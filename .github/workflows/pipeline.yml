@@ -1,0 +1,79 @@
+name: Pipeline
+on: [push, workflow_dispatch]
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+    PORT: ${{ vars.PORT }}
+    DOMAIN: ${{ vars.DOMAIN }}
+    DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+
+jobs:
+    docker_build_push:
+        runs-on: ubuntu-22.04
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+            - uses: actions/setup-node@v3
+              with:
+                node-version: 18
+
+            - name: Install wasp
+              run: curl -sSL https://get.wasp-lang.dev/installer.sh | sh
+
+            - name: Log in to the Container registry
+              uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - run: docker pull ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME || docker pull ghcr.io/$GITHUB_REPOSITORY || true
+            - run: docker build --build-arg PORT=$PORT -t ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME .
+            - name: Add tag latest if branch is main
+              if: github.ref_name == 'main'
+              run: docker tag ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME ghcr.io/$GITHUB_REPOSITORY:latest
+            - name: Push only if branch name is main
+              if: github.ref_name == 'main'
+              run: docker push ghcr.io/$GITHUB_REPOSITORY --all-tags
+
+    deploy:
+        runs-on: ubuntu-22.04
+        defaults:
+            run:
+                shell: bash
+        needs: [docker_build_push]
+        if: github.ref_name == 'main'
+        container:
+            image: python:3.7-stretch
+        env:
+            GITHUB_USERNAME: ${{ github.actor }}
+            GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+            SSH_KEY: ${{ secrets.SSH_KEY }}
+            AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+            DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
+        steps:
+            - uses: actions/checkout@v3
+            # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989
+            - run: chown -R $(id -u):$(id -g) $PWD
+            - run: echo "TAG=latest" >> $GITHUB_ENV
+            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then printenv PROD_CONFIG > "$(pwd)/.env" ; else printenv STAGING_CONFIG > "$(pwd)/.env" ; fi;
+            - run: echo "PATH=$PATH:/github/home/.local/bin" >> $GITHUB_ENV
+            - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+            - run: eval $(ssh-agent -s)
+            - run: mkdir -p ~/.ssh
+            - run: chmod 700 ~/.ssh
+            - run: ssh-keyscan "$DOMAIN" >> ~/.ssh/known_hosts
+            - run: chmod 644 ~/.ssh/known_hosts
+            - run: echo "$SSH_KEY" | base64 --decode > key.pem
+            - run: chmod 600 key.pem
+
+            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "DOMAIN=api.airt.ai" >> $GITHUB_ENV ; else echo "DOMAIN=api.staging.airt.ai" >> $GITHUB_ENV ; fi;
+            - run: ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker images"
+            - run: sh scripts/deploy.sh
+
+            - run: rm key.pem
