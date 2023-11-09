@@ -126,7 +126,7 @@ async def load_user_credentials(user_id):
 def create_google_ads_client(user_credentials):
     # Create a dictionary with the required structure for GoogleAdsClient
     google_ads_credentials = {
-        "developer_token": "rQl20ooeSUSJsTIredWGFw",  # Replace with your actual developer token
+        "developer_token": environ.get("DEVELOPER_TOKEN"),
         "use_proto_plus": False,
         "client_id": oauth2_settings["clientId"],
         "client_secret": oauth2_settings["clientSecret"],
