@@ -236,7 +236,7 @@ class AzureOpenAIRequest(BaseModel):
     conversation: List[Dict[str, str]]
 
 # Route 5: Connect to OpenAI and get response
-@app.post("/conversation")
+@app.post("/chat")
 async def create_item(request: AzureOpenAIRequest) -> str:
     conversation = request.conversation
     result = await get_openai_response(conversation)
