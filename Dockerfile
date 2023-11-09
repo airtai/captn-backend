@@ -28,7 +28,6 @@ RUN python3 -m pip install --upgrade pip
 COPY migrations ./migrations
 COPY application.py scripts/* fastapi_requirements.txt schema.prisma ./
 RUN pip install -r fastapi_requirements.txt
-RUN pip install airt_service-*-py3-none-any.whl
 
 EXPOSE ${PORT}
 
