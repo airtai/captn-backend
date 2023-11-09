@@ -10,11 +10,11 @@ from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
 from prisma import Prisma
 
-from openai_agent import main
+from openai_agent import openai
 
 app = FastAPI()
 app.include_router(
-    main.router,
+    openai.router,
     tags=["openai"]
 )
 
