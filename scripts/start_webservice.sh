@@ -7,7 +7,7 @@ fi
 
 echo NUM_WORKERS set to $NUM_WORKERS
 
-cat <<< "$CLIENT_SECRET" > client_secrets.json
+cat <<< "$CLIENT_SECRET" > client_secret.json
 
 prisma migrate deploy
 prisma generate
