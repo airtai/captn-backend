@@ -23,7 +23,7 @@ oauth2_settings = {
     "tokenUrl": client_secret_data["web"]["token_uri"],
     "clientId": client_secret_data["web"]["client_id"],
     "clientSecret": client_secret_data["web"]["client_secret"],
-    "redirectUri": "http://localhost:9000/login/callback",
+    "redirectUri": client_secret_data["web"]["redirect_uris"][0],
 }
 
 
