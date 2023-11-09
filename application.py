@@ -220,7 +220,7 @@ async def search(
     return campaign_data
 
 
-async def get_openai_response(conversation: List[Dict[str, str]]):
+async def get_openai_response(conversation: List[Dict[str, str]]) -> str:
     try:
         messages = [{"role": "system","content": SYSTEM_PROMPT}] + conversation
         completion = await azure_openai_client.chat.completions.create(
@@ -237,7 +237,7 @@ class AzureOpenAIRequest(BaseModel):
 
 # Route 5: Connect to OpenAI and get response
 @app.post("/conversation")
-async def create_item(request: AzureOpenAIRequest):
+async def create_item(request: AzureOpenAIRequest) -> str:
     conversation = request.conversation
     result = await get_openai_response(conversation)
     return result
