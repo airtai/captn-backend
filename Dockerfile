@@ -11,9 +11,9 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt update --fix-missing && apt upgrade --yes \
     && apt install -y software-properties-common apt-utils build-essential git wget curl \
-    # && add-apt-repository ppa:deadsnakes/ppa \
-    # && apt update \
-    # && apt install -y --no-install-recommends python3.10-dev python3.10-distutils python3-pip python3-apt \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt update \
+    && apt install -y --no-install-recommends python3.10-dev python3.10-distutils python3-pip python3-apt \
     && apt purge --auto-remove \
     && apt clean \
     && rm -rf /var/lib/apt/lists/*
