@@ -74,6 +74,12 @@ then
 	exit -1
 fi
 
+if test -z "$CAPTN_AGENT_URL"
+then
+	echo "ERROR: CAPTN_AGENT_URL variable must be defined, exiting"
+	exit -1
+fi
+
 if test -z "$DEVELOPER_TOKEN"
 then
 	echo "ERROR: DEVELOPER_TOKEN variable must be defined, exiting"
@@ -93,4 +99,4 @@ echo "Deleting old image"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker system prune -f || echo 'No images to delete'"
 
 echo "INFO: starting docker container"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --name gads -p $PORT:$PORT -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' -e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' -e AZURE_OPENAI_API_KEY='$AZURE_OPENAI_API_KEY' -e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' -e AZURE_MODEL='$AZURE_MODEL' -d ghcr.io/$GITHUB_REPOSITORY:$TAG"
+ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --name gads -p $PORT:$PORT -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' -e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' -e AZURE_OPENAI_API_KEY='$AZURE_OPENAI_API_KEY' -e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' -e AZURE_MODEL='$AZURE_MODEL' -e CAPTN_AGENT_URL='$CAPTN_AGENT_URL' -d ghcr.io/$GITHUB_REPOSITORY:$TAG"

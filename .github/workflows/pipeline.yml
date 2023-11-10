@@ -58,6 +58,7 @@ jobs:
             AZURE_API_VERSION: ${{ secrets.AZURE_API_VERSION }}
             AZURE_API_ENDPOINT: ${{ secrets.AZURE_API_ENDPOINT }}
             AZURE_MODEL: ${{ secrets.AZURE_MODEL }}
+            CAPTN_AGENT_URL: ${{ vars.CAPTN_AGENT_URL }}
             DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
         steps:
             - uses: actions/checkout@v3
