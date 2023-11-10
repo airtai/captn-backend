@@ -1,8 +1,12 @@
 import json
 from typing import List, Dict
 
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from openai import AsyncAzureOpenAI
-from fastapi import HTTPException
+
+router = APIRouter()
+
 
 # Load client secret data from the JSON file
 with open("client_secret.json") as secret_file:
@@ -37,7 +41,7 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
-async def get_openai_response(conversation: List[Dict[str, str]]) -> str:
+async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
     try:
         messages = [{"role": "system","content": _system_prompt}] + conversation
         completion = await _azure_openai_client.chat.completions.create(
@@ -47,4 +51,14 @@ async def get_openai_response(conversation: List[Dict[str, str]]) -> str:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
     result = completion.choices[0].message.content
+    return result
+
+
+class AzureOpenAIRequest(BaseModel):
+    conversation: List[Dict[str, str]]
+
+@router.post("/chat")
+async def create_item(request: AzureOpenAIRequest) -> str:
+    conversation = request.conversation
+    result = await _get_openai_response(conversation)
     return result
