@@ -26,6 +26,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install
 RUN python3 -m pip install --upgrade pip
 
 COPY migrations ./migrations
+COPY google_ads_auth_service ./google_ads_auth_service
+COPY openai_agent ./openai_agent
 COPY application.py scripts/* fastapi_requirements.txt schema.prisma ./
 RUN pip install -r fastapi_requirements.txt
 
