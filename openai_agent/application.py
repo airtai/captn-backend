@@ -1,26 +1,25 @@
 import json
 from typing import List, Dict
+from os import environ
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from openai import AsyncAzureOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter()
 
-
-# Load client secret data from the JSON file
-with open("client_secret.json") as secret_file:
-    client_secret_data = json.load(secret_file)
-
 # Setting up Azure OpenAI instance
-_azure_openai_client = AsyncAzureOpenAI(
-    api_key=client_secret_data["azure_openai"]["api_key"],
-    api_version=client_secret_data["azure_openai"]["api_version"],
-    azure_endpoint=client_secret_data["azure_openai"]["azure_endpoint"],
+azure_openai_client = AsyncAzureOpenAI(
+    api_key=environ.get("AZURE_OPENAI_API_KEY"),
+    api_version=environ.get("AZURE_API_VERSION"),
+    azure_endpoint=environ.get("AZURE_API_ENDPOINT"),
     max_retries=5, # default is 2
 )
 
-_system_prompt = """
+SYSTEM_PROMPT = """
 You are Captn AI, a digital marketing assistant for small businesses. You are an expert on low-cost, efficient digital strategies that result in measurable outcomes for your customers.
 
 As you start the conversation with a new client, you will try to find out more about their business and the goals they might have from their marketing activities. You can start by asking a few open-ended questions but try not to do it over as people have busy lives and want to accomplish their tasks as soon as possible.
@@ -43,9 +42,9 @@ Finally, ensure that your responses are formatted using markdown syntax, as they
 
 async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
     try:
-        messages = [{"role": "system","content": _system_prompt}] + conversation
-        completion = await _azure_openai_client.chat.completions.create(
-            model=client_secret_data["azure_openai"]["model"],
+        messages = [{"role": "system","content": SYSTEM_PROMPT}] + conversation
+        completion = await azure_openai_client.chat.completions.create(
+            model=environ.get("AZURE_MODEL"),
             messages= messages
         )
     except Exception as e:

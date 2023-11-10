@@ -13,7 +13,6 @@ app.include_router(
     tags=["Google Ads"]
 )
 
-
 if __name__ == "__main__":
     import uvicorn
 
