@@ -55,6 +55,9 @@ jobs:
             GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
             SSH_KEY: ${{ secrets.SSH_KEY }}
             AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+            AZURE_API_VERSION: ${{ secrets.AZURE_API_VERSION }}
+            AZURE_API_ENDPOINT: ${{ secrets.AZURE_API_ENDPOINT }}
+            AZURE_MODEL: ${{ secrets.AZURE_MODEL }}
             DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
         steps:
             - uses: actions/checkout@v3
