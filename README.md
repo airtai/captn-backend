@@ -1,2 +1,2 @@
-# captn-google-auth-ads
+# captn-backend
 Repo to handle google auth and google ads for captn
