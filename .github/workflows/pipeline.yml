@@ -66,18 +66,6 @@ jobs:
               if: github.ref_name == 'main'
               run: docker push ghcr.io/$GITHUB_REPOSITORY --all-tags
 
-    # check: # This job does nothing and is only used for the branch protection
-    #     if: github.ref_name == 'main'
-    #     needs:
-    #       - static_analysis
-    #       - docker_build_push
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #       - name: Decide whether the needed jobs succeeded or failed
-    #         uses: re-actors/alls-green@release/v1 # nosemgrep
-    #         with:
-    #           jobs: ${{ toJSON(needs) }}
-
     deploy:
         runs-on: ubuntu-22.04
         defaults:
