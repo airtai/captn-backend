@@ -1,7 +1,7 @@
 import json
 from contextlib import asynccontextmanager
-from typing import List, Optional
 from os import environ
+from typing import List, Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -9,7 +9,6 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
 from prisma import Prisma
-
 
 router = APIRouter()
 
@@ -25,6 +24,7 @@ oauth2_settings = {
     "clientSecret": client_secret_data["web"]["client_secret"],
     "redirectUri": client_secret_data["web"]["redirect_uris"][0],
 }
+
 
 @asynccontextmanager
 async def get_db_connection(db_url: Optional[str] = None):

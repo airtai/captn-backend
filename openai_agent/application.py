@@ -1,11 +1,11 @@
 import json
-from typing import List, Dict
 from os import environ
+from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from openai import AsyncAzureOpenAI
 from dotenv import load_dotenv
+from fastapi import APIRouter, HTTPException
+from openai import AsyncAzureOpenAI
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -16,7 +16,7 @@ azure_openai_client = AsyncAzureOpenAI(
     api_key=environ.get("AZURE_OPENAI_API_KEY"),
     api_version=environ.get("AZURE_API_VERSION"),
     azure_endpoint=environ.get("AZURE_API_ENDPOINT"),
-    max_retries=5, # default is 2
+    max_retries=5,  # default is 2
 )
 
 SYSTEM_PROMPT = """
@@ -40,21 +40,22 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
+
+class AzureOpenAIRequest(BaseModel):
+    conversation: List[Dict[str, str]]
+
+
 async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
     try:
-        messages = [{"role": "system","content": SYSTEM_PROMPT}] + conversation
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation
         completion = await azure_openai_client.chat.completions.create(
-            model=environ.get("AZURE_MODEL"),
-            messages= messages
+            model=environ.get("AZURE_MODEL"), messages=messages
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
     result = completion.choices[0].message.content
     return result
 
-
-class AzureOpenAIRequest(BaseModel):
-    conversation: List[Dict[str, str]]
 
 @router.post("/chat")
 async def create_item(request: AzureOpenAIRequest) -> str:
