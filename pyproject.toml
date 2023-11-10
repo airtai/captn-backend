@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "captn"
 description = "Python client to interact with captn services"
-readme = "README.md"
+# readme = "README.md"
 authors = [
     { name = "airt", email = "info@airt.ai" },
 ]
