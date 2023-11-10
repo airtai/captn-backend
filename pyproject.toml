@@ -89,9 +89,6 @@ exclude = [
     "/docs",
 ]
 
-[tool.hatch.metadata]
-allow-direct-references = true
-
 [tool.mypy]
 strict = true
 python_version = "3.8"
