@@ -10,6 +10,31 @@ env:
     CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
 jobs:
+    static_analysis:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+            - name: Install Dependencies and library
+              shell: bash
+              run: |
+                set -ux
+                python -m pip install --upgrade pip
+                pip install -e ".[dev]"
+            # - name: Run mypy
+            #   shell: bash
+            #   run: mypy captn google_ads openai_agent application.py
+
+            - name: Run bandit
+              shell: bash
+              run: bandit -c pyproject.toml -r captn
+
+            - name: Run Semgrep
+              shell: bash
+              run: semgrep scan --config auto --error
+
     docker_build_push:
         runs-on: ubuntu-22.04
         permissions:
@@ -46,7 +71,7 @@ jobs:
         defaults:
             run:
                 shell: bash
-        needs: [docker_build_push]
+        needs: [static_analysis, docker_build_push]
         if: github.ref_name == 'main'
         container:
             image: python:3.7-stretch
