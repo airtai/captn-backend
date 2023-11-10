@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 from contextlib import asynccontextmanager
 from os import environ
 from typing import List, Optional
@@ -56,7 +57,7 @@ async def get_login_url(request: Request, user_id: int = Query(title="User ID"))
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
         f"&redirect_uri={oauth2_settings['redirectUri']}&response_type=code"
-        "&scope=https://www.googleapis.com/auth/adwords email"
+        f"&scope={urllib.parse.quote_plus('https://www.googleapis.com/auth/adwords email')}"
         f"&access_type=offline&prompt=consent&state={user_id}"
     )
     return {"login_url": google_oauth_url}

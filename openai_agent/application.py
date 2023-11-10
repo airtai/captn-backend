@@ -2,12 +2,9 @@ import json
 from os import environ
 from typing import Dict, List
 
-from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
-
-load_dotenv()
 
 router = APIRouter()
 
