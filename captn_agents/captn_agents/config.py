@@ -13,7 +13,7 @@ api_base_sweeden = "https://airt-openai-sweden.openai.azure.com/"
 api_key_canada = os.getenv("AZURE_OPENAI_API_KEY_CANADA")
 api_base_canada = "https://airt-openai-canada.openai.azure.com/"
 
-api_key_openai = os.getenv("OPENAI_API_KEY")
+# api_key_openai = os.getenv("OPENAI_API_KEY")
 
 openai.api_type = "azure"
 
@@ -36,9 +36,9 @@ CONFIG_LIST = [
         "api_version": openai.api_version,
         # "engine": "airt-canada-gpt4",
     },
-    {
-        # "model": "gpt-4-1106-preview",
-        "model": "gpt-4",
-        "api_key": api_key_openai,
-    },
+    # {
+    #     # "model": "gpt-4-1106-preview",
+    #     "model": "gpt-4",
+    #     "api_key": api_key_openai,
+    # },
 ]
