@@ -16,7 +16,7 @@ jobs:
         with:
           # NOTE: at now only orgs is supported
           owner: airtai
-          name: captn-backend
+          name: rba-backend
 
           token: ${{ secrets.GITHUB_TOKEN }}
           # Keep latest N untagged images

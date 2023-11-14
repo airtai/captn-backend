@@ -74,10 +74,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/airtai/captn-backend"
-Documentation = "https://github.com/airtai/captn-backend"
-Tracker = "https://github.com/airtai/captn-backend/issues"
-Source = "https://github.com/airtai/captn-backend"
+Homepage = "https://github.com/airtai/rba-backend"
+Documentation = "https://github.com/airtai/rba-backend"
+Tracker = "https://github.com/airtai/rba-backend/issues"
+Source = "https://github.com/airtai/rba-backend"
 
 [tool.hatch.version]
 path = "captn/__about__.py"
