@@ -6,11 +6,11 @@ __all__ = [
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from captn_agents.captn_initial_team import CaptnInitialTeam
-from captn_agents.initial_team import (
+from .captn_initial_team import CaptnInitialTeam
+from .initial_team import (
     InitialTeam,
 )
-from captn_agents.team import Team
+from .team import Team
 
 initial_team_roles_never = [
     {

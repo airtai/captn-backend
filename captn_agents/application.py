@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from captn_agents.end_to_end import start_conversation
+from .captn_agents.end_to_end import start_conversation
 
 router = APIRouter()
 

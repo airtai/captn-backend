@@ -6,16 +6,16 @@ __all__ = [
 from pathlib import Path
 from typing import Any, Dict, List
 
-from captn_agents.function_configs import (
+from .function_configs import (
     answer_to_team_lead_question_config,
     create_team_config,
 )
-from captn_agents.planning_team import (
+from .planning_team import (
     answer_to_team_lead_question,
     create_planning_team,
     get_function_map_planning_team,
 )
-from captn_agents.team import Team
+from .team import Team
 
 
 class InitialTeam(Team):
@@ -67,7 +67,7 @@ class InitialTeam(Team):
         name = f"{name_prefix}_{str(user_id)}_{str(conv_id)}"
 
         return name
-    
+
     @classmethod
     def _get_team_name_prefix(cls) -> str:
         return "initial_team"
