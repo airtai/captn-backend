@@ -21,7 +21,7 @@ def chat(request: CaptnAgentRequest) -> str:
         task=request.message,
         max_round=80,
         human_input_mode="NEVER",
-        class_name="captn_initial_team",
+        class_name="banking_initial_team",
     )
 
     return last_message
@@ -29,7 +29,7 @@ def chat(request: CaptnAgentRequest) -> str:
 
 if __name__ == "__main__":
     request = CaptnAgentRequest(
-        message = "What are the metods for campaign optimization",
+        message = "I need a loan for 100,000 euros for a period of 10 years. Please provide me the credit calculation",
         user_id = 3,
         conv_id = 5,
     )
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
 
     request = CaptnAgentRequest(
-        message = "I have logged in",
+        message = "I don't have any previous loans or credit history.",
         user_id = 3,
         conv_id = 5,
     )
