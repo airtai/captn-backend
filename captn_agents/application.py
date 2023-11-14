@@ -1,10 +1,5 @@
-import json
-from os import environ
-from typing import Dict, List
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from pathlib import Path
 
 from captn_agents.end_to_end import start_conversation
 
@@ -25,10 +20,11 @@ def chat(request: AzureOpenAIRequest) -> str:
         conv_id=request.conv_id,
         task=request.message,
         max_round=80,
-        use_captn_class=True,
+        human_input_mode="NEVER",
+        class_name="captn_initial_team",
     )
 
-    return team_name, last_message
+    return last_message
 
 
 if __name__ == "__main__":
@@ -38,4 +34,18 @@ if __name__ == "__main__":
         conv_id = 5,
     )
 
-    chat(request=request)
+    last_message = chat(request=request)
+    print("*"*100)
+    print(f"User will receive the following message:\n{last_message}")
+    print("*"*100)
+
+
+    request = AzureOpenAIRequest(
+        message = "I have logged in",
+        user_id = 3,
+        conv_id = 5,
+    )
+    last_message = chat(request=request)
+    print("*"*100)
+    print(f"User will receive the following message:\n{last_message}")
+    print("*"*100)

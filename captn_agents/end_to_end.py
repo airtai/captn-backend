@@ -12,7 +12,7 @@ from captn_agents.initial_team import (
 )
 from captn_agents.team import Team
 
-initial_team_roles = [
+initial_team_roles_never = [
     {
         "Name": "User_proxy",
         "Description": "Your job is to comunicate with the Account_manager, do NOT suggest any code or execute the code by yourself",
@@ -23,7 +23,7 @@ initial_team_roles = [
     },
 ]
 
-captn_initial_team_roles = [
+captn_initial_team_roles_never = [
     {
         "Name": "User_proxy",
         "Description": """You are a user with a task for the Account_manager, do NOT suggest any code or execute the code by yourself.
@@ -34,6 +34,31 @@ If you receive a login link, just reply with: 'I am logged in now'""",
         "Description": "You are an account manager in the digital agency. Your job is to communicate with the User_proxy.",
     },
 ]
+
+captn_initial_team_roles_always = [
+    {
+        "Name": "User_proxy",
+        "Description": """You are a proxy between the real user and the Account_manager. Each time you receive a message for the user, just repeat the message and add 'TERMINATE' to the end""",
+    },
+    {
+        "Name": "Account_manager",
+        "Description": "You are an account manager in the digital agency. Your job is to communicate with the User_proxy.",
+    },
+]
+
+roles_dictionary = {
+    "initial_team": {
+        "human_input_mode": {"NEVER": initial_team_roles_never, "ALWAYS": []},
+        "class": InitialTeam,
+    },
+    "captn_initial_team": {
+        "human_input_mode": {
+            "NEVER": captn_initial_team_roles_always,  # captn_initial_team_roles_never,
+            "ALWAYS": captn_initial_team_roles_always,
+        },
+        "class": CaptnInitialTeam,
+    },
+}
 
 
 def start_conversation(
@@ -47,25 +72,26 @@ def start_conversation(
     seed: int = 42,
     temperature: float = 0.2,
     human_input_mode: str = "ALWAYS",
-    use_captn_class: bool = False,
+    class_name: str = "initial_team",
 ) -> Tuple[str, str]:
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
 
-    initial_team_class = CaptnInitialTeam if use_captn_class else InitialTeam
+    initial_team_class = roles_dictionary[class_name]["class"]
     if roles is None:
-        roles = captn_initial_team_roles if use_captn_class else initial_team_roles
+        roles = roles_dictionary[class_name]["human_input_mode"][human_input_mode]  # type: ignore
 
-    
     try:
-        team_name = InitialTeam.get_user_conv_team_name(user_id=user_id, conv_id=conv_id)
-        initial_team = Team.get_team(team_name)
+        team_name = InitialTeam.get_user_conv_team_name(
+            user_id=user_id, conv_id=conv_id
+        )
+        initial_team = Team.get_team(team_name)  # type: ignore
         create_new_conv = False
-    except:
+    except ValueError:
         create_new_conv = True
 
     if create_new_conv:
-        initial_team = initial_team_class(
+        initial_team = initial_team_class(  # type: ignore
             user_id=user_id,
             conv_id=conv_id,
             task=task,
@@ -82,9 +108,9 @@ def start_conversation(
         last_message = initial_team.get_last_message()
 
         return team_name, last_message
-    
+
     else:
-        continue_conversation(team_name=team_name, message=task)
+        return team_name, continue_conversation(team_name=team_name, message=task)
 
 
 def continue_conversation(team_name: str, message: str) -> str:
