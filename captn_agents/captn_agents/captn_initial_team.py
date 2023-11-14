@@ -1,15 +1,15 @@
 from pathlib import Path
 from typing import Any, Dict, List
 
-from captn_agents.function_configs import (
+from .function_configs import (
     answer_the_question_config,
     create_google_ads_team_config,
 )
-from captn_agents.google_ads_team import (
+from .google_ads_team import (
     answer_the_question,
     get_create_google_ads_team,
 )
-from captn_agents.initial_team import InitialTeam
+from .initial_team import InitialTeam
 
 
 class CaptnInitialTeam(InitialTeam):

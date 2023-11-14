@@ -8,18 +8,18 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
-from captn_agents.execution_team import (
+from .execution_team import (
     answer_to_execution_team,
     get_create_execution_team,
     get_function_map_execution_team,
 )
-from captn_agents.function_configs import (
+from .function_configs import (
     answer_to_execution_team_config,
     ask_for_additional_info_config,
     create_execution_team_config,
 )
-from captn_agents.functions import ask_for_additional_info
-from captn_agents.team import Team
+from .functions import ask_for_additional_info
+from .team import Team
 
 
 class PlanningTeam(Team):

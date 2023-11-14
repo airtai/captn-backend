@@ -16,15 +16,15 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable, Dict, Generator, List, Union
 
-from captn_agents.function_configs import (
+from .function_configs import (
     ask_for_additional_info_config,
     execute_command_config,
     list_files_config,
     read_file_config,
     write_to_file_config,
 )
-from captn_agents.functions import ask_for_additional_info
-from captn_agents.team import Team
+from .functions import ask_for_additional_info
+from .team import Team
 
 
 class ExecutionTeam(Team):

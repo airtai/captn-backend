@@ -4,19 +4,19 @@ import ast
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Union
 
-from captn_agents.function_configs import (
+from .function_configs import (
     ask_for_additional_info_config,
     execute_query_config,
     get_login_url_config,
     list_accessible_customers_config,
 )
-from captn_agents.functions import ask_for_additional_info
-from captn_agents.google_ads_mock import (
+from .functions import ask_for_additional_info
+from .google_ads_mock import (
     execute_query,
     get_login_url,
     list_accessible_customers,
 )
-from captn_agents.team import Team
+from .team import Team
 
 
 class GoogleAdsTeam(Team):

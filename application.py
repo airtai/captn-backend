@@ -3,9 +3,9 @@ from fastapi import FastAPI
 
 load_dotenv()
 
+import captn_agents
 import google_ads
 import openai_agent
-import captn_agents
 
 app = FastAPI()
 app.include_router(openai_agent.router, tags=["OpenAI"])
