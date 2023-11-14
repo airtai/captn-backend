@@ -54,7 +54,7 @@ async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
     return result
 
 
-@router.post("/chat")
+@router.post("/openai/chat")
 async def create_item(request: AzureOpenAIRequest) -> str:
     conversation = request.conversation
     result = await _get_openai_response(conversation)

@@ -6,7 +6,7 @@ from captn_agents.end_to_end import start_conversation
 router = APIRouter()
 
 
-class AzureOpenAIRequest(BaseModel):
+class CaptnAgentRequest(BaseModel):
     # conversation: List[Dict[str, str]]
     message: str
     user_id: int
@@ -14,7 +14,7 @@ class AzureOpenAIRequest(BaseModel):
 
 
 @router.post("/chat")
-def chat(request: AzureOpenAIRequest) -> str:
+def chat(request: CaptnAgentRequest) -> str:
     team_name, last_message = start_conversation(
         user_id=request.user_id,
         conv_id=request.conv_id,
@@ -28,7 +28,7 @@ def chat(request: AzureOpenAIRequest) -> str:
 
 
 if __name__ == "__main__":
-    request = AzureOpenAIRequest(
+    request = CaptnAgentRequest(
         message = "What are the metods for campaign optimization",
         user_id = 3,
         conv_id = 5,
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     print("*"*100)
 
 
-    request = AzureOpenAIRequest(
+    request = CaptnAgentRequest(
         message = "I have logged in",
         user_id = 3,
         conv_id = 5,
