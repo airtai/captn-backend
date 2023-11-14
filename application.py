@@ -5,10 +5,12 @@ load_dotenv()
 
 import google_ads
 import openai_agent
+import captn_agents
 
 app = FastAPI()
 app.include_router(openai_agent.router, tags=["OpenAI"])
 app.include_router(google_ads.router, tags=["Google Ads"])
+app.include_router(captn_agents.router, tags=["Captn Agents"])
 
 if __name__ == "__main__":
     import uvicorn
