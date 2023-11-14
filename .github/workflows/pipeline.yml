@@ -86,6 +86,7 @@ jobs:
             DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
             AZURE_OPENAI_API_KEY_SWEEDEN: ${{ secrets.AZURE_OPENAI_API_KEY_SWEEDEN }}
             AZURE_OPENAI_API_KEY_CANADA: ${{ secrets.AZURE_OPENAI_API_KEY_CANADA }}
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         steps:
             - uses: actions/checkout@v3
             # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989
