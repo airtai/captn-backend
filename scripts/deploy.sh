@@ -80,6 +80,18 @@ then
 	exit -1
 fi
 
+if test -z "$AZURE_OPENAI_API_KEY_SWEEDEN"
+then
+	echo "ERROR: AZURE_OPENAI_API_KEY_SWEEDEN variable must be defined, exiting"
+	exit -1
+fi
+
+if test -z "$AZURE_OPENAI_API_KEY_CANADA"
+then
+	echo "ERROR: AZURE_OPENAI_API_KEY_CANADA variable must be defined, exiting"
+	exit -1
+fi
+
 echo "INFO: stopping already running docker container"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker stop captn-backend || echo 'No containers available to stop'"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker container prune -f || echo 'No stopped containers to delete'"
@@ -93,4 +105,4 @@ echo "Deleting old image"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker system prune -f || echo 'No images to delete'"
 
 echo "INFO: starting docker container"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --name captn-backend -p $PORT:$PORT -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' -e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' -e AZURE_OPENAI_API_KEY='$AZURE_OPENAI_API_KEY' -e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' -e AZURE_MODEL='$AZURE_MODEL' -d ghcr.io/$GITHUB_REPOSITORY:$TAG"
+ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --name captn-backend -p $PORT:$PORT -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' -e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' -e AZURE_OPENAI_API_KEY='$AZURE_OPENAI_API_KEY' -e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' -e AZURE_MODEL='$AZURE_MODEL' -e AZURE_OPENAI_API_KEY_SWEEDEN='$AZURE_OPENAI_API_KEY_SWEEDEN' -e AZURE_OPENAI_API_KEY_CANADA='$AZURE_OPENAI_API_KEY_CANADA' -d ghcr.io/$GITHUB_REPOSITORY:$TAG"
