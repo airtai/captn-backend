@@ -5,7 +5,7 @@ from os import environ
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, status
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
@@ -146,13 +146,16 @@ def create_google_ads_client(user_credentials: Dict[str, Any]) -> GoogleAdsClien
 # Route 3: List accessible customer ids
 @router.get("/list-accessible-customers")
 async def list_accessible_customers(user_id: int = Query(title="User ID")) -> List[str]:
-    user_credentials = await load_user_credentials(user_id)
-    client = create_google_ads_client(user_credentials)
-    customer_service = client.get_service("CustomerService")
-    accessible_customers = customer_service.list_accessible_customers()
+    try:
+        user_credentials = await load_user_credentials(user_id)
+        client = create_google_ads_client(user_credentials)
+        customer_service = client.get_service("CustomerService")
+        accessible_customers = customer_service.list_accessible_customers()
 
-    customer_ids = [x.split("/")[-1] for x in accessible_customers.resource_names]
-    return customer_ids
+        customer_ids = [x.split("/")[-1] for x in accessible_customers.resource_names]
+        return customer_ids
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 # Route 4: Fetch user's ad campaign data
@@ -180,15 +183,18 @@ async def search(
 
     campaign_data = {}
 
-    for customer_id in customer_ids:
-        try:
-            response = service.search(customer_id=customer_id, query=query)
-            l = []  # noqa
-            for row in response:
-                json_str = json_format.MessageToJson(row)
-                l.append(json.loads(json_str))
-            campaign_data[customer_id] = l
-        except GoogleAdsException:
-            print(f"Exception for {customer_id}")
+    try:
+        for customer_id in customer_ids:
+            try:
+                response = service.search(customer_id=customer_id, query=query)
+                l = []  # noqa
+                for row in response:
+                    json_str = json_format.MessageToJson(row)
+                    l.append(json.loads(json_str))
+                campaign_data[customer_id] = l
+            except GoogleAdsException:
+                print(f"Exception for {customer_id}")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
     return campaign_data
