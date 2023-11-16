@@ -91,19 +91,20 @@ roles_dictionary = {
 }
 
 
-def start_conversation(
+def _get_initial_team(
     user_id: int,
     conv_id: int,
-    root_dir: Path = Path(".") / "logs",
+    root_dir: Path,
     *,
-    task: str = "Hi!",
-    roles: Optional[List[Dict[str, str]]] = None,
-    max_round: int = 20,
-    seed: int = 42,
-    temperature: float = 0.2,
-    human_input_mode: str = "ALWAYS",
-    class_name: str = "initial_team",
-) -> Tuple[str, str]:
+    task: str,
+    roles: Optional[List[Dict[str, str]]],
+    max_round: int,
+    seed: int,
+    temperature: float,
+    human_input_mode: str,
+    class_name: str,
+    use_async: bool = False,
+) -> Tuple[Optional[Team], str]:
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
 
@@ -111,6 +112,7 @@ def start_conversation(
     if roles is None:
         roles = roles_dictionary[class_name]["human_input_mode"][human_input_mode]  # type: ignore
 
+    initial_team = None
     try:
         team_name = InitialTeam.get_user_conv_team_name(
             user_id=user_id, conv_id=conv_id
@@ -131,7 +133,38 @@ def start_conversation(
             seed=seed,
             temperature=temperature,
             human_input_mode=human_input_mode,
+            use_async=use_async,
         )
+
+    return initial_team, team_name
+
+
+def start_conversation(
+    user_id: int,
+    conv_id: int,
+    root_dir: Path = Path(".") / "logs",
+    *,
+    task: str = "Hi!",
+    roles: Optional[List[Dict[str, str]]] = None,
+    max_round: int = 20,
+    seed: int = 42,
+    temperature: float = 0.2,
+    human_input_mode: str = "ALWAYS",
+    class_name: str = "initial_team",
+) -> Tuple[str, str]:
+    initial_team, team_name = _get_initial_team(
+        user_id=user_id,
+        conv_id=conv_id,
+        root_dir=root_dir,
+        task=task,
+        roles=roles,
+        max_round=max_round,
+        seed=seed,
+        temperature=temperature,
+        human_input_mode=human_input_mode,
+        class_name=class_name,
+    )
+    if initial_team:
         initial_team.initiate_chat()
 
         team_name = initial_team.name
@@ -143,10 +176,59 @@ def start_conversation(
         return team_name, continue_conversation(team_name=team_name, message=task)
 
 
+async def a_start_conversation(
+    user_id: int,
+    conv_id: int,
+    root_dir: Path = Path(".") / "logs",
+    *,
+    task: str = "Hi!",
+    roles: Optional[List[Dict[str, str]]] = None,
+    max_round: int = 20,
+    seed: int = 42,
+    temperature: float = 0.2,
+    human_input_mode: str = "ALWAYS",
+    class_name: str = "initial_team",
+) -> Tuple[str, str]:
+    initial_team, team_name = _get_initial_team(
+        user_id=user_id,
+        conv_id=conv_id,
+        root_dir=root_dir,
+        task=task,
+        roles=roles,
+        max_round=max_round,
+        seed=seed,
+        temperature=temperature,
+        human_input_mode=human_input_mode,
+        class_name=class_name,
+        use_async=True,
+    )
+    if initial_team:
+        await initial_team.a_initiate_chat()
+
+        team_name = initial_team.name
+        last_message = initial_team.get_last_message(add_prefix=False)
+
+        return team_name, last_message
+
+    else:
+        last_message = await a_continue_conversation(team_name=team_name, message=task)
+        return team_name, last_message
+
+
 def continue_conversation(team_name: str, message: str) -> str:
     initial_team = Team.get_team(team_name)
 
     initial_team.continue_chat(message=message)
+
+    last_message: str = initial_team.get_last_message(add_prefix=False)
+
+    return last_message
+
+
+async def a_continue_conversation(team_name: str, message: str) -> str:
+    initial_team = Team.get_team(team_name)
+
+    await initial_team.a_continue_chat(message=message)
 
     last_message: str = initial_team.get_last_message(add_prefix=False)
 

@@ -34,11 +34,17 @@ class InitialTeam(Team):
         seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "ALWAYS",
+        use_async: bool = False,
     ):
         name = InitialTeam.get_user_conv_team_name(user_id=user_id, conv_id=conv_id)
-        function_map = self._get_function_map(
-            user_id=user_id, working_dir=Path(work_dir)
-        )
+        if use_async:
+            function_map = self._get_function_map_async(
+                user_id=user_id, working_dir=Path(work_dir)
+            )
+        else:
+            function_map = self._get_function_map(
+                user_id=user_id, working_dir=Path(work_dir)
+            )
         super().__init__(
             roles=roles,
             function_map=function_map,
@@ -138,3 +144,8 @@ Your TASK description:
         }
 
         return function_map_initial_team
+
+    def _get_function_map_async(
+        self, user_id: int, working_dir: Path
+    ) -> Dict[str, Any]:
+        raise NotImplementedError()

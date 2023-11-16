@@ -4,6 +4,14 @@ import ast
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Union
 
+# from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
+from ...google_ads.client import (
+    get_login_url,
+    list_accessible_customers,
+)
+from ...google_ads.client import (
+    search as execute_query,
+)
 from .function_configs import (
     ask_for_additional_info_config,
     execute_query_config,
@@ -11,7 +19,6 @@ from .function_configs import (
     list_accessible_customers_config,
 )
 from .functions import ask_for_additional_info
-from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
 
 
@@ -179,6 +186,38 @@ def answer_the_question(answer: str, team_name: str) -> str:
     google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
 
     google_ads_team.continue_chat(message=answer)
+
+    last_message = google_ads_team.get_last_message()
+
+    return last_message
+
+
+def get_a_create_google_ads_team(
+    user_id: int, working_dir: Path
+) -> Callable[[Any], Any]:
+    async def a_create_google_ads_team(
+        task: str,
+        user_id: int = user_id,
+    ) -> str:
+        google_ads_team = GoogleAdsTeam(
+            task=task,
+            user_id=user_id,
+            work_dir=str(working_dir),
+        )
+
+        await google_ads_team.a_initiate_chat()
+
+        last_message = google_ads_team.get_last_message()
+
+        return last_message
+
+    return a_create_google_ads_team
+
+
+async def a_answer_the_question(answer: str, team_name: str) -> str:
+    google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
+
+    await google_ads_team.a_continue_chat(message=answer)
 
     last_message = google_ads_team.get_last_message()
 

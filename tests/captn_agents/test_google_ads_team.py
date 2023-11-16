@@ -165,10 +165,32 @@ def test_optimize_campaign() -> None:
     user_id = 13
     task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.ask_for_additional_info",
+        "captn.captn_agents.backend.google_ads_team.google_ads.client.ask_for_additional_info",
         return_value="I don't know, please propose a solution and let's go with it without checking with me again.",  # type: ignore
     ):
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
         google_ads_team.initiate_chat()
 
     assert last_message_is_termination(google_ads_team)
+
+
+def test_with_real() -> None:
+    user_id = 1
+    task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
+
+    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
+    google_ads_team.initiate_chat()
+
+    assert last_message_is_termination(google_ads_team)
+
+    google_ads_team.continue_chat(message="I am logged in.")
+
+
+def test_real_query() -> None:
+    user_id = 1
+    task = "Search database for customer ids: 8942812744, 2324127278 and query: SELECT * FROM keyword_view"
+    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
+    google_ads_team.initiate_chat()
+    assert last_message_is_termination(google_ads_team)
+
+    google_ads_team.continue_chat(message="We have the access")

@@ -206,6 +206,9 @@ You can leverage access to the following resources:
     def initiate_chat(self) -> None:
         self.manager.initiate_chat(self.manager, message=self.initial_message)
 
+    async def a_initiate_chat(self) -> None:
+        await self.manager.a_initiate_chat(self.manager, message=self.initial_message)
+
     def get_last_message(self, add_prefix: bool = True) -> str:
         last_message: str = self.manager.chat_messages[self.members[0]][-1]["content"]
         last_message = last_message.replace("PAUSE", "").replace(
@@ -219,3 +222,6 @@ You can leverage access to the following resources:
 
     def continue_chat(self, message: str) -> None:
         self.manager.send(recipient=self.manager, message=message)
+
+    async def a_continue_chat(self, message: str) -> None:
+        await self.manager.a_send(recipient=self.manager, message=message)

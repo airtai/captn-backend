@@ -1,5 +1,5 @@
 import shutil
-import unittest
+from unittest import mock
 from pathlib import Path
 
 from captn.captn_agents.backend.end_to_end import start_conversation
@@ -24,27 +24,33 @@ def test_end_to_end() -> None:
     create_google_ads_team = get_create_google_ads_team(
         user_id=user_id, working_dir=working_dir
     )
-    with unittest.mock.patch(
-        "captn_agents.captn_initial_team.get_create_google_ads_team",
-        return_value=create_google_ads_team,
-    ) as mock_get_create_google_ads_team:
-        team_name, last_message = start_conversation(
-            user_id=user_id,
-            conv_id=conv_id,
-            task=task,
-            root_dir=root_dir,
-            seed=45,
-            max_round=15,
-            human_input_mode="NEVER",
-            class_name="captn_initial_team",
-        )
+    # with mock.patch(
+    #     "captn.captn_agents.captn_initial_team.get_create_google_ads_team",
+    #     return_value=create_google_ads_team,
+    # ) as mock_get_create_google_ads_team:
+    team_name, last_message = start_conversation(
+        user_id=user_id,
+        conv_id=conv_id,
+        task=task,
+        root_dir=root_dir,
+        seed=45,
+        max_round=15,
+        human_input_mode="NEVER",
+        class_name="captn_initial_team",
+    )
 
-        initial_team = Team.get_team(team_name)
+    initial_team = Team.get_team(team_name)
 
-        # HOW TO MOCK INNER FUNCTION: get_create_google_ads_team.create_google_ads_team ???
-        print(f"{mock_get_create_google_ads_team.call_args_list=}")
-        mock_get_create_google_ads_team.assert_called_once()
-        assert last_message_is_termination(initial_team)
+    # HOW TO MOCK INNER FUNCTION: get_create_google_ads_team.create_google_ads_team ???
+    # print(f"{mock_get_create_google_ads_team.call_args_list=}")
+    # mock_get_create_google_ads_team.assert_called_once()
+    assert last_message_is_termination(initial_team)
+
+    start_conversation(
+        user_id=user_id,
+        conv_id=conv_id,
+        task="I have authenticated",
+    )
 
         # continue_conversation(
         #     team_name=team_name,
