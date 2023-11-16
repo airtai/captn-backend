@@ -67,9 +67,21 @@ lint = [
     "semgrep==1.48.0",
 ]
 
+test-core = [
+    "coverage[toml]>=7.2,<8",
+    "pytest==7.4.3,<8",
+    "pytest-asyncio>=0.21",
+    "dirty-equals==0.6.0",
+]
+
+testing = [
+    "captn[test-core]",
+    "watchfiles",
+]
+
 
 dev = [
-    "captn[lint]",
+    "captn[lint,testing]",
     "pre-commit==3.5.0",
     "detect-secrets==1.4.0",
 ]
