@@ -220,3 +220,52 @@ answer_the_question_config = {
         "required": ["answer", "team_name"],
     },
 }
+
+calculate_credit_config = {
+    "name": "calculate_credit",
+    "description": "Calculate the credit",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "credit_duration": {
+                "type": "string",
+                "description": "Loan repayment term",
+            },
+            "amount_euro": {
+                "type": "string",
+                "description": "Total loan amount in euros",
+            },
+        },
+        "required": ["credit_duration", "amount_euro"],
+    },
+}
+
+create_banking_credit_calculation_team_config = {
+    "name": "create_banking_credit_calculation_team",
+    "description": "Create banking team dedicated for the credit calculation",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "task": {
+                "type": "string",
+                "description": "A task which needs to be solved",
+            },
+        },
+        "required": ["task"],
+    },
+}
+
+reply_to_client_config = {
+    "name": "reply_to_client",
+    "description": "Respond to the client (answer to his task or question for additional information)",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string",
+                "description": "Message for the client",
+            },
+        },
+        "required": ["message"],
+    },
+}

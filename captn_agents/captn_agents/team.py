@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import autogen
 
-from .config import CONFIG_LIST
+from captn_agents.config import CONFIG_LIST
 
 
 class Team:
@@ -206,13 +206,14 @@ You can leverage access to the following resources:
     def initiate_chat(self) -> None:
         self.manager.initiate_chat(self.manager, message=self.initial_message)
 
-    def get_last_message(self) -> str:
+    def get_last_message(self, add_prefix: bool = True) -> str:
         last_message: str = self.manager.chat_messages[self.members[0]][-1]["content"]
         last_message = last_message.replace("PAUSE", "").replace(
             "TERMINATE", ""
         )  # todo: ???
 
-        last_message = f"Response from team '{self.name}':\n{last_message}"
+        if add_prefix:
+            last_message = f"Response from team '{self.name}':\n{last_message}"
 
         return last_message
 

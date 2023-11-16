@@ -6,6 +6,7 @@ __all__ = [
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from .banking_initial_team import BookingInitialTeam
 from .captn_initial_team import CaptnInitialTeam
 from .initial_team import InitialTeam
 from .team import Team
@@ -44,6 +45,30 @@ captn_initial_team_roles_always = [
     },
 ]
 
+banking_initial_team_roles_never = [
+    {
+        "Name": "User_proxy",
+        "Description": """You are a proxy between the client and the Account_manager. do NOT suggest any code or execute the code by yourself.""",
+    },
+    {
+        "Name": "Account_manager",
+        "Description": "You are an account manager in the bank.",
+    },
+]
+
+banking_initial_team_roles_always = [
+    {
+        "Name": "User_proxy",
+        "Description": """You are a proxy between client and the Account_manager. When you want to ask the client a question or return to him a summary of what has been done,
+    use the 'reply_to_client' command. The message which will be sent to the user must ALWAYS be written in CROATIAN language.""",
+    },
+    {
+        "Name": "Account_manager",
+        "Description": "You are an account manager in the bank.",
+    },
+]
+
+
 roles_dictionary = {
     "initial_team": {
         "human_input_mode": {"NEVER": initial_team_roles_never, "ALWAYS": []},
@@ -55,6 +80,13 @@ roles_dictionary = {
             "ALWAYS": captn_initial_team_roles_always,
         },
         "class": CaptnInitialTeam,
+    },
+    "banking_initial_team": {
+        "human_input_mode": {
+            "NEVER": banking_initial_team_roles_always,  # banking_initial_team_roles_never,
+            "ALWAYS": banking_initial_team_roles_always,
+        },
+        "class": BookingInitialTeam,
     },
 }
 
@@ -103,7 +135,7 @@ def start_conversation(
         initial_team.initiate_chat()
 
         team_name = initial_team.name
-        last_message = initial_team.get_last_message()
+        last_message = initial_team.get_last_message(add_prefix=False)
 
         return team_name, last_message
 
@@ -116,6 +148,6 @@ def continue_conversation(team_name: str, message: str) -> str:
 
     initial_team.continue_chat(message=message)
 
-    last_message = initial_team.get_last_message()
+    last_message: str = initial_team.get_last_message(add_prefix=False)
 
     return last_message
