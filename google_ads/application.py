@@ -155,7 +155,9 @@ async def list_accessible_customers(user_id: int = Query(title="User ID")) -> Li
         customer_ids = [x.split("/")[-1] for x in accessible_customers.resource_names]
         return customer_ids
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
 
 
 # Route 4: Fetch user's ad campaign data
@@ -195,6 +197,8 @@ async def search(
             except GoogleAdsException:
                 print(f"Exception for {customer_id}")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
 
     return campaign_data

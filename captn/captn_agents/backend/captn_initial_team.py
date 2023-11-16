@@ -1,7 +1,12 @@
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .function_configs import answer_the_question_config, create_google_ads_team_config
+from .function_configs import (
+    answer_the_question_config,
+    create_google_ads_team_config,
+    reply_to_client_config,
+)
+from .functions import reply_to_client
 from .google_ads_team import (
     a_answer_the_question,
     answer_the_question,
@@ -15,6 +20,7 @@ class CaptnInitialTeam(InitialTeam):
     _functions: List[Dict[str, Any]] = [
         create_google_ads_team_config,
         answer_the_question_config,
+        reply_to_client_config,
     ]
 
     def __init__(
@@ -64,6 +70,9 @@ Your current task is:
 You have access to the following commands:
 1. create_google_ads_team: Create Google Ads team for solving the task, params: (task: string)
 2. answer_the_question: Answer to the teams question, params: (answer: string, team_name: str)
+
+Only the User_proxy has access to the following commands:
+1. reply_to_client: Respond to the client (answer to his task or question for additional information), params: (message: string)
 """
 
     @property
@@ -82,6 +91,7 @@ Your TASK description:
         function_map = {
             "create_google_ads_team": lambda task: create_google_ads_team(task),
             "answer_the_question": answer_the_question,
+            "reply_to_client": reply_to_client,
         }
 
         return function_map
