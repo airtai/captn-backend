@@ -2,11 +2,11 @@ import shutil
 import unittest
 from pathlib import Path
 
-from captn_agents.end_to_end import start_conversation
-from captn_agents.google_ads_team import (
+from captn.captn_agents.backend.end_to_end import start_conversation
+from captn.captn_agents.backend.google_ads_team import (
     get_create_google_ads_team,
 )
-from captn_agents.team import Team
+from captn.captn_agents.backend.team import Team
 
 from .utils import last_message_is_termination
 

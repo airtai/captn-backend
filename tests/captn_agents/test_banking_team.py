@@ -1,7 +1,7 @@
 import unittest
 
 # from unittest.mock import Mock
-from captn_agents.banking_team import BankingTeam
+from captn.captn_agents.backend.banking_team import BankingTeam
 
 from .utils import last_message_is_termination
 
@@ -11,7 +11,7 @@ def test_get_login_url() -> None:
     task = "I need a loan for 100,000 euros for a period of 10 years. Please provide me the credit calculation"
 
     with unittest.mock.patch(
-        "captn_agents.banking_team.ask_for_additional_info",
+        "captn.captn_agents.backend.banking_team.ask_for_additional_info",
         return_value="I don't know, I am fine with any proposal you suggest",  # type: ignore
     ):
         google_ads_team = BankingTeam(task=task, user_id=user_id)

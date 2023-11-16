@@ -1,11 +1,11 @@
 import json
 from unittest.mock import Mock
 
-from captn_agents.planning_team import (
+from captn.captn_agents.backend.planning_team import (
     PlanningTeam,
     create_planning_team,
 )
-from captn_agents.team import Team
+from captn.captn_agents.backend.team import Team
 
 from .utils import last_message_is_termination
 

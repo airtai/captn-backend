@@ -1,4 +1,4 @@
-from captn_agents.team import Team
+from captn.captn_agents.backend.team import Team
 
 
 def last_message_is_termination(team: Team) -> bool:

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .captn_agents.end_to_end import start_conversation
+from .backend.end_to_end import start_conversation
 
 router = APIRouter()
 

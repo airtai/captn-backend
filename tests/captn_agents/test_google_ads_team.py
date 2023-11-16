@@ -1,7 +1,7 @@
 import unittest
 
 # from unittest.mock import Mock
-from captn_agents.google_ads_team import (
+from captn.captn_agents.backend.google_ads_team import (
     GoogleAdsTeam,
 )
 
@@ -24,7 +24,7 @@ def _login_was_called(google_ads_team: GoogleAdsTeam) -> bool:
 def test_get_login_url() -> None:
     user_id = 13
     with unittest.mock.patch(
-        "captn_agents.google_ads_team.get_login_url",
+        "captn.captn_agents.backend.google_ads_team.get_login_url",
         return_value={
             "login_url": f"https://accounts.google.com/o/oauth2/auth?client_id=476761633153-o81jdsampd62i4biqef0k82494mepkjs.apps.googleusercontent.com&redirect_uri=http://localhost:9000/login/callback&response_type=code&scope=https://www.googleapis.com/auth/adwords email&access_type=offline&prompt=consent&state={user_id}"
         },  # type: ignore
@@ -42,7 +42,7 @@ def test_list_accessible_customers() -> None:
     task = "List all the accesible customers"
     user_id = 13
     with unittest.mock.patch(
-        "captn_agents.google_ads_team.list_accessible_customers",
+        "captn.captn_agents.backend.google_ads_team.list_accessible_customers",
         return_value=["8942812744", "2324127278", "7119828439", "6505006790", "8913146119"],  # type: ignore
     ) as mock_list_accessible_customers:
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
@@ -122,7 +122,7 @@ def test_query_is_none() -> None:
     user_id = 13
     task = "Search database for customer ids: 8942812744 and 2324127278"
     with unittest.mock.patch(
-        "captn_agents.google_ads_team.execute_query",
+        "captn.captn_agents.backend.google_ads_team.execute_query",
         return_value=query_result,  # type: ignore
     ) as mock_query:
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
@@ -136,7 +136,7 @@ def test_query() -> None:
     user_id = 13
     task = "Search database for customer ids: 8942812744, 2324127278 and query: SELECT * FROM keyword_view"
     with unittest.mock.patch(
-        "captn_agents.google_ads_team.execute_query",
+        "captn.captn_agents.backend.google_ads_team.execute_query",
         return_value=query_result,  # type: ignore
     ) as mock_query:
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
@@ -152,7 +152,7 @@ def test_report_creation() -> None:
     user_id = 13
     task = "Create report for all customers and all campaigns"
     with unittest.mock.patch(
-        "captn_agents.google_ads_team.ask_for_additional_info",
+        "captn.captn_agents.backend.google_ads_team.ask_for_additional_info",
         return_value="I don't know, I am fine with any proposal you suggest",  # type: ignore
     ):
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
@@ -165,7 +165,7 @@ def test_optimize_campaign() -> None:
     user_id = 13
     task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
     with unittest.mock.patch(
-        "captn_agents.google_ads_team.ask_for_additional_info",
+        "captn.captn_agents.backend.google_ads_team.ask_for_additional_info",
         return_value="I don't know, please propose a solution and let's go with it without checking with me again.",  # type: ignore
     ):
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)

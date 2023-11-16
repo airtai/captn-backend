@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 from unittest.mock import Mock
 
-from captn_agents.execution_team import (
+from captn.captn_agents.backend.execution_team import (
     ExecutionTeam,
     get_create_execution_team,
     get_execute_command,
@@ -10,7 +10,7 @@ from captn_agents.execution_team import (
     get_write_to_file,
     list_files,
 )
-from captn_agents.team import Team
+from captn.captn_agents.backend.team import Team
 
 from .utils import last_message_is_termination
 

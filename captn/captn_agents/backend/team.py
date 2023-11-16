@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import autogen
 
-from captn_agents.config import CONFIG_LIST
+from .config import CONFIG_LIST
 
 
 class Team:

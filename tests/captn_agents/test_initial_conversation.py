@@ -2,7 +2,7 @@
 from typing import Any, Dict, Union
 from unittest.mock import Mock
 
-from captn_agents.initial_team import InitialTeam
+from captn.captn_agents.backend.initial_team import InitialTeam
 
 from .utils import last_message_is_termination
 
@@ -40,7 +40,8 @@ initial_team = InitialTeam(
     user_id=1,
     task=task,
     roles=roles,
-    function_map=function_map,  # type: ignore
+    conv_id=13,
+    # function_map=function_map,  # type: ignore
     human_input_mode="NEVER",
 )
 
