@@ -2,7 +2,12 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .function_configs import answer_the_question_config, create_google_ads_team_config
-from .google_ads_team import answer_the_question, get_create_google_ads_team
+from .google_ads_team import (
+    a_answer_the_question,
+    answer_the_question,
+    get_a_create_google_ads_team,
+    get_create_google_ads_team,
+)
 from .initial_team import InitialTeam
 
 
@@ -24,6 +29,7 @@ class CaptnInitialTeam(InitialTeam):
         seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "ALWAYS",
+        use_async: bool = False,
     ):
         super().__init__(
             user_id=user_id,
@@ -35,6 +41,7 @@ class CaptnInitialTeam(InitialTeam):
             seed=seed,
             temperature=temperature,
             human_input_mode=human_input_mode,
+            use_async=use_async,
         )
 
     @property
@@ -75,6 +82,21 @@ Your TASK description:
         function_map = {
             "create_google_ads_team": lambda task: create_google_ads_team(task),
             "answer_the_question": answer_the_question,
+        }
+
+        return function_map
+
+    def _get_function_map_async(
+        self, user_id: int, working_dir: Path
+    ) -> Dict[str, Any]:
+        a_create_google_ads_team = get_a_create_google_ads_team(
+            user_id=user_id,
+            working_dir=working_dir,
+        )
+
+        function_map = {
+            "create_google_ads_team": a_create_google_ads_team,
+            "answer_the_question": a_answer_the_question,
         }
 
         return function_map

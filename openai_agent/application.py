@@ -2,7 +2,7 @@ from os import environ
 from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
-from openai import AsyncAzureOpenAI
+from openai import AsyncAzureOpenAI  # type: ignore
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -52,7 +52,7 @@ async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
             status_code=500, detail=f"Internal server error: {e}"
         ) from e
     result = completion.choices[0].message.content
-    return result  # type: ignore[return-value]
+    return result  # type: ignore
 
 
 @router.post("/openai/chat")
