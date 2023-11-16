@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .captn_agents.end_to_end import start_conversation
+from .backend.end_to_end import start_conversation
 
 router = APIRouter()
 
@@ -29,23 +29,22 @@ def chat(request: CaptnAgentRequest) -> str:
 
 if __name__ == "__main__":
     request = CaptnAgentRequest(
-        message = "What are the metods for campaign optimization",
-        user_id = 3,
-        conv_id = 5,
+        message="What are the metods for campaign optimization",
+        user_id=3,
+        conv_id=5,
     )
 
     last_message = chat(request=request)
-    print("*"*100)
+    print("*" * 100)
     print(f"User will receive the following message:\n{last_message}")
-    print("*"*100)
-
+    print("*" * 100)
 
     request = CaptnAgentRequest(
-        message = "I have logged in",
-        user_id = 3,
-        conv_id = 5,
+        message="I have logged in",
+        user_id=3,
+        conv_id=5,
     )
     last_message = chat(request=request)
-    print("*"*100)
+    print("*" * 100)
     print(f"User will receive the following message:\n{last_message}")
-    print("*"*100)
+    print("*" * 100)

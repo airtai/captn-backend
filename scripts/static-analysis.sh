@@ -2,10 +2,10 @@
 set -e
 
 # echo "Running mypy..."
-# mypy captn google_ads openai_agent application.py
+mypy captn google_ads openai_agent application.py
 
 echo "Running bandit..."
-bandit -c pyproject.toml -r captn
+bandit -c pyproject.toml -r captn google_ads openai_agent application.py
 
 echo "Running semgrep..."
 semgrep scan --config auto --error
