@@ -4,7 +4,6 @@ import ast
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Union
 
-# from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from ...google_ads.client import (
     get_login_url,
     list_accessible_customers,
@@ -19,6 +18,8 @@ from .function_configs import (
     list_accessible_customers_config,
 )
 from .functions import ask_for_additional_info
+
+# from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
 
 
@@ -118,6 +119,7 @@ questions using the 'ask_for_additional_info' function.
 5. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 6. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
+7. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the neccessary informations.
 """
 
     @property
@@ -134,6 +136,9 @@ ONLY Google ads specialist can suggest following commands:
 2. 'list_accessible_customers': List all the customers accessible to the user, no input params: ()
 3. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
 Example of customer_ids parameter: ["12", "44", "111"]
+You can use optional parameter 'query' for writing SQL queries. e.g.:
+"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
+FROM keyword_view WHERE segments.date DURING LAST_7_DAYS"
 """
 
 

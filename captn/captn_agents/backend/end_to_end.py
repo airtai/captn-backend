@@ -37,7 +37,8 @@ If you receive a login link, just reply with: 'I am logged in now'""",
 captn_initial_team_roles_always = [
     {
         "Name": "User_proxy",
-        "Description": """You are a proxy between the real user and the Account_manager. Each time you receive a message for the user, just repeat the message and add 'TERMINATE' to the end""",
+        "Description": """You are a proxy between the real user and the Account_manager. When you want to ask the client a question or return to him a summary of what has been done,
+use the 'reply_to_client' command. The message which will be sent to the user must ALWAYS be written in CROATIAN language.""",
     },
     {
         "Name": "Account_manager",
@@ -104,7 +105,7 @@ def _get_initial_team(
     human_input_mode: str,
     class_name: str,
     use_async: bool = False,
-) -> Tuple[Optional[Team], str]:
+) -> Tuple[Optional[Team], str, bool]:
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
 
@@ -136,7 +137,7 @@ def _get_initial_team(
             use_async=use_async,
         )
 
-    return initial_team, team_name
+    return initial_team, team_name, create_new_conv
 
 
 def start_conversation(
@@ -152,7 +153,7 @@ def start_conversation(
     human_input_mode: str = "ALWAYS",
     class_name: str = "initial_team",
 ) -> Tuple[str, str]:
-    initial_team, team_name = _get_initial_team(
+    initial_team, team_name, create_new_conv = _get_initial_team(
         user_id=user_id,
         conv_id=conv_id,
         root_dir=root_dir,
@@ -164,7 +165,7 @@ def start_conversation(
         human_input_mode=human_input_mode,
         class_name=class_name,
     )
-    if initial_team:
+    if create_new_conv and initial_team:
         initial_team.initiate_chat()
 
         team_name = initial_team.name
@@ -189,7 +190,7 @@ async def a_start_conversation(
     human_input_mode: str = "ALWAYS",
     class_name: str = "initial_team",
 ) -> Tuple[str, str]:
-    initial_team, team_name = _get_initial_team(
+    initial_team, team_name, create_new_conv = _get_initial_team(
         user_id=user_id,
         conv_id=conv_id,
         root_dir=root_dir,
@@ -202,7 +203,7 @@ async def a_start_conversation(
         class_name=class_name,
         use_async=True,
     )
-    if initial_team:
+    if create_new_conv and initial_team:
         await initial_team.a_initiate_chat()
 
         team_name = initial_team.name
