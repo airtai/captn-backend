@@ -23,22 +23,22 @@ CONFIG_LIST = [
     {
         "model": "gpt-4",
         "api_key": api_key_sweeden,
-        "base_url": api_base_sweeden,
+        "api_base": api_base_sweeden,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
-        # "engine": "airt-gpt4",
+        "engine": "airt-gpt4",
     },
     {
         "model": "gpt-4",
         "api_key": api_key_canada,
-        "base_url": api_base_canada,
+        "api_base": api_base_canada,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
-        # "engine": "airt-canada-gpt4",
+        "engine": "airt-canada-gpt4",
     },
-    {
-        # "model": "gpt-4-1106-preview",
-        "model": "gpt-4",
-        "api_key": api_key_openai,
-    },
+    # {
+    #     # "model": "gpt-4-1106-preview",
+    #     "model": "gpt-4",
+    #     "api_key": api_key_openai,
+    # },
 ]
