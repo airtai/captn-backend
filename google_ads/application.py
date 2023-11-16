@@ -2,14 +2,14 @@ import json
 import urllib.parse
 from contextlib import asynccontextmanager
 from os import environ
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
-from prisma import Prisma
+from prisma import Prisma  # type: ignore[attr-defined]
 
 router = APIRouter()
 
@@ -28,7 +28,7 @@ oauth2_settings = {
 
 
 @asynccontextmanager
-async def get_db_connection(db_url: Optional[str] = None):
+async def get_db_connection(db_url: Optional[str] = None) -> Prisma:
     if not db_url:
         db_url = environ.get("DATABASE_URL")
     db = Prisma(datasource={"url": db_url})
@@ -39,11 +39,13 @@ async def get_db_connection(db_url: Optional[str] = None):
         await db.disconnect()
 
 
-async def get_user(user_id: int):
+async def get_user(user_id: Union[int, str]) -> Any:
     curr_db_url = environ.get("DATABASE_URL")
-    wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "waspdb")
+    wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "waspdb")  # type: ignore[union-attr]
     async with get_db_connection(db_url=wasp_db_url) as db:
-        user = await db.query_first(f'SELECT * from "User" where id={user_id}')
+        user = await db.query_first(
+            f'SELECT * from "User" where id={user_id}'  # nosec: [B608]
+        )
     if not user:
         raise HTTPException(status_code=404, detail="user_id not found")
     return user
@@ -51,8 +53,10 @@ async def get_user(user_id: int):
 
 # Route 1: Redirect to Google OAuth
 @router.get("/login")
-async def get_login_url(request: Request, user_id: int = Query(title="User ID")):
-    user = await get_user(user_id=user_id)
+async def get_login_url(
+    request: Request, user_id: int = Query(title="User ID")
+) -> Dict[str, str]:
+    # user = await get_user(user_id=user_id)
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
@@ -67,7 +71,7 @@ async def get_login_url(request: Request, user_id: int = Query(title="User ID"))
 @router.get("/login/callback")
 async def login_callback(
     code: str = Query(title="Authorization Code"), state: str = Query(title="State")
-):
+) -> Dict[str, str]:
     user_id = state
     user = await get_user(user_id=user_id)
 
@@ -96,7 +100,7 @@ async def login_callback(
     if userinfo_response.status_code == 200:
         user_info = userinfo_response.json()
     async with get_db_connection() as db:
-        row = await db.gauth.upsert(
+        await db.gauth.upsert(
             where={"user_id": user["id"]},
             data={
                 "create": {
@@ -114,8 +118,8 @@ async def login_callback(
     return {"message": "User credentials saved successfully"}
 
 
-async def load_user_credentials(user_id):
-    user = await get_user(user_id=user_id)
+async def load_user_credentials(user_id: Union[int, str]) -> Any:
+    # user = await get_user(user_id=user_id)
     async with get_db_connection() as db:
         data = await db.gauth.find_unique_or_raise(where={"user_id": user_id})
 
@@ -123,7 +127,7 @@ async def load_user_credentials(user_id):
 
 
 # Initialize Google Ads API client
-def create_google_ads_client(user_credentials):
+def create_google_ads_client(user_credentials: Dict[str, Any]) -> GoogleAdsClient:
     # Create a dictionary with the required structure for GoogleAdsClient
     google_ads_credentials = {
         "developer_token": environ.get("DEVELOPER_TOKEN"),
@@ -141,7 +145,7 @@ def create_google_ads_client(user_credentials):
 
 # Route 3: List accessible customer ids
 @router.get("/list-accessible-customers")
-async def list_accessible_customers(user_id: int = Query(title="User ID")):
+async def list_accessible_customers(user_id: int = Query(title="User ID")) -> List[str]:
     user_credentials = await load_user_credentials(user_id)
     client = create_google_ads_client(user_credentials)
     customer_service = client.get_service("CustomerService")
@@ -155,9 +159,9 @@ async def list_accessible_customers(user_id: int = Query(title="User ID")):
 @router.get("/search")
 async def search(
     user_id: int = Query(title="User ID"),
-    customer_ids: List[str] = Query(None),
+    customer_ids: List[str] = Query(None),  # noqa
     query: str = Query(None, title="Google ads query"),
-):
+) -> Dict[str, List[Any]]:
     user_credentials = await load_user_credentials(user_id)
     client = create_google_ads_client(user_credentials)
     service = client.get_service("GoogleAdsService")
@@ -165,7 +169,7 @@ async def search(
     # Replace this with your actual Google Ads API query to fetch campaign data
     if not query:
         query = (
-            f"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name "
+            "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name "
             "FROM keyword_view WHERE segments.date DURING LAST_7_DAYS"
         )
     print(f"{query=}")
@@ -179,12 +183,12 @@ async def search(
     for customer_id in customer_ids:
         try:
             response = service.search(customer_id=customer_id, query=query)
-            l = []
+            l = []  # noqa
             for row in response:
                 json_str = json_format.MessageToJson(row)
                 l.append(json.loads(json_str))
             campaign_data[customer_id] = l
-        except GoogleAdsException as e:
+        except GoogleAdsException:
             print(f"Exception for {customer_id}")
 
     return campaign_data

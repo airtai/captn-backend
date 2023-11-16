@@ -7,9 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from .captn_initial_team import CaptnInitialTeam
-from .initial_team import (
-    InitialTeam,
-)
+from .initial_team import InitialTeam
 from .team import Team
 
 initial_team_roles_never = [

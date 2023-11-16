@@ -6,10 +6,7 @@ __all__ = [
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .function_configs import (
-    answer_to_team_lead_question_config,
-    create_team_config,
-)
+from .function_configs import answer_to_team_lead_question_config, create_team_config
 from .planning_team import (
     answer_to_team_lead_question,
     create_planning_team,

@@ -11,11 +11,7 @@ from .function_configs import (
     list_accessible_customers_config,
 )
 from .functions import ask_for_additional_info
-from .google_ads_mock import (
-    execute_query,
-    get_login_url,
-    list_accessible_customers,
-)
+from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
 
 

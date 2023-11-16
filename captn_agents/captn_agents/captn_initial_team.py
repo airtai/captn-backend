@@ -1,14 +1,8 @@
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .function_configs import (
-    answer_the_question_config,
-    create_google_ads_team_config,
-)
-from .google_ads_team import (
-    answer_the_question,
-    get_create_google_ads_team,
-)
+from .function_configs import answer_the_question_config, create_google_ads_team_config
+from .google_ads_team import answer_the_question, get_create_google_ads_team
 from .initial_team import InitialTeam
 
 

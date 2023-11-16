@@ -3,9 +3,9 @@ from fastapi import FastAPI
 
 load_dotenv()
 
-import captn_agents
-import google_ads
-import openai_agent
+import captn_agents  # noqa
+import google_ads  # noqa
+import openai_agent  # noqa
 
 app = FastAPI()
 app.include_router(openai_agent.router, tags=["OpenAI"])
@@ -15,4 +15,4 @@ app.include_router(captn_agents.router, tags=["Captn Agents"])
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=9000)
+    uvicorn.run(app, host="0.0.0.0", port=9000)  # nosec [B104]

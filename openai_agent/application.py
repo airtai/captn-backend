@@ -1,4 +1,3 @@
-import json
 from os import environ
 from typing import Dict, List
 
@@ -12,7 +11,7 @@ router = APIRouter()
 azure_openai_client = AsyncAzureOpenAI(
     api_key=environ.get("AZURE_OPENAI_API_KEY"),
     api_version=environ.get("AZURE_API_VERSION"),
-    azure_endpoint=environ.get("AZURE_API_ENDPOINT"),
+    azure_endpoint=environ.get("AZURE_API_ENDPOINT"),  # type: ignore[arg-type]
     max_retries=5,  # default is 2
 )
 
@@ -46,12 +45,14 @@ async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation
         completion = await azure_openai_client.chat.completions.create(
-            model=environ.get("AZURE_MODEL"), messages=messages
+            model=environ.get("AZURE_MODEL"), messages=messages  # type: ignore[arg-type]
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {e}"
+        ) from e
     result = completion.choices[0].message.content
-    return result
+    return result  # type: ignore[return-value]
 
 
 @router.post("/openai/chat")
