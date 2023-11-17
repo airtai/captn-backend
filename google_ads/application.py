@@ -78,9 +78,11 @@ async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
 # Route 1: Redirect to Google OAuth
 @router.get("/login")
 async def get_login_url(
-    request: Request, user_id: int = Query(title="User ID"), conv_id: int = Query(title="Conversation ID")
+    request: Request,
+    user_id: int = Query(title="User ID"),
+    conv_id: int = Query(title="Conversation ID"),
 ) -> Dict[str, str]:
-    user = await get_user(user_id=user_id)
+    await get_user(user_id=user_id)
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
@@ -96,7 +98,7 @@ async def get_login_url(
 @router.get("/login/callback")
 async def login_callback(
     code: str = Query(title="Authorization Code"), state: str = Query(title="State")
-) -> Dict[str, str]:
+) -> RedirectResponse:
     conv_id = state
     user_id = await get_user_id_from_conversation(conv_id)
     user = await get_user(user_id=user_id)
@@ -148,7 +150,7 @@ async def login_callback(
 
 
 async def load_user_credentials(user_id: Union[int, str]) -> Any:
-    user = await get_user(user_id=user_id)
+    await get_user(user_id=user_id)
     async with get_db_connection() as db:
         data = await db.gauth.find_unique_or_raise(where={"user_id": user_id})
 
