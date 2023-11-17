@@ -65,13 +65,13 @@ async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
         )
         if not conversation:
             raise HTTPException(status_code=404, detail=f"conv_id {conv_id} not found")
-        chat_id = conversation["chatid"]
+        chat_id = conversation["chatId"]
         chat = await db.query_first(
             f'SELECT * from "Chat" where id={chat_id}'  # nosec: [B608]
         )
         if not chat:
             raise HTTPException(status_code=404, detail=f"chat_id {chat_id} not found")
-    user_id = chat["userid"]
+    user_id = chat["userId"]
     return user_id
 
 
