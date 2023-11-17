@@ -38,7 +38,7 @@ captn_initial_team_roles_always = [
     {
         "Name": "User_proxy",
         "Description": """You are a proxy between the real user and the Account_manager. When you want to ask the client a question or return to him a summary of what has been done,
-use the 'reply_to_client' command. The message which will be sent to the user must ALWAYS be written in CROATIAN language.""",
+use the 'reply_to_client' command.""",
     },
     {
         "Name": "Account_manager",

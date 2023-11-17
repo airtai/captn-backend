@@ -8,10 +8,6 @@ from .utils import last_message_is_termination
 
 
 def test_end_to_end() -> None:
-    root_dir = Path("./logs/captn").resolve()
-    if root_dir.exists():
-        shutil.rmtree(root_dir)
-
     task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
     user_id = 1
     conv_id = 17
@@ -52,3 +48,39 @@ def test_end_to_end() -> None:
     #     team_name=team_name,
     #     message="Please write a summary of what has been done",
     # )
+
+
+def test_hello() -> None:
+    task = "Hello"
+    user_id = 1
+    conv_id = 17
+
+    team_name, last_message = start_conversation(
+        user_id=user_id,
+        conv_id=conv_id,
+        task=task,
+        max_round=80,
+        human_input_mode="NEVER",
+        class_name="captn_initial_team",
+    )
+
+    initial_team = Team.get_team(team_name)
+    assert last_message_is_termination(initial_team)
+
+
+def test_non_relevant_questions() -> None:
+    task = "Which city is the capital of Croatia?"
+    user_id = 1
+    conv_id = 17
+
+    team_name, last_message = start_conversation(
+        user_id=user_id,
+        conv_id=conv_id,
+        task=task,
+        max_round=80,
+        human_input_mode="NEVER",
+        class_name="captn_initial_team",
+    )
+
+    initial_team = Team.get_team(team_name)
+    assert last_message_is_termination(initial_team)
