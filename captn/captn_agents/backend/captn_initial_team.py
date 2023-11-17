@@ -59,8 +59,14 @@ Your current task is:
     @property
     def _guidelines(self) -> str:
         return """## Guidelines
-1. If Google Ads team sends you a login link, the link must be forwarded to the user
-2. Once the user is logged in, you need to suggest the 'answer_the_question' command and answer with:
+### Basic Guidelines
+Here are few mandatory guidelines which you mus ALWAYS follow:
+1. If you receive a simple question/message from the client, try to answer it quickly (do NOT create google ads team for these messages)
+2. Do NOT try answer to questions non related with Digital marketing, just reply: "I am a digital marketing assistant, I cannot answer questions on other topics"
+
+### Google Ads Guidelines
+3. If Google Ads team sends you a login link, the link must be forwarded to the user (always use Markdown when returning url links)
+4. Once the user is logged in, you need to suggest the 'answer_the_question' command and answer with:
 'User has logged in, please continue'. This will enable the Google Ads team to continue with the task.
 """
 
@@ -82,9 +88,12 @@ Your TASK description:
 \n{self.task}
 """
 
-    def _get_function_map(self, user_id: int, working_dir: Path) -> Dict[str, Any]:
+    def _get_function_map(
+        self, user_id: int, conv_id: int, working_dir: Path
+    ) -> Dict[str, Any]:
         create_google_ads_team = get_create_google_ads_team(
             user_id=user_id,
+            conv_id=conv_id,
             working_dir=working_dir,
         )
 
@@ -97,10 +106,11 @@ Your TASK description:
         return function_map
 
     def _get_function_map_async(
-        self, user_id: int, working_dir: Path
+        self, user_id: int, conv_id: int, working_dir: Path
     ) -> Dict[str, Any]:
         a_create_google_ads_team = get_a_create_google_ads_team(
             user_id=user_id,
+            conv_id=conv_id,
             working_dir=working_dir,
         )
 

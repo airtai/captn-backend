@@ -1,18 +1,12 @@
-import pytest
-
 import shutil
-import unittest
 from pathlib import Path
+
+import pytest
 
 from captn.captn_agents.backend.end_to_end import a_start_conversation
 from captn.captn_agents.backend.google_ads_team import (
-    get_create_google_ads_team,
-)
-
-from captn.captn_agents.backend.google_ads_team import (
     GoogleAdsTeam,
 )
-
 from captn.captn_agents.backend.team import Team
 
 from .utils import last_message_is_termination
@@ -28,8 +22,10 @@ def _login_was_called(google_ads_team: GoogleAdsTeam) -> bool:
 @pytest.mark.asyncio
 async def test_get_login_url() -> None:
     user_id = 1
+    conv_id = 1
+
     task = "I need a login url"
-    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
+    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
     await google_ads_team.a_initiate_chat()
 
     assert _login_was_called(google_ads_team)

@@ -6,7 +6,7 @@ BASE_URL = environ.get(
 )
 
 
-def get_login_url(user_id: int) -> Dict[str, str]:
+def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     return {
         "login_url": f"https://accounts.google.com/o/oauth2/auth?client_id=476761633153-o81jdsampd62i4biqef0k82494mepkjs.apps.googleusercontent.com&redirect_uri=http://localhost:9000/login/callback&response_type=code&scope=https://www.googleapis.com/auth/adwords email&access_type=offline&prompt=consent&state={user_id}"
     }

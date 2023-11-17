@@ -36,14 +36,15 @@ class InitialTeam(Team):
         human_input_mode: str = "ALWAYS",
         use_async: bool = False,
     ):
+        self.conv_id = conv_id
         name = InitialTeam.get_user_conv_team_name(user_id=user_id, conv_id=conv_id)
         if use_async:
             function_map = self._get_function_map_async(
-                user_id=user_id, working_dir=Path(work_dir)
+                user_id=user_id, conv_id=conv_id, working_dir=Path(work_dir)
             )
         else:
             function_map = self._get_function_map(
-                user_id=user_id, working_dir=Path(work_dir)
+                user_id=user_id, conv_id=conv_id, working_dir=Path(work_dir)
             )
         super().__init__(
             roles=roles,
@@ -134,7 +135,9 @@ Your TASK description:
 
         self._create_groupchat_and_manager()
 
-    def _get_function_map(self, user_id: int, working_dir: Path) -> Dict[str, Any]:
+    def _get_function_map(
+        self, user_id: int, conv_id: int, working_dir: Path
+    ) -> Dict[str, Any]:
         function_map_initial_team = {
             "create_team": lambda json_as_a_string: create_planning_team(
                 json_as_a_string,
@@ -146,6 +149,6 @@ Your TASK description:
         return function_map_initial_team
 
     def _get_function_map_async(
-        self, user_id: int, working_dir: Path
+        self, user_id: int, conv_id: int, working_dir: Path
     ) -> Dict[str, Any]:
         raise NotImplementedError()
