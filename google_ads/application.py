@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
@@ -39,32 +40,56 @@ async def get_db_connection(db_url: Optional[str] = None) -> Prisma:
         await db.disconnect()
 
 
-async def get_user(user_id: Union[int, str]) -> Any:
+async def get_wasp_db_url() -> str:
     curr_db_url = environ.get("DATABASE_URL")
     wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "waspdb")  # type: ignore[union-attr]
+    return wasp_db_url
+
+
+async def get_user(user_id: Union[int, str]) -> Any:
+    wasp_db_url = await get_wasp_db_url()
     async with get_db_connection(db_url=wasp_db_url) as db:
         user = await db.query_first(
             f'SELECT * from "User" where id={user_id}'  # nosec: [B608]
         )
     if not user:
-        raise HTTPException(status_code=404, detail="user_id not found")
+        raise HTTPException(status_code=404, detail=f"user_id {user_id} not found")
     return user
+
+
+async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
+    wasp_db_url = await get_wasp_db_url()
+    async with get_db_connection(db_url=wasp_db_url) as db:
+        conversation = await db.query_first(
+            f'SELECT * from "Conversation" where id={conv_id}'  # nosec: [B608]
+        )
+        if not conversation:
+            raise HTTPException(status_code=404, detail=f"conv_id {conv_id} not found")
+        chat_id = conversation["chatid"]
+        chat = await db.query_first(
+            f'SELECT * from "Chat" where id={chat_id}'  # nosec: [B608]
+        )
+        if not chat:
+            raise HTTPException(status_code=404, detail=f"chat_id {chat_id} not found")
+    user_id = chat["userid"]
+    return user_id
 
 
 # Route 1: Redirect to Google OAuth
 @router.get("/login")
 async def get_login_url(
-    request: Request, user_id: int = Query(title="User ID")
+    request: Request, user_id: int = Query(title="User ID"), conv_id: int = Query(title="Conversation ID")
 ) -> Dict[str, str]:
-    # user = await get_user(user_id=user_id)
+    user = await get_user(user_id=user_id)
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
         f"&redirect_uri={oauth2_settings['redirectUri']}&response_type=code"
         f"&scope={urllib.parse.quote_plus('https://www.googleapis.com/auth/adwords email')}"
-        f"&access_type=offline&prompt=consent&state={user_id}"
+        f"&access_type=offline&prompt=consent&state={conv_id}"
     )
-    return {"login_url": google_oauth_url}
+    markdown_url = f"[Click Here]({google_oauth_url})"
+    return {"login_url": markdown_url}
 
 
 # Route 2: Save user credentials/token to a JSON file
@@ -72,7 +97,8 @@ async def get_login_url(
 async def login_callback(
     code: str = Query(title="Authorization Code"), state: str = Query(title="State")
 ) -> Dict[str, str]:
-    user_id = state
+    conv_id = state
+    user_id = await get_user_id_from_conversation(conv_id)
     user = await get_user(user_id=user_id)
 
     token_request_data = {
@@ -115,11 +141,14 @@ async def login_callback(
             },
         )
 
-    return {"message": "User credentials saved successfully"}
+    redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
+    logged_in_message = "I have successfully logged in"
+    redirect_uri = f"{redirect_domain}/chat/{conv_id}?msg={logged_in_message}"
+    return RedirectResponse(redirect_uri)
 
 
 async def load_user_credentials(user_id: Union[int, str]) -> Any:
-    # user = await get_user(user_id=user_id)
+    user = await get_user(user_id=user_id)
     async with get_db_connection() as db:
         data = await db.gauth.find_unique_or_raise(where={"user_id": user_id})
 
