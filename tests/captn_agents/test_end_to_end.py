@@ -1,7 +1,10 @@
 import shutil
 from pathlib import Path
 
-from captn.captn_agents.backend.end_to_end import continue_conversation, start_conversation
+from captn.captn_agents.backend.end_to_end import (
+    continue_conversation,
+    start_conversation,
+)
 from captn.captn_agents.backend.team import Team
 
 from .utils import last_message_is_termination

@@ -1,11 +1,7 @@
 import shutil
-from unittest import mock
 from pathlib import Path
 
 from captn.captn_agents.backend.end_to_end import start_conversation
-from captn.captn_agents.backend.google_ads_team import (
-    get_create_google_ads_team,
-)
 from captn.captn_agents.backend.team import Team
 
 from .utils import last_message_is_termination
@@ -19,7 +15,6 @@ def test_end_to_end() -> None:
     task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
     user_id = 1
     conv_id = 17
-    working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
 
     # create_google_ads_team = get_create_google_ads_team(
     #     user_id=user_id, conv_id=conv_id, working_dir=working_dir
@@ -53,7 +48,7 @@ def test_end_to_end() -> None:
         class_name="captn_initial_team",
     )
 
-        # continue_conversation(
-        #     team_name=team_name,
-        #     message="Please write a summary of what has been done",
-        # )
+    # continue_conversation(
+    #     team_name=team_name,
+    #     message="Please write a summary of what has been done",
+    # )
