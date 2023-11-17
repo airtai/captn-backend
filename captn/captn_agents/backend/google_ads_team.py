@@ -67,13 +67,15 @@ in the plan.
         *,
         task: str,
         user_id: int,
+        conv_id: int,
         work_dir: str = "google_ads",
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
     ):
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
-            user_id=user_id
+            user_id=user_id,
+            conv_id=conv_id,
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -88,7 +90,7 @@ in the plan.
             temperature=temperature,
             name=name,
         )
-
+        self.conv_id = conv_id
         self.task = task
         self.llm_config = GoogleAdsTeam.get_llm_config(
             seed=seed, temperature=temperature
@@ -142,7 +144,7 @@ FROM keyword_view WHERE segments.date DURING LAST_7_DAYS"
 """
 
 
-def _get_function_map(user_id: int) -> Dict[str, Any]:
+def _get_function_map(user_id: int, conv_id: int) -> Dict[str, Any]:
     def _string_to_list(customer_ids: Union[List[str], str]) -> List[str]:
         if isinstance(customer_ids, list):
             return customer_ids
@@ -156,7 +158,7 @@ def _get_function_map(user_id: int) -> Dict[str, Any]:
         )
 
     function_map = {
-        "get_login_url": lambda: get_login_url(user_id=user_id),
+        "get_login_url": lambda: get_login_url(user_id=user_id, conv_id=conv_id),
         "list_accessible_customers": lambda: list_accessible_customers(user_id=user_id),
         "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
             user_id, _string_to_list(customer_ids), query
@@ -167,14 +169,18 @@ def _get_function_map(user_id: int) -> Dict[str, Any]:
     return function_map
 
 
-def get_create_google_ads_team(user_id: int, working_dir: Path) -> Callable[[Any], Any]:
+def get_create_google_ads_team(
+    user_id: int, conv_id: int, working_dir: Path
+) -> Callable[[Any], Any]:
     def create_google_ads_team(
         task: str,
         user_id: int = user_id,
+        conv_id: int = conv_id,
     ) -> str:
         google_ads_team = GoogleAdsTeam(
             task=task,
             user_id=user_id,
+            conv_id=conv_id,
             work_dir=str(working_dir),
         )
 
@@ -198,15 +204,17 @@ def answer_the_question(answer: str, team_name: str) -> str:
 
 
 def get_a_create_google_ads_team(
-    user_id: int, working_dir: Path
+    user_id: int, conv_id: int, working_dir: Path
 ) -> Callable[[Any], Any]:
     async def a_create_google_ads_team(
         task: str,
         user_id: int = user_id,
+        conv_id: int = conv_id,
     ) -> str:
         google_ads_team = GoogleAdsTeam(
             task=task,
             user_id=user_id,
+            conv_id=conv_id,
             work_dir=str(working_dir),
         )
 

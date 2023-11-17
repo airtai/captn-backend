@@ -6,7 +6,7 @@ import requests
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 
 
-def get_login_url(user_id: int) -> Dict[str, str]:
+def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     params = {"user_id": user_id}
     response = requests.get(f"{BASE_URL}/login", params=params, timeout=10)
     return response.json()  # type: ignore[no-any-return]

@@ -21,9 +21,9 @@ def test_end_to_end() -> None:
     conv_id = 17
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
 
-    create_google_ads_team = get_create_google_ads_team(
-        user_id=user_id, working_dir=working_dir
-    )
+    # create_google_ads_team = get_create_google_ads_team(
+    #     user_id=user_id, conv_id=conv_id, working_dir=working_dir
+    # )
     # with mock.patch(
     #     "captn.captn_agents.captn_initial_team.get_create_google_ads_team",
     #     return_value=create_google_ads_team,

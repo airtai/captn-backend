@@ -82,9 +82,12 @@ Your TASK description:
 \n{self.task}
 """
 
-    def _get_function_map(self, user_id: int, working_dir: Path) -> Dict[str, Any]:
+    def _get_function_map(
+        self, user_id: int, conv_id: int, working_dir: Path
+    ) -> Dict[str, Any]:
         create_google_ads_team = get_create_google_ads_team(
             user_id=user_id,
+            conv_id=conv_id,
             working_dir=working_dir,
         )
 
@@ -97,10 +100,11 @@ Your TASK description:
         return function_map
 
     def _get_function_map_async(
-        self, user_id: int, working_dir: Path
+        self, user_id: int, conv_id: int, working_dir: Path
     ) -> Dict[str, Any]:
         a_create_google_ads_team = get_a_create_google_ads_team(
             user_id=user_id,
+            conv_id=conv_id,
             working_dir=working_dir,
         )
 

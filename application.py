@@ -5,6 +5,7 @@ load_dotenv()
 
 import captn.captn_agents  # noqa
 import google_ads  # noqa
+
 # import openai_agent  # noqa
 
 app = FastAPI()

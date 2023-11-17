@@ -28,8 +28,10 @@ def _login_was_called(google_ads_team: GoogleAdsTeam) -> bool:
 @pytest.mark.asyncio
 async def test_get_login_url() -> None:
     user_id = 1
+    conv_id = 1
+
     task = "I need a login url"
-    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id)
+    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
     await google_ads_team.a_initiate_chat()
 
     assert _login_was_called(google_ads_team)
