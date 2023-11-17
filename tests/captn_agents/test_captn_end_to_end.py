@@ -1,6 +1,3 @@
-import shutil
-from pathlib import Path
-
 from captn.captn_agents.backend.end_to_end import start_conversation
 from captn.captn_agents.backend.team import Team
 

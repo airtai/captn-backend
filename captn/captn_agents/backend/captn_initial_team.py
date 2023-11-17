@@ -61,8 +61,8 @@ Your current task is:
         return """## Guidelines
 ### Basic Guidelines
 Here are few mandatory guidelines which you mus ALWAYS follow:
-1. If you receive a simple question/message from the client, try to answer it quickly (do NOT create google ads team for these messages)     
-2. Do NOT try answer to questions non related with Digital marketing, just reply: "I am a digital marketing assistant, I cannot answer questions on other topics" 
+1. If you receive a simple question/message from the client, try to answer it quickly (do NOT create google ads team for these messages)
+2. Do NOT try answer to questions non related with Digital marketing, just reply: "I am a digital marketing assistant, I cannot answer questions on other topics"
 
 ### Google Ads Guidelines
 3. If Google Ads team sends you a login link, the link must be forwarded to the user (always use Markdown when returning url links)
