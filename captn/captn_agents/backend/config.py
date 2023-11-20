@@ -21,21 +21,29 @@ openai.api_version = "2023-07-01-preview"
 
 CONFIG_LIST = [
     {
-        "model": "gpt-4",
-        "api_key": api_key_sweeden,
-        "api_base": api_base_sweeden,
-        "api_type": openai.api_type,
-        "api_version": openai.api_version,
-        "engine": "airt-gpt4",
+        "model": "airt-canada-gpt4",
+        "api_base": "http://litellm.westeurope.cloudapp.azure.com:8000",  #litellm compatible endpoint
+        "api_type": "open_ai",
+        "api_key": "NULL", # just a placeholder
     },
-    {
-        "model": "gpt-4",
-        "api_key": api_key_canada,
-        "api_base": api_base_canada,
-        "api_type": openai.api_type,
-        "api_version": openai.api_version,
-        "engine": "airt-canada-gpt4",
-    },
+    # {
+    #     "model": "gpt-4",
+    #     "api_key": api_key_sweeden,
+    #     "api_base": api_base_sweeden,
+    #     "api_type": openai.api_type,
+    #     "api_version": openai.api_version,
+    #     "engine": "airt-gpt4",
+    # },
+    # {
+    #     "model": "gpt-4",
+    #     "api_key": api_key_canada,
+    #     "api_base": api_base_canada,
+    #     "api_type": openai.api_type,
+    #     "api_version": openai.api_version,
+    #     "engine": "airt-canada-gpt4",
+    # },
+
+    # DO NOT USE OPENAI FOR NOW
     # {
     #     # "model": "gpt-4-1106-preview",
     #     "model": "gpt-4",
