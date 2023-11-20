@@ -98,6 +98,18 @@ then
 	exit -1
 fi
 
+if test -z "$LITELLM_MODEL"
+then
+	echo "ERROR: LITELLM_MODEL variable must be defined, exiting"
+	exit -1
+fi
+
+if test -z "$LITELLM_API_BASE"
+then
+	echo "ERROR: LITELLM_API_BASE variable must be defined, exiting"
+	exit -1
+fi
+
 echo "INFO: stopping already running docker container"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker stop captn-backend || echo 'No containers available to stop'"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker container prune -f || echo 'No stopped containers to delete'"
@@ -111,4 +123,4 @@ echo "Deleting old image"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker system prune -f || echo 'No images to delete'"
 
 echo "INFO: starting docker container"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --name captn-backend -p $PORT:$PORT -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' -e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' -e AZURE_OPENAI_API_KEY='$AZURE_OPENAI_API_KEY' -e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' -e AZURE_MODEL='$AZURE_MODEL' -e AZURE_OPENAI_API_KEY_SWEEDEN='$AZURE_OPENAI_API_KEY_SWEEDEN' -e AZURE_OPENAI_API_KEY_CANADA='$AZURE_OPENAI_API_KEY_CANADA' -e OPENAI_API_KEY='$OPENAI_API_KEY' -d ghcr.io/$GITHUB_REPOSITORY:$TAG"
+ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --name captn-backend -p $PORT:$PORT -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' -e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' -e AZURE_OPENAI_API_KEY='$AZURE_OPENAI_API_KEY' -e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' -e AZURE_MODEL='$AZURE_MODEL' -e AZURE_OPENAI_API_KEY_SWEEDEN='$AZURE_OPENAI_API_KEY_SWEEDEN' -e AZURE_OPENAI_API_KEY_CANADA='$AZURE_OPENAI_API_KEY_CANADA' -e OPENAI_API_KEY='$OPENAI_API_KEY' -e LITELLM_MODEL='$LITELLM_MODEL' -e LITELLM_API_BASE='$LITELLM_API_BASE' -d ghcr.io/$GITHUB_REPOSITORY:$TAG"

@@ -7,6 +7,10 @@ __all__ = ["CONFIG_LIST"]
 
 load_dotenv()
 
+
+litellm_model= os.getenv("LITELLM_MODEL")
+litellm_api_base = os.getenv("LITELLM_API_BASE")
+
 api_key_sweeden = os.getenv("AZURE_OPENAI_API_KEY_SWEEDEN")
 api_base_sweeden = "https://airt-openai-sweden.openai.azure.com/"
 
@@ -21,8 +25,8 @@ openai.api_version = "2023-07-01-preview"
 
 CONFIG_LIST = [
     {
-        "model": "airt-canada-gpt4",
-        "api_base": "http://litellm.westeurope.cloudapp.azure.com:8000",  #litellm compatible endpoint
+        "model": litellm_model,
+        "api_base": litellm_api_base,  #litellm compatible endpoint
         "api_type": "open_ai",
         "api_key": "NULL", # just a placeholder
     },
