@@ -89,6 +89,7 @@ jobs:
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
             LITELLM_MODEL: ${{ secrets.LITELLM_MODEL }}
             LITELLM_API_BASE: ${{ secrets.LITELLM_API_BASE }}
+            LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
         steps:
             - uses: actions/checkout@v3
             # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989

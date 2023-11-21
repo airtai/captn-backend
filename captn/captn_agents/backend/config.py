@@ -19,6 +19,8 @@ api_base_canada = "https://airt-openai-canada.openai.azure.com/"
 
 api_key_openai = os.getenv("OPENAI_API_KEY")
 
+api_key_litellm = os.getenv("LITELLM_API_KEY")
+
 openai.api_type = "azure"
 
 openai.api_version = "2023-07-01-preview"
@@ -28,7 +30,7 @@ CONFIG_LIST = [
         "model": litellm_model,
         "api_base": litellm_api_base,  #litellm compatible endpoint
         "api_type": "open_ai",
-        "api_key": "NULL", # just a placeholder
+        "api_key": api_key_litellm, # just a placeholder
     },
     # {
     #     "model": "gpt-4",
