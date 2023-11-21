@@ -90,7 +90,7 @@ jobs:
             LITELLM_MODEL: ${{ secrets.LITELLM_MODEL }}
             LITELLM_API_BASE: ${{ secrets.LITELLM_API_BASE }}
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989
             - run: chown -R $(id -u):$(id -g) $PWD
             - run: echo "TAG=latest" >> $GITHUB_ENV
