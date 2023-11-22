@@ -11,6 +11,13 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
 from prisma import Prisma  # type: ignore[attr-defined]
+from pydantic import BaseModel
+
+
+class UserAuthenticated(BaseModel):
+    user_id: int
+    is_authenticated: bool
+
 
 router = APIRouter()
 
@@ -65,13 +72,7 @@ async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
         )
         if not conversation:
             raise HTTPException(status_code=404, detail=f"conv_id {conv_id} not found")
-        chat_id = conversation["chatId"]
-        chat = await db.query_first(
-            f'SELECT * from "Chat" where id={chat_id}'  # nosec: [B608]
-        )
-        if not chat:
-            raise HTTPException(status_code=404, detail=f"chat_id {chat_id} not found")
-    user_id = chat["userId"]
+    user_id = conversation["userId"]
     return user_id
 
 
@@ -233,3 +234,16 @@ async def search(
         ) from e
 
     return campaign_data
+
+
+@router.get("/authenticated")
+async def is_authenticated_for_ads(
+    user_id: int = Query(title="User Id")
+) -> UserAuthenticated:
+    await get_user(user_id=user_id)
+    async with get_db_connection() as db:
+        data = await db.gauth.find_unique(where={"user_id": user_id})
+
+    if not data:
+        return UserAuthenticated(user_id=user_id, is_authenticated=False)
+    return UserAuthenticated(user_id=user_id, is_authenticated=True)

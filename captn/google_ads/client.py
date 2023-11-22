@@ -36,3 +36,13 @@ def search(
     if not response.ok:
         raise ValueError(response.content)
     return response.json()  # type: ignore[no-any-return]
+
+
+def is_authenticated(user_id: int) -> bool:
+    params: Dict[str, int] = {
+        "user_id": user_id
+    }
+    response = requests.get(f"{BASE_URL}/authenticated", params=params, timeout=10)
+    if not response.ok:
+        raise ValueError(response.content)
+    return response.json()["is_authenticated"]  # type: ignore[no-any-return]
