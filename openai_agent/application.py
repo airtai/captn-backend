@@ -2,18 +2,18 @@ from os import environ
 from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
-from openai import AsyncAzureOpenAI  # type: ignore
+import openai
 from pydantic import BaseModel
+
+from captn.captn_agents.backend.create_dummy_team import create_dummy_task, get_dummy_task_status
 
 router = APIRouter()
 
 # Setting up Azure OpenAI instance
-azure_openai_client = AsyncAzureOpenAI(
-    api_key=environ.get("AZURE_OPENAI_API_KEY"),
-    api_version=environ.get("AZURE_API_VERSION"),
-    azure_endpoint=environ.get("AZURE_API_ENDPOINT"),  # type: ignore[arg-type]
-    max_retries=5,  # default is 2
-)
+openai.api_type = "azure"
+openai.api_key = environ.get("AZURE_OPENAI_API_KEY")
+openai.api_base = environ.get("AZURE_API_ENDPOINT")
+openai.api_version = environ.get("AZURE_API_VERSION")
 
 SYSTEM_PROMPT = """
 You are Captn AI, a digital marketing assistant for small businesses. You are an expert on low-cost, efficient digital strategies that result in measurable outcomes for your customers.
@@ -36,16 +36,20 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
-
 class AzureOpenAIRequest(BaseModel):
-    conversation: List[Dict[str, str]]
+    # conversation: List[Dict[str, str]]
+    message: List[Dict[str, str]]
+    user_id: int
+    conv_id: int
 
 
-async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
+async def _get_openai_response(message: List[Dict[str, str]]) -> str:
+    print("_get_openai_response")
+    print("conversation")
     try:
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation
-        completion = await azure_openai_client.chat.completions.create(
-            model=environ.get("AZURE_MODEL"), messages=messages  # type: ignore[arg-type]
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
+        completion = await openai.ChatCompletion.acreate(
+            engine=environ.get("AZURE_MODEL"), messages=messages  # type: ignore[arg-type]
         )
     except Exception as e:
         raise HTTPException(
@@ -55,8 +59,14 @@ async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
     return result  # type: ignore
 
 
-@router.post("/openai/chat")
+@router.post("/chat")
 async def create_item(request: AzureOpenAIRequest) -> str:
-    conversation = request.conversation
-    result = await _get_openai_response(conversation)
+    message = request.message
+    result = await _get_openai_response(message)
     return result
+
+
+@router.get("/get-team-status")
+async def get_team_status(conversation_id: str) -> Dict[str, str]:
+    status = get_dummy_task_status(conversation_id)
+    return status
