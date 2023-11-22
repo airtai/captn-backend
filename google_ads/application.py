@@ -238,7 +238,7 @@ async def search(
 
 @router.get("/authenticated")
 async def is_authenticated_for_ads(
-    user_id: int = Query(title="User Id")
+    user_id: int = Query(title="User Id"),
 ) -> UserAuthenticated:
     await get_user(user_id=user_id)
     async with get_db_connection() as db:

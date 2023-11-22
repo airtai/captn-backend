@@ -39,9 +39,7 @@ def search(
 
 
 def is_authenticated(user_id: int) -> bool:
-    params: Dict[str, int] = {
-        "user_id": user_id
-    }
+    params: Dict[str, int] = {"user_id": user_id}
     response = requests.get(f"{BASE_URL}/authenticated", params=params, timeout=10)
     if not response.ok:
         raise ValueError(response.content)
