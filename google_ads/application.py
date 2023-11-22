@@ -65,14 +65,18 @@ async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
         )
         if not conversation:
             raise HTTPException(status_code=404, detail=f"conv_id {conv_id} not found")
-        chat_id = conversation["chatId"]
-        chat = await db.query_first(
-            f'SELECT * from "Chat" where id={chat_id}'  # nosec: [B608]
-        )
-        if not chat:
-            raise HTTPException(status_code=404, detail=f"chat_id {chat_id} not found")
-    user_id = chat["userId"]
+    user_id = conversation["userId"]
     return user_id
+
+
+async def is_authenticated_for_ads(user_id: int) -> bool:
+    await get_user(user_id=user_id)
+    async with get_db_connection() as db:
+        data = await db.gauth.find_unique(where={"user_id": user_id})
+
+    if not data:
+        return False
+    return True
 
 
 # Route 1: Redirect to Google OAuth
@@ -82,7 +86,9 @@ async def get_login_url(
     user_id: int = Query(title="User ID"),
     conv_id: int = Query(title="Conversation ID"),
 ) -> Dict[str, str]:
-    await get_user(user_id=user_id)
+    is_authenticated = await is_authenticated_for_ads(user_id=user_id)
+    if is_authenticated:
+        return {"login_url": f"User is already authenticated"}
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
