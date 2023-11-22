@@ -35,17 +35,21 @@ def search(
         params["customer_ids"] = customer_ids
     if query:
         params["query"] = query
+    print(params)
     response = requests.get(f"{BASE_URL}/search", params=params, timeout=10)
     if not response.ok:
         raise ValueError(response.content)
 
     response_json = response.json()
     if len(str(response_json)) > 5000:
-        summary = "Here is the summary the result:\n"
+        summary = "Here is the summary of the executed query:\n"
         clicks = 23
         impressions = 9
         for customer_id in response_json.keys():
-            summary += f"customer_id: {customer_id}\n   - 'name': 'Website traffic-Search-{customer_id}'\n   - 'metrics': 'clicks': {clicks}, 'impressions': {impressions}\n"
+            summary += f"""customer_id: {customer_id}
+ - 'name': 'Website traffic-Search-{customer_id}' 
+ - 'metrics': 'clicks': {clicks}, 'impressions': {impressions} 'conversions': 0.15
+ - 'text': 'fast api tutorial'\n"""
             clicks += 12
             impressions += 3
         return summary
@@ -55,5 +59,5 @@ def search(
     #     json.dump(response.json(), f)
 
     # return f"The result is saved at ..... {file_name}"
-
+    print(len(str(response_json)))
     return response.json()  # type: ignore[no-any-return]

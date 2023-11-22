@@ -113,19 +113,22 @@ Your current task is:
     @property
     def _guidelines(self) -> str:
         return """## Guidelines
-1. You are a Google Ads team in charge of running digital campaigns.
-2. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
+1. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
 questions using the 'ask_for_additional_info' function.
-3. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
-4. To use Google ads API, you need to ask user to login using the URL retrieved by calling the 'get_login_url' function
+2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
+3. To use Google ads API, you need to ask user to login using the URL retrieved by calling the 'get_login_url' function
  first and then passing the url to the user using 'ask_for_additional_info' function.
-5. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
-6. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
+4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
+5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
-7. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the neccessary informations.
+6. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the neccessary informations.
+7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
 8. Do NOT use 'ask_for_additional_info' command for asking the questions on how to Google Ads API.
 Your team is in charge of using the Google Ads API and no one elce does NOT know how to use it.
-9. Before making any changes (with budgets, keywords, etc.) ask the user if he approves
+9. Do NOT ask the user questions about the information which you can get by using Google Ads API (keywords, clikcks etc.)
+10. Before making any changes (with budgets, keywords, etc.) ask the user if he approves. 
+Also, make sure that you explicitly tell the user which changes you want to make.
+11. Always suggest one change at the time (do NOT work on multiple things at the same time)
 """
 
     @property
@@ -144,9 +147,7 @@ ONLY Google ads specialist can suggest following commands:
 Example of customer_ids parameter: ["12", "44", "111"]
 You can use optional parameter 'query' for writing SQL queries. e.g.:
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
-FROM keyword_view WHERE segments.date DURING LAST_7_DAYS"
-
-Please use 'keyword_view' database table.
+FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
 """
 
 
