@@ -11,13 +11,6 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
 from prisma import Prisma  # type: ignore[attr-defined]
-from pydantic import BaseModel
-
-
-class UserAuthenticated(BaseModel):
-    user_id: int
-    is_authenticated: bool
-
 
 router = APIRouter()
 
@@ -76,6 +69,16 @@ async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
     return user_id
 
 
+async def is_authenticated_for_ads(user_id: int) -> bool:
+    await get_user(user_id=user_id)
+    async with get_db_connection() as db:
+        data = await db.gauth.find_unique(where={"user_id": user_id})
+
+    if not data:
+        return False
+    return True
+
+
 # Route 1: Redirect to Google OAuth
 @router.get("/login")
 async def get_login_url(
@@ -83,7 +86,9 @@ async def get_login_url(
     user_id: int = Query(title="User ID"),
     conv_id: int = Query(title="Conversation ID"),
 ) -> Dict[str, str]:
-    await get_user(user_id=user_id)
+    is_authenticated = await is_authenticated_for_ads(user_id=user_id)
+    if is_authenticated:
+        return {"login_url": f"User id {user_id} already authenticated"}
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
@@ -234,16 +239,3 @@ async def search(
         ) from e
 
     return campaign_data
-
-
-@router.get("/authenticated")
-async def is_authenticated_for_ads(
-    user_id: int = Query(title="User Id"),
-) -> UserAuthenticated:
-    await get_user(user_id=user_id)
-    async with get_db_connection() as db:
-        data = await db.gauth.find_unique(where={"user_id": user_id})
-
-    if not data:
-        return UserAuthenticated(user_id=user_id, is_authenticated=False)
-    return UserAuthenticated(user_id=user_id, is_authenticated=True)
