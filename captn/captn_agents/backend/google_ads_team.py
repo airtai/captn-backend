@@ -2,7 +2,7 @@ __all__ = ["GoogleAdsTeam"]
 
 import ast
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from ...google_ads.client import (
     get_login_url,
@@ -76,6 +76,7 @@ in the plan.
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
             user_id=user_id,
             conv_id=conv_id,
+            work_dir=work_dir,
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -107,7 +108,7 @@ in the plan.
     def _task(self) -> str:
         return f"""You are a Google Ads team in charge of running digital campaigns.
 Your current task is:
-\n{self.task}"""
+\n{self.task}\n\n"""
 
     @property
     def _guidelines(self) -> str:
@@ -116,12 +117,15 @@ Your current task is:
 2. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
 questions using the 'ask_for_additional_info' function.
 3. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
-4. To use Google ads api, you need to ask user to login using the URL retrieved by calling the 'get_login_url' function
+4. To use Google ads API, you need to ask user to login using the URL retrieved by calling the 'get_login_url' function
  first and then passing the url to the user using 'ask_for_additional_info' function.
 5. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 6. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
 7. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the neccessary informations.
+8. Do NOT use 'ask_for_additional_info' command for asking the questions on how to Google Ads API.
+Your team is in charge of using the Google Ads API and no one elce does NOT know how to use it.
+9. Before making any changes (with budgets, keywords, etc.) ask the user if he approves
 """
 
     @property
@@ -141,12 +145,16 @@ Example of customer_ids parameter: ["12", "44", "111"]
 You can use optional parameter 'query' for writing SQL queries. e.g.:
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
 FROM keyword_view WHERE segments.date DURING LAST_7_DAYS"
+
+Please use 'keyword_view' database table.
 """
 
 
-def _get_function_map(user_id: int, conv_id: int) -> Dict[str, Any]:
-    def _string_to_list(customer_ids: Union[List[str], str]) -> List[str]:
-        if isinstance(customer_ids, list):
+def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
+    def _string_to_list(
+        customer_ids: Optional[Union[List[str], str]]
+    ) -> Optional[List[str]]:
+        if customer_ids is None or isinstance(customer_ids, list):
             return customer_ids
 
         customer_ids_list = ast.literal_eval(customer_ids)
@@ -161,7 +169,10 @@ def _get_function_map(user_id: int, conv_id: int) -> Dict[str, Any]:
         "get_login_url": lambda: get_login_url(user_id=user_id, conv_id=conv_id),
         "list_accessible_customers": lambda: list_accessible_customers(user_id=user_id),
         "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
-            user_id, _string_to_list(customer_ids), query
+            user_id=user_id,
+            customer_ids=_string_to_list(customer_ids),
+            query=query,
+            work_dir=work_dir,
         ),
         "ask_for_additional_info": ask_for_additional_info,
     }

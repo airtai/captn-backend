@@ -8,7 +8,7 @@ __all__ = ["CONFIG_LIST"]
 load_dotenv()
 
 
-litellm_model= os.getenv("LITELLM_MODEL")
+litellm_model = os.getenv("LITELLM_MODEL")
 litellm_api_base = os.getenv("LITELLM_API_BASE")
 
 api_key_sweeden = os.getenv("AZURE_OPENAI_API_KEY_SWEEDEN")
@@ -28,10 +28,16 @@ openai.api_version = "2023-07-01-preview"
 CONFIG_LIST = [
     {
         "model": litellm_model,
-        "api_base": litellm_api_base,  #litellm compatible endpoint
-        "api_type": "open_ai",
-        "api_key": api_key_litellm, # just a placeholder
+        "base_url": litellm_api_base,  # litellm compatible endpoint
+        # "api_type": "open_ai",
+        "api_key": api_key_litellm,  # just a placeholder
     },
+    # {
+    #     "model": "airt-canada-gpt4",
+    #     "base_url": "http://localhost:9000",  #litellm compatible endpoint
+    #     # "api_type": "open_ai",
+    #     "api_key": "NULL", # just a placeholder
+    # },
     # {
     #     "model": "gpt-4",
     #     "api_key": api_key_sweeden,
@@ -48,7 +54,6 @@ CONFIG_LIST = [
     #     "api_version": openai.api_version,
     #     "engine": "airt-canada-gpt4",
     # },
-
     # DO NOT USE OPENAI FOR NOW
     # {
     #     # "model": "gpt-4-1106-preview",
