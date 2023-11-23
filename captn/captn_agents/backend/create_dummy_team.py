@@ -17,7 +17,11 @@ async def execute_dummy_task(conversation_id):
         await asyncio.sleep(20)
         TASK_STATUS[conversation_id] = {"status": "ready", "msg": "I have an answer for your question"}
 
-async def create_dummy_task(conversation_id):
+def create_dummy_task(conversation_id, message):
+    print("======")
+    print(f"New task is created: {conversation_id}")
+    print(f"Message: {message}")
+    print("======")
     # Start the task execution with the given conversation_id
     asyncio.create_task(execute_dummy_task(conversation_id))
 

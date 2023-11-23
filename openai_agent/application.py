@@ -38,9 +38,8 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
-def get_digital_marketing_campaign_support(message: str) -> str:
-    # create a new task
-    # return a friendly message
+def get_digital_marketing_campaign_support(conv_id: int, message: str) -> str:
+    create_dummy_task(conv_id, message)
     return f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?"
 
 
@@ -67,7 +66,7 @@ class AzureOpenAIRequest(BaseModel):
     user_id: int
     conv_id: int
 
-async def _get_openai_response(message: List[Dict[str, str]]) -> str:
+async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> str:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
         messages.append({"role": "system", "content": "If the client requests assistance with optimizing or improving their digital marketing or advertising campaign, please refrain from responding and instead, only call the get_digital_marketing_campaign_support function. For general inquiries about digital marketing or advertising campaign, you may respond."})
@@ -91,7 +90,7 @@ async def _get_openai_response(message: List[Dict[str, str]]) -> str:
         
         # verify function has correct number of arguments
         function_args = json.loads(response_message["function_call"]["arguments"])
-        function_response = function_to_call(**function_args)
+        function_response = function_to_call(conv_id=conv_id, **function_args)
         return function_response
     else:
         result = completion.choices[0].message.content
@@ -103,7 +102,8 @@ async def _get_openai_response(message: List[Dict[str, str]]) -> str:
 @router.post("/chat")
 async def create_item(request: AzureOpenAIRequest) -> str:
     message = request.message
-    result = await _get_openai_response(message)
+    conv_id = request.conv_id
+    result = await _get_openai_response(message, conv_id)
     return result
 
 
