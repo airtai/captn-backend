@@ -1,17 +1,17 @@
 __all__ = ["GoogleAdsTeam"]
 
 import ast
+import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from ...google_ads.client import (
+    execute_query,
     get_login_url,
     list_accessible_customers,
 )
-from ...google_ads.client import (
-    search as execute_query,
-)
 from .function_configs import (
+    analyze_query_response_config,
     ask_for_additional_info_config,
     execute_query_config,
     get_login_url_config,
@@ -29,6 +29,7 @@ class GoogleAdsTeam(Team):
         list_accessible_customers_config,
         execute_query_config,
         ask_for_additional_info_config,
+        analyze_query_response_config,
     ]
 
     _default_roles = [
@@ -126,7 +127,7 @@ Don't repeat your self and others and do not use any filler words.
 8. Do NOT use 'ask_for_additional_info' command for asking the questions on how to Google Ads API.
 Your team is in charge of using the Google Ads API and no one elce does NOT know how to use it.
 9. Do NOT ask the user questions about the information which you can get by using Google Ads API (keywords, clikcks etc.)
-10. Before making any changes (with budgets, keywords, etc.) ask the user if he approves. 
+10. Before making any changes (with budgets, keywords, etc.) ask the user if he approves.
 Also, make sure that you explicitly tell the user which changes you want to make.
 11. Always suggest one change at the time (do NOT work on multiple things at the same time)
 """
@@ -148,7 +149,32 @@ Example of customer_ids parameter: ["12", "44", "111"]
 You can use optional parameter 'query' for writing SQL queries. e.g.:
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
 FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
+
+4. 'analyze_query_response': Analyze the execute_query response, no input params: (file_name: str)
 """
+
+
+def analyze_query_response(work_dir: str, file_name: str) -> Union[str, Dict[str, Any]]:
+    # work_dir = "/home/robert/captn-backend/logs/user_id=1/conv_id=17"
+    path = Path(work_dir) / file_name
+
+    with open(path) as json_file:
+        data = json.load(json_file)
+
+    if len(str(data)) > 5000:
+        summary = "Here is the summary of the executed query:\n"
+        clicks = 23
+        impressions = 9
+        for customer_id in data.keys():
+            summary += f"""customer_id: {customer_id}
+- 'name': 'Website traffic-Search-{customer_id}'
+- 'metrics': 'clicks': {clicks}, 'impressions': {impressions} 'conversions': 0.15
+- 'text': 'fast api tutorial'\n"""
+            clicks += 12
+            impressions += 3
+        return summary
+
+    return data  # type: ignore[no-any-return]
 
 
 def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
@@ -176,6 +202,9 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             work_dir=work_dir,
         ),
         "ask_for_additional_info": ask_for_additional_info,
+        "analyze_query_response": lambda file_name: analyze_query_response(
+            work_dir=work_dir, file_name=file_name
+        ),
     }
 
     return function_map

@@ -88,7 +88,7 @@ async def get_login_url(
 ) -> Dict[str, str]:
     is_authenticated = await is_authenticated_for_ads(user_id=user_id)
     if is_authenticated:
-        return {"login_url": f"User is already authenticated"}
+        return {"login_url": "User is already authenticated"}
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"

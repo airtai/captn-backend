@@ -1,6 +1,7 @@
 import os
 
 import openai
+from autogen import __version__ as autogen_version
 from dotenv import load_dotenv
 
 __all__ = ["CONFIG_LIST"]
@@ -28,13 +29,14 @@ openai.api_version = "2023-07-01-preview"
 CONFIG_LIST = [
     {
         "model": litellm_model,
+        "api_base": litellm_api_base,
         "base_url": litellm_api_base,  # litellm compatible endpoint
-        # "api_type": "open_ai",
+        "api_type": "open_ai",
         "api_key": api_key_litellm,  # just a placeholder
     },
     # {
     #     "model": "airt-canada-gpt4",
-    #     "base_url": "http://localhost:9000",  #litellm compatible endpoint
+    #     "base_url": "http://localhost:9054",  #litellm compatible endpoint
     #     # "api_type": "open_ai",
     #     "api_key": "NULL", # just a placeholder
     # },
@@ -61,3 +63,10 @@ CONFIG_LIST = [
     #     "api_key": api_key_openai,
     # },
 ]
+
+for config in CONFIG_LIST:
+    if autogen_version < "2.":
+        config.pop("base_url")
+    else:
+        config.pop("api_base")
+        config.pop("api_type")

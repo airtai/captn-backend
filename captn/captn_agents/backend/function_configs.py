@@ -269,3 +269,18 @@ reply_to_client_config = {
         "required": ["message"],
     },
 }
+
+analyze_query_response_config = {
+    "name": "analyze_query_response",
+    "description": "Analyze the execute_query response",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "file_name": {
+                "type": "string",
+                "description": "The name of the file where the response is saved",
+            },
+        },
+        "required": ["file_name"],
+    },
+}
