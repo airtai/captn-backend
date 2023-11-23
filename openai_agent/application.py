@@ -1,3 +1,5 @@
+import json
+import inspect
 from os import environ
 from typing import Dict, List
 
@@ -36,27 +38,66 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
+def get_digital_marketing_campaign_support(message: str) -> str:
+    # create a new task
+    # return a friendly message
+    return f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?"
+
+
+FUNCTIONS = [
+    {
+        "name": "get_digital_marketing_campaign_support",
+        "description": "Gets specialized assistance for resolving digital marketing and digital advertising campaign inquiries.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "The user request message"
+                }
+            },
+            "required": ["message"]
+        }
+    },
+]
+
 class AzureOpenAIRequest(BaseModel):
     # conversation: List[Dict[str, str]]
     message: List[Dict[str, str]]
     user_id: int
     conv_id: int
 
-
 async def _get_openai_response(message: List[Dict[str, str]]) -> str:
-    print("_get_openai_response")
-    print("conversation")
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
+        messages.append({"role": "system", "content": "If the client requests assistance with optimizing or improving their digital marketing or advertising campaign, please refrain from responding and instead, only call the get_digital_marketing_campaign_support function. For general inquiries about digital marketing or advertising campaign, you may respond."})
         completion = await openai.ChatCompletion.acreate(
-            engine=environ.get("AZURE_MODEL"), messages=messages  # type: ignore[arg-type]
+            engine=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS, # type: ignore[arg-type]
         )
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Internal server error: {e}"
         ) from e
-    result = completion.choices[0].message.content
-    return result  # type: ignore
+
+    response_message = completion.choices[0].message
+    # Check if the model wants to call a function
+    if response_message.get("function_call"):
+        # Call the function. The JSON response may not always be valid so make sure to handle errors
+        function_name = response_message["function_call"]["name"] # todo: enclose in try catch???
+        available_functions = {
+            "get_digital_marketing_campaign_support": get_digital_marketing_campaign_support,
+        }
+        function_to_call = available_functions[function_name]
+        
+        # verify function has correct number of arguments
+        function_args = json.loads(response_message["function_call"]["arguments"])
+        function_response = function_to_call(**function_args)
+        return function_response
+    else:
+        result = completion.choices[0].message.content
+        return result  # type: ignore
+    
+    
 
 
 @router.post("/chat")
