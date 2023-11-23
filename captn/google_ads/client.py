@@ -45,18 +45,6 @@ def execute_query(
         raise ValueError(response.content)
 
     response_json = response.json()
-    #     if len(str(response_json)) > 5000:
-    #         summary = "Here is the summary of the executed query:\n"
-    #         clicks = 23
-    #         impressions = 9
-    #         for customer_id in response_json.keys():
-    #             summary += f"""customer_id: {customer_id}
-    #  - 'name': 'Website traffic-Search-{customer_id}'
-    #  - 'metrics': 'clicks': {clicks}, 'impressions': {impressions} 'conversions': 0.15
-    #  - 'text': 'fast api tutorial'\n"""
-    #             clicks += 12
-    #             impressions += 3
-    #         return summary
 
     file_name = "query_" + datetime.now().isoformat() + ".json"
     path = Path(work_dir) / file_name

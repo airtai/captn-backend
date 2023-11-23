@@ -155,7 +155,6 @@ FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
 
 
 def analyze_query_response(work_dir: str, file_name: str) -> Union[str, Dict[str, Any]]:
-    # work_dir = "/home/robert/captn-backend/logs/user_id=1/conv_id=17"
     path = Path(work_dir) / file_name
 
     with open(path) as json_file:
