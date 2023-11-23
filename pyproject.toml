@@ -65,6 +65,8 @@ lint = [
     "pyupgrade-directories",
     "bandit==1.7.5",
     "semgrep==1.48.0",
+    "pre-commit==3.5.0",
+    "detect-secrets==1.4.0",
 ]
 
 test-core = [
@@ -79,12 +81,22 @@ testing = [
     "watchfiles",
 ]
 
+agents = [
+    "fastapi==0.104.1",
+    "prisma==0.11.0",
+    "google-ads==22.1.0",
+    "httpx==0.25.1",
+    "uvicorn==0.24.0.post1",
+    "python-dotenv==1.0.0",
+    "pyautogen==0.1.14",
+    "pandas>=2.1",
+]
+
 
 dev = [
-    "captn[lint,testing]",
-    "pre-commit==3.5.0",
-    "detect-secrets==1.4.0",
+    "captn[lint,testing,agents]",
 ]
+
 
 [project.urls]
 Homepage = "https://github.com/airtai/captn-backend"
