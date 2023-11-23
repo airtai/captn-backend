@@ -1,7 +1,7 @@
 import json
 import inspect
 from os import environ
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 import openai
@@ -38,9 +38,12 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
-def get_digital_marketing_campaign_support(conv_id: int, message: str) -> str:
+def get_digital_marketing_campaign_support(conv_id: int, message: str) -> Dict[str, str]:
     create_dummy_task(conv_id, message)
-    return f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?"
+    return {
+        "content":f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
+        "team_status": "inprogress"
+    }
 
 
 FUNCTIONS = [
@@ -66,7 +69,7 @@ class AzureOpenAIRequest(BaseModel):
     user_id: int
     conv_id: int
 
-async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> str:
+async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
         messages.append({"role": "system", "content": "If the client requests assistance with optimizing or improving their digital marketing or advertising campaign, please refrain from responding and instead, only call the get_digital_marketing_campaign_support function. For general inquiries about digital marketing or advertising campaign, you may respond."})
@@ -94,20 +97,24 @@ async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> s
         return function_response
     else:
         result = completion.choices[0].message.content
-        return result  # type: ignore
-    
-    
-
+        return {
+            "content":result,
+            "team_status": None
+        }
 
 @router.post("/chat")
-async def create_item(request: AzureOpenAIRequest) -> str:
+async def create_item(request: AzureOpenAIRequest) -> Dict[str, Optional[str]]:
     message = request.message
     conv_id = request.conv_id
     result = await _get_openai_response(message, conv_id)
     return result
 
 
-@router.get("/get-team-status")
-async def get_team_status(conversation_id: str) -> Dict[str, str]:
+class GetTeamStatusRequest(BaseModel):
+    conversation_id: int
+
+@router.post("/get-team-status")
+async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, str]:
+    conversation_id = request.conversation_id
     status = get_dummy_task_status(conversation_id)
     return status

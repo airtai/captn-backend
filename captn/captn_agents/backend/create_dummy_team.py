@@ -15,7 +15,7 @@ async def execute_dummy_task(conversation_id):
         # If conversation_id already exists in TASK_STATUS, reset and update
         TASK_STATUS[conversation_id] = {"status": "inprogress", "msg": ""}
         await asyncio.sleep(20)
-        TASK_STATUS[conversation_id] = {"status": "ready", "msg": "I have an answer for your question"}
+        TASK_STATUS[conversation_id] = {"status": "ready", "msg": "Nevermind. I know the answer already."}
 
 def create_dummy_task(conversation_id, message):
     print("======")
