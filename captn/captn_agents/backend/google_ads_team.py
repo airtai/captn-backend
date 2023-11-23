@@ -154,26 +154,54 @@ FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
 """
 
 
-def analyze_query_response(work_dir: str, file_name: str) -> Union[str, Dict[str, Any]]:
-    path = Path(work_dir) / file_name
+def analyze_query_response(work_dir: str, file_name: str) -> str:
+#     return """For customer_id = 2324127278, we have the following aggregated statistics:
+# - metrics.clicks: 3731.0
+# - metrics.conversions': 0.0
+# - metrics.impressions': 3660371.0
+# """
+    # retval = {'metrics.clicks': 3731.0,
+    #     'metrics.conversions': 0.0,
+    #     'metrics.impressions': 3660371.0}
+    
+    # return retval
+    
+    retval = {'2324127278': {'metrics.clicks': 3731.0,
+        'metrics.conversions': 0.0,
+        'metrics.impressions': 3660371.0}}
+    
+    return json.dumps(retval)
 
-    with open(path) as json_file:
-        data = json.load(json_file)
+    # fixture_path = Path("fixtures/test_query.parquet")
+    # assert fixture_path.exists()
 
-    if len(str(data)) > 5000:
-        summary = "Here is the summary of the executed query:\n"
-        clicks = 23
-        impressions = 9
-        for customer_id in data.keys():
-            summary += f"""customer_id: {customer_id}
-- 'name': 'Website traffic-Search-{customer_id}'
-- 'metrics': 'clicks': {clicks}, 'impressions': {impressions} 'conversions': 0.15
-- 'text': 'fast api tutorial'\n"""
-            clicks += 12
-            impressions += 3
-        return summary
+    # df = pd.read_parquet()
 
-    return data  # type: ignore[no-any-return]
+    # def agregate_by_customer_id(df: pd.DataFrame) -> Dict[str, Dict[str, float]]:
+    #     agg = df.groupby("customer_id")[["metrics.clicks", "metrics.conversions", "metrics.impressions"]].sum()
+    #     return agg.to_dict(orient="index")
+    
+    # return agregate_by_customer_id(df)
+    
+#     path = Path(work_dir) / file_name
+
+#     with open(path) as json_file:
+#         data = json.load(json_file)
+
+#     # if len(str(data)) > 5000:
+#     summary = "Here is the summary of the executed query:\n"
+#     clicks = 23
+#     impressions = 9
+#     for customer_id in data.keys():
+#         summary += f"""customer_id: {customer_id}
+# - 'name': 'Website traffic-Search-{customer_id}'
+# - 'metrics': 'clicks': {clicks}, 'impressions': {impressions} 'conversions': 0.15
+# - 'text': 'fast api tutorial'\n"""
+#         clicks += 12
+#         impressions += 3
+#     return summary
+
+    # return data  # type: ignore[no-any-return]
 
 
 def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:

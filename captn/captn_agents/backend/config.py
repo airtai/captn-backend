@@ -36,8 +36,9 @@ CONFIG_LIST = [
     },
     # {
     #     "model": "airt-canada-gpt4",
+    #     "api_base": "http://localhost:9054",
     #     "base_url": "http://localhost:9054",  #litellm compatible endpoint
-    #     # "api_type": "open_ai",
+    #     "api_type": "open_ai",
     #     "api_key": "NULL", # just a placeholder
     # },
     # {

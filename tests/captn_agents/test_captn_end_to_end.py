@@ -41,6 +41,15 @@ def test_end_to_end() -> None:
         class_name="captn_initial_team",
     )
 
+    start_conversation(
+        user_id=user_id,
+        conv_id=conv_id,
+        task="I allow the mentioned changes.",
+        max_round=80,
+        human_input_mode="NEVER",
+        class_name="captn_initial_team",
+    )
+
     # continue_conversation(
     #     team_name=team_name,
     #     message="Please write a summary of what has been done",
