@@ -13,7 +13,7 @@ router = APIRouter()
 
 # Setting up Azure OpenAI instance
 openai.api_type = "azure"
-openai.api_key = environ.get("AZURE_OPENAI_API_KEY")
+openai.api_key = environ.get("AZURE_OPENAI_API_KEY_CANADA")
 openai.api_base = environ.get("AZURE_API_ENDPOINT")
 openai.api_version = environ.get("AZURE_API_VERSION")
 
