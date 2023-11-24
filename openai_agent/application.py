@@ -72,7 +72,7 @@ class AzureOpenAIRequest(BaseModel):
 async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
-        messages.append({"role": "system", "content": "If the client requests assistance with optimizing or improving their digital marketing or advertising campaign, please refrain from responding and instead, only call the get_digital_marketing_campaign_support function. For general inquiries about digital marketing or advertising campaign, you may respond."})
+        messages.append({"role": "system", "content": "You should call the 'get_digital_marketing_campaign_support' function only when the previous user message is about optimizing or enhancing their digital marketing or advertising campaign. Do not make reference to previous conversations, and avoid calling 'get_digital_marketing_campaign_support' solely based on conversation history. Take into account that the client may have asked different questions in recent interactions, and respond accordingly."})
         completion = await openai.ChatCompletion.acreate(
             engine=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS, # type: ignore[arg-type]
         )
@@ -98,8 +98,7 @@ async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> D
     else:
         result = completion.choices[0].message.content
         return {
-            "content":result,
-            "team_status": None
+            "content":result
         }
 
 @router.post("/chat")
