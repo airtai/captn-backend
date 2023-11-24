@@ -1,19 +1,21 @@
+import json
+import inspect
 from os import environ
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
-from openai import AsyncAzureOpenAI  # type: ignore
+import openai
 from pydantic import BaseModel
+
+from captn.captn_agents.backend.create_dummy_team import create_dummy_task, get_dummy_task_status
 
 router = APIRouter()
 
 # Setting up Azure OpenAI instance
-azure_openai_client = AsyncAzureOpenAI(
-    api_key=environ.get("AZURE_OPENAI_API_KEY"),
-    api_version=environ.get("AZURE_API_VERSION"),
-    azure_endpoint=environ.get("AZURE_API_ENDPOINT"),  # type: ignore[arg-type]
-    max_retries=5,  # default is 2
-)
+openai.api_type = "azure"
+openai.api_key = environ.get("AZURE_OPENAI_API_KEY")
+openai.api_base = environ.get("AZURE_API_ENDPOINT")
+openai.api_version = environ.get("AZURE_API_VERSION")
 
 SYSTEM_PROMPT = """
 You are Captn AI, a digital marketing assistant for small businesses. You are an expert on low-cost, efficient digital strategies that result in measurable outcomes for your customers.
@@ -36,27 +38,82 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
+def get_digital_marketing_campaign_support(conv_id: int, message: str) -> Dict[str, str]:
+    create_dummy_task(conv_id, message)
+    return {
+        "content":f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
+        "team_status": "inprogress"
+    }
+
+
+FUNCTIONS = [
+    {
+        "name": "get_digital_marketing_campaign_support",
+        "description": "Gets specialized assistance for resolving digital marketing and digital advertising campaign inquiries.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "The user request message"
+                }
+            },
+            "required": ["message"]
+        }
+    },
+]
 
 class AzureOpenAIRequest(BaseModel):
-    conversation: List[Dict[str, str]]
+    # conversation: List[Dict[str, str]]
+    message: List[Dict[str, str]]
+    user_id: int
+    conv_id: int
 
-
-async def _get_openai_response(conversation: List[Dict[str, str]]) -> str:
+async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
     try:
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation
-        completion = await azure_openai_client.chat.completions.create(
-            model=environ.get("AZURE_MODEL"), messages=messages  # type: ignore[arg-type]
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
+        messages.append({"role": "system", "content": "You should call the 'get_digital_marketing_campaign_support' function only when the previous user message is about optimizing or enhancing their digital marketing or advertising campaign. Do not make reference to previous conversations, and avoid calling 'get_digital_marketing_campaign_support' solely based on conversation history. Take into account that the client may have asked different questions in recent interactions, and respond accordingly."})
+        completion = await openai.ChatCompletion.acreate(
+            engine=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS, # type: ignore[arg-type]
         )
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Internal server error: {e}"
         ) from e
-    result = completion.choices[0].message.content
-    return result  # type: ignore
 
+    response_message = completion.choices[0].message
+    # Check if the model wants to call a function
+    if response_message.get("function_call"):
+        # Call the function. The JSON response may not always be valid so make sure to handle errors
+        function_name = response_message["function_call"]["name"] # todo: enclose in try catch???
+        available_functions = {
+            "get_digital_marketing_campaign_support": get_digital_marketing_campaign_support,
+        }
+        function_to_call = available_functions[function_name]
+        
+        # verify function has correct number of arguments
+        function_args = json.loads(response_message["function_call"]["arguments"])
+        function_response = function_to_call(conv_id=conv_id, **function_args)
+        return function_response
+    else:
+        result = completion.choices[0].message.content
+        return {
+            "content":result
+        }
 
-@router.post("/openai/chat")
-async def create_item(request: AzureOpenAIRequest) -> str:
-    conversation = request.conversation
-    result = await _get_openai_response(conversation)
+@router.post("/chat")
+async def create_item(request: AzureOpenAIRequest) -> Dict[str, Optional[str]]:
+    message = request.message
+    conv_id = request.conv_id
+    result = await _get_openai_response(message, conv_id)
     return result
+
+
+class GetTeamStatusRequest(BaseModel):
+    conversation_id: int
+
+@router.post("/get-team-status")
+async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, str]:
+    conversation_id = request.conversation_id
+    status = get_dummy_task_status(conversation_id)
+    return status

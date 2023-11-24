@@ -6,10 +6,10 @@ load_dotenv()
 import captn.captn_agents  # noqa
 import google_ads  # noqa
 
-# import openai_agent  # noqa
+import openai_agent  # noqa
 
 app = FastAPI()
-# app.include_router(openai_agent.router, tags=["OpenAI"])
+app.include_router(openai_agent.router, prefix="/openai", tags=["OpenAI"])
 app.include_router(google_ads.router, tags=["Google Ads"])
 app.include_router(captn.captn_agents.router, tags=["Captn Agents"])
 
