@@ -38,6 +38,10 @@ async def execute_dummy_task(conversation_id):
 def create_dummy_task(conversation_id, message):
     # Start the task execution with the given conversation_id
     asyncio.create_task(execute_dummy_task(conversation_id))
+    print("======")
+    print(f"New task is created: {conversation_id}")
+    print(f"Message: {message}")
+    print("======")
 
 def get_dummy_task_status(conversation_id):
     return TASK_STATUS.get(conversation_id, {})
