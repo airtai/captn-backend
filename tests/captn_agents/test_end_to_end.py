@@ -1,6 +1,8 @@
 import shutil
 from pathlib import Path
 
+import pytest
+
 from captn.captn_agents.backend.end_to_end import (
     continue_conversation,
     start_conversation,
@@ -13,6 +15,7 @@ from .utils import last_message_is_termination
 
 
 # cassettes/{module_name}/test_end_to_end.yaml will be used
+# @pytest.mark.vcr("../fixtures/vcr_cassettes/test_planning_team.yaml", filter_query_parameters=["api-key"])
 # @pytest.mark.vcr(
 #     filter_headers=["api-key"]
 # )
@@ -38,7 +41,7 @@ def test_end_to_end() -> None:
         task=task,
         roles=roles,
         root_dir=root_dir,
-        seed=45,
+        cache_seed=45,
         human_input_mode="NEVER",
     )
 

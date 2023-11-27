@@ -1,3 +1,4 @@
+import json
 from typing import Any, Callable, Dict, List, Optional
 
 import autogen
@@ -32,7 +33,7 @@ class Team:
         function_map: Optional[Dict[str, Callable[[Any], Any]]] = None,
         work_dir: str = "my_default_workdir",
         max_round: int = 80,
-        seed: int = 42,
+        cache_seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
     ):
@@ -40,7 +41,7 @@ class Team:
         self.initial_message: str
         self.name: str
         self.max_round = max_round
-        self.seed = seed
+        self.cache_seed = cache_seed
         self.temperature = temperature
 
         self.function_map = function_map
@@ -63,13 +64,13 @@ class Team:
         raise NotImplementedError()
 
     @classmethod
-    def get_llm_config(cls, seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
+    def get_llm_config(cls, cache_seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
         llm_config = {
             "config_list": CONFIG_LIST,
-            "seed": seed,
+            "cache_seed": cache_seed,
             "temperature": temperature,
             "functions": cls._functions,
-            "request_timeout": 800,
+            # "request_timeout": 800,
         }
         return llm_config
 
@@ -108,11 +109,11 @@ class Team:
         is_user_proxy: bool = False,
     ) -> autogen.ConversableAgent:
         name = name.lower().replace(" ", "_")
-        system_message = f"""You are {name}, {description}
+        system_message = json.dumps(f"""You are {name}, {description}
 
 Your task is to chat with other team mambers and try to solve the given task.
 Do NOT try to finish the task until other team members give their opinion.
-"""
+""")
 
         if is_user_proxy:
             return autogen.UserProxyAgent(
@@ -187,7 +188,7 @@ You can leverage access to the following resources:
         return ""
 
     def _create_initial_message(self) -> None:
-        self.initial_message = f"""{self._task}
+        self.initial_message = json.dumps(f"""{self._task}
 
 {self._first_section}
 
@@ -202,7 +203,7 @@ You can leverage access to the following resources:
 {self._best_practices}
 
 {self._final_section}
-"""
+""")
 
     def initiate_chat(self) -> None:
         self.manager.initiate_chat(self.manager, message=self.initial_message)

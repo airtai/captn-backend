@@ -71,7 +71,7 @@ in the plan.
         conv_id: int,
         work_dir: str = "google_ads",
         max_round: int = 80,
-        seed: int = 42,
+        cache_seed: int = 42,
         temperature: float = 0.2,
     ):
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
@@ -88,14 +88,14 @@ in the plan.
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
-            seed=seed,
+            cache_seed=cache_seed,
             temperature=temperature,
             name=name,
         )
         self.conv_id = conv_id
         self.task = task
         self.llm_config = GoogleAdsTeam.get_llm_config(
-            seed=seed, temperature=temperature
+            cache_seed=cache_seed, temperature=temperature
         )
 
         self._create_members()
@@ -145,10 +145,10 @@ ONLY Google ads specialist can suggest following commands:
 1. 'get_login_url': Get the users login url, no input params: ()
 2. 'list_accessible_customers': List all the customers accessible to the user, no input params: ()
 3. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
-Example of customer_ids parameter: ["12", "44", "111"]
+Example of customer_ids parameter: ['12', '44', '111']
 You can use optional parameter 'query' for writing SQL queries. e.g.:
-"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
-FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
+'SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
+FROM keyword_view WHERE segments.date DURING LAST_30_DAYS'
 
 4. 'analyze_query_response': Analyze the execute_query response, no input params: (file_name: str)
 """

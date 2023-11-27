@@ -51,7 +51,7 @@ in the plan.
         user_id: int,
         work_dir: str = "banking",
         max_round: int = 80,
-        seed: int = 42,
+        cache_seed: int = 42,
         temperature: float = 0.2,
     ):
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
@@ -66,13 +66,13 @@ in the plan.
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
-            seed=seed,
+            cache_seed=cache_seed,
             temperature=temperature,
             name=name,
         )
 
         self.task = task
-        self.llm_config = BankingTeam.get_llm_config(seed=seed, temperature=temperature)
+        self.llm_config = BankingTeam.get_llm_config(cache_seed=cache_seed, temperature=temperature)
 
         self._create_members()
         self._create_initial_message()

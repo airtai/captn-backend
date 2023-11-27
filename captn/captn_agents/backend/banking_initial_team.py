@@ -30,7 +30,7 @@ class BookingInitialTeam(InitialTeam):
         roles: List[Dict[str, str]],
         work_dir: str = "initial_banking",
         max_round: int = 80,
-        seed: int = 42,
+        cache_seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "ALWAYS",
     ):
@@ -41,7 +41,7 @@ class BookingInitialTeam(InitialTeam):
             roles=roles,
             work_dir=work_dir,
             max_round=max_round,
-            seed=seed,
+            cache_seed=cache_seed,
             temperature=temperature,
             human_input_mode=human_input_mode,
         )

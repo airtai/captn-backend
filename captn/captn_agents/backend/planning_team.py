@@ -35,7 +35,7 @@ class PlanningTeam(Team):
         function_map: Dict[str, Callable[[Any], Any]],
         work_dir: str = "planning",
         max_round: int = 80,
-        seed: int = 42,
+        cache_seed: int = 42,
         temperature: float = 0.2,
     ):
         roles: List[Dict[str, str]] = planning_team_input_dict["Roles"]
@@ -46,13 +46,13 @@ class PlanningTeam(Team):
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
-            seed=seed,
+            cache_seed=cache_seed,
             temperature=temperature,
             name=name,
         )
 
         self.llm_config = PlanningTeam.get_llm_config(
-            seed=seed, temperature=temperature
+            cache_seed=cache_seed, temperature=temperature
         )
 
         self._create_members()

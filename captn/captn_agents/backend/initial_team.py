@@ -31,7 +31,7 @@ class InitialTeam(Team):
         roles: List[Dict[str, str]],
         work_dir: str = "initial",
         max_round: int = 80,
-        seed: int = 42,
+        cache_seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "ALWAYS",
         use_async: bool = False,
@@ -51,7 +51,7 @@ class InitialTeam(Team):
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
-            seed=seed,
+            cache_seed=cache_seed,
             temperature=temperature,
             name=name,
             human_input_mode=human_input_mode,
@@ -59,7 +59,7 @@ class InitialTeam(Team):
 
         self.task = task
         self.llm_config = self.__class__.get_llm_config(
-            seed=seed, temperature=temperature
+            cache_seed=cache_seed, temperature=temperature
         )
 
         self._create_members()

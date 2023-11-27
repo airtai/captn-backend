@@ -43,7 +43,7 @@ class ExecutionTeam(Team):
         function_map: Dict[str, Callable[[Any], Any]],
         work_dir: str,
         max_round: int = 80,
-        seed: int = 42,
+        cache_seed: int = 42,
         temperature: float = 0.2,
     ):
         roles_with_descriptions = [
@@ -56,14 +56,14 @@ class ExecutionTeam(Team):
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
-            seed=seed,
+            cache_seed=cache_seed,
             temperature=temperature,
             name=name,
         )
 
         self.plan = plan
         self.llm_config = ExecutionTeam.get_llm_config(
-            seed=seed, temperature=temperature
+            cache_seed=cache_seed, temperature=temperature
         )
 
         self._create_members()

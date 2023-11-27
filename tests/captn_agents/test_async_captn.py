@@ -47,7 +47,7 @@ async def test_end_to_end() -> None:
         conv_id=conv_id,
         task=task,
         root_dir=root_dir,
-        seed=45,
+        cache_seed=45,
         max_round=15,
         human_input_mode="NEVER",
         class_name="captn_initial_team",

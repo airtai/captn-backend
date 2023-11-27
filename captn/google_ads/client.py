@@ -12,7 +12,8 @@ BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     params = {"user_id": user_id, "conv_id": conv_id}
     response = requests.get(f"{BASE_URL}/login", params=params, timeout=10)
-    return response.json()  # type: ignore[no-any-return]
+    assert isinstance(response.json(), dict)
+    return json.dumps(response.json())  # type: ignore[no-any-return]
 
 
 def list_accessible_customers(user_id: int) -> List[str]:
@@ -23,7 +24,8 @@ def list_accessible_customers(user_id: int) -> List[str]:
     if not response.ok:
         raise ValueError(response.content)
     # return ["8942812744", "2324127278", "7119828439", "6505006790", "8913146119"]
-    return response.json()  # type: ignore[no-any-return]
+    assert isinstance(response.json(), list)
+    return json.dumps(response.json())  # type: ignore[no-any-return]
 
 
 def execute_query(
