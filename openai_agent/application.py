@@ -1,7 +1,7 @@
 import json
 import inspect
 from os import environ
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from fastapi import APIRouter, HTTPException
 import openai
@@ -45,7 +45,6 @@ def get_digital_marketing_campaign_support(conv_id: int, message: str) -> Dict[s
         "team_status": "inprogress"
     }
 
-
 FUNCTIONS = [
     {
         "name": "get_digital_marketing_campaign_support",
@@ -62,12 +61,6 @@ FUNCTIONS = [
         }
     },
 ]
-
-class AzureOpenAIRequest(BaseModel):
-    # conversation: List[Dict[str, str]]
-    message: List[Dict[str, str]]
-    user_id: int
-    conv_id: int
 
 async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
     try:
@@ -101,19 +94,34 @@ async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> D
             "content":result
         }
 
+def _user_response_to_agent(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
+    create_dummy_task(conv_id, message)
+    return {
+        "content":"""**Thank you for your response!**
+
+Our team can now proceed with the work, and if we need any additional information, we'll reach out to you. In the meantime, feel free to ask me any questions about digital marketing. I'm here to help! 😊🚀""",
+        "team_status": "inprogress"
+    }
+
+class AzureOpenAIRequest(BaseModel):
+    # conversation: List[Dict[str, str]]
+    message: List[Dict[str, str]]
+    user_id: int
+    conv_id: int
+    is_answer_to_agent_question: bool
+
 @router.post("/chat")
 async def create_item(request: AzureOpenAIRequest) -> Dict[str, Optional[str]]:
     message = request.message
     conv_id = request.conv_id
-    result = await _get_openai_response(message, conv_id)
+    result = _user_response_to_agent(message, conv_id) if request.is_answer_to_agent_question else await _get_openai_response(message, conv_id)
     return result
-
 
 class GetTeamStatusRequest(BaseModel):
     conversation_id: int
 
 @router.post("/get-team-status")
-async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, str]:
+async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, Union[str, bool]]:
     conversation_id = request.conversation_id
     status = get_dummy_task_status(conversation_id)
     return status
