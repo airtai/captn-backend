@@ -69,7 +69,7 @@ class Team:
             "seed": seed,
             "temperature": temperature,
             "functions": cls._functions,
-            "request_timeout": 800,
+            # "request_timeout": 800,
         }
         return llm_config
 

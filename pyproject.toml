@@ -81,6 +81,7 @@ test-core = [
 testing = [
     "captn[test-core]",
     "watchfiles",
+    "pytest-recording"
 ]
 
 agents = [
@@ -90,7 +91,7 @@ agents = [
     "httpx==0.25.1",
     "uvicorn==0.24.0.post1",
     "python-dotenv==1.0.0",
-    "pyautogen==0.1.14",
+    "pyautogen==0.2.0",
     "pandas>=2.1",
 ]
 

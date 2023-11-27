@@ -25,6 +25,8 @@ def list_accessible_customers(user_id: int) -> List[str]:
     # return ["8942812744", "2324127278", "7119828439", "6505006790", "8913146119"]
     return response.json()  # type: ignore[no-any-return]
 
+    # return json.dumps(response.json())
+
 
 def execute_query(
     user_id: int,

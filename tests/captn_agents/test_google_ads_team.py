@@ -1,5 +1,5 @@
 import unittest
-
+import pytest
 # from unittest.mock import Mock
 from captn.captn_agents.backend.google_ads_team import (
     GoogleAdsTeam,
@@ -154,11 +154,16 @@ def test_query() -> None:
         )
 
 
+
+# cassettes/{module_name}/test_end_to_end.yaml will be used
+# @pytest.mark.vcr(
+#     # filter_headers=["api-key"]
+# )
 def test_report_creation() -> None:
-    user_id = 13
+    user_id = 1
     conv_id = 1
 
-    task = "Create report for all customers and all campaigns"
+    task = "Create report for all customers and all campaigns."
     with unittest.mock.patch(
         "captn.captn_agents.backend.google_ads_team.ask_for_additional_info",
         return_value="I don't know, I am fine with any proposal you suggest",  # type: ignore

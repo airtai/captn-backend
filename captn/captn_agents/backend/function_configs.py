@@ -177,6 +177,8 @@ execute_query_config = {
         "properties": {
             "customer_ids": {
                 "type": "string",
+                # "type": "array",
+                # "items": {"type": "string"},
                 "description": "List of customer ids",
             },
             "query": {
