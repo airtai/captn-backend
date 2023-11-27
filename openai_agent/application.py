@@ -1,5 +1,5 @@
 import json
-import inspect
+from time import sleep
 from os import environ
 from typing import Dict, List, Optional, Union
 
@@ -95,6 +95,7 @@ async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> D
         }
 
 def _user_response_to_agent(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
+    sleep(2)
     create_dummy_task(conv_id, message)
     return {
         "content":"""**Thank you for your response!**
