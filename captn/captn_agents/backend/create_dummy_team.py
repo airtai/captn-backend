@@ -23,6 +23,11 @@ Hurray! Your campaign report is ready😊"""
 
 async def execute_dummy_task(conversation_id):
     global TASK_STATUS
+    print("======")
+    print("Entering execute_dummy_task")
+    print("TASK_STATUS")
+    print(TASK_STATUS)
+    print("======")
 
     if (conversation_id not in TASK_STATUS) or (not TASK_STATUS[conversation_id]["is_question"]):
         # If conversation_id is not in TASK_STATUS, create new entry
@@ -36,6 +41,11 @@ async def execute_dummy_task(conversation_id):
         await asyncio.sleep(20)
         TASK_STATUS[conversation_id]["status"] = "completed"
         TASK_STATUS[conversation_id]["msg"] = ANSWER_MSG
+    print("======")
+    print("Exiting execute_dummy_task")
+    print("TASK_STATUS")
+    print(TASK_STATUS)
+    print("======")
 
 def create_dummy_task(conversation_id, message):
     print("======")
