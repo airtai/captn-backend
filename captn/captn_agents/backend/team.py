@@ -64,7 +64,9 @@ class Team:
         raise NotImplementedError()
 
     @classmethod
-    def get_llm_config(cls, cache_seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
+    def get_llm_config(
+        cls, cache_seed: int = 42, temperature: float = 0.2
+    ) -> Dict[str, Any]:
         llm_config = {
             "config_list": CONFIG_LIST,
             "cache_seed": cache_seed,
@@ -109,11 +111,13 @@ class Team:
         is_user_proxy: bool = False,
     ) -> autogen.ConversableAgent:
         name = name.lower().replace(" ", "_")
-        system_message = json.dumps(f"""You are {name}, {description}
+        system_message = json.dumps(
+            f"""You are {name}, {description}
 
 Your task is to chat with other team mambers and try to solve the given task.
 Do NOT try to finish the task until other team members give their opinion.
-""")
+"""
+        )
 
         if is_user_proxy:
             return autogen.UserProxyAgent(
@@ -188,7 +192,8 @@ You can leverage access to the following resources:
         return ""
 
     def _create_initial_message(self) -> None:
-        self.initial_message = json.dumps(f"""{self._task}
+        self.initial_message = json.dumps(
+            f"""{self._task}
 
 {self._first_section}
 
@@ -203,7 +208,8 @@ You can leverage access to the following resources:
 {self._best_practices}
 
 {self._final_section}
-""")
+"""
+        )
 
     def initiate_chat(self) -> None:
         self.manager.initiate_chat(self.manager, message=self.initial_message)

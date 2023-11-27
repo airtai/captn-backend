@@ -10,6 +10,7 @@ from .utils import last_message_is_termination
 
 # cassettes/{module_name}/test_end_to_end.yaml will be used
 
+
 def before_record_response(response):
     # do not record 429 and 500 responses
     # if ("status_code" in response) and (response["status_code"] in [429, 500]):
@@ -17,6 +18,7 @@ def before_record_response(response):
     # if ("status_code" in response) and (response["status_code"] in [429]):
     #     return None
     return response
+
 
 @pytest.mark.vcr(
     filter_headers=["api-key", "X-OpenAI-Client-User-Agent"],

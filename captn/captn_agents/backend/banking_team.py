@@ -72,7 +72,9 @@ in the plan.
         )
 
         self.task = task
-        self.llm_config = BankingTeam.get_llm_config(cache_seed=cache_seed, temperature=temperature)
+        self.llm_config = BankingTeam.get_llm_config(
+            cache_seed=cache_seed, temperature=temperature
+        )
 
         self._create_members()
         self._create_initial_message()

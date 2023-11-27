@@ -90,10 +90,10 @@ msg = json.loads(s)
 print(f"{msg=}")
 
 
-
 # record the cassete (first time): pytest --record-mode=once test_captn_end_to_end.py -s
 
 # cassettes/{module_name}/test_end_to_end.yaml will be used
+
 
 def before_record_response(response):
     # do not record 429 and 500 responses
@@ -102,6 +102,7 @@ def before_record_response(response):
     # if ("status_code" in response) and (response["status_code"] in [429]):
     #     return None
     return response
+
 
 @pytest.mark.vcr(
     filter_headers=["api-key", "X-OpenAI-Client-User-Agent"],
@@ -113,14 +114,13 @@ def test_end_to_end() -> None:
 
     api_base_canada = "https://airt-openai-canada.openai.azure.com"
 
-
     deployment_name = "airt-canada-gpt4"
 
     client = OpenAI(
         api_key=api_key_canada,
         base_url=api_base_canada + f"/openai/deployments/{deployment_name}",
-        default_query= {'api-version': '2023-12-01-preview'},
-        default_headers= {'api-key': api_key_canada}
+        default_query={"api-version": "2023-12-01-preview"},
+        default_headers={"api-key": api_key_canada},
     )
 
     # chat_completion = client.chat.completions.create(
@@ -137,8 +137,6 @@ def test_end_to_end() -> None:
     # print(f"{chat_completion=}")
 
     print(f"{msg=}")
-    chat_completion = client.chat.completions.create(
-        **msg
-        )
+    chat_completion = client.chat.completions.create(**msg)
 
     print(chat_completion)

@@ -28,16 +28,16 @@ openai.api_version = "2023-12-01-preview"
 
 CONFIG_LIST = [
     {
-        "model": "airt-canada-gpt4", # deployment
-        "api_base": api_base_canada, # resource
+        "model": "airt-canada-gpt4",  # deployment
+        "api_base": api_base_canada,  # resource
         "base_url": api_base_canada,  # litellm compatible endpoint
         "api_key": api_key_canada,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
     },
     {
-        "model": "airt-gpt4", # deployment
-        "api_base": api_base_sweeden, # resource
+        "model": "airt-gpt4",  # deployment
+        "api_base": api_base_sweeden,  # resource
         "base_url": api_base_sweeden,  # litellm compatible endpoint
         "api_key": api_key_sweeden,
         "api_type": openai.api_type,

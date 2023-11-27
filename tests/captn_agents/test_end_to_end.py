@@ -1,8 +1,6 @@
 import shutil
 from pathlib import Path
 
-import pytest
-
 from captn.captn_agents.backend.end_to_end import (
     continue_conversation,
     start_conversation,
