@@ -1,8 +1,28 @@
 from typing import Any, Callable, Dict, List, Optional
 
 import autogen
+import openai
+from fastcore.basics import patch
 
 from .config import CONFIG_LIST
+
+_completions_create_original = autogen.oai.client.OpenAIWrapper._completions_create
+
+
+# WORKAROUND for consistent 500 eror code when using openai functions
+@patch  # type: ignore
+def _completions_create(
+    self: autogen.oai.client.OpenAIWrapper,
+    client: openai.OpenAI,
+    params: Dict[str, Any],
+) -> Any:
+    for message in params["messages"]:
+        name = message.get("name")
+        role = message.get("role")
+        if name and role != "function":
+            # print(f"Removing name parameter from the following message:\n{message}")
+            message.pop("name")
+    return _completions_create_original(self, client=client, params=params)
 
 
 class Team:

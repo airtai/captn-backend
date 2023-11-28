@@ -17,7 +17,10 @@ def list_accessible_customers(user_id: int) -> List[str]:
 
 
 def execute_query(
-    user_id: int, customer_ids: Optional[List[str]] = None, query: Optional[str] = None
+    user_id: int,
+    customer_ids: Optional[List[str]] = None,
+    query: Optional[str] = None,
+    work_dir: Optional[str] = None,
 ) -> Dict[str, Optional[List[Dict[str, Any]]]]:
     if customer_ids is None:
         customer_ids = ["all"]
