@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.protobuf import json_format
+from google.api_core import protobuf_helpers
 from prisma import Prisma  # type: ignore[attr-defined]
 
 router = APIRouter()
@@ -164,11 +165,11 @@ async def load_user_credentials(user_id: Union[int, str]) -> Any:
 
 
 # Initialize Google Ads API client
-def create_google_ads_client(user_credentials: Dict[str, Any]) -> GoogleAdsClient:
+def create_google_ads_client(user_credentials: Dict[str, Any], use_proto_plus: bool = False) -> GoogleAdsClient:
     # Create a dictionary with the required structure for GoogleAdsClient
     google_ads_credentials = {
         "developer_token": environ.get("DEVELOPER_TOKEN"),
-        "use_proto_plus": False,
+        "use_proto_plus": use_proto_plus,
         "client_id": oauth2_settings["clientId"],
         "client_secret": oauth2_settings["clientSecret"],
         "refresh_token": user_credentials["refresh_token"],
@@ -239,3 +240,32 @@ async def search(
         ) from e
 
     return campaign_data
+
+
+@router.get("/pause-ad")
+async def pause_ad(user_id: int, customer_id, ad_group_id, ad_id) -> str:
+    user_credentials = await load_user_credentials(user_id)
+    client = create_google_ads_client(user_credentials=user_credentials, use_proto_plus=True)
+
+    ad_group_ad_service = client.get_service("AdGroupAdService")
+    ad_group_ad_operation = client.get_type("AdGroupAdOperation")
+
+    try:
+        ad_group_ad = ad_group_ad_operation.update
+        ad_group_ad.resource_name = ad_group_ad_service.ad_group_ad_path(
+            customer_id, ad_group_id, ad_id
+        )
+        ad_group_ad.status = client.enums.AdGroupStatusEnum.PAUSED
+        client.copy_from(
+            ad_group_ad_operation.update_mask,
+            protobuf_helpers.field_mask(None, ad_group_ad._pb),
+        )
+
+        ad_group_ad_response = ad_group_ad_service.mutate_ad_group_ads(
+            customer_id=customer_id, operations=[ad_group_ad_operation]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    return f"Paused ad group ad {ad_group_ad_response.results[0].resource_name}."

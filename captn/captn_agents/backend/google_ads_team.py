@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from ...google_ads.client import (
     execute_query,
     list_accessible_customers,
+    pause_ad,
 )
 from .execution_team import get_read_file
 from .function_configs import (
@@ -15,6 +16,7 @@ from .function_configs import (
     execute_query_config,
     list_accessible_customers_config,
     read_file_config,
+    pause_ad_config,
 )
 from .functions import ask_for_additional_info
 
@@ -30,6 +32,7 @@ class GoogleAdsTeam(Team):
         ask_for_additional_info_config,
         # analyze_query_response_config,
         read_file_config,
+        pause_ad_config,
     ]
 
     _default_roles = [
@@ -149,6 +152,12 @@ Example of customer_ids parameter: ["12", "44", "111"]
 You can use optional parameter 'query' for writing SQL queries. e.g.:
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
 FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
+
+3. 'pause_ad': Pause the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string)
+Before executing the 'pause_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id 
+with the 'execute_query' command and the following 'query':
+"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
+
 """
 
 
@@ -241,6 +250,13 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         #     work_dir=work_dir, file_name=file_name
         # ),
         "read_file": read_file,
+        "pause_ad": lambda customer_id, ad_group_id, ad_id: pause_ad(
+            user_id=user_id,
+            conv_id=conv_id,
+            customer_id=customer_id,
+            ad_group_id=ad_group_id,
+            ad_id=ad_id,
+        )
     }
 
     return function_map

@@ -286,3 +286,26 @@ analyze_query_response_config = {
         "required": ["file_name"],
     },
 }
+
+pause_ad_config = {
+    "name": "pause_ad",
+    "description": "Pause the Google Ad",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "ad_group_id": {
+                "type": "string",
+                "description": "Id of the Ad group",
+            },
+            "ad_id": {
+                "type": "string",
+                "description": "Id of the Ad",
+            },
+        },
+        "required": ["customer_id", "ad_group_id", "ad_id"],
+    },
+}
