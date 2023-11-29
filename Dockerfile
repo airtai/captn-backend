@@ -29,8 +29,8 @@ COPY migrations ./migrations
 COPY google_ads ./google_ads
 COPY openai_agent ./openai_agent
 COPY captn ./captn
-COPY application.py scripts/* fastapi_requirements.txt schema.prisma pyproject.toml ./
-RUN pip install -r fastapi_requirements.txt && pip install -e .
+COPY application.py scripts/* schema.prisma pyproject.toml ./
+RUN pip install -e ".[dev]"
 
 EXPOSE ${PORT}
 
