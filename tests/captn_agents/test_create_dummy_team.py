@@ -34,13 +34,16 @@ async def test_dummy_task_creation():
     with TemporaryDirectory() as d:
         conversation_id = 1000000
         message = "Some message"
+        team_name = "Google Ads Team"
         task_status_file_path = Path(d) / "task_status.json"
-        create_dummy_task(conversation_id, message, task_status_file_path)
+        create_dummy_task(conversation_id, message, team_name, task_status_file_path)
 
         # Initially, the status should be inprogress
         await asyncio.sleep(1)
         assert get_dummy_task_status(conversation_id, task_status_file_path) == {
-            "status": "inprogress",
+            "team_id": f"{conversation_id}",
+            "team_name": team_name,
+            "team_status": "inprogress",
             "msg": "",
             "is_question": True,
         }
@@ -49,18 +52,22 @@ async def test_dummy_task_creation():
             16
         )  # Wait for the first task to complete (15 seconds + 1 second buffer)
         assert get_dummy_task_status(conversation_id, task_status_file_path) == {
-            "status": "pause",
+            "team_id": f"{conversation_id}",
+            "team_name": team_name,
+            "team_status": "pause",
             "msg": QUESTION_MSG,
             "is_question": True,
         }
 
         # call create_dummy_task for the second time
-        create_dummy_task(conversation_id, message, task_status_file_path)
+        create_dummy_task(conversation_id, message, team_name, task_status_file_path)
 
         # After the second creation, the status should reset to inprogress
         await asyncio.sleep(1)
         assert get_dummy_task_status(conversation_id, task_status_file_path) == {
-            "status": "inprogress",
+            "team_id": f"{conversation_id}",
+            "team_name": team_name,
+            "team_status": "inprogress",
             "msg": "",
             "is_question": False,
         }
@@ -69,19 +76,23 @@ async def test_dummy_task_creation():
             21
         )  # Wait for the second task to complete (20 seconds + 1 second buffer)
         assert get_dummy_task_status(conversation_id, task_status_file_path) == {
-            "status": "completed",
+            "team_id": f"{conversation_id}",
+            "team_name": team_name,
+            "team_status": "completed",
             "msg": ANSWER_MSG,
             "is_question": False,
         }
 
         # call create_dummy_task for the second time
-        create_dummy_task(conversation_id, message, task_status_file_path)
+        create_dummy_task(conversation_id, message, team_name, task_status_file_path)
 
         await asyncio.sleep(
             16
         )  # Wait for the first task to complete (15 seconds + 1 second buffer)
         assert get_dummy_task_status(conversation_id, task_status_file_path) == {
-            "status": "pause",
+            "team_id": f"{conversation_id}",
+            "team_name": team_name,
+            "team_status": "pause",
             "msg": QUESTION_MSG,
             "is_question": True,
         }

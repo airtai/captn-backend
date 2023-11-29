@@ -47,7 +47,7 @@ def write_dict_to_json_file(data: Dict[str, str], file_path: str):
         print(f"Error while writing to the task_status.json file: {e}")
 
 
-async def execute_dummy_task(conversation_id: str, task_status_file_path: str):
+async def execute_dummy_task(conversation_id: str, team_name: str, task_status_file_path: str):
     task_status = read_json_file(task_status_file_path)
     is_new_task = (conversation_id not in task_status) or (
         not task_status[conversation_id]["is_question"]
@@ -55,24 +55,28 @@ async def execute_dummy_task(conversation_id: str, task_status_file_path: str):
 
     if is_new_task:
         task_status[conversation_id] = {
-            "status": "inprogress",
+            "team_id": conversation_id,
+            "team_name": team_name,
+            "team_status": "inprogress",
             "msg": "",
             "is_question": True,
         }
         write_dict_to_json_file(task_status, task_status_file_path)
 
         await asyncio.sleep(15)
-        task_status[conversation_id].update({"status": "pause", "msg": QUESTION_MSG})
+        task_status[conversation_id].update({"team_status": "pause", "msg": QUESTION_MSG})
     else:
         task_status[conversation_id] = {
-            "status": "inprogress",
+            "team_id": conversation_id,
+            "team_name": team_name,
+            "team_status": "inprogress",
             "msg": "",
             "is_question": not task_status[conversation_id]["is_question"],
         }
         write_dict_to_json_file(task_status, task_status_file_path)
 
         await asyncio.sleep(20)
-        task_status[conversation_id].update({"status": "completed", "msg": ANSWER_MSG})
+        task_status[conversation_id].update({"team_status": "completed", "msg": ANSWER_MSG})
 
     write_dict_to_json_file(task_status, task_status_file_path)
 
@@ -80,14 +84,17 @@ async def execute_dummy_task(conversation_id: str, task_status_file_path: str):
 def create_dummy_task(
     conversation_id: int,
     message: str,
+    team_name: str,
     task_status_file_path: str = TASK_STATUS_FILE_PATH,
 ):
     print("======")
-    print(f"New task is created: {conversation_id}")
+    print(f"New team is created with the following details:")
+    print(f"Team ID/Conversation ID: {conversation_id}")
+    print(f"Team Name: {team_name}")
     print(f"Message: {message}")
     print("======")
     # Start the task execution with the given conversation_id
-    asyncio.create_task(execute_dummy_task(str(conversation_id), task_status_file_path))
+    asyncio.create_task(execute_dummy_task(str(conversation_id), team_name, task_status_file_path))
 
 
 def get_dummy_task_status(

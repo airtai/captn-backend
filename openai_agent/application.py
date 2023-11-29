@@ -38,10 +38,13 @@ Finally, ensure that your responses are formatted using markdown syntax, as they
 """
 
 def get_digital_marketing_campaign_support(conv_id: int, message: str) -> Dict[str, str]:
-    create_dummy_task(conv_id, message)
+    team_name = f"GoogleAdsAgent_{conv_id}"
+    create_dummy_task(conv_id, message, team_name)
     return {
         "content":f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
-        "team_status": "inprogress"
+        "team_status": "inprogress",
+        "team_name": team_name,
+        "team_id": conv_id
     }
 
 FUNCTIONS = [
@@ -93,35 +96,38 @@ async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> D
             "content":result
         }
 
-def _user_response_to_agent(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
+def _user_response_to_agent(message: List[Dict[str, str]], user_answer_to_team_id: int) -> Dict[str, Optional[str]]:
     last_user_message = message[-1]["content"]
-    create_dummy_task(conv_id, last_user_message)
+    team_name = f"GoogleAdsAgent_{user_answer_to_team_id}"
+    create_dummy_task(user_answer_to_team_id, last_user_message, team_name)
     return {
         "content":"""**Thank you for your response!**
 
 Our team can now proceed with the work, and if we need any additional information, we'll reach out to you. In the meantime, feel free to ask me any questions about digital marketing. I'm here to help! 😊🚀""",
-        "team_status": "inprogress"
+        "team_status": "inprogress",
+        "team_name": team_name,
+        "team_id": user_answer_to_team_id
     }
 
 class AzureOpenAIRequest(BaseModel):
-    # conversation: List[Dict[str, str]]
     message: List[Dict[str, str]]
     user_id: int
     conv_id: int
     is_answer_to_agent_question: bool
+    user_answer_to_team_id: Union[int, None]
 
 @router.post("/chat")
-async def create_item(request: AzureOpenAIRequest) -> Dict[str, Optional[str]]:
+async def create_item(request: AzureOpenAIRequest) -> Dict[str, Union[Optional[str], Optional[int]]]:
     message = request.message
     conv_id = request.conv_id
-    result = _user_response_to_agent(message, conv_id) if request.is_answer_to_agent_question else await _get_openai_response(message, conv_id)
+    result = _user_response_to_agent(message, request.user_answer_to_team_id) if request.is_answer_to_agent_question else await _get_openai_response(message, conv_id)
     return result
 
 class GetTeamStatusRequest(BaseModel):
-    conversation_id: int
+    team_id: int
 
 @router.post("/get-team-status")
-async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, Union[str, bool]]:
-    conversation_id = request.conversation_id
-    status = get_dummy_task_status(conversation_id)
+async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, Union[str, bool, int]]:
+    team_id = request.team_id
+    status = get_dummy_task_status(team_id)
     return status
