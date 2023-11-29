@@ -2,11 +2,12 @@ import json
 from datetime import datetime
 from os import environ
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
+ALREADY_AUTHENTICATED = "User is already authenticated"
 
 
 def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
@@ -15,7 +16,13 @@ def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     return response.json()  # type: ignore[no-any-return]
 
 
-def list_accessible_customers(user_id: int) -> List[str]:
+def list_accessible_customers(
+    user_id: int, conv_id: int
+) -> Union[List[str], Dict[str, str]]:
+    login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
+    if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
+        return login_url_response
+
     params = {"user_id": user_id}
     response = requests.get(
         f"{BASE_URL}/list-accessible-customers", params=params, timeout=10
@@ -30,10 +37,15 @@ def list_accessible_customers(user_id: int) -> List[str]:
 
 def execute_query(
     user_id: int,
+    conv_id: int,
     work_dir: str,
     customer_ids: Optional[List[str]] = None,
     query: Optional[str] = None,
-) -> str:
+) -> Union[str, Dict[str, str]]:
+    login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
+    if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
+        return login_url_response
+
     params: Dict[str, Any] = {
         "user_id": user_id,
     }
@@ -41,7 +53,7 @@ def execute_query(
         params["customer_ids"] = customer_ids
     if query:
         params["query"] = query
-    print(params)
+
     response = requests.get(f"{BASE_URL}/search", params=params, timeout=10)
     if not response.ok:
         raise ValueError(response.content)

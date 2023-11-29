@@ -12,12 +12,13 @@ def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     }
 
 
-def list_accessible_customers(user_id: int) -> List[str]:
+def list_accessible_customers(user_id: int, conv_id: int) -> List[str]:
     return ["8942812744", "2324127278"]  # , "7119828439", "6505006790", "8913146119"]
 
 
 def execute_query(
     user_id: int,
+    conv_id: int,
     customer_ids: Optional[List[str]] = None,
     query: Optional[str] = None,
     work_dir: Optional[str] = None,
