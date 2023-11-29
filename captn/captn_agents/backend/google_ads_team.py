@@ -10,12 +10,13 @@ from ...google_ads.client import (
     get_login_url,
     list_accessible_customers,
 )
+from .execution_team import get_read_file
 from .function_configs import (
-    analyze_query_response_config,
     ask_for_additional_info_config,
     execute_query_config,
     get_login_url_config,
     list_accessible_customers_config,
+    read_file_config,
 )
 from .functions import ask_for_additional_info
 
@@ -29,7 +30,8 @@ class GoogleAdsTeam(Team):
         list_accessible_customers_config,
         execute_query_config,
         ask_for_additional_info_config,
-        analyze_query_response_config,
+        # analyze_query_response_config,
+        read_file_config,
     ]
 
     _default_roles = [
@@ -130,6 +132,7 @@ Your team is in charge of using the Google Ads API and no one elce does NOT know
 10. Before making any changes (with budgets, keywords, etc.) ask the user if he approves.
 Also, make sure that you explicitly tell the user which changes you want to make.
 11. Always suggest one change at the time (do NOT work on multiple things at the same time)
+12. After executing UPDATE database queries, please check if everything was successfuly updated by using the SELECT query.
 """
 
     @property
@@ -150,7 +153,8 @@ You can use optional parameter 'query' for writing SQL queries. e.g.:
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
 FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
 
-4. 'analyze_query_response': Analyze the execute_query response, no input params: (file_name: str)
+4. read_file: Read an existing file, params: (filename: string)
+
 """
 
 
@@ -224,6 +228,8 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             "Error: parameter customer_ids must be a list of strings. e.g. ['1', '5', '10']"
         )
 
+    read_file = get_read_file(working_dir=Path(work_dir))
+
     function_map = {
         "get_login_url": lambda: get_login_url(user_id=user_id, conv_id=conv_id),
         "list_accessible_customers": lambda: list_accessible_customers(user_id=user_id),
@@ -234,9 +240,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             work_dir=work_dir,
         ),
         "ask_for_additional_info": ask_for_additional_info,
-        "analyze_query_response": lambda file_name: analyze_query_response(
-            work_dir=work_dir, file_name=file_name
-        ),
+        # "analyze_query_response": lambda file_name: analyze_query_response(
+        #     work_dir=work_dir, file_name=file_name
+        # ),
+        "read_file": read_file,
     }
 
     return function_map

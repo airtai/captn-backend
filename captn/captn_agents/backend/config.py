@@ -27,28 +27,28 @@ openai.api_type = "azure"
 openai.api_version = "2023-12-01-preview"
 
 CONFIG_LIST = [
-    {
-        "model": litellm_model,
-        "api_base": litellm_api_base,
-        "base_url": litellm_api_base,  # litellm compatible endpoint
-        # "api_type": "open_ai",
-        "api_key": api_key_litellm,  # just a placeholder
-    },
+    # {
+    #     "model": litellm_model,
+    #     "api_base": litellm_api_base,
+    #     "base_url": litellm_api_base,  # litellm compatible endpoint
+    #     # "api_type": "open_ai",
+    #     "api_key": api_key_litellm,  # just a placeholder
+    # },
     # {
     #     "model": "airt-canada-gpt4",
     #     "api_base": "http://localhost:9055",
     #     "base_url": "http://localhost:9055",  #litellm compatible endpoint
     #     "api_type": "open_ai",
-    #     "api_key": "NULL", # just a placeholder
+    #     "api_key": "NULL", # just a placeholder  # pragma: allowlist secret
     # },
-    # {
-    #     "model": "airt-gpt4",
-    #     "api_key": api_key_sweeden,
-    #     "api_base": api_base_sweeden,
-    #     "base_url": api_base_sweeden,
-    #     "api_type": openai.api_type,
-    #     "api_version": openai.api_version,
-    # },
+    {
+        "model": "airt-gpt4",
+        "api_key": api_key_sweeden,
+        "api_base": api_base_sweeden,
+        "base_url": api_base_sweeden,
+        "api_type": openai.api_type,
+        "api_version": openai.api_version,
+    },
     # {
     #     "model": "gpt-4",
     #     "api_key": api_key_canada,

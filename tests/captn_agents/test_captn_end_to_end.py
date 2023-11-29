@@ -5,7 +5,8 @@ from .utils import last_message_is_termination
 
 
 def test_end_to_end() -> None:
-    task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
+    # task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
+    task = "Please stop all of my Google ads campaigns."
     user_id = 1
     conv_id = 17
 

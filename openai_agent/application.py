@@ -2,11 +2,14 @@ import json
 from os import environ
 from typing import Dict, List, Optional, Union
 
-from fastapi import APIRouter, HTTPException
 import openai
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.create_dummy_team import create_dummy_task, get_dummy_task_status
+from captn.captn_agents.backend.create_dummy_team import (
+    create_dummy_task,
+    get_dummy_task_status,
+)
 
 router = APIRouter()
 
@@ -37,12 +40,16 @@ Since you are an expert, you should suggest the best option to your clients and 
 Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
-def get_digital_marketing_campaign_support(conv_id: int, message: str) -> Dict[str, str]:
+
+def get_digital_marketing_campaign_support(
+    conv_id: int, message: str
+) -> Dict[str, str]:
     create_dummy_task(conv_id, message)
     return {
-        "content":f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
-        "team_status": "inprogress"
+        "content": "Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
+        "team_status": "inprogress",
     }
+
 
 FUNCTIONS = [
     {
@@ -51,22 +58,29 @@ FUNCTIONS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "message": {
-                    "type": "string",
-                    "description": "The user request message"
-                }
+                "message": {"type": "string", "description": "The user request message"}
             },
-            "required": ["message"]
-        }
+            "required": ["message"],
+        },
     },
 ]
 
-async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
+
+async def _get_openai_response(
+    message: List[Dict[str, str]], conv_id: int
+) -> Dict[str, Optional[str]]:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
-        messages.append({"role": "system", "content": "You should call the 'get_digital_marketing_campaign_support' function only when the previous user message is about optimizing or enhancing their digital marketing or advertising campaign. Do not make reference to previous conversations, and avoid calling 'get_digital_marketing_campaign_support' solely based on conversation history. Take into account that the client may have asked different questions in recent interactions, and respond accordingly."})
+        messages.append(
+            {
+                "role": "system",
+                "content": "You should call the 'get_digital_marketing_campaign_support' function only when the previous user message is about optimizing or enhancing their digital marketing or advertising campaign. Do not make reference to previous conversations, and avoid calling 'get_digital_marketing_campaign_support' solely based on conversation history. Take into account that the client may have asked different questions in recent interactions, and respond accordingly.",
+            }
+        )
         completion = await openai.ChatCompletion.acreate(
-            engine=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS, # type: ignore[arg-type]
+            engine=environ.get("AZURE_MODEL"),
+            messages=messages,
+            functions=FUNCTIONS,  # type: ignore[arg-type]
         )
     except Exception as e:
         raise HTTPException(
@@ -77,31 +91,35 @@ async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> D
     # Check if the model wants to call a function
     if response_message.get("function_call"):
         # Call the function. The JSON response may not always be valid so make sure to handle errors
-        function_name = response_message["function_call"]["name"] # todo: enclose in try catch???
+        function_name = response_message["function_call"][
+            "name"
+        ]  # todo: enclose in try catch???
         available_functions = {
             "get_digital_marketing_campaign_support": get_digital_marketing_campaign_support,
         }
         function_to_call = available_functions[function_name]
-        
+
         # verify function has correct number of arguments
         function_args = json.loads(response_message["function_call"]["arguments"])
         function_response = function_to_call(conv_id=conv_id, **function_args)
         return function_response
     else:
         result = completion.choices[0].message.content
-        return {
-            "content":result
-        }
+        return {"content": result}
 
-def _user_response_to_agent(message: List[Dict[str, str]], conv_id: int) -> Dict[str, Optional[str]]:
+
+def _user_response_to_agent(
+    message: List[Dict[str, str]], conv_id: int
+) -> Dict[str, Optional[str]]:
     last_user_message = message[-1]["content"]
     create_dummy_task(conv_id, last_user_message)
     return {
-        "content":"""**Thank you for your response!**
+        "content": """**Thank you for your response!**
 
 Our team can now proceed with the work, and if we need any additional information, we'll reach out to you. In the meantime, feel free to ask me any questions about digital marketing. I'm here to help! 😊🚀""",
-        "team_status": "inprogress"
+        "team_status": "inprogress",
     }
+
 
 class AzureOpenAIRequest(BaseModel):
     # conversation: List[Dict[str, str]]
@@ -110,15 +128,22 @@ class AzureOpenAIRequest(BaseModel):
     conv_id: int
     is_answer_to_agent_question: bool
 
+
 @router.post("/chat")
 async def create_item(request: AzureOpenAIRequest) -> Dict[str, Optional[str]]:
     message = request.message
     conv_id = request.conv_id
-    result = _user_response_to_agent(message, conv_id) if request.is_answer_to_agent_question else await _get_openai_response(message, conv_id)
+    result = (
+        _user_response_to_agent(message, conv_id)
+        if request.is_answer_to_agent_question
+        else await _get_openai_response(message, conv_id)
+    )
     return result
+
 
 class GetTeamStatusRequest(BaseModel):
     conversation_id: int
+
 
 @router.post("/get-team-status")
 async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, Union[str, bool]]:
