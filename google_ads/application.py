@@ -2,10 +2,10 @@ import json
 import urllib.parse
 from contextlib import asynccontextmanager
 from os import environ
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Literal
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, status, Depends
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
@@ -242,8 +242,31 @@ async def search(
     return campaign_data
 
 
+from pydantic import BaseModel, validator, ValidationError
+from typing import Optional
+
+class AdBase(BaseModel):
+    customer_id: Optional[str] = None
+    ad_group_id: Optional[str] = None
+    name: Optional[str] = None
+    cpc_bid_micros: Optional[int] = None
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None
+
+    @validator('customer_id', always=True)
+    def validate_customer_id(cls, v):
+        if not v:
+            raise ValidationError("Field required: customer_id is missing")
+        return v
+    
+    @validator('ad_group_id', always=True)
+    def validate_ad_group_id(cls, v):
+        if not v:
+            raise ValidationError("Field required: ad_group_id is missing")
+        return v
+    
+
 @router.get("/pause-ad")
-async def pause_ad(user_id: int, customer_id, ad_group_id, ad_id) -> str:
+async def pause_ad(user_id: int, customer_id: str, ad_group_id: str, ad_id: str) -> str:
     user_credentials = await load_user_credentials(user_id)
     client = create_google_ads_client(user_credentials=user_credentials, use_proto_plus=True)
 
@@ -269,3 +292,67 @@ async def pause_ad(user_id: int, customer_id, ad_group_id, ad_id) -> str:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
     return f"Paused ad group ad {ad_group_ad_response.results[0].resource_name}."
+
+
+class AdGroup(BaseModel):
+    customer_id: Optional[str] = None
+    ad_group_id: Optional[str] = None
+    name: Optional[str] = None
+    cpc_bid_micros: Optional[int] = None
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None
+
+    @validator('customer_id', always=True)
+    def validate_customer_id(cls, v):
+        if not v:
+            raise ValidationError("Field required: customer_id is missing")
+        return v
+    
+    @validator('ad_group_id', always=True)
+    def validate_ad_group_id(cls, v):
+        if not v:
+            raise ValidationError("Field required: ad_group_id is missing")
+        return v
+
+
+
+@router.get("/update-ad-group")
+async def update_ad_group(user_id: int, ad_group_model: AdGroup = Depends()) -> str:
+    user_credentials = await load_user_credentials(user_id)
+    client = create_google_ads_client(user_credentials=user_credentials, use_proto_plus=True)
+
+    ad_group_dict = ad_group_model.model_dump()
+    customer_id = ad_group_dict.pop("customer_id")
+    ad_group_id = ad_group_dict.pop("ad_group_id")
+
+    if ad_group_dict["status"] == "ENABLED":
+        ad_group_dict["status"] = client.enums.AdGroupStatusEnum.ENABLED
+    elif ad_group_dict["status"] == "PAUSED":
+         ad_group_dict["status"] = client.enums.AdGroupStatusEnum.PAUSED
+
+    ad_group_service = client.get_service("AdGroupService")
+
+    # Create ad group operation.
+    ad_group_operation = client.get_type("AdGroupOperation")
+    ad_group = ad_group_operation.update
+    ad_group.resource_name = ad_group_service.ad_group_path(
+        customer_id, ad_group_id
+    )
+
+    # ad_group.status = client.enums.AdGroupStatusEnum.PAUSED
+    print(client.enums.AdGroupStatusEnum.ENABLED)
+    for attribute_name, attribute_value in ad_group_dict.items():
+        if attribute_value:
+            setattr(ad_group, attribute_name, attribute_value)
+            print(f"Set {attribute_name} to {attribute_value}")
+
+    client.copy_from(
+        ad_group_operation.update_mask,
+        protobuf_helpers.field_mask(None, ad_group._pb),
+    )
+
+    # Update the ad group.
+    ad_group_response = ad_group_service.mutate_ad_groups(
+        customer_id=customer_id, operations=[ad_group_operation]
+    )
+
+    return f"Updated ad group {ad_group_response.results[0].resource_name}."
