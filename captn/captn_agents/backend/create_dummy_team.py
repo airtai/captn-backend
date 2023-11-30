@@ -67,5 +67,4 @@ def create_dummy_task(
 def get_dummy_task_status(
     conversation_id
 ):
-    print(TASK_STATUS)
     return TASK_STATUS.get(str(conversation_id), {})
