@@ -41,7 +41,7 @@ def get_digital_marketing_campaign_support(conv_id: int, message: str) -> Dict[s
     team_name = f"GoogleAdsAgent_{conv_id}"
     create_dummy_task(conv_id, message, team_name)
     return {
-        "content":f"Ahoy! Indeed, Our team is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
+        "content":f"Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": conv_id
@@ -101,9 +101,9 @@ def _user_response_to_agent(message: List[Dict[str, str]], user_answer_to_team_i
     team_name = f"GoogleAdsAgent_{user_answer_to_team_id}"
     create_dummy_task(user_answer_to_team_id, last_user_message, team_name)
     return {
-        "content":"""**Thank you for your response!**
+        "content":f"""**Thank you for your response!**
 
-Our team can now proceed with the work, and if we need any additional information, we'll reach out to you. In the meantime, feel free to ask me any questions about digital marketing. I'm here to help! 😊🚀""",
+**{team_name}** can now proceed with the work, and if we need any additional information, we'll reach out to you. In the meantime, feel free to ask me any questions about digital marketing. I'm here to help! 😊🚀""",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": user_answer_to_team_id

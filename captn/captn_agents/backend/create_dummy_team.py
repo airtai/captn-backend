@@ -10,7 +10,7 @@ project_root_dir = current_dir.parent.parent.parent
 TASK_STATUS_FILE_PATH = project_root_dir / "task_status.json"
 
 QUESTION_MSG = """
-## 📢 Notification from our team: 
+## 📢 Notification from **{}**: 
 
 <br/>
 
@@ -21,7 +21,7 @@ Our team has a question for you. Can you please answer the below:
 What is your name? 😊"""
 
 ANSWER_MSG = """
-## 📢 Notification from our team: 
+## 📢 Notification from **{}**: 
 
 <br/>
 
@@ -64,7 +64,7 @@ async def execute_dummy_task(conversation_id: str, team_name: str, task_status_f
         write_dict_to_json_file(task_status, task_status_file_path)
 
         await asyncio.sleep(15)
-        task_status[conversation_id].update({"team_status": "pause", "msg": QUESTION_MSG})
+        task_status[conversation_id].update({"team_status": "pause", "msg": QUESTION_MSG.format(team_name)})
     else:
         task_status[conversation_id] = {
             "team_id": conversation_id,
@@ -76,7 +76,7 @@ async def execute_dummy_task(conversation_id: str, team_name: str, task_status_f
         write_dict_to_json_file(task_status, task_status_file_path)
 
         await asyncio.sleep(20)
-        task_status[conversation_id].update({"team_status": "completed", "msg": ANSWER_MSG})
+        task_status[conversation_id].update({"team_status": "completed", "msg": ANSWER_MSG.format(team_name)})
 
     write_dict_to_json_file(task_status, task_status_file_path)
 
