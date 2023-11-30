@@ -11,7 +11,7 @@ from captn.captn_agents.backend.create_dummy_team import (
 )
 
 QUESTION_MSG = """
-## 📢 Notification from our team: 
+## 📢 Notification from **{}**: 
 
 <br/>
 
@@ -22,7 +22,7 @@ Our team has a question for you. Can you please answer the below:
 What is your name? 😊"""
 
 ANSWER_MSG = """
-## 📢 Notification from our team: 
+## 📢 Notification from **{}**: 
 
 <br/>
 
@@ -55,7 +55,7 @@ async def test_dummy_task_creation():
             "team_id": f"{conversation_id}",
             "team_name": team_name,
             "team_status": "pause",
-            "msg": QUESTION_MSG,
+            "msg": QUESTION_MSG.format(team_name),
             "is_question": True,
         }
 
@@ -79,7 +79,7 @@ async def test_dummy_task_creation():
             "team_id": f"{conversation_id}",
             "team_name": team_name,
             "team_status": "completed",
-            "msg": ANSWER_MSG,
+            "msg": ANSWER_MSG.format(team_name),
             "is_question": False,
         }
 
@@ -93,6 +93,6 @@ async def test_dummy_task_creation():
             "team_id": f"{conversation_id}",
             "team_name": team_name,
             "team_status": "pause",
-            "msg": QUESTION_MSG,
+            "msg": QUESTION_MSG.format(team_name),
             "is_question": True,
         }
