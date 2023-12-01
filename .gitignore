@@ -6,3 +6,7 @@ __pycache__/
 .cache/
 
 logs/
+
+cassettes/
+OAI_CONFIG_LIST
+tmp*

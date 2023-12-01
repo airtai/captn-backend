@@ -5,12 +5,15 @@ from os import environ
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
+from google.api_core import protobuf_helpers
 from google.protobuf import json_format
 from prisma import Prisma  # type: ignore[attr-defined]
+
+from .model import AdBase
 
 router = APIRouter()
 
@@ -88,7 +91,7 @@ async def get_login_url(
 ) -> Dict[str, str]:
     is_authenticated = await is_authenticated_for_ads(user_id=user_id)
     if is_authenticated:
-        return {"login_url": f"User is already authenticated"}
+        return {"login_url": "User is already authenticated"}
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
@@ -164,11 +167,13 @@ async def load_user_credentials(user_id: Union[int, str]) -> Any:
 
 
 # Initialize Google Ads API client
-def create_google_ads_client(user_credentials: Dict[str, Any]) -> GoogleAdsClient:
+def create_google_ads_client(
+    user_credentials: Dict[str, Any], use_proto_plus: bool = False
+) -> GoogleAdsClient:
     # Create a dictionary with the required structure for GoogleAdsClient
     google_ads_credentials = {
         "developer_token": environ.get("DEVELOPER_TOKEN"),
-        "use_proto_plus": False,
+        "use_proto_plus": use_proto_plus,
         "client_id": oauth2_settings["clientId"],
         "client_secret": oauth2_settings["clientSecret"],
         "refresh_token": user_credentials["refresh_token"],
@@ -239,3 +244,92 @@ async def search(
         ) from e
 
     return campaign_data
+
+
+async def _update(
+    user_id: int, ad_model: AdBase, key_service_operation: Dict[str, str]
+) -> str:
+    user_credentials = await load_user_credentials(user_id)
+    client = create_google_ads_client(
+        user_credentials=user_credentials, use_proto_plus=True
+    )
+
+    ad_dict = ad_model.model_dump()
+    customer_id = ad_dict.pop("customer_id")
+    ad_group_id = ad_dict.pop("ad_group_id")
+
+    if ad_dict["status"] == "ENABLED":
+        ad_dict["status"] = client.enums.AdGroupStatusEnum.ENABLED
+    elif ad_dict["status"] == "PAUSED":
+        ad_dict["status"] = client.enums.AdGroupStatusEnum.PAUSED
+
+    ad_service = client.get_service(key_service_operation["service"])
+    ad_operation = client.get_type(key_service_operation["operation"])
+    key = key_service_operation["key"]
+    try:
+        ad_group_ad = ad_operation.update
+
+        if key == "ad_group_ad":
+            ad_id = ad_dict.pop("ad_id")
+            ad_group_ad.resource_name = ad_service.ad_group_ad_path(
+                customer_id, ad_group_id, ad_id
+            )
+        elif key == "ad_group":
+            ad_group_ad.resource_name = ad_service.ad_group_path(
+                customer_id, ad_group_id
+            )
+        else:
+            raise KeyError(f"key: {key} is not supported")
+
+        for attribute_name, attribute_value in ad_dict.items():
+            if attribute_value:
+                setattr(ad_group_ad, attribute_name, attribute_value)
+                print(f"Set {attribute_name} to {attribute_value}")
+
+        client.copy_from(
+            ad_operation.update_mask,
+            protobuf_helpers.field_mask(None, ad_group_ad._pb),  # type: ignore[no-untyped-call]
+        )
+
+        if key == "ad_group_ad":
+            ad_response = ad_service.mutate_ad_group_ads(
+                customer_id=customer_id, operations=[ad_operation]
+            )
+        elif key == "ad_group":
+            ad_response = ad_service.mutate_ad_groups(
+                customer_id=customer_id, operations=[ad_operation]
+            )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    return f"Updated {ad_response.results[0].resource_name}."
+
+
+@router.get("/update-ad")
+async def update_ad(user_id: int, ad_model: AdBase = Depends()) -> str:
+    key_service_operation = {
+        "key": "ad_group_ad",
+        "service": "AdGroupAdService",
+        "operation": "AdGroupAdOperation",
+    }
+
+    return await _update(
+        user_id=user_id, ad_model=ad_model, key_service_operation=key_service_operation
+    )
+
+
+@router.get("/update-ad-group")
+async def update_ad_group(user_id: int, ad_group_model: AdBase = Depends()) -> str:
+    key_service_operation = {
+        "key": "ad_group",
+        "service": "AdGroupService",
+        "operation": "AdGroupOperation",
+    }
+
+    return await _update(
+        user_id=user_id,
+        ad_model=ad_group_model,
+        key_service_operation=key_service_operation,
+    )

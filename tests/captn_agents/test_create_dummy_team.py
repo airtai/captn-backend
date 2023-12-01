@@ -1,9 +1,10 @@
 # test_status_updater.py
 
-import pytest
-from pathlib import Path
 import asyncio
+from pathlib import Path
 from tempfile import TemporaryDirectory
+
+import pytest
 
 from captn.captn_agents.backend.create_dummy_team import (
     create_dummy_task,
@@ -11,7 +12,7 @@ from captn.captn_agents.backend.create_dummy_team import (
 )
 
 QUESTION_MSG = """
-## 📢 Notification from our team: 
+## 📢 Notification from our team:
 
 <br/>
 
@@ -22,7 +23,7 @@ Our team has a question for you. Can you please answer the below:
 What is your name? 😊"""
 
 ANSWER_MSG = """
-## 📢 Notification from our team: 
+## 📢 Notification from our team:
 
 <br/>
 
@@ -30,7 +31,7 @@ Hurray! Your campaign report is ready😊"""
 
 
 @pytest.mark.asyncio
-async def test_dummy_task_creation():
+async def test_dummy_task_creation() -> None:
     with TemporaryDirectory() as d:
         conversation_id = 1000000
         message = "Some message"
