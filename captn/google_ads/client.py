@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 
+from ..model import AdBase
+
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
 
@@ -72,34 +74,16 @@ def execute_query(
     return f"The result of the query saved at: {file_name}"
 
 
-def _validate_input(customer_id: str, ad_group_id: str, ad_id: str) -> str:
-    return_value = ""
-    if not customer_id:
-        return_value += "Parameter customer_id can NOT be empty.\n"
-    if not ad_group_id:
-        return_value += "Parameter ad_group_id can NOT be empty.\n"
-    if not ad_id:
-        return_value += "Parameter ad_id can NOT be empty.\n"
-    return return_value
-
-def pause_ad(user_id: int, conv_id: int, customer_id: str, ad_group_id: str, ad_id: str) -> str:
-    validate_input_response = _validate_input(customer_id=customer_id, ad_group_id=ad_group_id, ad_id=ad_id)
-    if validate_input_response:
-        return validate_input_response
-
+def update_ad(user_id: int, conv_id: int, ad: AdBase) -> str:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response
 
-    params: Dict[str, Any] = {
-        "user_id": user_id,
-        "customer_id": customer_id,
-        "ad_group_id": ad_group_id,
-        "ad_id": ad_id,
-    }
+    params: Dict[str, Any] = ad.model_dump()
+    params["user_id"] = user_id
 
-    response = requests.get(f"{BASE_URL}/pause-ad", params=params, timeout=10)
+    response = requests.get(f"{BASE_URL}/update-ad", params=params, timeout=10)
     if not response.ok:
         raise ValueError(response.content)
 
-    return response.json() # type: ignore[no-any-return]
+    return response.json()  # type: ignore[no-any-return]

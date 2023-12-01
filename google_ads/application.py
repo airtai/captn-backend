@@ -2,16 +2,18 @@ import json
 import urllib.parse
 from contextlib import asynccontextmanager
 from os import environ
-from typing import Any, Dict, List, Optional, Union, Literal
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query, Request, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
-from google.protobuf import json_format
 from google.api_core import protobuf_helpers
+from google.protobuf import json_format
 from prisma import Prisma  # type: ignore[attr-defined]
+
+from .model import AdBase
 
 router = APIRouter()
 
@@ -165,7 +167,9 @@ async def load_user_credentials(user_id: Union[int, str]) -> Any:
 
 
 # Initialize Google Ads API client
-def create_google_ads_client(user_credentials: Dict[str, Any], use_proto_plus: bool = False) -> GoogleAdsClient:
+def create_google_ads_client(
+    user_credentials: Dict[str, Any], use_proto_plus: bool = False
+) -> GoogleAdsClient:
     # Create a dictionary with the required structure for GoogleAdsClient
     google_ads_credentials = {
         "developer_token": environ.get("DEVELOPER_TOKEN"),
@@ -242,117 +246,90 @@ async def search(
     return campaign_data
 
 
-from pydantic import BaseModel, validator, ValidationError
-from typing import Optional
-
-class AdBase(BaseModel):
-    customer_id: Optional[str] = None
-    ad_group_id: Optional[str] = None
-    name: Optional[str] = None
-    cpc_bid_micros: Optional[int] = None
-    status: Optional[Literal["ENABLED", "PAUSED"]] = None
-
-    @validator('customer_id', always=True)
-    def validate_customer_id(cls, v):
-        if not v:
-            raise ValidationError("Field required: customer_id is missing")
-        return v
-    
-    @validator('ad_group_id', always=True)
-    def validate_ad_group_id(cls, v):
-        if not v:
-            raise ValidationError("Field required: ad_group_id is missing")
-        return v
-    
-
-@router.get("/pause-ad")
-async def pause_ad(user_id: int, customer_id: str, ad_group_id: str, ad_id: str) -> str:
+async def _update(
+    user_id: int, ad_model: AdBase, key_service_operation: Dict[str, str]
+) -> str:
     user_credentials = await load_user_credentials(user_id)
-    client = create_google_ads_client(user_credentials=user_credentials, use_proto_plus=True)
+    client = create_google_ads_client(
+        user_credentials=user_credentials, use_proto_plus=True
+    )
 
-    ad_group_ad_service = client.get_service("AdGroupAdService")
-    ad_group_ad_operation = client.get_type("AdGroupAdOperation")
+    ad_dict = ad_model.model_dump()
+    customer_id = ad_dict.pop("customer_id")
+    ad_group_id = ad_dict.pop("ad_group_id")
 
+    if ad_dict["status"] == "ENABLED":
+        ad_dict["status"] = client.enums.AdGroupStatusEnum.ENABLED
+    elif ad_dict["status"] == "PAUSED":
+        ad_dict["status"] = client.enums.AdGroupStatusEnum.PAUSED
+
+    ad_service = client.get_service(key_service_operation["service"])
+    ad_operation = client.get_type(key_service_operation["operation"])
+    key = key_service_operation["key"]
     try:
-        ad_group_ad = ad_group_ad_operation.update
-        ad_group_ad.resource_name = ad_group_ad_service.ad_group_ad_path(
-            customer_id, ad_group_id, ad_id
-        )
-        ad_group_ad.status = client.enums.AdGroupStatusEnum.PAUSED
+        ad_group_ad = ad_operation.update
+
+        if key == "ad_group_ad":
+            ad_id = ad_dict.pop("ad_id")
+            ad_group_ad.resource_name = ad_service.ad_group_ad_path(
+                customer_id, ad_group_id, ad_id
+            )
+        elif key == "ad_group":
+            ad_group_ad.resource_name = ad_service.ad_group_path(
+                customer_id, ad_group_id
+            )
+        else:
+            raise KeyError(f"key: {key} is not supported")
+
+        for attribute_name, attribute_value in ad_dict.items():
+            if attribute_value:
+                setattr(ad_group_ad, attribute_name, attribute_value)
+                print(f"Set {attribute_name} to {attribute_value}")
+
         client.copy_from(
-            ad_group_ad_operation.update_mask,
-            protobuf_helpers.field_mask(None, ad_group_ad._pb),
+            ad_operation.update_mask,
+            protobuf_helpers.field_mask(None, ad_group_ad._pb),  # type: ignore[no-untyped-call]
         )
 
-        ad_group_ad_response = ad_group_ad_service.mutate_ad_group_ads(
-            customer_id=customer_id, operations=[ad_group_ad_operation]
-        )
+        if key == "ad_group_ad":
+            ad_response = ad_service.mutate_ad_group_ads(
+                customer_id=customer_id, operations=[ad_operation]
+            )
+        elif key == "ad_group":
+            ad_response = ad_service.mutate_ad_groups(
+                customer_id=customer_id, operations=[ad_operation]
+            )
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
-    return f"Paused ad group ad {ad_group_ad_response.results[0].resource_name}."
+    return f"Updated {ad_response.results[0].resource_name}."
 
 
-class AdGroup(BaseModel):
-    customer_id: Optional[str] = None
-    ad_group_id: Optional[str] = None
-    name: Optional[str] = None
-    cpc_bid_micros: Optional[int] = None
-    status: Optional[Literal["ENABLED", "PAUSED"]] = None
+@router.get("/update-ad")
+async def update_ad(user_id: int, ad_model: AdBase = Depends()) -> str:
+    key_service_operation = {
+        "key": "ad_group_ad",
+        "service": "AdGroupAdService",
+        "operation": "AdGroupAdOperation",
+    }
 
-    @validator('customer_id', always=True)
-    def validate_customer_id(cls, v):
-        if not v:
-            raise ValidationError("Field required: customer_id is missing")
-        return v
-    
-    @validator('ad_group_id', always=True)
-    def validate_ad_group_id(cls, v):
-        if not v:
-            raise ValidationError("Field required: ad_group_id is missing")
-        return v
-
+    return await _update(
+        user_id=user_id, ad_model=ad_model, key_service_operation=key_service_operation
+    )
 
 
 @router.get("/update-ad-group")
-async def update_ad_group(user_id: int, ad_group_model: AdGroup = Depends()) -> str:
-    user_credentials = await load_user_credentials(user_id)
-    client = create_google_ads_client(user_credentials=user_credentials, use_proto_plus=True)
+async def update_ad_group(user_id: int, ad_group_model: AdBase = Depends()) -> str:
+    key_service_operation = {
+        "key": "ad_group",
+        "service": "AdGroupService",
+        "operation": "AdGroupOperation",
+    }
 
-    ad_group_dict = ad_group_model.model_dump()
-    customer_id = ad_group_dict.pop("customer_id")
-    ad_group_id = ad_group_dict.pop("ad_group_id")
-
-    if ad_group_dict["status"] == "ENABLED":
-        ad_group_dict["status"] = client.enums.AdGroupStatusEnum.ENABLED
-    elif ad_group_dict["status"] == "PAUSED":
-         ad_group_dict["status"] = client.enums.AdGroupStatusEnum.PAUSED
-
-    ad_group_service = client.get_service("AdGroupService")
-
-    # Create ad group operation.
-    ad_group_operation = client.get_type("AdGroupOperation")
-    ad_group = ad_group_operation.update
-    ad_group.resource_name = ad_group_service.ad_group_path(
-        customer_id, ad_group_id
+    return await _update(
+        user_id=user_id,
+        ad_model=ad_group_model,
+        key_service_operation=key_service_operation,
     )
-
-    # ad_group.status = client.enums.AdGroupStatusEnum.PAUSED
-    print(client.enums.AdGroupStatusEnum.ENABLED)
-    for attribute_name, attribute_value in ad_group_dict.items():
-        if attribute_value:
-            setattr(ad_group, attribute_name, attribute_value)
-            print(f"Set {attribute_name} to {attribute_value}")
-
-    client.copy_from(
-        ad_group_operation.update_mask,
-        protobuf_helpers.field_mask(None, ad_group._pb),
-    )
-
-    # Update the ad group.
-    ad_group_response = ad_group_service.mutate_ad_groups(
-        customer_id=customer_id, operations=[ad_group_operation]
-    )
-
-    return f"Updated ad group {ad_group_response.results[0].resource_name}."

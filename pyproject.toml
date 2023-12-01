@@ -167,6 +167,9 @@ ignore = [
     "C901",  # too complex
 ]
 
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends"]
+
 [tool.ruff.pydocstyle]
 convention = "google"
 

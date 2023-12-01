@@ -12,9 +12,10 @@ def test_end_to_end() -> None:
     # task = "Give me the names, ids and status for all of my campaignsf."
     task = "Pause 'Website traffic-Search-3' campaign"
     # task = "Pause 'Search-1' campaign"
+    task = "Enable all Ads for the 'Website traffic-Search-3' campaign"
 
     # task = "I need customer_id, ad_group_id and ad_id for all of my campaigns"
-    
+
     user_id = 1
     conv_id = 17
 
