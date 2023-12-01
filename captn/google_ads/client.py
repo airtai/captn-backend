@@ -75,7 +75,7 @@ def execute_query(
     return f"The result of the query saved at: {file_name}"
 
 
-def update_ad(user_id: int, conv_id: int, ad: AdBase) -> Dict[str, Any]:
+def update_campaign_or_group_or_ad(user_id: int, conv_id: int, ad: AdBase, endpoint: str = "/update-ad") -> Dict[str, Any]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response
@@ -83,7 +83,7 @@ def update_ad(user_id: int, conv_id: int, ad: AdBase) -> Dict[str, Any]:
     params: Dict[str, Any] = ad.model_dump()
     params["user_id"] = user_id
 
-    response = requests.get(f"{BASE_URL}/update-ad", params=params, timeout=10)
+    response = requests.get(f"{BASE_URL}{endpoint}", params=params, timeout=10)
     if not response.ok:
         raise ValueError(response.content)
 

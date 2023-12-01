@@ -8,9 +8,9 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from ...google_ads.client import (
     execute_query,
     list_accessible_customers,
-    update_ad,
+    update_campaign_or_group_or_ad,
 )
-from ...model import AdBase
+from ...model import AdGroupAd
 from .execution_team import get_read_file
 from .function_configs import (
     ask_for_additional_info_config,
@@ -133,7 +133,6 @@ Your team is in charge of using the Google Ads API and no one elce does NOT know
 10. Before making any changes (with budgets, keywords, etc.) ask the user if he approves.
 Also, make sure that you explicitly tell the user which changes you want to make.
 11. Always suggest one change at the time (do NOT work on multiple things at the same time)
-12. After executing UPDATE database queries, please check if everything was successfuly updated by using the SELECT query.
 """
 
     @property
@@ -253,10 +252,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         #     work_dir=work_dir, file_name=file_name
         # ),
         "read_file": read_file,
-        "update_ad": lambda customer_id, ad_group_id, ad_id, name=None, cpc_bid_micros=None, status=None: update_ad(
+        "update_ad": lambda customer_id, ad_group_id, ad_id, name=None, cpc_bid_micros=None, status=None: update_campaign_or_group_or_ad(
             user_id=user_id,
             conv_id=conv_id,
-            ad=AdBase(
+            ad=AdGroupAd(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
                 ad_id=ad_id,
@@ -264,6 +263,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 cpc_bid_micros=cpc_bid_micros,
                 status=status,
             ),
+            endpoint="/update-ad",
         ),
     }
 
