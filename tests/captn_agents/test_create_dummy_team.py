@@ -31,7 +31,7 @@ Hurray! Your campaign report is ready😊"""
 
 
 @pytest.mark.asyncio
-async def test_dummy_task_creation():
+async def test_dummy_task_creation() -> None:
     with TemporaryDirectory() as d:
         conversation_id = 1000000
         message = "Some message"

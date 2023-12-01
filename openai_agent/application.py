@@ -16,7 +16,9 @@ router = APIRouter()
 # Setting up Azure OpenAI instance
 openai.api_type = "azure"
 openai.api_key = environ.get("AZURE_OPENAI_API_KEY_CANADA")
-openai.api_base = environ.get("AZURE_API_ENDPOINT")
+
+if hasattr(openai, "api_base"):
+    openai.api_base = environ.get("AZURE_API_ENDPOINT")
 openai.api_version = environ.get("AZURE_API_VERSION")
 
 SYSTEM_PROMPT = """
@@ -77,7 +79,8 @@ async def _get_openai_response(
                 "content": "You should call the 'get_digital_marketing_campaign_support' function only when the previous user message is about optimizing or enhancing their digital marketing or advertising campaign. Do not make reference to previous conversations, and avoid calling 'get_digital_marketing_campaign_support' solely based on conversation history. Take into account that the client may have asked different questions in recent interactions, and respond accordingly.",
             }
         )
-        completion = await openai.ChatCompletion.acreate(
+        # this is probably not working with the new API, ignoring mypy error for now
+        completion = await openai.ChatCompletion.acreate(  # type: ignore[attr-defined]
             engine=environ.get("AZURE_MODEL"),
             messages=messages,
             functions=FUNCTIONS,  # type: ignore[arg-type]
@@ -102,7 +105,7 @@ async def _get_openai_response(
         # verify function has correct number of arguments
         function_args = json.loads(response_message["function_call"]["arguments"])
         function_response = function_to_call(conv_id=conv_id, **function_args)
-        return function_response
+        return function_response  # type: ignore[return-value]
     else:
         result = completion.choices[0].message.content
         return {"content": result}

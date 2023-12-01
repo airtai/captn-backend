@@ -15,7 +15,8 @@ ALREADY_AUTHENTICATED = "User is already authenticated"
 def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     params = {"user_id": user_id, "conv_id": conv_id}
     response = requests.get(f"{BASE_URL}/login", params=params, timeout=10)
-    return response.json()  # type: ignore[no-any-return]
+    retval: Dict[str, str] = response.json()
+    return retval  # type: ignore[no-any-return]
 
 
 def list_accessible_customers(
@@ -74,7 +75,7 @@ def execute_query(
     return f"The result of the query saved at: {file_name}"
 
 
-def update_ad(user_id: int, conv_id: int, ad: AdBase) -> str:
+def update_ad(user_id: int, conv_id: int, ad: AdBase) -> Dict[str, Any]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response
@@ -86,4 +87,5 @@ def update_ad(user_id: int, conv_id: int, ad: AdBase) -> str:
     if not response.ok:
         raise ValueError(response.content)
 
-    return response.json()  # type: ignore[no-any-return]
+    response_dict: Dict[str, Any] = response.json()  # type: ignore[no-any-return]
+    return response_dict

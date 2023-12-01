@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Union
 
 current_dir = Path(__file__).parent
 
@@ -28,7 +28,7 @@ ANSWER_MSG = """
 Hurray! Your campaign report is ready😊"""
 
 
-def read_json_file(file_path: str) -> Dict[str, str]:
+def read_json_file(file_path: str) -> Dict[str, Any]:
     try:
         with open(Path(file_path)) as file:
             return json.load(file)  # type: ignore[no-any-return]
@@ -79,18 +79,20 @@ async def execute_dummy_task(conversation_id: str, task_status_file_path: str) -
 def create_dummy_task(
     conversation_id: int,
     message: str,
-    task_status_file_path: str = TASK_STATUS_FILE_PATH,
-):
+    task_status_file_path: Path = TASK_STATUS_FILE_PATH,
+) -> None:
     print("======")
     print(f"New task is created: {conversation_id}")
     print(f"Message: {message}")
     print("======")
     # Start the task execution with the given conversation_id
-    asyncio.create_task(execute_dummy_task(str(conversation_id), task_status_file_path))
+    asyncio.create_task(
+        execute_dummy_task(str(conversation_id), str(task_status_file_path))
+    )
 
 
 def get_dummy_task_status(
-    conversation_id, task_status_file_path: str = TASK_STATUS_FILE_PATH
-):
-    task_status = read_json_file(task_status_file_path)
-    return task_status.get(str(conversation_id), {})
+    conversation_id: int, task_status_file_path: Path = TASK_STATUS_FILE_PATH
+) -> Dict[str, Union[str, bool]]:
+    task_status = read_json_file(str(task_status_file_path))
+    return task_status.get(str(conversation_id), {})  # type: ignore[no-any-return]
