@@ -22,7 +22,7 @@ def _login_was_called(google_ads_team: GoogleAdsTeam) -> bool:
 
 
 def test_get_login_url() -> None:
-    user_id = 13
+    user_id = 1
     conv_id = 1
     with unittest.mock.patch(
         "captn.captn_agents.backend.google_ads_team.get_login_url",
@@ -34,14 +34,14 @@ def test_get_login_url() -> None:
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
         google_ads_team.initiate_chat()
 
-        mock_get_login_url.assert_called_once_with(user_id=user_id)
+        mock_get_login_url.assert_called_once_with(user_id=user_id, conv_id=conv_id)
         assert _login_was_called(google_ads_team)
         assert last_message_is_termination(google_ads_team)
 
 
 def test_list_accessible_customers() -> None:
     task = "List all the accesible customers"
-    user_id = 13
+    user_id = 1
     conv_id = 1
     with unittest.mock.patch(
         "captn.captn_agents.backend.google_ads_team.list_accessible_customers",
@@ -121,7 +121,7 @@ query_result = {
 
 
 def test_query_is_none() -> None:
-    user_id = 13
+    user_id = 1
     conv_id = 1
 
     task = "Search database for customer ids: 8942812744 and 2324127278"
@@ -131,13 +131,18 @@ def test_query_is_none() -> None:
     ) as mock_query:
         google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
         google_ads_team.initiate_chat()
-        mock_query.assert_called_once_with(user_id, ["8942812744", "2324127278"], None)
+        mock_query.assert_called_once_with(
+            user_id=user_id,
+            customer_ids=["8942812744", "2324127278"],
+            query=None,
+            work_dir="google_ads",
+        )
 
         assert last_message_is_termination(google_ads_team)
 
 
 def test_query() -> None:
-    user_id = 13
+    user_id = 1
     conv_id = 1
 
     task = "Search database for customer ids: 8942812744, 2324127278 and query: SELECT * FROM keyword_view"
@@ -150,61 +155,49 @@ def test_query() -> None:
         assert last_message_is_termination(google_ads_team)
         print(f"{mock_query.call_args_list=}")
         mock_query.assert_called_once_with(
-            user_id, ["8942812744", "2324127278"], "SELECT * FROM keyword_view"
+            user_id=user_id,
+            customer_ids=["8942812744", "2324127278"],
+            query="SELECT * FROM keyword_view",
+            work_dir="google_ads",
         )
 
 
-def test_report_creation() -> None:
-    user_id = 13
+# cassettes/{module_name}/test_end_to_end.yaml will be used
+# @pytest.mark.vcr(
+#     # filter_headers=["api-key"]
+# )
+def test_analyze() -> None:
+    user_id = 1
     conv_id = 1
 
-    task = "Create report for all customers and all campaigns"
+    task = "Get info about my campaigns and return the summary of the analyze_query_response command."
     with unittest.mock.patch(
         "captn.captn_agents.backend.google_ads_team.ask_for_additional_info",
-        return_value="I don't know, I am fine with any proposal you suggest",  # type: ignore
+        return_value="I don't know, I am fine with any proposal you suggest (if analyze command was called just terminate)",  # type: ignore
     ):
-        google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
-        google_ads_team.initiate_chat()
+        file_name = "query_22112023.json"
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.google_ads_team.execute_query",
+            return_value=f"The result of the query saved at: {file_name}",  # type: ignore
+        ):
+            analyze_ret_value = {
+                "2324127278": {
+                    "metrics.clicks": 3731.0,
+                    "metrics.conversions": 0.0,
+                    "metrics.impressions": 3660371.0,
+                }
+            }
+            with unittest.mock.patch(
+                "captn.captn_agents.backend.google_ads_team.analyze_query_response",
+                return_value=analyze_ret_value,  # type: ignore
+            ) as analyze_mock:
+                google_ads_team = GoogleAdsTeam(
+                    task=task, user_id=user_id, conv_id=conv_id
+                )
+                google_ads_team.initiate_chat()
 
-    assert last_message_is_termination(google_ads_team)
+                assert last_message_is_termination(google_ads_team)
 
-
-def test_optimize_campaign() -> None:
-    user_id = 13
-    conv_id = 1
-
-    task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
-    with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.google_ads.client.ask_for_additional_info",
-        return_value="I don't know, please propose a solution and let's go with it without checking with me again.",  # type: ignore
-    ):
-        google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
-        google_ads_team.initiate_chat()
-
-    assert last_message_is_termination(google_ads_team)
-
-
-def test_with_real() -> None:
-    user_id = 1
-    conv_id = 1
-
-    task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
-
-    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
-    google_ads_team.initiate_chat()
-
-    assert last_message_is_termination(google_ads_team)
-
-    google_ads_team.continue_chat(message="I am logged in.")
-
-
-def test_real_query() -> None:
-    user_id = 1
-    conv_id = 1
-
-    task = "Search database for customer ids: 8942812744, 2324127278 and query: SELECT * FROM keyword_view"
-    google_ads_team = GoogleAdsTeam(task=task, user_id=user_id, conv_id=conv_id)
-    google_ads_team.initiate_chat()
-    assert last_message_is_termination(google_ads_team)
-
-    google_ads_team.continue_chat(message="We have the access")
+                analyze_mock.assert_called_once_with(
+                    file_name=file_name, work_dir="google_ads"
+                )

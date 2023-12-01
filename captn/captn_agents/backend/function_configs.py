@@ -177,6 +177,8 @@ execute_query_config = {
         "properties": {
             "customer_ids": {
                 "type": "string",
+                # "type": "array",
+                # "items": {"type": "string"},
                 "description": "List of customer ids",
             },
             "query": {
@@ -267,5 +269,55 @@ reply_to_client_config = {
             },
         },
         "required": ["message"],
+    },
+}
+
+analyze_query_response_config = {
+    "name": "analyze_query_response",
+    "description": "Analyze the execute_query response",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "file_name": {
+                "type": "string",
+                "description": "The name of the file where the response is saved",
+            },
+        },
+        "required": ["file_name"],
+    },
+}
+
+update_ad_config = {
+    "name": "update_ad",
+    "description": "Update Google Ad",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "ad_group_id": {
+                "type": "string",
+                "description": "Id of the Ad group",
+            },
+            "ad_id": {
+                "type": "string",
+                "description": "Id of the Ad",
+            },
+            "name": {
+                "type": "string",
+                "description": "The name of the Ad",
+            },
+            "cpc_bid_micros": {
+                "type": "integer",
+                "description": "Cost per click bid micros",
+            },
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+        },
+        "required": ["customer_id", "ad_group_id", "ad_id"],
     },
 }
