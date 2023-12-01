@@ -287,6 +287,42 @@ analyze_query_response_config = {
     },
 }
 
+update_ad_group_config = {
+    "name": "update_ad_group",
+    "description": "Update Google Ad Group",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "ad_group_id": {
+                "type": "string",
+                "description": "Id of the Ad group",
+            },
+            "ad_id": {
+                "type": "string",
+                "description": "Id of the Ad",
+            },
+            "name": {
+                "type": "string",
+                "description": "The name of the Ad",
+            },
+            "cpc_bid_micros": {
+                "type": "integer",
+                "description": "Cost per click bid micros",
+            },
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+        },
+        "required": ["customer_id", "ad_group_id"],
+    },
+}
+
+
 update_ad_config = {
     "name": "update_ad",
     "description": "Update Google Ad",
@@ -312,6 +348,34 @@ update_ad_config = {
             "cpc_bid_micros": {
                 "type": "integer",
                 "description": "Cost per click bid micros",
+            },
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+        },
+        "required": ["customer_id", "ad_group_id", "ad_id"],
+    },
+}
+
+
+update_campaign_config = {
+    "name": "update_campaign",
+    "description": "Update Google Ads Campaign",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "campaign_id": {
+                "type": "string",
+                "description": "Id of the campaign",
+            },
+            "name": {
+                "type": "string",
+                "description": "The name of the Ad",
             },
             "status": {
                 "type": "string",

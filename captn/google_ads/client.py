@@ -75,7 +75,9 @@ def execute_query(
     return f"The result of the query saved at: {file_name}"
 
 
-def update_campaign_or_group_or_ad(user_id: int, conv_id: int, ad: AdBase, endpoint: str = "/update-ad") -> Dict[str, Any]:
+def update_campaign_or_group_or_ad(
+    user_id: int, conv_id: int, ad: AdBase, endpoint: str = "/update-ad"
+) -> Dict[str, Any]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response

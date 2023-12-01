@@ -31,11 +31,11 @@ oauth2_settings = {
 }
 
 
-@asynccontextmanager
-async def get_db_connection(db_url: Optional[str] = None) -> Prisma:
+@asynccontextmanager  # type: ignore
+async def get_db_connection(db_url: Optional[str] = None) -> Prisma:  # type: ignore
     if not db_url:
         db_url = environ.get("DATABASE_URL")
-    db = Prisma(datasource={"url": db_url})
+    db = Prisma(datasource={"url": db_url})  # type: ignore
     await db.connect()
     try:
         yield db
@@ -51,7 +51,7 @@ async def get_wasp_db_url() -> str:
 
 async def get_user(user_id: Union[int, str]) -> Any:
     wasp_db_url = await get_wasp_db_url()
-    async with get_db_connection(db_url=wasp_db_url) as db:
+    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
         user = await db.query_first(
             f'SELECT * from "User" where id={user_id}'  # nosec: [B608]
         )
@@ -64,7 +64,7 @@ async def get_user_id_chat_id_from_conversation(
     conv_id: Union[int, str]
 ) -> Tuple[Any, Any]:
     wasp_db_url = await get_wasp_db_url()
-    async with get_db_connection(db_url=wasp_db_url) as db:
+    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
         conversation = await db.query_first(
             f'SELECT * from "Conversation" where id={conv_id}'  # nosec: [B608]
         )
@@ -77,7 +77,7 @@ async def get_user_id_chat_id_from_conversation(
 
 async def is_authenticated_for_ads(user_id: int) -> bool:
     await get_user(user_id=user_id)
-    async with get_db_connection() as db:
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
         data = await db.gauth.find_unique(where={"user_id": user_id})
 
     if not data:
@@ -139,7 +139,7 @@ async def login_callback(
 
     if userinfo_response.status_code == 200:
         user_info = userinfo_response.json()
-    async with get_db_connection() as db:
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
         await db.gauth.upsert(
             where={"user_id": user["id"]},
             data={
@@ -163,7 +163,7 @@ async def login_callback(
 
 async def load_user_credentials(user_id: Union[int, str]) -> Any:
     await get_user(user_id=user_id)
-    async with get_db_connection() as db:
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
         data = await db.gauth.find_unique_or_raise(where={"user_id": user_id})
 
     return data.creds
@@ -251,6 +251,7 @@ async def search(
 
 AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad"]
 
+
 async def _update(
     user_id: int, model: AdBase, key_service_operation: Dict[str, str]
 ) -> str:
@@ -278,7 +279,7 @@ async def _update(
 
     service = client.get_service(key_service_operation["service"])
     operation = client.get_type(key_service_operation["operation"])
-    
+
     try:
         operation_update = operation.update
 

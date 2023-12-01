@@ -10,7 +10,7 @@ from ...google_ads.client import (
     list_accessible_customers,
     update_campaign_or_group_or_ad,
 )
-from ...model import AdGroupAd
+from ...model import AdGroup, AdGroupAd, Campaign
 from .execution_team import get_read_file
 from .function_configs import (
     ask_for_additional_info_config,
@@ -18,6 +18,8 @@ from .function_configs import (
     list_accessible_customers_config,
     read_file_config,
     update_ad_config,
+    update_ad_group_config,
+    update_campaign_config,
 )
 from .functions import ask_for_additional_info
 
@@ -34,6 +36,8 @@ class GoogleAdsTeam(Team):
         # analyze_query_response_config,
         read_file_config,
         update_ad_config,
+        update_ad_group_config,
+        update_campaign_config,
     ]
 
     _default_roles = [
@@ -160,6 +164,11 @@ Before executing the 'update_ad' command, you can easily get the needed paramete
 with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
+4. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
+name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+
+5. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
+name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]])
 """
 
 
@@ -264,6 +273,30 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 status=status,
             ),
             endpoint="/update-ad",
+        ),
+        "update_ad_group": lambda customer_id, ad_group_id, ad_id=None, name=None, cpc_bid_micros=None, status=None: update_campaign_or_group_or_ad(
+            user_id=user_id,
+            conv_id=conv_id,
+            ad=AdGroup(
+                customer_id=customer_id,
+                ad_group_id=ad_group_id,
+                ad_id=ad_id,
+                name=name,
+                cpc_bid_micros=cpc_bid_micros,
+                status=status,
+            ),
+            endpoint="/update-ad-group",
+        ),
+        "update_campaign": lambda customer_id, campaign_id, name=None, status=None: update_campaign_or_group_or_ad(
+            user_id=user_id,
+            conv_id=conv_id,
+            ad=Campaign(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                name=name,
+                status=status,
+            ),
+            endpoint="/update-campaign",
         ),
     }
 
