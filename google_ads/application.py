@@ -2,7 +2,7 @@ import json
 import urllib.parse
 from contextlib import asynccontextmanager
 from os import environ
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -60,7 +60,9 @@ async def get_user(user_id: Union[int, str]) -> Any:
     return user
 
 
-async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
+async def get_user_id_chat_id_from_conversation(
+    conv_id: Union[int, str]
+) -> Tuple[Any, Any]:
     wasp_db_url = await get_wasp_db_url()
     async with get_db_connection(db_url=wasp_db_url) as db:
         conversation = await db.query_first(
@@ -69,7 +71,8 @@ async def get_user_id_from_conversation(conv_id: Union[int, str]) -> Any:
         if not conversation:
             raise HTTPException(status_code=404, detail=f"conv_id {conv_id} not found")
     user_id = conversation["userId"]
-    return user_id
+    chat_id = conversation["chatId"]
+    return user_id, chat_id
 
 
 async def is_authenticated_for_ads(user_id: int) -> bool:
@@ -109,7 +112,7 @@ async def login_callback(
     code: str = Query(title="Authorization Code"), state: str = Query(title="State")
 ) -> RedirectResponse:
     conv_id = state
-    user_id = await get_user_id_from_conversation(conv_id)
+    user_id, chat_id = await get_user_id_chat_id_from_conversation(conv_id)
     user = await get_user(user_id=user_id)
 
     token_request_data = {
@@ -154,7 +157,7 @@ async def login_callback(
 
     redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
     logged_in_message = "I have successfully logged in"
-    redirect_uri = f"{redirect_domain}/chat/{conv_id}?msg={logged_in_message}"
+    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}"
     return RedirectResponse(redirect_uri)
 
 

@@ -1,8 +1,8 @@
-from typing import Dict, Union
 import asyncio
+from typing import Dict, Union
 
 QUESTION_MSG = """
-## 📢 Notification from **{}**: 
+## 📢 Notification from **{}**:
 
 <br/>
 
@@ -13,13 +13,14 @@ Our team has a question for you. Can you please answer the below:
 What is your name? 😊"""
 
 ANSWER_MSG = """
-## 📢 Notification from **{}**: 
+## 📢 Notification from **{}**:
 
 <br/>
 
 Hurray! Your campaign report is ready😊"""
 
 TASK_STATUS: Dict[str, Dict[str, Union[str, bool]]] = {}
+
 
 async def execute_dummy_task(conversation_id: str, team_name: str) -> None:
     is_new_task = (conversation_id not in TASK_STATUS) or (
@@ -35,7 +36,9 @@ async def execute_dummy_task(conversation_id: str, team_name: str) -> None:
             "is_question": True,
         }
         await asyncio.sleep(15)
-        TASK_STATUS[conversation_id].update({"team_status": "pause", "msg": QUESTION_MSG.format(team_name)})
+        TASK_STATUS[conversation_id].update(
+            {"team_status": "pause", "msg": QUESTION_MSG.format(team_name)}
+        )
     else:
         TASK_STATUS[conversation_id] = {
             "team_id": conversation_id,
@@ -46,7 +49,9 @@ async def execute_dummy_task(conversation_id: str, team_name: str) -> None:
         }
 
         await asyncio.sleep(20)
-        TASK_STATUS[conversation_id].update({"team_status": "completed", "msg": ANSWER_MSG.format(team_name)})
+        TASK_STATUS[conversation_id].update(
+            {"team_status": "completed", "msg": ANSWER_MSG.format(team_name)}
+        )
 
 
 def create_dummy_task(
@@ -55,7 +60,7 @@ def create_dummy_task(
     team_name: str,
 ) -> None:
     print("======")
-    print(f"New team is created with the following details:")
+    print("New team is created with the following details:")
     print(f"Team ID/Conversation ID: {conversation_id}")
     print(f"Team Name: {team_name}")
     print(f"Message: {message}")
@@ -64,7 +69,5 @@ def create_dummy_task(
     asyncio.create_task(execute_dummy_task(str(conversation_id), team_name))
 
 
-def get_dummy_task_status(
-    conversation_id: int
-) -> Dict[str, Union[str, bool]]:
+def get_dummy_task_status(conversation_id: int) -> Dict[str, Union[str, bool]]:
     return TASK_STATUS.get(str(conversation_id), {})
