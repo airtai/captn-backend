@@ -3,7 +3,7 @@ from os import environ
 from typing import Dict, List, Optional, Union
 
 from fastapi import APIRouter, HTTPException
-import openai
+from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
 from captn.captn_agents.backend.create_dummy_team import create_dummy_task, get_dummy_task_status
@@ -11,10 +11,10 @@ from captn.captn_agents.backend.create_dummy_team import create_dummy_task, get_
 router = APIRouter()
 
 # Setting up Azure OpenAI instance
-openai.api_type = "azure"
-openai.api_key = environ.get("AZURE_OPENAI_API_KEY_CANADA")
-openai.api_base = environ.get("AZURE_API_ENDPOINT")
-openai.api_version = environ.get("AZURE_API_VERSION")
+aclient = AsyncAzureOpenAI(api_key=environ.get("AZURE_OPENAI_API_KEY_CANADA"),
+azure_endpoint=environ.get("AZURE_API_ENDPOINT"),
+api_version=environ.get("AZURE_API_VERSION"))
+
 
 SYSTEM_PROMPT = """
 You are Captn AI, a digital marketing assistant for small businesses. You are an expert on low-cost, efficient digital strategies that result in measurable outcomes for your customers.
@@ -68,26 +68,25 @@ async def _get_openai_response(message: List[Dict[str, str]], conv_id: int) -> D
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
         messages.append({"role": "system", "content": "You should call the 'get_digital_marketing_campaign_support' function only when the previous user message is about optimizing or enhancing their digital marketing or advertising campaign. Do not make reference to previous conversations, and avoid calling 'get_digital_marketing_campaign_support' solely based on conversation history. Take into account that the client may have asked different questions in recent interactions, and respond accordingly."})
-        completion = await openai.ChatCompletion.acreate(
-            engine=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS, # type: ignore[arg-type]
-        )
+        completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Internal server error: {e}"
         ) from e
 
     response_message = completion.choices[0].message
+    
     # Check if the model wants to call a function
-    if response_message.get("function_call"):
+    if response_message.function_call:
         # Call the function. The JSON response may not always be valid so make sure to handle errors
-        function_name = response_message["function_call"]["name"] # todo: enclose in try catch???
+        function_name = response_message.function_call.name # todo: enclose in try catch???
         available_functions = {
             "get_digital_marketing_campaign_support": get_digital_marketing_campaign_support,
         }
         function_to_call = available_functions[function_name]
         
         # verify function has correct number of arguments
-        function_args = json.loads(response_message["function_call"]["arguments"])
+        function_args = json.loads(response_message.function_call.arguments)
         function_response = function_to_call(conv_id=conv_id, **function_args)
         return function_response
     else:
