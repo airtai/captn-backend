@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union
 import asyncio
 
 QUESTION_MSG = """
@@ -19,9 +19,9 @@ ANSWER_MSG = """
 
 Hurray! Your campaign report is ready😊"""
 
-TASK_STATUS = {}
+TASK_STATUS: Dict[str, Dict[str, Union[str, bool]]] = {}
 
-async def execute_dummy_task(conversation_id: str, team_name: str):
+async def execute_dummy_task(conversation_id: str, team_name: str) -> None:
     is_new_task = (conversation_id not in TASK_STATUS) or (
         not TASK_STATUS[conversation_id]["is_question"]
     )
@@ -53,7 +53,7 @@ def create_dummy_task(
     conversation_id: int,
     message: str,
     team_name: str,
-):
+) -> None:
     print("======")
     print(f"New team is created with the following details:")
     print(f"Team ID/Conversation ID: {conversation_id}")
@@ -65,6 +65,6 @@ def create_dummy_task(
 
 
 def get_dummy_task_status(
-    conversation_id
-):
+    conversation_id: int
+) -> Dict[str, Union[str, bool]]:
     return TASK_STATUS.get(str(conversation_id), {})
