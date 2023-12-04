@@ -55,12 +55,14 @@ async def execute_dummy_task(conversation_id: str, team_name: str) -> None:
 
 
 def create_dummy_task(
+    user_id: int,
     conversation_id: int,
     message: str,
     team_name: str,
 ) -> None:
     print("======")
     print("New team is created with the following details:")
+    print(f"User ID: {user_id}")
     print(f"Team ID/Conversation ID: {conversation_id}")
     print(f"Team Name: {team_name}")
     print(f"Message: {message}")

@@ -33,7 +33,8 @@ async def test_dummy_task_creation() -> None:
     conversation_id = 1000000
     message = "Some message"
     team_name = "Google Ads Team"
-    create_dummy_task(conversation_id, message, team_name)
+    user_id = 1
+    create_dummy_task(user_id, conversation_id, message, team_name)
 
     # Initially, the status should be inprogress
     await asyncio.sleep(1)
@@ -57,7 +58,7 @@ async def test_dummy_task_creation() -> None:
     }
 
     # call create_dummy_task for the second time
-    create_dummy_task(conversation_id, message, team_name)
+    create_dummy_task(user_id, conversation_id, message, team_name)
 
     # After the second creation, the status should reset to inprogress
     await asyncio.sleep(1)
@@ -81,7 +82,7 @@ async def test_dummy_task_creation() -> None:
     }
 
     # call create_dummy_task for the second time
-    create_dummy_task(conversation_id, message, team_name)
+    create_dummy_task(user_id, conversation_id, message, team_name)
 
     await asyncio.sleep(
         16
