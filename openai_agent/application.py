@@ -186,8 +186,4 @@ class GetTeamStatusRequest(BaseModel):
 async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, Union[str, bool]]:
     team_id = request.team_id
     status = get_dummy_task_status(team_id)
-    print("*" * 20)
-    print("Current team status:")
-    print(status)
-    print("*" * 20)
     return status
