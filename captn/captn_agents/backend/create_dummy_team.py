@@ -72,4 +72,8 @@ def create_dummy_task(
 
 
 def get_dummy_task_status(conversation_id: int) -> Dict[str, Union[str, bool]]:
+    print("*" * 20)
+    print("Current team TASK_STATUS:")
+    print(TASK_STATUS)
+    print("*" * 20)
     return TASK_STATUS.get(str(conversation_id), {})
