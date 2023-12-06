@@ -22,6 +22,7 @@ from .function_configs import (
     update_campaign_config,
 )
 from .functions import ask_for_additional_info
+from .initial_team import InitialTeam
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -89,7 +90,8 @@ in the plan.
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
-        name = GoogleAdsTeam._get_new_team_name()
+        # name = GoogleAdsTeam._get_new_team_name()
+        name = InitialTeam.get_user_conv_team_name(user_id=user_id, conv_id=conv_id)
 
         super().__init__(
             roles=roles,
