@@ -117,14 +117,16 @@ def _get_initial_team(
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
 
-    initial_team_class = roles_dictionary[class_name]["class"]
+    initial_team_class: Team = roles_dictionary[class_name]["class"]  # type: ignore
     if roles is None:
         roles = roles_dictionary[class_name]["human_input_mode"][human_input_mode]  # type: ignore
 
     initial_team = None
     try:
-        team_name = InitialTeam.get_user_conv_team_name(
-            user_id=user_id, conv_id=conv_id
+        team_name = Team.get_user_conv_team_name(
+            name_prefix=initial_team_class._get_team_name_prefix(),
+            user_id=user_id,
+            conv_id=conv_id,
         )
         initial_team = Team.get_team(team_name)  # type: ignore
         create_new_conv = False

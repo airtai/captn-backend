@@ -53,7 +53,7 @@ class CaptnInitialTeam(InitialTeam):
     @property
     def _task(self) -> str:
         return f"""You are a team in charge of running digital campaigns.
-Your current task is:
+The client has sent you the following task:
 \n{self.task}"""
 
     @property

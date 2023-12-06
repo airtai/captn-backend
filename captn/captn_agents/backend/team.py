@@ -45,6 +45,12 @@ class Team:
         except KeyError as e:
             raise ValueError(f"Unknown team name: '{team_name}'") from e
 
+    @staticmethod
+    def get_user_conv_team_name(name_prefix: str, user_id: int, conv_id: int) -> str:
+        name = f"{name_prefix}_{str(user_id)}_{str(conv_id)}"
+
+        return name
+
     def __init__(
         self,
         roles: List[Dict[str, str]],
