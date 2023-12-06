@@ -59,10 +59,10 @@ Your expertise combined with 'get_digital_marketing_campaign_support' can provid
 
 
 def get_digital_marketing_campaign_support(
-    user_id: int, conv_id: int, message: str
+    user_id: int, chat_id: int, conv_id: int, message: str
 ) -> Dict[str, Union[Optional[str], int]]:
     team_name = f"GoogleAdsAgent_{conv_id}"
-    create_dummy_task(user_id, conv_id, message, team_name)
+    create_dummy_task(user_id, chat_id, conv_id, message, team_name)
     return {
         "content": f"Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
         "team_status": "inprogress",
@@ -98,7 +98,7 @@ This instruction is mandatory; follow it strictly. Do not reference past convers
 
 
 async def _get_openai_response(
-    user_id: int, message: List[Dict[str, str]], conv_id: int
+    user_id: int, chat_id: int, message: List[Dict[str, str]], conv_id: int
 ) -> Dict[str, Union[Optional[str], int]]:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
@@ -130,7 +130,7 @@ async def _get_openai_response(
         # verify function has correct number of arguments
         function_args = json.loads(response_message.function_call.arguments)
         function_response = function_to_call(
-            user_id=user_id, conv_id=conv_id, **function_args
+            user_id=user_id, chat_id=chat_id, conv_id=conv_id, **function_args
         )
         return function_response
     else:
@@ -139,11 +139,16 @@ async def _get_openai_response(
 
 
 def _user_response_to_agent(
-    user_id: int, message: List[Dict[str, str]], user_answer_to_team_id: int
+    user_id: int,
+    chat_id: int,
+    message: List[Dict[str, str]],
+    user_answer_to_team_id: int,
 ) -> Dict[str, Union[Optional[str], int]]:
     last_user_message = message[-1]["content"]
     team_name = f"GoogleAdsAgent_{user_answer_to_team_id}"
-    create_dummy_task(user_id, user_answer_to_team_id, last_user_message, team_name)
+    create_dummy_task(
+        user_id, chat_id, user_answer_to_team_id, last_user_message, team_name
+    )
     return {
         "content": f"""**Thank you for your response!**
 
@@ -155,6 +160,7 @@ def _user_response_to_agent(
 
 
 class AzureOpenAIRequest(BaseModel):
+    chat_id: int
     message: List[Dict[str, str]]
     user_id: int
     conv_id: int
@@ -168,12 +174,13 @@ async def create_item(
 ) -> Dict[str, Union[Optional[str], int]]:
     message = request.message
     conv_id = request.conv_id
+    chat_id = request.chat_id
     result = (
         _user_response_to_agent(
-            request.user_id, message, request.user_answer_to_team_id
+            request.user_id, chat_id, message, request.user_answer_to_team_id
         )
         if (request.is_answer_to_agent_question and request.user_answer_to_team_id)
-        else await _get_openai_response(request.user_id, message, conv_id)
+        else await _get_openai_response(request.user_id, chat_id, message, conv_id)
     )
     return result
 
