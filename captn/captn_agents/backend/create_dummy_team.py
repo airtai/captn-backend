@@ -1,7 +1,11 @@
 import asyncio
+from os import environ
 from typing import Dict, Union
 
-ACTION_MSG = """
+REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
+
+ACTION_MSG = (
+    """
 ## 📢 Notification from **{}**:
 
 <br/>
@@ -10,8 +14,11 @@ To navigate Google Ads waters, I require access to your account. Please use the 
 
 <br/>
 
-[Mock Link](http://localhost:3000/chat/{}?msg=LoggedIn&team_name={}&team_id={})
-"""
+<a class="underline text-white" href="""
+    + f""""{REDIRECT_DOMAIN}/chat/"""
+    + """{}?msg=LoggedIn&team_name={}&team_id={}">Mock Link</a>"""
+    ""
+)
 
 QUESTION_MSG = """
 ## 📢 Notification from **{}**:
