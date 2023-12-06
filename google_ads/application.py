@@ -13,7 +13,7 @@ from google.api_core import protobuf_helpers
 from google.protobuf import json_format
 from prisma import Prisma  # type: ignore[attr-defined]
 
-from .model import AdBase
+from .model import AdBase, AdGroup, AdGroupAd, Campaign
 
 router = APIRouter()
 
@@ -31,11 +31,11 @@ oauth2_settings = {
 }
 
 
-@asynccontextmanager
-async def get_db_connection(db_url: Optional[str] = None) -> Prisma:
+@asynccontextmanager  # type: ignore
+async def get_db_connection(db_url: Optional[str] = None) -> Prisma:  # type: ignore
     if not db_url:
         db_url = environ.get("DATABASE_URL")
-    db = Prisma(datasource={"url": db_url})
+    db = Prisma(datasource={"url": db_url})  # type: ignore
     await db.connect()
     try:
         yield db
@@ -51,7 +51,7 @@ async def get_wasp_db_url() -> str:
 
 async def get_user(user_id: Union[int, str]) -> Any:
     wasp_db_url = await get_wasp_db_url()
-    async with get_db_connection(db_url=wasp_db_url) as db:
+    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
         user = await db.query_first(
             f'SELECT * from "User" where id={user_id}'  # nosec: [B608]
         )
@@ -64,7 +64,7 @@ async def get_user_id_chat_id_from_conversation(
     conv_id: Union[int, str]
 ) -> Tuple[Any, Any]:
     wasp_db_url = await get_wasp_db_url()
-    async with get_db_connection(db_url=wasp_db_url) as db:
+    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
         conversation = await db.query_first(
             f'SELECT * from "Conversation" where id={conv_id}'  # nosec: [B608]
         )
@@ -77,7 +77,7 @@ async def get_user_id_chat_id_from_conversation(
 
 async def is_authenticated_for_ads(user_id: int) -> bool:
     await get_user(user_id=user_id)
-    async with get_db_connection() as db:
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
         data = await db.gauth.find_unique(where={"user_id": user_id})
 
     if not data:
@@ -139,7 +139,7 @@ async def login_callback(
 
     if userinfo_response.status_code == 200:
         user_info = userinfo_response.json()
-    async with get_db_connection() as db:
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
         await db.gauth.upsert(
             where={"user_id": user["id"]},
             data={
@@ -163,7 +163,7 @@ async def login_callback(
 
 async def load_user_credentials(user_id: Union[int, str]) -> Any:
     await get_user(user_id=user_id)
-    async with get_db_connection() as db:
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
         data = await db.gauth.find_unique_or_raise(where={"user_id": user_id})
 
     return data.creds
@@ -249,69 +249,88 @@ async def search(
     return campaign_data
 
 
+AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad"]
+
+
 async def _update(
-    user_id: int, ad_model: AdBase, key_service_operation: Dict[str, str]
+    user_id: int, model: AdBase, key_service_operation: Dict[str, str]
 ) -> str:
     user_credentials = await load_user_credentials(user_id)
     client = create_google_ads_client(
         user_credentials=user_credentials, use_proto_plus=True
     )
 
-    ad_dict = ad_model.model_dump()
-    customer_id = ad_dict.pop("customer_id")
-    ad_group_id = ad_dict.pop("ad_group_id")
+    model_dict = model.model_dump()
+    customer_id = model_dict.pop("customer_id")
 
-    if ad_dict["status"] == "ENABLED":
-        ad_dict["status"] = client.enums.AdGroupStatusEnum.ENABLED
-    elif ad_dict["status"] == "PAUSED":
-        ad_dict["status"] = client.enums.AdGroupStatusEnum.PAUSED
-
-    ad_service = client.get_service(key_service_operation["service"])
-    ad_operation = client.get_type(key_service_operation["operation"])
     key = key_service_operation["key"]
+    if key not in AVALIABLE_KEYS:
+        raise KeyError(f"key: {key} is not supported")
+
+    if key == "campaign":
+        status_enum = client.enums.CampaignStatusEnum
+    else:
+        status_enum = client.enums.AdGroupStatusEnum
+
+    if model_dict["status"] == "ENABLED":
+        model_dict["status"] = status_enum.ENABLED
+    elif model_dict["status"] == "PAUSED":
+        model_dict["status"] = status_enum.PAUSED
+
+    service = client.get_service(key_service_operation["service"])
+    operation = client.get_type(key_service_operation["operation"])
+
     try:
-        ad_group_ad = ad_operation.update
+        operation_update = operation.update
 
         if key == "ad_group_ad":
-            ad_id = ad_dict.pop("ad_id")
-            ad_group_ad.resource_name = ad_service.ad_group_ad_path(
+            ad_group_id = model_dict.pop("ad_group_id")
+            ad_id = model_dict.pop("ad_id")
+            operation_update.resource_name = service.ad_group_ad_path(
                 customer_id, ad_group_id, ad_id
             )
         elif key == "ad_group":
-            ad_group_ad.resource_name = ad_service.ad_group_path(
+            ad_group_id = model_dict.pop("ad_group_id")
+            operation_update.resource_name = service.ad_group_path(
                 customer_id, ad_group_id
             )
         else:
-            raise KeyError(f"key: {key} is not supported")
+            campaign_id = model_dict.pop("campaign_id")
+            operation_update.resource_name = service.campaign_path(
+                customer_id, campaign_id
+            )
 
-        for attribute_name, attribute_value in ad_dict.items():
+        for attribute_name, attribute_value in model_dict.items():
             if attribute_value:
-                setattr(ad_group_ad, attribute_name, attribute_value)
-                print(f"Set {attribute_name} to {attribute_value}")
+                setattr(operation_update, attribute_name, attribute_value)
 
         client.copy_from(
-            ad_operation.update_mask,
-            protobuf_helpers.field_mask(None, ad_group_ad._pb),  # type: ignore[no-untyped-call]
+            operation.update_mask,
+            protobuf_helpers.field_mask(None, operation_update._pb),  # type: ignore[no-untyped-call]
         )
 
         if key == "ad_group_ad":
-            ad_response = ad_service.mutate_ad_group_ads(
-                customer_id=customer_id, operations=[ad_operation]
+            response = service.mutate_ad_group_ads(
+                customer_id=customer_id, operations=[operation]
             )
         elif key == "ad_group":
-            ad_response = ad_service.mutate_ad_groups(
-                customer_id=customer_id, operations=[ad_operation]
+            response = service.mutate_ad_groups(
+                customer_id=customer_id, operations=[operation]
+            )
+        else:
+            response = service.mutate_campaigns(
+                customer_id=customer_id, operations=[operation]
             )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
-    return f"Updated {ad_response.results[0].resource_name}."
+    return f"Updated {response.results[0].resource_name}."
 
 
 @router.get("/update-ad")
-async def update_ad(user_id: int, ad_model: AdBase = Depends()) -> str:
+async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
     key_service_operation = {
         "key": "ad_group_ad",
         "service": "AdGroupAdService",
@@ -319,12 +338,12 @@ async def update_ad(user_id: int, ad_model: AdBase = Depends()) -> str:
     }
 
     return await _update(
-        user_id=user_id, ad_model=ad_model, key_service_operation=key_service_operation
+        user_id=user_id, model=ad_model, key_service_operation=key_service_operation
     )
 
 
 @router.get("/update-ad-group")
-async def update_ad_group(user_id: int, ad_group_model: AdBase = Depends()) -> str:
+async def update_ad_group(user_id: int, ad_group_model: AdGroup = Depends()) -> str:
     key_service_operation = {
         "key": "ad_group",
         "service": "AdGroupService",
@@ -333,6 +352,21 @@ async def update_ad_group(user_id: int, ad_group_model: AdBase = Depends()) -> s
 
     return await _update(
         user_id=user_id,
-        ad_model=ad_group_model,
+        model=ad_group_model,
+        key_service_operation=key_service_operation,
+    )
+
+
+@router.get("/update-campaign")
+async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) -> str:
+    key_service_operation = {
+        "key": "campaign",
+        "service": "CampaignService",
+        "operation": "CampaignOperation",
+    }
+
+    return await _update(
+        user_id=user_id,
+        model=campaign_model,
         key_service_operation=key_service_operation,
     )
