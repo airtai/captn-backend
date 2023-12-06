@@ -82,6 +82,7 @@ testing = [
     "captn[test-core]",
     "watchfiles",
     "pytest-recording",
+    "freezegun"
 ]
 
 agents = [

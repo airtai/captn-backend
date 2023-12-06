@@ -1,24 +1,22 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel
 
 
 class AdBase(BaseModel):
-    customer_id: Optional[str] = None
-    ad_group_id: Optional[str] = None
-    ad_id: Optional[str] = None
+    customer_id: str
     name: Optional[str] = None
-    cpc_bid_micros: Optional[int] = None
     status: Optional[Literal["ENABLED", "PAUSED"]] = None
 
-    @field_validator("customer_id")
-    def validate_customer_id(cls, v: str) -> str:
-        if not v:
-            raise ValidationError("Field required: customer_id is missing")
-        return v
 
-    @field_validator("ad_group_id")
-    def validate_ad_group_id(cls, v: str) -> str:
-        if not v:
-            raise ValidationError("Field required: ad_group_id is missing")
-        return v
+class Campaign(AdBase):
+    campaign_id: str
+
+
+class AdGroup(AdBase):
+    ad_group_id: str
+    cpc_bid_micros: Optional[int] = None
+
+
+class AdGroupAd(AdGroup):
+    ad_id: str
