@@ -46,6 +46,7 @@ async def get_db_connection(db_url: Optional[str] = None) -> Prisma:  # type: ig
 async def get_wasp_db_url() -> str:
     curr_db_url = environ.get("DATABASE_URL")
     wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "waspdb")  # type: ignore[union-attr]
+    # wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "chatApp-1ae2dfd26b")  # type: ignore[union-attr]
     return wasp_db_url
 
 

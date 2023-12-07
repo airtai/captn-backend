@@ -14,7 +14,7 @@ ALREADY_AUTHENTICATED = "User is already authenticated"
 
 def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     params = {"user_id": user_id, "conv_id": conv_id}
-    response = requests.get(f"{BASE_URL}/login", params=params, timeout=10)
+    response = requests.get(f"{BASE_URL}/login", params=params, timeout=60)
     retval: Dict[str, str] = response.json()
     return retval  # type: ignore[no-any-return]
 
@@ -28,7 +28,7 @@ def list_accessible_customers(
 
     params = {"user_id": user_id}
     response = requests.get(
-        f"{BASE_URL}/list-accessible-customers", params=params, timeout=10
+        f"{BASE_URL}/list-accessible-customers", params=params, timeout=60
     )
     if not response.ok:
         raise ValueError(response.content)
@@ -57,7 +57,7 @@ def execute_query(
     if query:
         params["query"] = query
 
-    response = requests.get(f"{BASE_URL}/search", params=params, timeout=10)
+    response = requests.get(f"{BASE_URL}/search", params=params, timeout=60)
     if not response.ok:
         raise ValueError(response.content)
 
@@ -85,7 +85,7 @@ def update_campaign_or_group_or_ad(
     params: Dict[str, Any] = ad.model_dump()
     params["user_id"] = user_id
 
-    response = requests.get(f"{BASE_URL}{endpoint}", params=params, timeout=10)
+    response = requests.get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
     if not response.ok:
         raise ValueError(response.content)
 

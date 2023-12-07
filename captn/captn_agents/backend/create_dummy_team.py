@@ -2,7 +2,19 @@ import asyncio
 from os import environ
 from typing import Dict, Union
 
+from captn.captn_agents.application import CaptnAgentRequest, chat
+
 REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
+
+NOTIFICATION_MSG = """
+## 📢 Notification from **{}**:
+
+<br/>
+
+{}
+
+<br/>
+"""
 
 ACTION_MSG = (
     """
@@ -41,7 +53,9 @@ Hurray! Your campaign report is ready😊"""
 TASK_STATUS: Dict[str, Dict[str, Union[str, bool, int]]] = {}
 
 
-async def create_new_task(chat_id: str, conversation_id: str, team_name: str) -> None:
+async def create_new_task(
+    chat_id: str, conversation_id: str, team_name: str, message: str
+) -> None:
     TASK_STATUS[str(conversation_id)] = {
         "team_id": conversation_id,
         "team_name": team_name,
@@ -50,11 +64,18 @@ async def create_new_task(chat_id: str, conversation_id: str, team_name: str) ->
         "is_question": False,
         "call_counter": 0,
     }
-    await asyncio.sleep(15)
+    # await asyncio.sleep(15)
+    request_obj = CaptnAgentRequest(
+        message=message, user_id=1, conv_id=int(conversation_id)
+    )
+    # last_message, is_question, status= chat(request_obj)
+    # todo: add try except block
+    last_message = chat(request_obj)
     TASK_STATUS[str(conversation_id)].update(
         {
             "team_status": "pause",
-            "msg": ACTION_MSG.format(team_name, chat_id, team_name, conversation_id),
+            # "msg": ACTION_MSG.format(team_name, chat_id, team_name, conversation_id),
+            "msg": NOTIFICATION_MSG.format(team_name, last_message),
             "call_counter": int(TASK_STATUS[str(conversation_id)]["call_counter"]) + 1,
         }
     )
@@ -99,12 +120,12 @@ async def complete_task(chat_id: str, conversation_id: str, team_name: str) -> N
 
 
 async def execute_dummy_task(
-    chat_id: str, conversation_id: str, team_name: str
+    chat_id: str, conversation_id: str, team_name: str, message: str
 ) -> None:
     is_new_task = conversation_id not in TASK_STATUS
 
     if is_new_task:
-        await create_new_task(chat_id, conversation_id, team_name)
+        await create_new_task(chat_id, conversation_id, team_name, message)
     else:
         if TASK_STATUS[str(conversation_id)]["call_counter"] == 1:
             await ask_question(chat_id, conversation_id, team_name)
@@ -129,7 +150,7 @@ def create_dummy_task(
     print("======")
     # Start the task execution with the given conversation_id
     asyncio.create_task(
-        execute_dummy_task(str(chat_id), str(conversation_id), team_name)
+        execute_dummy_task(str(chat_id), str(conversation_id), team_name, message)
     )
 
 
