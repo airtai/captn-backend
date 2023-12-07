@@ -13,7 +13,7 @@ from google.api_core import protobuf_helpers
 from google.protobuf import json_format
 from prisma import Prisma  # type: ignore[attr-defined]
 
-from .model import AdBase, AdGroup, AdGroupAd, Campaign
+from .model import AdBase, AdGroup, AdGroupAd, AdGroupCriterion, Campaign
 
 router = APIRouter()
 
@@ -249,7 +249,7 @@ async def search(
     return campaign_data
 
 
-AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad"]
+AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad", "ad_group_criterion"]
 
 
 async def _update(
@@ -294,6 +294,12 @@ async def _update(
             operation_update.resource_name = service.ad_group_path(
                 customer_id, ad_group_id
             )
+        elif key == "ad_group_criterion":
+            ad_group_id = model_dict.pop("ad_group_id")
+            criterion_id = model_dict.pop("criterion_id")
+            operation_update.resource_name = service.ad_group_criterion_path(
+                customer_id, ad_group_id, criterion_id
+            )
         else:
             campaign_id = model_dict.pop("campaign_id")
             operation_update.resource_name = service.campaign_path(
@@ -315,6 +321,10 @@ async def _update(
             )
         elif key == "ad_group":
             response = service.mutate_ad_groups(
+                customer_id=customer_id, operations=[operation]
+            )
+        elif key == "ad_group_criterion":
+            response = service.mutate_ad_group_criteria(
                 customer_id=customer_id, operations=[operation]
             )
         else:
@@ -368,5 +378,22 @@ async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) ->
     return await _update(
         user_id=user_id,
         model=campaign_model,
+        key_service_operation=key_service_operation,
+    )
+
+
+@router.get("/update-ad-group-criterion")
+async def update_ad_group_criterion(
+    user_id: int, ad_group_criterion_model: AdGroupCriterion = Depends()
+) -> str:
+    key_service_operation = {
+        "key": "ad_group_criterion",
+        "service": "AdGroupCriterionService",
+        "operation": "AdGroupCriterionOperation",
+    }
+
+    return await _update(
+        user_id=user_id,
+        model=ad_group_criterion_model,
         key_service_operation=key_service_operation,
     )

@@ -248,7 +248,9 @@ You can leverage access to the following resources:
         return last_message
 
     def continue_chat(self, message: str) -> None:
+        message = f"Response from the client:\n{message}"
         self.manager.send(recipient=self.manager, message=message)
 
     async def a_continue_chat(self, message: str) -> None:
+        message = f"Response from the client:\n{message}"
         await self.manager.a_send(recipient=self.manager, message=message)

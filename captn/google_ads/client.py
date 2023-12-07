@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 
-from ..model import AdBase
+from google_ads.model import AdBase
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
