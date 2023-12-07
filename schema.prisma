@@ -18,3 +18,16 @@ model GAuth {
   creds      Json
   info       Json
 }
+
+model Task {
+  user_id Int
+  chat_id Int
+  team_id Int @id
+  team_name String
+  team_status String
+  msg String
+  is_question Boolean
+  call_counter Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}

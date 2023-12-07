@@ -1,8 +1,7 @@
 import json
 import urllib.parse
-from contextlib import asynccontextmanager
 from os import environ
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -11,7 +10,8 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.api_core import protobuf_helpers
 from google.protobuf import json_format
-from prisma import Prisma  # type: ignore[attr-defined]
+
+from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
 from .model import AdBase, AdGroup, AdGroupAd, Campaign
 
@@ -29,25 +29,6 @@ oauth2_settings = {
     "clientSecret": client_secret_data["web"]["client_secret"],
     "redirectUri": client_secret_data["web"]["redirect_uris"][0],
 }
-
-
-@asynccontextmanager  # type: ignore
-async def get_db_connection(db_url: Optional[str] = None) -> Prisma:  # type: ignore
-    if not db_url:
-        db_url = environ.get("DATABASE_URL")
-    db = Prisma(datasource={"url": db_url})  # type: ignore
-    await db.connect()
-    try:
-        yield db
-    finally:
-        await db.disconnect()
-
-
-async def get_wasp_db_url() -> str:
-    curr_db_url = environ.get("DATABASE_URL")
-    wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "waspdb")  # type: ignore[union-attr]
-    # wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "chatApp-1ae2dfd26b")  # type: ignore[union-attr]
-    return wasp_db_url
 
 
 async def get_user(user_id: Union[int, str]) -> Any:
