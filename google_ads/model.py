@@ -20,3 +20,7 @@ class AdGroup(AdBase):
 
 class AdGroupAd(AdGroup):
     ad_id: str
+
+
+class AdGroupCriterion(AdGroup):
+    criterion_id: str

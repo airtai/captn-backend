@@ -382,7 +382,42 @@ update_campaign_config = {
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
         },
-        "required": ["customer_id", "ad_group_id", "ad_id"],
+        "required": ["customer_id", "campaign_id"],
+    },
+}
+
+update_ad_group_criterion_config = {
+    "name": "update_ad_group_criterion",
+    "description": "Update Google Ads Group Criterion",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "ad_group_id": {
+                "type": "string",
+                "description": "Id of the Ad group",
+            },
+            "criterion_id": {
+                "type": "string",
+                "description": "Id of the Ad group criterion",
+            },
+            "name": {
+                "type": "string",
+                "description": "The name of the Ad",
+            },
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+            "cpc_bid_micros": {
+                "type": "integer",
+                "description": "Cost per click bid micros",
+            },
+        },
+        "required": ["customer_id", "ad_group_id", "criterion_id"],
     },
 }
 

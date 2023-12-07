@@ -5,12 +5,13 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from google_ads.model import AdGroup, AdGroupAd, AdGroupCriterion, Campaign
+
 from ...google_ads.client import (
     execute_query,
     list_accessible_customers,
     update_campaign_or_group_or_ad,
 )
-from ...model import AdGroup, AdGroupAd, Campaign
 from .execution_team import get_read_file
 from .function_configs import (
     execute_query_config,
@@ -19,6 +20,7 @@ from .function_configs import (
     reply_to_client_2_config,
     update_ad_config,
     update_ad_group_config,
+    update_ad_group_criterion_config,
     update_campaign_config,
 )
 from .functions import reply_to_client_2
@@ -38,6 +40,7 @@ class GoogleAdsTeam(Team):
         update_ad_config,
         update_ad_group_config,
         update_campaign_config,
+        update_ad_group_criterion_config,
     ]
 
     _default_roles = [
@@ -116,7 +119,11 @@ sure it is understandable by non-experts.
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         name = x.get("name")
-        return name == "reply_to_client"
+        content = x.get("content")
+
+        return (
+            name == "reply_to_client" and content is not None and not content.startswith("Error:")
+        )
 
     @classmethod
     def _get_team_name_prefix(cls) -> str:
@@ -147,8 +154,12 @@ Your team is in charge of using the Google Ads API and no one elce does NOT know
 Also, make sure that you explicitly tell the user which changes you want to make.
 11. Always suggest one change at the time (do NOT work on multiple things at the same time)
 12. Never repeat the content from (received) previous messages
-13. When using "execute_query" vommand, ff 'FROM campaign' query filter returns empty responses,
+13. When using "execute_query" command, if 'FROM campaign' query filter returns empty responses,
 try to use 'FROM ad_group' query filter.
+14. The client can NOT see your conversation, he only receives the message which you send him by using the
+'reply_to_client' command
+15. Whenever you use a 'reply_to_client' command, the your team is on the break until you get the response from the client.
+So use this command only when you have a question or some result for the client
 """
 
     @property
@@ -183,6 +194,10 @@ name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["EN
 
 5. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
 name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]])
+
+6. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
+criterion_id: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
+cpc_bid_micros: Optional[int])
 """
 
 
@@ -311,6 +326,19 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 status=status,
             ),
             endpoint="/update-campaign",
+        ),
+        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, name=None, status=None, cpc_bid_micros=None: update_campaign_or_group_or_ad(
+            user_id=user_id,
+            conv_id=conv_id,
+            ad=AdGroupCriterion(
+                customer_id=customer_id,
+                ad_group_id=ad_group_id,
+                criterion_id=criterion_id,
+                name=name,
+                status=status,
+                cpc_bid_micros=cpc_bid_micros,
+            ),
+            endpoint="/update-ad-group-criterion",
         ),
     }
 
