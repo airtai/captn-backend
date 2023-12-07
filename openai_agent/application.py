@@ -192,5 +192,5 @@ class GetTeamStatusRequest(BaseModel):
 @router.post("/get-team-status")
 async def get_team_status(request: GetTeamStatusRequest) -> Dict[str, Union[str, bool]]:
     team_id = request.team_id
-    status = get_dummy_task_status(team_id)
+    status = await get_dummy_task_status(team_id)
     return status

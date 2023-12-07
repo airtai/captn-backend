@@ -80,13 +80,7 @@ async def get_task(*, team_id: int) -> Task:
 
 async def update_task(team_id: int, **kwargs: Union[int, str, bool]) -> Task:
     async with get_db_connection() as db:  # type: ignore[var-annotated]
-        task: Task = await db.task.upsert(
-            where={"team_id": team_id},
-            data={
-                "create": {**{"team_id": team_id}, **kwargs},
-                "update": kwargs,
-            },
-        )
+        task: Task = await db.task.update(where={"team_id": team_id}, data=kwargs)
     return task
 
 
@@ -114,6 +108,7 @@ async def create_new_task(
         team_id=task.team_id,
         team_status="pause",
         msg=NOTIFICATION_MSG.format(team_name, last_message),
+        # msg=ACTION_MSG.format(team_name, chat_id, team_name, conversation_id),
         call_counter=task.call_counter + 1,
     )
     return task
@@ -166,11 +161,11 @@ async def execute_dummy_task(
         task = await create_new_task(
             user_id, chat_id, conversation_id, team_name, message
         )
-
-    if task.call_counter == 1:
-        await ask_question(chat_id, conversation_id, team_name)
     else:
-        await complete_task(chat_id, conversation_id, team_name)
+        if task.call_counter == 1:
+            await ask_question(chat_id, conversation_id, team_name)
+        else:
+            await complete_task(chat_id, conversation_id, team_name)
 
 
 def create_dummy_task(
@@ -194,8 +189,8 @@ def create_dummy_task(
     )
 
 
-def get_dummy_task_status(conversation_id: int) -> Dict[str, Union[str, bool]]:
-    task = asyncio.run(get_task(team_id=conversation_id))
+async def get_dummy_task_status(conversation_id: int) -> Dict[str, Union[str, bool]]:
+    task = await get_task(team_id=conversation_id)
     d = task.model_dump()
     exclude_columns = ["call_counter", "created_at", "updated_at"]
     return {k: v for k, v in d.items() if k not in exclude_columns}  # type: ignore

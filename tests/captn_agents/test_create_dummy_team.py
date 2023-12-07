@@ -1,5 +1,3 @@
-# # test_status_updater.py
-
 # import asyncio
 
 # import pytest
@@ -16,7 +14,7 @@
 # @pytest.mark.asyncio
 # async def test_dummy_task_creation() -> None:
 #     chat_id = 31
-#     conversation_id = 1000000
+#     conversation_id = 100
 #     message = "Some message"
 #     team_name = "Google Ads Team"
 #     user_id = 1
@@ -24,8 +22,11 @@
 
 #     # Initially, the status should be inprogress
 #     await asyncio.sleep(1)
-#     assert get_dummy_task_status(conversation_id) == {
-#         "team_id": f"{conversation_id}",
+#     result = await get_dummy_task_status(conversation_id)
+#     assert result == {
+#         "chat_id": chat_id,
+#         "user_id": user_id,
+#         "team_id": conversation_id,
 #         "team_name": team_name,
 #         "team_status": "inprogress",
 #         "msg": "",
@@ -33,10 +34,13 @@
 #     }
 
 #     await asyncio.sleep(
-#         16
+#         17
 #     )  # Wait for the first task to complete (15 seconds + 1 second buffer)
-#     assert get_dummy_task_status(conversation_id) == {
-#         "team_id": f"{conversation_id}",
+#     result = await get_dummy_task_status(conversation_id)
+#     assert result == {
+#         "chat_id": chat_id,
+#         "user_id": user_id,
+#         "team_id": conversation_id,
 #         "team_name": team_name,
 #         "team_status": "pause",
 #         "msg": ACTION_MSG.format(team_name, chat_id, team_name, conversation_id),
@@ -48,8 +52,11 @@
 
 #     # After the second creation, the status should reset to inprogress
 #     await asyncio.sleep(1)
-#     assert get_dummy_task_status(conversation_id) == {
-#         "team_id": f"{conversation_id}",
+#     result = await get_dummy_task_status(conversation_id)
+#     assert result == {
+#         "chat_id": chat_id,
+#         "user_id": user_id,
+#         "team_id": conversation_id,
 #         "team_name": team_name,
 #         "team_status": "inprogress",
 #         "msg": "",
@@ -59,8 +66,11 @@
 #     await asyncio.sleep(
 #         16
 #     )  # Wait for the second task to complete (15 seconds + 1 second buffer)
-#     assert get_dummy_task_status(conversation_id) == {
-#         "team_id": f"{conversation_id}",
+#     result = await get_dummy_task_status(conversation_id)
+#     assert result == {
+#         "chat_id": chat_id,
+#         "user_id": user_id,
+#         "team_id": conversation_id,
 #         "team_name": team_name,
 #         "team_status": "pause",
 #         "msg": QUESTION_MSG.format(team_name),
@@ -71,8 +81,11 @@
 #     create_dummy_task(user_id, chat_id, conversation_id, message, team_name)
 #     # After the second creation, the status should reset to inprogress
 #     await asyncio.sleep(1)
-#     assert get_dummy_task_status(conversation_id) == {
-#         "team_id": f"{conversation_id}",
+#     result = await get_dummy_task_status(conversation_id)
+#     assert result == {
+#         "chat_id": chat_id,
+#         "user_id": user_id,
+#         "team_id": conversation_id,
 #         "team_name": team_name,
 #         "team_status": "inprogress",
 #         "msg": "",
@@ -82,8 +95,11 @@
 #     await asyncio.sleep(
 #         16
 #     )  # Wait for the first task to complete (15 seconds + 1 second buffer)
-#     assert get_dummy_task_status(conversation_id) == {
-#         "team_id": f"{conversation_id}",
+#     result = await get_dummy_task_status(conversation_id)
+#     assert result == {
+#         "chat_id": chat_id,
+#         "user_id": user_id,
+#         "team_id": conversation_id,
 #         "team_name": team_name,
 #         "team_status": "completed",
 #         "msg": ANSWER_MSG.format(team_name),
