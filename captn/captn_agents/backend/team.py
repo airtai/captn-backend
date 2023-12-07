@@ -106,7 +106,7 @@ class Team:
         self.manager = autogen.GroupChatManager(
             groupchat=self.groupchat,
             llm_config=self.llm_config,
-            is_termination_msg=Team._is_termination_msg,
+            is_termination_msg=self._is_termination_msg,
         )
 
     def _create_members(self) -> None:
@@ -146,14 +146,14 @@ Do NOT try to finish the task until other team members give their opinion.
                 name=name,
                 llm_config=self.llm_config,
                 system_message=system_message,
-                is_termination_msg=Team._is_termination_msg,
+                is_termination_msg=self._is_termination_msg,
             )
 
         return autogen.AssistantAgent(
             name=name,
             llm_config=self.llm_config,
             system_message=system_message,
-            is_termination_msg=Team._is_termination_msg,
+            is_termination_msg=self._is_termination_msg,
             code_execution_config={"work_dir": self.work_dir},
             function_map=self.function_map,
         )

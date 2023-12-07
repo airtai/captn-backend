@@ -16,12 +16,12 @@ from .function_configs import (
     execute_query_config,
     list_accessible_customers_config,
     read_file_config,
-    reply_to_client_config,
+    reply_to_client_2_config,
     update_ad_config,
     update_ad_group_config,
     update_campaign_config,
 )
-from .functions import reply_to_client
+from .functions import reply_to_client_2
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -32,7 +32,7 @@ class GoogleAdsTeam(Team):
         # get_login_url_config,
         list_accessible_customers_config,
         execute_query_config,
-        reply_to_client_config,
+        reply_to_client_2_config,
         # analyze_query_response_config,
         read_file_config,
         update_ad_config,
@@ -112,6 +112,11 @@ sure it is understandable by non-experts.
 
         self._create_members()
         self._create_initial_message()
+
+    @staticmethod
+    def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
+        name = x.get("name")
+        return name == "reply_to_client"
 
     @classmethod
     def _get_team_name_prefix(cls) -> str:
@@ -265,7 +270,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             query=query,
             work_dir=work_dir,
         ),
-        "reply_to_client": reply_to_client,
+        "reply_to_client": reply_to_client_2,
         # "analyze_query_response": lambda file_name: analyze_query_response(
         #     work_dir=work_dir, file_name=file_name
         # ),

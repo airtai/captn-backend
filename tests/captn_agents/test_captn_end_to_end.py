@@ -27,7 +27,8 @@ def test_update_campaign_name() -> None:
     # task = "I need customer_id and campaign id for 'Website traffic-Search-3' campaign"
 
     task = """To each campaign which name starts with: 'Website', add '-up' at the end of the name
-You have all the permissions to update the campaign name, so do not ask me for any additional info, just do it!!"""
+You have all the permissions to update the campaign name, so do not ask me for any additional info, just do it!!
+Allow the chages to the google ads team without any confirmation from the client"""
 
     user_id = 1
     conv_id = 17

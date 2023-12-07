@@ -385,3 +385,27 @@ update_campaign_config = {
         "required": ["customer_id", "ad_group_id", "ad_id"],
     },
 }
+
+
+reply_to_client_2_config = {
+    "name": "reply_to_client",
+    "description": "Respond to the client (answer to his task or question for additional information)",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string",
+                "description": "Message for the client",
+            },
+            "is_question": {
+                "type": "boolean",
+                "description": "Is the message a question for additional info from the client",
+            },
+            "completed": {
+                "type": "boolean",
+                "description": "Has the team completed the task or are they waiting for additional info",
+            },
+        },
+        "required": ["message", "is_question", "completed"],
+    },
+}
