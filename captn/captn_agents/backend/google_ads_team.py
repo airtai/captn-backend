@@ -13,15 +13,15 @@ from ...google_ads.client import (
 from ...model import AdGroup, AdGroupAd, Campaign
 from .execution_team import get_read_file
 from .function_configs import (
-    ask_for_additional_info_config,
     execute_query_config,
     list_accessible_customers_config,
     read_file_config,
+    reply_to_client_2_config,
     update_ad_config,
     update_ad_group_config,
     update_campaign_config,
 )
-from .functions import ask_for_additional_info
+from .functions import reply_to_client_2
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -32,7 +32,7 @@ class GoogleAdsTeam(Team):
         # get_login_url_config,
         list_accessible_customers_config,
         execute_query_config,
-        ask_for_additional_info_config,
+        reply_to_client_2_config,
         # analyze_query_response_config,
         read_file_config,
         update_ad_config,
@@ -60,13 +60,12 @@ and make sure the task is completed on time. You are also SOLELY responsible for
 
 Based on the initial task, a number of proposed solutions will be suggested by the team. You must ask the team to write a detailed plan
 including steps and expected outcomes. Once the plan is ready, you must summarize it and ask the user for permission to execute it using
-'ask_for_additional_info'. Once the permission is granted, please instruct the team to execute the plan. Once the proposed solution
-is executed, you must write a short summary of accomplished work and forward it to the user using 'ask_for_additional_info'.
+'reply_to_client'. Once the permission is granted, please instruct the team to execute the plan. Once the proposed solution
+is executed, you must write a short summary of accomplished work and forward it to the user using 'reply_to_client'.
 
 Once the initial task given to the team is completed by implementing proposed solutions, you must write a short summary of
-accomplished work and finish the message with the word "TERMINATE". That message will be forwarded to the client and make
-sure it is understandable by non-experts. DO NOT allow the team to finish with actually implementing the proposed solution outlined
-in the plan.
+accomplished work and execute the 'reply_to_client' command. That message will be forwarded to the client so make
+sure it is understandable by non-experts.
 """,
         },
     ]
@@ -89,7 +88,12 @@ in the plan.
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
-        name = GoogleAdsTeam._get_new_team_name()
+        # name = GoogleAdsTeam._get_new_team_name()
+        name = Team.get_user_conv_team_name(
+            name_prefix=GoogleAdsTeam._get_team_name_prefix(),
+            user_id=user_id,
+            conv_id=conv_id,
+        )
 
         super().__init__(
             roles=roles,
@@ -109,6 +113,11 @@ in the plan.
         self._create_members()
         self._create_initial_message()
 
+    @staticmethod
+    def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
+        name = x.get("name")
+        return name == "reply_to_client"
+
     @classmethod
     def _get_team_name_prefix(cls) -> str:
         return "google_ads_team"
@@ -116,27 +125,30 @@ in the plan.
     @property
     def _task(self) -> str:
         return f"""You are a Google Ads team in charge of running digital campaigns.
-Your current task is:
+The client has sent you the following task:
 \n{self.task}\n\n"""
 
     @property
     def _guidelines(self) -> str:
         return """## Guidelines
 1. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
-questions using the 'ask_for_additional_info' function.
+questions using the 'reply_to_client' function.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
-3. If you receive login url, forward it to the user by using the 'ask_for_additional_info' function.
+3. If you receive login url, forward it to the user by using the 'reply_to_client' function.
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
 6. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the neccessary informations.
 7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
-8. Do NOT use 'ask_for_additional_info' command for asking the questions on how to Google Ads API.
+8. Do NOT use 'reply_to_client' command for asking the questions on how to Google Ads API.
 Your team is in charge of using the Google Ads API and no one elce does NOT know how to use it.
 9. Do NOT ask the user questions about the information which you can get by using Google Ads API (keywords, clikcks etc.)
 10. Before making any changes (with budgets, keywords, etc.) ask the user if he approves.
 Also, make sure that you explicitly tell the user which changes you want to make.
 11. Always suggest one change at the time (do NOT work on multiple things at the same time)
+12. Never repeat the content from (received) previous messages
+13. When using "execute_query" vommand, ff 'FROM campaign' query filter returns empty responses,
+try to use 'FROM ad_group' query filter.
 """
 
     @property
@@ -146,7 +158,7 @@ Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
 All team members have access to the following command:
-1. ask_for_additional_info: Ask the user for additional information, params: (question: string)
+1. reply_to_client: Ask the user for additional information, params: (message: string)
 2. read_file: Read an existing file, params: (filename: string)
 
 ONLY Google ads specialist can suggest following commands:
@@ -156,6 +168,8 @@ Example of customer_ids parameter: ["12", "44", "111"]
 You can use optional parameter 'query' for writing SQL queries. e.g.:
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
 FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
+
+Suggestion: keyword_view table is a good place to start digging for info.
 
 3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
 name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
@@ -256,7 +270,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             query=query,
             work_dir=work_dir,
         ),
-        "ask_for_additional_info": ask_for_additional_info,
+        "reply_to_client": reply_to_client_2,
         # "analyze_query_response": lambda file_name: analyze_query_response(
         #     work_dir=work_dir, file_name=file_name
         # ),

@@ -21,7 +21,7 @@ def chat(request: CaptnAgentRequest) -> str:
         task=request.message,
         max_round=80,
         human_input_mode="NEVER",
-        class_name="captn_initial_team",
+        class_name="google_ads_team",
     )
 
     return last_message
