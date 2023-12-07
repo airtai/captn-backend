@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .banking_initial_team import BookingInitialTeam
 from .captn_initial_team import CaptnInitialTeam
+from .google_ads_team import GoogleAdsTeam
 from .initial_team import InitialTeam
 from .team import Team
 
@@ -89,6 +90,13 @@ roles_dictionary = {
         },
         "class": BookingInitialTeam,
     },
+    "google_ads_team": {
+        "human_input_mode": {
+            "NEVER": None,
+            "ALWAYS": None,
+        },
+        "class": GoogleAdsTeam,
+    },
 }
 
 
@@ -109,14 +117,16 @@ def _get_initial_team(
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
 
-    initial_team_class = roles_dictionary[class_name]["class"]
+    initial_team_class: Team = roles_dictionary[class_name]["class"]  # type: ignore
     if roles is None:
         roles = roles_dictionary[class_name]["human_input_mode"][human_input_mode]  # type: ignore
 
     initial_team = None
     try:
-        team_name = InitialTeam.get_user_conv_team_name(
-            user_id=user_id, conv_id=conv_id
+        team_name = Team.get_user_conv_team_name(
+            name_prefix=initial_team_class._get_team_name_prefix(),
+            user_id=user_id,
+            conv_id=conv_id,
         )
         initial_team = Team.get_team(team_name)  # type: ignore
         create_new_conv = False
@@ -124,18 +134,29 @@ def _get_initial_team(
         create_new_conv = True
 
     if create_new_conv:
-        initial_team = initial_team_class(  # type: ignore
-            user_id=user_id,
-            conv_id=conv_id,
-            task=task,
-            roles=roles,
-            work_dir=str(working_dir),
-            max_round=max_round,
-            seed=seed,
-            temperature=temperature,
-            human_input_mode=human_input_mode,
-            use_async=use_async,
-        )
+        if issubclass(initial_team_class, InitialTeam):  # type: ignore
+            initial_team = initial_team_class(  # type: ignore
+                user_id=user_id,
+                conv_id=conv_id,
+                task=task,
+                roles=roles,
+                work_dir=str(working_dir),
+                max_round=max_round,
+                seed=seed,
+                temperature=temperature,
+                human_input_mode=human_input_mode,
+                use_async=use_async,
+            )
+        else:
+            initial_team = initial_team_class(  # type: ignore
+                user_id=user_id,
+                conv_id=conv_id,
+                task=task,
+                work_dir=str(working_dir),
+                max_round=max_round,
+                seed=seed,
+                temperature=temperature,
+            )
 
     return initial_team, team_name, create_new_conv
 

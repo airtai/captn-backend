@@ -37,7 +37,11 @@ class InitialTeam(Team):
         use_async: bool = False,
     ):
         self.conv_id = conv_id
-        name = InitialTeam.get_user_conv_team_name(user_id=user_id, conv_id=conv_id)
+        name = Team.get_user_conv_team_name(
+            name_prefix=InitialTeam._get_team_name_prefix(),
+            user_id=user_id,
+            conv_id=conv_id,
+        )
         if use_async:
             function_map = self._get_function_map_async(
                 user_id=user_id, conv_id=conv_id, working_dir=Path(work_dir)
@@ -64,13 +68,6 @@ class InitialTeam(Team):
 
         self._create_members()
         self._create_initial_message()
-
-    @classmethod
-    def get_user_conv_team_name(cls, user_id: int, conv_id: int) -> str:
-        name_prefix = cls._get_team_name_prefix()
-        name = f"{name_prefix}_{str(user_id)}_{str(conv_id)}"
-
-        return name
 
     @classmethod
     def _get_team_name_prefix(cls) -> str:
