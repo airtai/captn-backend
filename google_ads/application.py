@@ -1,8 +1,7 @@
 import json
 import urllib.parse
-from contextlib import asynccontextmanager
 from os import environ
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -11,7 +10,9 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.api_core import protobuf_helpers
 from google.protobuf import json_format
-from prisma import Prisma  # type: ignore[attr-defined]
+from prisma.models import Task
+
+from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
 from .model import AdBase, AdGroup, AdGroupAd, AdGroupCriterion, Campaign
 
@@ -29,24 +30,6 @@ oauth2_settings = {
     "clientSecret": client_secret_data["web"]["client_secret"],
     "redirectUri": client_secret_data["web"]["redirect_uris"][0],
 }
-
-
-@asynccontextmanager  # type: ignore
-async def get_db_connection(db_url: Optional[str] = None) -> Prisma:  # type: ignore
-    if not db_url:
-        db_url = environ.get("DATABASE_URL")
-    db = Prisma(datasource={"url": db_url})  # type: ignore
-    await db.connect()
-    try:
-        yield db
-    finally:
-        await db.disconnect()
-
-
-async def get_wasp_db_url() -> str:
-    curr_db_url = environ.get("DATABASE_URL")
-    wasp_db_url = curr_db_url.replace(curr_db_url.split("/")[-1], "waspdb")  # type: ignore[union-attr]
-    return wasp_db_url
 
 
 async def get_user(user_id: Union[int, str]) -> Any:
@@ -102,7 +85,7 @@ async def get_login_url(
         f"&scope={urllib.parse.quote_plus('https://www.googleapis.com/auth/adwords email')}"
         f"&access_type=offline&prompt=consent&state={conv_id}"
     )
-    markdown_url = f"[Click Here]({google_oauth_url})"
+    markdown_url = f"To navigate Google Ads waters, I require access to your account. Please [click here]({google_oauth_url}) to grant permission."
     return {"login_url": markdown_url}
 
 
@@ -155,9 +138,11 @@ async def login_callback(
             },
         )
 
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
+        task: Task = await db.task.find_unique_or_raise(where={"team_id": int(conv_id)})
     redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
     logged_in_message = "I have successfully logged in"
-    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}"
+    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}&team_id={task.team_id}&team_name={task.team_name}"
     return RedirectResponse(redirect_uri)
 
 
