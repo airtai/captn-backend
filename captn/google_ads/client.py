@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import requests
-
-from google_ads.model import AdBase
+from pydantic import BaseModel
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
@@ -76,7 +75,7 @@ def execute_query(
 
 
 def update_campaign_or_group_or_ad(
-    user_id: int, conv_id: int, ad: AdBase, endpoint: str = "/update-ad"
+    user_id: int, conv_id: int, ad: BaseModel, endpoint: str = "/update-ad"
 ) -> Dict[str, Any]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:

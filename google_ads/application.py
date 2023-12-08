@@ -10,8 +10,8 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.api_core import protobuf_helpers
 from google.protobuf import json_format
+from prisma.models import Task
 
-from captn.captn_agents.backend.create_dummy_team import get_task
 from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
 from .model import AdBase, AdGroup, AdGroupAd, AdGroupCriterion, Campaign
@@ -138,7 +138,8 @@ async def login_callback(
             },
         )
 
-    task = await get_task(team_id=int(conv_id))
+    async with get_db_connection() as db:  # type: ignore[var-annotated]
+        task: Task = await db.task.find_unique_or_raise(where={"team_id": int(conv_id)})
     redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
     logged_in_message = "I have successfully logged in"
     redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}&team_id={task.team_id}&team_name={task.team_name}"
