@@ -123,8 +123,11 @@ def create_dummy_task(
 async def get_dummy_task_status(
     conversation_id: int,
 ) -> Dict[str, Union[str, bool, int]]:
-    task = await get_task(team_id=conversation_id)
-    d = task.model_dump()
-    exclude_columns = ["created_at", "updated_at"]
-    result = {k: v for k, v in d.items() if k not in exclude_columns}  # type: ignore
-    return result
+    try:
+        task = await get_task(team_id=conversation_id)
+        d = task.model_dump()
+        exclude_columns = ["created_at", "updated_at"]
+        result = {k: v for k, v in d.items() if k not in exclude_columns}  # type: ignore
+        return result
+    except RecordNotFoundError:
+        return {}
