@@ -122,7 +122,9 @@ sure it is understandable by non-experts.
         content = x.get("content")
 
         return (
-            name == "reply_to_client" and content is not None and not content.startswith("Error:")
+            name == "reply_to_client"
+            and content is not None
+            and not content.startswith("Error:")
         )
 
     @classmethod
