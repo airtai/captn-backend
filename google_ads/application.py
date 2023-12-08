@@ -85,7 +85,7 @@ async def get_login_url(
         f"&scope={urllib.parse.quote_plus('https://www.googleapis.com/auth/adwords email')}"
         f"&access_type=offline&prompt=consent&state={conv_id}"
     )
-    markdown_url = f"[Click Here]({google_oauth_url})"
+    markdown_url = f"To navigate Google Ads waters, I require access to your account. Please [click here]({google_oauth_url}) to grant permission."
     return {"login_url": markdown_url}
 
 
