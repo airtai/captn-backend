@@ -27,7 +27,6 @@ model Task {
   team_status String
   msg String
   is_question Boolean
-  call_counter Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

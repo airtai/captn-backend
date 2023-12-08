@@ -1,5 +1,5 @@
+import ast
 import asyncio
-from os import environ
 from typing import Dict, Union
 
 from prisma.errors import RecordNotFoundError
@@ -7,8 +7,6 @@ from prisma.models import Task
 
 from captn.captn_agents.application import CaptnAgentRequest, chat
 from captn.captn_agents.helpers import get_db_connection
-
-REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
 
 NOTIFICATION_MSG = """
 ## 📢 Notification from **{}**:
@@ -20,40 +18,6 @@ NOTIFICATION_MSG = """
 <br/>
 """
 
-ACTION_MSG = (
-    """
-## 📢 Notification from **{}**:
-
-<br/>
-
-To navigate Google Ads waters, I require access to your account. Please use the link below to grant permission
-
-<br/>
-
-<a class="underline text-white" href="""
-    + f""""{REDIRECT_DOMAIN}/chat/"""
-    + """{}?msg=LoggedIn&team_name={}&team_id={}">Mock Link</a>"""
-    ""
-)
-
-QUESTION_MSG = """
-## 📢 Notification from **{}**:
-
-<br/>
-
-Our team has a question for you. Can you please answer the below:
-
-<br/>
-
-What is your name? 😊"""
-
-ANSWER_MSG = """
-## 📢 Notification from **{}**:
-
-<br/>
-
-Hurray! Your campaign report is ready😊"""
-
 
 async def create_task(
     *,
@@ -64,7 +28,6 @@ async def create_task(
     team_status: str,
     msg: str,
     is_question: bool,
-    call_counter: int,
 ) -> Task:
     data = locals()
     async with get_db_connection() as db:  # type: ignore[var-annotated]
@@ -95,61 +58,34 @@ async def create_new_task(
         team_status="inprogress",
         msg="",
         is_question=False,
-        call_counter=0,
-    )
-    # await asyncio.sleep(15)
-    request_obj = CaptnAgentRequest(
-        message=message, user_id=user_id, conv_id=conversation_id
-    )
-    # last_message, is_question, status= chat(request_obj)
-    # todo: add try except block
-    last_message = chat(request_obj)
-    task = await update_task(
-        team_id=task.team_id,
-        team_status="pause",
-        msg=NOTIFICATION_MSG.format(team_name, last_message),
-        # msg=ACTION_MSG.format(team_name, chat_id, team_name, conversation_id),
-        call_counter=task.call_counter + 1,
     )
     return task
 
 
-async def ask_question(chat_id: int, conversation_id: int, team_name: str) -> None:
-    task = await get_task(team_id=conversation_id)
-    task = await update_task(
-        team_id=conversation_id,
-        team_name=team_name,
-        team_status="inprogress",
-        msg="",
-        is_question=True,
-        call_counter=task.call_counter,
-    )
-    await asyncio.sleep(15)
-    task = await update_task(
-        team_id=task.team_id,
-        team_status="pause",
-        msg=QUESTION_MSG.format(team_name),
-        call_counter=task.call_counter + 1,
-    )
-
-
-async def complete_task(chat_id: int, conversation_id: int, team_name: str) -> None:
-    task = await get_task(team_id=conversation_id)
+async def update_existing_task(
+    task: Task, user_id: int, conversation_id: int, message: str, team_name: str
+) -> Task:
     task = await update_task(
         team_id=conversation_id,
         team_name=team_name,
         team_status="inprogress",
         msg="",
         is_question=False,
-        call_counter=task.call_counter,
     )
-    await asyncio.sleep(15)
+    request_obj = CaptnAgentRequest(
+        message=message, user_id=user_id, conv_id=conversation_id
+    )
+    response = ast.literal_eval(chat(request_obj))
+    last_message = response["message"]
+    status = response["status"]
+    is_question = response["is_question"]
     task = await update_task(
         team_id=task.team_id,
-        team_status="completed",
-        msg=ANSWER_MSG.format(team_name),
-        call_counter=task.call_counter + 1,
+        team_status=status,
+        msg=NOTIFICATION_MSG.format(team_name, last_message),
+        is_question=is_question,
     )
+    return task
 
 
 async def execute_dummy_task(
@@ -161,11 +97,7 @@ async def execute_dummy_task(
         task = await create_new_task(
             user_id, chat_id, conversation_id, team_name, message
         )
-    else:
-        if task.call_counter == 1:
-            await ask_question(chat_id, conversation_id, team_name)
-        else:
-            await complete_task(chat_id, conversation_id, team_name)
+    await update_existing_task(task, user_id, conversation_id, message, team_name)
 
 
 def create_dummy_task(
@@ -183,14 +115,16 @@ def create_dummy_task(
     print(f"Team Name: {team_name}")
     print(f"Message: {message}")
     print("======")
-    # Start the task execution with the given conversation_id
     asyncio.create_task(
         execute_dummy_task(user_id, chat_id, conversation_id, team_name, message)
     )
 
 
-async def get_dummy_task_status(conversation_id: int) -> Dict[str, Union[str, bool]]:
+async def get_dummy_task_status(
+    conversation_id: int,
+) -> Dict[str, Union[str, bool, int]]:
     task = await get_task(team_id=conversation_id)
     d = task.model_dump()
-    exclude_columns = ["call_counter", "created_at", "updated_at"]
-    return {k: v for k, v in d.items() if k not in exclude_columns}  # type: ignore
+    exclude_columns = ["created_at", "updated_at"]
+    result = {k: v for k, v in d.items() if k not in exclude_columns}  # type: ignore
+    return result
