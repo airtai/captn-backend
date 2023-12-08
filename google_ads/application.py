@@ -11,6 +11,7 @@ from google.ads.googleads.errors import GoogleAdsException
 from google.api_core import protobuf_helpers
 from google.protobuf import json_format
 
+from captn.captn_agents.backend.create_dummy_team import get_task
 from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
 from .model import AdBase, AdGroup, AdGroupAd, Campaign
@@ -137,9 +138,10 @@ async def login_callback(
             },
         )
 
+    task = await get_task(team_id=int(conv_id))
     redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
     logged_in_message = "I have successfully logged in"
-    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}"
+    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}&team_id={task.team_id}&team_name={task.team_name}"
     return RedirectResponse(redirect_uri)
 
 
