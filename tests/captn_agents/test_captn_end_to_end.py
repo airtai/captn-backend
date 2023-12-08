@@ -26,7 +26,7 @@ def test_update_campaign_name() -> None:
     # task = "Enable all Ads for the 'Website traffic-Search-3' campaign"
     # task = "I need customer_id and campaign id for 'Website traffic-Search-3' campaign"
 
-    task = """To each campaign which name starts with: 'Website', add '-up' at the end of the name
+    task = """To each campaign which name starts with: 'Website', add '-up' at the end of the name (add 'up' even if name already contains it)
 You have all the permissions to update the campaign name, so do not ask me for any additional info, just do it!!
 Allow the chages to the google ads team without any confirmation from the client"""
 
@@ -47,7 +47,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
+        update_mock.assert_called_once()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-campaign"
@@ -78,7 +78,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
+        update_mock.assert_called_once()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-campaign"
@@ -109,7 +109,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
+        update_mock.assert_called_once()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-ad-group"
@@ -140,7 +140,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
+        update_mock.assert_called_once()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-ad"

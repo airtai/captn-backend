@@ -252,85 +252,72 @@ async def search(
 AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad", "ad_group_criterion"]
 
 
-async def _update(
-    user_id: int, model: AdBase, key_service_operation: Dict[str, str]
-) -> str:
+async def _get_client(user_id: int) -> GoogleAdsClient:
     user_credentials = await load_user_credentials(user_id)
     client = create_google_ads_client(
         user_credentials=user_credentials, use_proto_plus=True
     )
+    return client
 
-    model_dict = model.model_dump()
-    customer_id = model_dict.pop("customer_id")
 
-    key = key_service_operation["key"]
-    if key not in AVALIABLE_KEYS:
-        raise KeyError(f"key: {key} is not supported")
+def _set_fields(
+    client: GoogleAdsClient,
+    model_dict: Dict[str, Any],
+    operation: Any,
+    operation_update: Any,
+) -> None:
+    for attribute_name, attribute_value in model_dict.items():
+        if attribute_value:
+            setattr(operation_update, attribute_name, attribute_value)
 
-    if key == "campaign":
-        status_enum = client.enums.CampaignStatusEnum
-    else:
-        status_enum = client.enums.AdGroupStatusEnum
+    # Retrieve a FieldMask for the fields configured in the campaign/ad_group/ad_group_ad.
+    client.copy_from(
+        operation.update_mask,
+        protobuf_helpers.field_mask(None, operation_update._pb),  # type: ignore[no-untyped-call]
+    )
 
-    if model_dict["status"] == "ENABLED":
-        model_dict["status"] = status_enum.ENABLED
-    elif model_dict["status"] == "PAUSED":
-        model_dict["status"] = status_enum.PAUSED
 
-    service = client.get_service(key_service_operation["service"])
-    operation = client.get_type(key_service_operation["operation"])
+async def _update(
+    user_id: int, model: AdBase, service_operation_and_function_names: Dict[str, Any]
+) -> str:
+    client = await _get_client(user_id=user_id)
+
+    service = client.get_service(service_operation_and_function_names["service"])
+    operation = client.get_type(service_operation_and_function_names["operation"])
 
     try:
+        model_dict = model.model_dump()
+
+        mandatory_fields = service_operation_and_function_names["mandatory_fields"]
+        if "customer_id" in mandatory_fields:
+            mandatory_fields.remove("customer_id")
+        else:
+            raise KeyError("customer_id must be inside the mandatory_fields list")
+        customer_id = model_dict.pop("customer_id")
         operation_update = operation.update
 
-        if key == "ad_group_ad":
-            ad_group_id = model_dict.pop("ad_group_id")
-            ad_id = model_dict.pop("ad_id")
-            operation_update.resource_name = service.ad_group_ad_path(
-                customer_id, ad_group_id, ad_id
-            )
-        elif key == "ad_group":
-            ad_group_id = model_dict.pop("ad_group_id")
-            operation_update.resource_name = service.ad_group_path(
-                customer_id, ad_group_id
-            )
-        elif key == "ad_group_criterion":
-            ad_group_id = model_dict.pop("ad_group_id")
-            criterion_id = model_dict.pop("criterion_id")
-            operation_update.resource_name = service.ad_group_criterion_path(
-                customer_id, ad_group_id, criterion_id
-            )
-        else:
-            campaign_id = model_dict.pop("campaign_id")
-            operation_update.resource_name = service.campaign_path(
-                customer_id, campaign_id
-            )
+        mandatory_fields_values = [
+            model_dict.pop(mandatory_field) for mandatory_field in mandatory_fields
+        ]
 
-        for attribute_name, attribute_value in model_dict.items():
-            if attribute_value:
-                setattr(operation_update, attribute_name, attribute_value)
-
-        client.copy_from(
-            operation.update_mask,
-            protobuf_helpers.field_mask(None, operation_update._pb),  # type: ignore[no-untyped-call]
+        service_path_function = getattr(
+            service, service_operation_and_function_names["service_path"]
+        )
+        operation_update.resource_name = service_path_function(
+            customer_id, *mandatory_fields_values
         )
 
-        if key == "ad_group_ad":
-            response = service.mutate_ad_group_ads(
-                customer_id=customer_id, operations=[operation]
-            )
-        elif key == "ad_group":
-            response = service.mutate_ad_groups(
-                customer_id=customer_id, operations=[operation]
-            )
-        elif key == "ad_group_criterion":
-            response = service.mutate_ad_group_criteria(
-                customer_id=customer_id, operations=[operation]
-            )
-        else:
-            response = service.mutate_campaigns(
-                customer_id=customer_id, operations=[operation]
-            )
+        _set_fields(
+            client=client,
+            model_dict=model_dict,
+            operation=operation,
+            operation_update=operation_update,
+        )
+
+        mutate_function = getattr(
+            service, service_operation_and_function_names["mutate"]
+        )
+        response = mutate_function(customer_id=customer_id, operations=[operation])
 
     except Exception as e:
         raise HTTPException(
@@ -342,43 +329,51 @@ async def _update(
 @router.get("/update-ad")
 async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
     key_service_operation = {
-        "key": "ad_group_ad",
         "service": "AdGroupAdService",
         "operation": "AdGroupAdOperation",
+        "mutate": "mutate_ad_group_ads",
+        "mandatory_fields": ["customer_id", "ad_group_id", "ad_id"],
+        "service_path": "ad_group_ad_path",
     }
 
     return await _update(
-        user_id=user_id, model=ad_model, key_service_operation=key_service_operation
+        user_id=user_id,
+        model=ad_model,
+        service_operation_and_function_names=key_service_operation,
     )
 
 
 @router.get("/update-ad-group")
 async def update_ad_group(user_id: int, ad_group_model: AdGroup = Depends()) -> str:
     key_service_operation = {
-        "key": "ad_group",
         "service": "AdGroupService",
         "operation": "AdGroupOperation",
+        "mutate": "mutate_ad_groups",
+        "mandatory_fields": ["customer_id", "ad_group_id"],
+        "service_path": "ad_group_path",
     }
 
     return await _update(
         user_id=user_id,
         model=ad_group_model,
-        key_service_operation=key_service_operation,
+        service_operation_and_function_names=key_service_operation,
     )
 
 
 @router.get("/update-campaign")
 async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) -> str:
     key_service_operation = {
-        "key": "campaign",
         "service": "CampaignService",
         "operation": "CampaignOperation",
+        "mutate": "mutate_campaigns",
+        "mandatory_fields": ["customer_id", "campaign_id"],
+        "service_path": "campaign_path",
     }
 
     return await _update(
         user_id=user_id,
         model=campaign_model,
-        key_service_operation=key_service_operation,
+        service_operation_and_function_names=key_service_operation,
     )
 
 
@@ -387,13 +382,15 @@ async def update_ad_group_criterion(
     user_id: int, ad_group_criterion_model: AdGroupCriterion = Depends()
 ) -> str:
     key_service_operation = {
-        "key": "ad_group_criterion",
         "service": "AdGroupCriterionService",
         "operation": "AdGroupCriterionOperation",
+        "mutate": "mutate_ad_group_criteria",
+        "mandatory_fields": ["customer_id", "ad_group_id", "criterion_id"],
+        "service_path": "ad_group_criterion_path",
     }
 
     return await _update(
         user_id=user_id,
         model=ad_group_criterion_model,
-        key_service_operation=key_service_operation,
+        service_operation_and_function_names=key_service_operation,
     )
