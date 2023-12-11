@@ -2,7 +2,7 @@
 
 
 if [[ -z "${NUM_WORKERS}" ]]; then
-  NUM_WORKERS=3
+  NUM_WORKERS=1
 fi
 
 echo NUM_WORKERS set to $NUM_WORKERS

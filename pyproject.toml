@@ -46,6 +46,7 @@ dynamic = ["version"]
 
 dependencies = [
     "requests>=2.20.0,<3.0.0",
+    "asyncer>=0.0.2"
 ]
 
 [project.optional-dependencies]

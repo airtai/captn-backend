@@ -1,7 +1,8 @@
 import ast
-import asyncio
 from typing import Dict, Union
 
+from asyncer import asyncify
+from fastapi import BackgroundTasks
 from prisma.errors import RecordNotFoundError
 from prisma.models import Task
 
@@ -75,10 +76,15 @@ async def update_existing_task(
     request_obj = CaptnAgentRequest(
         message=message, user_id=user_id, conv_id=conversation_id
     )
-    response = ast.literal_eval(chat(request_obj))
-    last_message = response["message"]
-    status = response["status"]
-    is_question = response["is_question"]
+
+    # response = ast.literal_eval(chat(request_obj))
+
+    response = await asyncify(chat)(request_obj)
+    response_dict = ast.literal_eval(response)
+
+    last_message = response_dict["message"]
+    status = response_dict["status"]
+    is_question = response_dict["is_question"]
     task = await update_task(
         team_id=task.team_id,
         team_status=status,
@@ -100,12 +106,13 @@ async def execute_dummy_task(
     await update_existing_task(task, user_id, conversation_id, message, team_name)
 
 
-def create_dummy_task(
+async def create_dummy_task(
     user_id: int,
     chat_id: int,
     conversation_id: int,
     message: str,
     team_name: str,
+    background_tasks: BackgroundTasks,
 ) -> None:
     print("======")
     print("New team is created with the following details:")
@@ -115,9 +122,13 @@ def create_dummy_task(
     print(f"Team Name: {team_name}")
     print(f"Message: {message}")
     print("======")
-    asyncio.create_task(
-        execute_dummy_task(user_id, chat_id, conversation_id, team_name, message)
+
+    background_tasks.add_task(
+        execute_dummy_task, user_id, chat_id, conversation_id, team_name, message
     )
+    # asyncio.create_task(
+    #     execute_dummy_task(user_id, chat_id, conversation_id, team_name, message)
+    # )
 
 
 async def get_dummy_task_status(
