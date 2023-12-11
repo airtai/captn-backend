@@ -46,7 +46,6 @@ dynamic = ["version"]
 
 dependencies = [
     "requests>=2.20.0,<3.0.0",
-    "asyncer>=0.0.2"
 ]
 
 [project.optional-dependencies]
@@ -96,6 +95,7 @@ agents = [
     "pyautogen==0.2.0",
     "pandas>=2.1",
     "fastcore==1.5.29",
+    "asyncer==0.0.2",
 ]
 
 
