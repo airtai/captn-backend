@@ -5,7 +5,7 @@ from freezegun import freeze_time
 
 from captn.captn_agents.backend.end_to_end import start_conversation
 from captn.captn_agents.backend.team import Team
-from captn.google_ads.client import update_campaign_or_group_or_ad
+from captn.google_ads.client import google_ads_create_update
 
 from .utils import last_message_is_termination
 
@@ -34,8 +34,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
@@ -57,7 +57,7 @@ Allow the chages to the google ads team without any confirmation from the client
 
 @freeze_time("2023-11-01")
 def test_pause_campaigns() -> None:
-    task = """Pause all campaigns which start with 'Website' campaign.
+    task = """Pause all campaigns which start with 'Website' campaign. (Pause them even if they are already paused)
 You have all the permissions to pause the campaign, so do not ask me for any additional info, just do it!!
 Allow the chages to the google ads team without any confirmation from the client"""
 
@@ -65,8 +65,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
@@ -88,7 +88,7 @@ Allow the chages to the google ads team without any confirmation from the client
 
 @freeze_time("2023-11-01")
 def test_pause_ad_groups() -> None:
-    task = """Pause all ad groups for the campaigns which name starts with 'Website.
+    task = """Pause all ad groups for the campaigns which name starts with 'Website' (do not pause the campains).
 You have all the permissions to pause the ad groups, so do not ask me for any additional info, just do it!!
 Allow the chages to the google ads team without any confirmation from the client"""
 
@@ -96,8 +96,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
@@ -127,8 +127,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
@@ -144,6 +144,38 @@ Allow the chages to the google ads team without any confirmation from the client
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-ad"
+
+        assert last_message_is_termination(initial_team)
+
+
+@freeze_time("2023-11-01")
+def test_add_negative_keywords() -> None:
+    task = """Add negative kwyword for customer_id=2324127278, campaign_id=20761810762.
+Set keyword_text=new_keyword_testing and the keyqord match type should be Broad.
+You have all the permissions to pause the ads, so do not ask me for any additional info, just do it!!
+Allow the chages to the google ads team without any confirmation from the client"""
+
+    user_id = 1
+    conv_id = 17
+
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
+    ) as update_mock:
+        team_name, last_message = start_conversation(
+            user_id=user_id,
+            conv_id=conv_id,
+            task=task,
+            max_round=80,
+            human_input_mode="NEVER",
+            class_name="captn_initial_team",
+        )
+
+        initial_team = Team.get_team(team_name)
+        update_mock.assert_called_once()
+
+        _, kwargs = update_mock.call_args
+        assert kwargs["endpoint"] == "/add-negative-keywords-to-campaign"
 
         assert last_message_is_termination(initial_team)
 

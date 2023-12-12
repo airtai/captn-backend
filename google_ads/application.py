@@ -14,7 +14,14 @@ from prisma.models import Task
 
 from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
-from .model import AdBase, AdGroup, AdGroupAd, AdGroupCriterion, Campaign
+from .model import (
+    AdBase,
+    AdGroup,
+    AdGroupAd,
+    AdGroupCriterion,
+    Campaign,
+    CampaignCriterion,
+)
 
 router = APIRouter()
 
@@ -377,5 +384,82 @@ async def update_ad_group_criterion(
     return await _update(
         user_id=user_id,
         model=ad_group_criterion_model,
+        service_operation_and_function_names=key_service_operation,
+    )
+
+
+async def _add(
+    user_id: int, model: AdBase, service_operation_and_function_names: Dict[str, Any]
+) -> str:
+    client = await _get_client(user_id=user_id)
+
+    operation = client.get_type(service_operation_and_function_names["operation"])
+    service = client.get_service(service_operation_and_function_names["service"])
+
+    try:
+        model_dict = model.model_dump()
+
+        mandatory_fields = service_operation_and_function_names["mandatory_fields"]
+        if "customer_id" in mandatory_fields:
+            mandatory_fields.remove("customer_id")
+        else:
+            raise KeyError("customer_id must be inside the mandatory_fields list")
+        customer_id = model_dict.pop("customer_id")
+        mandatory_fields_values = [
+            model_dict.pop(mandatory_field) for mandatory_field in mandatory_fields
+        ]
+
+        operation_create = operation.create
+
+        setattr_func = service_operation_and_function_names["setattr_func"]
+        setattr_func(model_dict=model_dict, operation_create=operation_create)
+
+        campaign_service = client.get_service(
+            service_operation_and_function_names["root_service"]
+        )
+
+        operation_create.campaign = campaign_service.campaign_path(
+            customer_id, *mandatory_fields_values
+        )
+
+        mutate_function = getattr(
+            service, service_operation_and_function_names["mutate"]
+        )
+
+        response = mutate_function(customer_id=customer_id, operations=[operation])
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    return f"Created {response.results[0].resource_name}."
+
+
+def add_keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> None:
+    for attribute_name, attribute_value in model_dict.items():
+        if attribute_value:
+            if "keyword_" in attribute_name:
+                attribute_name = attribute_name.replace("keyword_", "")
+                setattr(operation_create.keyword, attribute_name, attribute_value)
+            else:
+                setattr(operation_create, attribute_name, attribute_value)
+
+
+@router.get("/add-negative-keywords-to-campaign")
+async def add_keywords(
+    user_id: int, campaign_criterion_model: CampaignCriterion = Depends()
+) -> str:
+    key_service_operation = {
+        "service": "CampaignCriterionService",
+        "operation": "CampaignCriterionOperation",
+        "root_service": "CampaignService",
+        "mutate": "mutate_campaign_criteria",
+        "mandatory_fields": ["customer_id", "campaign_id"],
+        "setattr_func": add_keywords_setattr,
+    }
+
+    return await _add(
+        user_id=user_id,
+        model=campaign_criterion_model,
         service_operation_and_function_names=key_service_operation,
     )

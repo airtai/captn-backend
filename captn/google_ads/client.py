@@ -74,7 +74,7 @@ def execute_query(
     return f"The result of the query saved at: {file_name}"
 
 
-def update_campaign_or_group_or_ad(
+def google_ads_create_update(
     user_id: int, conv_id: int, ad: BaseModel, endpoint: str = "/update-ad"
 ) -> Dict[str, Any]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)

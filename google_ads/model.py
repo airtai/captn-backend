@@ -24,3 +24,10 @@ class AdGroupAd(AdGroup):
 
 class AdGroupCriterion(AdGroup):
     criterion_id: str
+
+
+class CampaignCriterion(Campaign):
+    keyword_match_type: Literal["EXACT", "BROAD"]
+    keyword_text: str
+    negative: Optional[bool] = True
+    bid_modifier: Optional[float] = None
