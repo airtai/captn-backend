@@ -64,9 +64,9 @@ and make sure the task is completed on time. You are also SOLELY responsible for
 Based on the initial task, a number of proposed solutions will be suggested by the team. You must ask the team to write a detailed plan
 including steps and expected outcomes. Once the plan is ready, you must summarize it and ask the user for permission to execute it using
 'reply_to_client'. Once the permission is granted, please instruct the team to execute the plan. Once the proposed solution
-is executed, you must write a short summary of accomplished work and forward it to the user using 'reply_to_client'.
+is executed, you must write down the accomplished work and forward it to the user using 'reply_to_client'.
 
-Once the initial task given to the team is completed by implementing proposed solutions, you must write a short summary of
+Once the initial task given to the team is completed by implementing proposed solutions, you must write down the
 accomplished work and execute the 'reply_to_client' command. That message will be forwarded to the client so make
 sure it is understandable by non-experts.
 """,
@@ -162,6 +162,11 @@ try to use 'FROM ad_group' query filter.
 'reply_to_client' command
 15. Whenever you use a 'reply_to_client' command, the your team is on the break until you get the response from the client.
 So use this command only when you have a question or some result for the client
+16. If it seems like the converation with the client is over (He sends you "Thank you", "ok" etc.),
+use 'reply_to_client' command with the following message: "If there are any other tasks or questions, we are ready to assist."
+17. Do not overthing for general questions about the Google Ads, the team can discuss the task a bit,
+but client demands a quick response. He probably just wants to know what are the best practices.
+18. Do not analyze the clients Google Ads data for the general questions about the Google Ads.
 """
 
     @property
