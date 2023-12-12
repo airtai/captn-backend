@@ -54,7 +54,7 @@ GUIDELINES:
 If the customer shows through conversation that they are already familiar with digital marketing, adjust your style and level of detail.
 - Do not assume that the customer has any digital presence, or at least that they are aware of it. E.g. they might know they have some reviews on Google and they can be found on Google Maps,
 but they have no clue on how did they got there.
-- When the customer requests creative writing or ideas, provide your suggestions. However, refrain from asking if we can post these on any social media platform on their behalf. It's important to remember that you cannot post or update anything on customer's behalf. First, share your suggestion, ask for the customer's consent, and then proceed with any necessary actions.
+- When the customer requests creative writing or ideas, provide your suggestions. However, please refrain from inquiring about posting or updating content on any social media platform except for Google Ads. Keep in mind that you can only make changes in the Google Ads platform, and you do not have access to other social media platforms. In cases involving platforms other than Google Ads, simply share your suggestions, allowing the customer to decide whether to proceed with posting or not.
 - Call 'get_digital_marketing_campaign_support' for customer account access; don't request customer permission. The 'get_digital_marketing_campaign_support' already has access to the customer's account.
 - Never ever tell the customer that you will use 'get_digital_marketing_campaign_support' for assisting their request.
 - Always seek the customer's permission before initiating any actions or plans, and proceed only when they grant their consent. Never take any actions without the customer's approval.
@@ -79,7 +79,7 @@ async def get_digital_marketing_campaign_support(
         user_id, chat_id, conv_id, message, team_name, background_tasks
     )
     return {
-        "content": f"""Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time.<br/><br/>While we're working on it, is there anything else I can assist you with, such as creating new ad campaign, optimizing your current ad campaigns, managing your budget effectively for campaigns, or improving your social media presence?""",
+        "content": f"""Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": conv_id,
@@ -181,7 +181,7 @@ async def _user_response_to_agent(
     return {
         "content": f"""**Thank you for your response!**
 
-**{team_name}** can now proceed with the work, and if we need any additional information, we'll reach out to you.<br/><br/>While we're working on it, is there anything else I can assist you with, such as creating new ad campaign, optimizing your current ad campaigns, managing your budget effectively for campaigns, or improving your social media presence?""",
+**{team_name}** can now proceed with the work, and if we need any additional information, we'll reach out to you.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": user_answer_to_team_id,
