@@ -5,7 +5,7 @@ from freezegun import freeze_time
 
 from captn.captn_agents.backend.end_to_end import start_conversation
 from captn.captn_agents.backend.team import Team
-from captn.google_ads.client import update_campaign_or_group_or_ad
+from captn.google_ads.client import google_ads_create_update
 
 from .utils import last_message_is_termination
 
@@ -34,8 +34,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
@@ -65,8 +65,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
@@ -96,8 +96,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
@@ -127,8 +127,8 @@ Allow the chages to the google ads team without any confirmation from the client
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.update_campaign_or_group_or_ad",
-        side_effect=update_campaign_or_group_or_ad,
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
     ) as update_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,

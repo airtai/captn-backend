@@ -5,15 +5,22 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from google_ads.model import AdGroup, AdGroupAd, AdGroupCriterion, Campaign
+from google_ads.model import (
+    AdGroup,
+    AdGroupAd,
+    AdGroupCriterion,
+    Campaign,
+    CampaignCriterion,
+)
 
 from ...google_ads.client import (
     execute_query,
+    google_ads_create_update,
     list_accessible_customers,
-    update_campaign_or_group_or_ad,
 )
 from .execution_team import get_read_file
 from .function_configs import (
+    create_negative_keywords_config,
     execute_query_config,
     list_accessible_customers_config,
     read_file_config,
@@ -41,6 +48,7 @@ class GoogleAdsTeam(Team):
         update_ad_group_config,
         update_campaign_config,
         update_ad_group_criterion_config,
+        create_negative_keywords_config,
     ]
 
     _default_roles = [
@@ -205,6 +213,10 @@ name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]])
 6. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
 criterion_id: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 cpc_bid_micros: Optional[int])
+
+7. 'create_negative_keywords': Creates Negative keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
+keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
+status: Optional[Literal["ENABLED", "PAUSED"]])
 """
 
 
@@ -297,7 +309,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         #     work_dir=work_dir, file_name=file_name
         # ),
         "read_file": read_file,
-        "update_ad": lambda customer_id, ad_group_id, ad_id, name=None, cpc_bid_micros=None, status=None: update_campaign_or_group_or_ad(
+        "update_ad": lambda customer_id, ad_group_id, ad_id, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             ad=AdGroupAd(
@@ -310,7 +322,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad",
         ),
-        "update_ad_group": lambda customer_id, ad_group_id, ad_id=None, name=None, cpc_bid_micros=None, status=None: update_campaign_or_group_or_ad(
+        "update_ad_group": lambda customer_id, ad_group_id, ad_id=None, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             ad=AdGroup(
@@ -323,7 +335,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad-group",
         ),
-        "update_campaign": lambda customer_id, campaign_id, name=None, status=None: update_campaign_or_group_or_ad(
+        "update_campaign": lambda customer_id, campaign_id, name=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             ad=Campaign(
@@ -334,7 +346,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-campaign",
         ),
-        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, name=None, status=None, cpc_bid_micros=None: update_campaign_or_group_or_ad(
+        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, name=None, status=None, cpc_bid_micros=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             ad=AdGroupCriterion(
@@ -346,6 +358,20 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 cpc_bid_micros=cpc_bid_micros,
             ),
             endpoint="/update-ad-group-criterion",
+        ),
+        "create_negative_keywords": lambda customer_id, campaign_id, keyword_text, keyword_match_type, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            ad=CampaignCriterion(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                status=status,
+                keyword_match_type=keyword_match_type,
+                keyword_text=keyword_text,
+                negative=negative,
+                bid_modifier=bid_modifier,
+            ),
+            endpoint="/add-negative-keywords-to-campaign",
         ),
     }
 

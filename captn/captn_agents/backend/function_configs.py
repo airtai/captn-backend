@@ -444,3 +444,47 @@ reply_to_client_2_config = {
         "required": ["message", "is_question", "completed"],
     },
 }
+
+create_negative_keywords_config = {
+    "name": "create_negative_keywords",
+    "description": "Creates Negative keywords (CampaignCriterion)",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "campaign_id": {
+                "type": "string",
+                "description": "Id of the campaign",
+            },
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+            "keyword_match_type": {
+                "type": "string",
+                "description": "The match type of the keyword.",
+            },
+            "keyword_text": {
+                "type": "string",
+                "description": "The text of the keyword",
+            },
+            "negative": {
+                "type": "boolean",
+                "description": "Whether to target (false) or exclude (true) the criterion",
+            },
+            "bid_modifier": {
+                "type": "number",
+                "description": "The modifier for the bids when the criterion matches.",
+            },
+        },
+        "required": [
+            "customer_id",
+            "campaign_id",
+            "keyword_match_type",
+            "keyword_text",
+        ],
+    },
+}
