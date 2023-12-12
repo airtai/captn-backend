@@ -203,3 +203,38 @@ def test_non_relevant_questions() -> None:
 
     initial_team = Team.get_team(team_name)
     assert last_message_is_termination(initial_team)
+
+
+def test_ending_the_conversation() -> None:
+    task = "Which is more important: positive or negative keywords?"
+    user_id = 1
+    conv_id = 17
+
+    team_name, last_message = start_conversation(
+        user_id=user_id,
+        conv_id=conv_id,
+        task=task,
+        max_round=80,
+        human_input_mode="NEVER",
+        class_name="google_ads_team",
+    )
+
+    initial_team = Team.get_team(team_name)
+    assert last_message_is_termination(initial_team, is_gads_team=True)
+
+    task = "Never mind"
+
+    team_name, last_message = start_conversation(
+        user_id=user_id,
+        conv_id=conv_id,
+        task=task,
+        max_round=80,
+        human_input_mode="NEVER",
+        class_name="google_ads_team",
+    )
+
+    initial_team = Team.get_team(team_name)
+    assert last_message_is_termination(initial_team, is_gads_team=True)
+
+    END_OF_CONV = "If there are any other tasks or questions, we are ready to assist."
+    assert END_OF_CONV in last_message
