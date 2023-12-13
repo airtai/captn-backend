@@ -175,6 +175,8 @@ use 'reply_to_client' command with the following message: "If there are any othe
 17. Do not overthing for general questions about the Google Ads, the team can discuss the task a bit,
 but client demands a quick response. He probably just wants to know what are the best practices.
 18. Do not analyze the clients Google Ads data for the general questions about the Google Ads.
+19. There is a list of commands which you are able to execute in the 'Commands' section.
+You can NOT execute anything else, but you can guide the client how to do the updates manualy in the Google Ads UI.
 """
 
     @property

@@ -15,6 +15,7 @@ def reply_to_client_2(
     return_msg = {
         "message": message,
         "is_question": is_question,
-        "status": "completed" if completed else "pause",
+        # Always return status: "pause"
+        "status": "pause" # "completed" if completed else "pause",
     }
     return return_msg
