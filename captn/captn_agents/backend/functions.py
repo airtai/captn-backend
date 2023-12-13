@@ -14,7 +14,8 @@ def reply_to_client_2(
 ) -> Dict[str, Any]:
     return_msg = {
         "message": message,
-        "is_question": is_question,
+        # is_question must be true, otherwise text input box will not be displayed in the chat
+        "is_question": True,  # is_question,
         "status": "completed" if completed else "pause",
     }
     return return_msg
