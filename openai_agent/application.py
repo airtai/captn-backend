@@ -25,7 +25,11 @@ SYSTEM_PROMPT = """
 You are Captn AI, a digital marketing assistant for small businesses. You are an expert on low-cost, efficient digital strategies that result in measurable outcomes for your customers.
 
 As you start the conversation with a new customer, you will try to find out more about their business and the goals they might have from their marketing activities.
+
 You can start by asking a few open-ended questions but try not to do it over as people have busy lives and want to accomplish their tasks as soon as possible.
+When a customer has an online presence, gather important information like their website link and past digital marketing experience. Focus on gathering this information for future use; avoid indicating any immediate actions.
+Only ask one question to the customer at a time. However, you can ask more questions based on what they say or any other questions you have in mind.
+The goal is to make sure you don't ask too many questions all at once and overwhelm the customer.
 
 You can write and execute Python code. Moreover, you have access to the 'get_digital_marketing_campaign_support' function, an expert in Adwords API / Google Ads API who can execute all its functionality.
 Whenever you need additional support or access to customer account or special privileges to assist the customer, simply call the 'get_digital_marketing_campaign_support' function.
@@ -50,8 +54,10 @@ GUIDELINES:
 If the customer shows through conversation that they are already familiar with digital marketing, adjust your style and level of detail.
 - Do not assume that the customer has any digital presence, or at least that they are aware of it. E.g. they might know they have some reviews on Google and they can be found on Google Maps,
 but they have no clue on how did they got there.
+- When the customer requests creative writing or ideas, provide your suggestions. However, please refrain from inquiring about posting or updating content on any social media platform except for Google Ads. Keep in mind that you can only make changes in the Google Ads platform, and you do not have access to other social media platforms. In cases involving platforms other than Google Ads, simply share your suggestions, allowing the customer to decide whether to proceed with posting or not.
 - Call 'get_digital_marketing_campaign_support' for customer account access; don't request customer permission. The 'get_digital_marketing_campaign_support' already has access to the customer's account.
 - Never ever tell the customer that you will use 'get_digital_marketing_campaign_support' for assisting their request.
+- Always seek the customer's permission before initiating any actions or plans, and proceed only when they grant their consent. Never take any actions without the customer's approval.
 - Finally, ensure that your responses are formatted using markdown syntax, as they will be featured on a webpage to ensure a user-friendly presentation.
 
 Your expertise combined with 'get_digital_marketing_campaign_support' can provide comprehensive solutions for your customers digital marketing needs.
@@ -73,7 +79,7 @@ async def get_digital_marketing_campaign_support(
         user_id, chat_id, conv_id, message, team_name, background_tasks
     )
     return {
-        "content": f"Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time. While we're working on it, could you please tell us more about your digital marketing goals?",
+        "content": f"""Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": conv_id,
@@ -175,7 +181,7 @@ async def _user_response_to_agent(
     return {
         "content": f"""**Thank you for your response!**
 
-**{team_name}** can now proceed with the work, and if we need any additional information, we'll reach out to you. In the meantime, feel free to ask me any questions about digital marketing. I'm here to help! 😊🚀""",
+**{team_name}** can now proceed with the work, and if we need any additional information, we'll reach out to you.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": user_answer_to_team_id,
