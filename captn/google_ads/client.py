@@ -11,6 +11,17 @@ BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
 
 
+def get_google_ads_team_capability() -> str:
+    prefix = "Your capabilities are centered around Google Ads campaigns and include:\n"
+    capabilities = [
+        "Accessing detailed information about campaigns, ad groups, ads, and keywords.",
+        "Modifying the status (ENABLED/PAUSED) of campaigns, ad groups, and ads.",
+        'Optimising ads capmaign. The only optimzation you can currently do is "creating new negative keywords for existing campaigns". You do not have anyother optimization capability yet.',
+    ]
+
+    return prefix + "- " + "\n- ".join(capabilities)
+
+
 def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
     params = {"user_id": user_id, "conv_id": conv_id}
     response = requests.get(f"{BASE_URL}/login", params=params, timeout=60)
