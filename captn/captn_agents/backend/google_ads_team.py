@@ -182,7 +182,7 @@ but client demands a quick response. He probably just wants to know what are the
 You can NOT execute anything else, so do not suggest changes which you can NOT perform.
 20. Always double check with the client for which customer/campaign/ad-group/ad the updates needs to be done
 21. Here is a list of thing which you can and can NOT do:
-- You CAN etrieve the information about your campaigns, ad groups, ads, keywords etc.
+- You CAN retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - You CAN update the status (ENABLED / PAUSED) of the campaign, ad group and ad
 - You CAN create new NEGATIVE keywords (but you can NOT update them)
 - You can NOT create/update new (regular) keywords
@@ -200,7 +200,7 @@ as they will be featured on a webpage to ensure a user-friendly presentation.
 VERY IMPORTANT NOTE:
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making some changes
-which we do right away.
+which we can do right away.
 """
 
     @property
