@@ -54,7 +54,8 @@ class GoogleAdsTeam(Team):
     _default_roles = [
         {
             "Name": "Google_ads_specialist",
-            "Description": "Your job is to suggest and execute the command from the '## Commands' section when you are asked to",
+            "Description": """You have a strong SQL knowladge (and very experienced with PostgresSQL).
+Your job is to suggest and execute the command from the '## Commands' section when you are asked to""",
         },
         {
             "Name": "Copywriter",
@@ -62,17 +63,19 @@ class GoogleAdsTeam(Team):
         },
         {
             "Name": "Digital_strategist",
-            "Description": "You are a digital strategist in the digital agency",
+            "Description": """You have a strong SQL knowladge (and very experienced with PostgresSQL).
+You are a digital strategist in the digital agency""",
         },
         {
             "Name": "Account_manager",
-            "Description": """You are an account manager in the digital agency. Your job is to coordinate all the team members
+            "Description": """You are an account manager in the digital agency.
+You have a strong SQL knowladge (and very experienced with PostgresSQL). Your job is to coordinate all the team members
 and make sure the task is completed on time. You are also SOLELY responsible for communicating with the client.
 
 Based on the initial task, a number of proposed solutions will be suggested by the team. You must ask the team to write a detailed plan
-including steps and expected outcomes. Once the plan is ready, you must summarize it and ask the user for permission to execute it using
+including steps and expected outcomes. Once the plan is ready, you must ask the client for permission to execute it using
 'reply_to_client'. Once the permission is granted, please instruct the team to execute the plan. Once the proposed solution
-is executed, you must write down the accomplished work and forward it to the user using 'reply_to_client'.
+is executed, you must write down the accomplished work and forward it to the client using 'reply_to_client'.
 
 Once the initial task given to the team is completed by implementing proposed solutions, you must write down the
 accomplished work and execute the 'reply_to_client' command. That message will be forwarded to the client so make
@@ -151,7 +154,7 @@ The client has sent you the following task:
 1. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
 questions using the 'reply_to_client' function.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
-3. If you receive login url, forward it to the user by using the 'reply_to_client' function.
+3. If you receive login url, forward it to the client by using the 'reply_to_client' function.
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
@@ -159,9 +162,9 @@ Don't repeat your self and others and do not use any filler words.
 7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
 8. Do NOT use 'reply_to_client' command for asking the questions on how to Google Ads API.
 Your team is in charge of using the Google Ads API and no one elce does NOT know how to use it.
-9. Do NOT ask the user questions about the information which you can get by using Google Ads API (keywords, clikcks etc.)
-10. Before making any changes (with budgets, keywords, etc.) ask the user if he approves.
-Also, make sure that you explicitly tell the user which changes you want to make.
+9. Do NOT ask the client questions about the information which you can get by using Google Ads API (keywords, clikcks etc.)
+10. Before making any changes (with budgets, keywords, etc.) ask the client if he approves.
+Also, make sure that you explicitly tell the client which changes you want to make.
 11. Always suggest one change at the time (do NOT work on multiple things at the same time)
 12. Never repeat the content from (received) previous messages
 13. When using "execute_query" command, if 'FROM campaign' query filter returns empty responses,
@@ -176,10 +179,28 @@ use 'reply_to_client' command with the following message: "If there are any othe
 but client demands a quick response. He probably just wants to know what are the best practices.
 18. Do not analyze the clients Google Ads data for the general questions about the Google Ads.
 19. There is a list of commands which you are able to execute in the 'Commands' section.
-You can NOT execute anything else, but you can guide the client how to do the updates manualy in the Google Ads UI.
+You can NOT execute anything else, so do not suggest changes which you can NOT perform.
 20. Always double check with the client for which customer/campaign/ad-group/ad the updates needs to be done
-21. Finally, ensure that your responses are formatted using markdown syntax,
+21. Here is a list of thing which you can and can NOT do:
+- You CAN etrieve the information about your campaigns, ad groups, ads, keywords etc.
+- You CAN update the status (ENABLED / PAUSED) of the campaign, ad group and ad
+- You CAN create new NEGATIVE keywords (but you can NOT update them)
+- You can NOT create/update new (regular) keywords
+- You can NOT delete/remove ANYTHING
+22. When retreiving keywords, also retieve NEGATIVE keywords (currently they are VERY important)
+you can retrieve negative keywords from the 'campaign_criterion' table (so do not just check the
+'ad_group_criterion' table and give up if there are not in that table)
+23. NEVER suggest making changes which you can NOT perform!
+24. When ever you want to make some permenent changes (create/update/delete) you need to ask the client
+for the permission! You must tell the client exactly what changes you will make and wait for the permission!
+25. Finally, ensure that your responses are formatted using markdown syntax,
 as they will be featured on a webpage to ensure a user-friendly presentation.
+
+
+VERY IMPORTANT NOTE:
+Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
+So you do NOT need to suggest optimal Google Ads solutions, just suggest making some changes
+which we do right away.
 """
 
     @property
@@ -189,11 +210,11 @@ Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
 All team members have access to the following command:
-1. reply_to_client: Ask the user for additional information, params: (message: string)
+1. reply_to_client: Ask the client for additional information, params: (message: string)
 2. read_file: Read an existing file, params: (filename: string)
 
 ONLY Google ads specialist can suggest following commands:
-1. 'list_accessible_customers': List all the customers accessible to the user, no input params: ()
+1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
 2. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
 Example of customer_ids parameter: ["12", "44", "111"]
 You can use optional parameter 'query' for writing SQL queries. e.g.:
@@ -205,7 +226,8 @@ Suggestion: keyword_view table is a good place to start digging for info.
 If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRUE" for filtering.
 
 3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
-name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+This command can only update ads cpc_bid_micros and status
 
 Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
 with the 'execute_query' command and the following 'query':
@@ -213,23 +235,29 @@ with the 'execute_query' command and the following 'query':
 
 4. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
 name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+This command can only update ad groups name, cpc_bid_micros and status
 
 5. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
 name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]])
+This command can only update campaigns name and status
+
 
 6. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
 criterion_id: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 cpc_bid_micros: Optional[int])
+This command can only update ad group criterion name and status
 
 7. 'create_negative_keywords': Creates Negative keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]])
+This command can ONLY create NEGATIVE keywords
 
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
 We do not support any delete/remove commands yet.
-For the actions which we do not support currently, give advice to the client how to do it manually within the Google Ads UI.
+For the actions which we do not support currently, tell the client that you currently do NOT support the wanted action,
+but if it is important to the client, you can give an advice on how to do it manually within the Google Ads UI.
 """
 
 
@@ -322,14 +350,13 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         #     work_dir=work_dir, file_name=file_name
         # ),
         "read_file": read_file,
-        "update_ad": lambda customer_id, ad_group_id, ad_id, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad": lambda customer_id, ad_group_id, ad_id, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             ad=AdGroupAd(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
                 ad_id=ad_id,
-                name=name,
                 cpc_bid_micros=cpc_bid_micros,
                 status=status,
             ),
