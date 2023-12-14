@@ -341,10 +341,6 @@ update_ad_config = {
                 "type": "string",
                 "description": "Id of the Ad",
             },
-            "name": {
-                "type": "string",
-                "description": "The name of the Ad",
-            },
             "cpc_bid_micros": {
                 "type": "integer",
                 "description": "Cost per click bid micros",
