@@ -250,7 +250,7 @@ with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
 4. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
-client_has_approved: bool. name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+client_has_approved: bool, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
 This command can only update ad groups name, cpc_bid_micros and status
 
 5. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
