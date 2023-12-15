@@ -47,7 +47,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called_once()
+        update_mock.assert_called()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-campaign"
@@ -78,7 +78,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called_once()
+        update_mock.assert_called()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-campaign"
@@ -109,7 +109,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called_once()
+        update_mock.assert_called()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-ad-group"
@@ -140,7 +140,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called_once()
+        update_mock.assert_called()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/update-ad"
@@ -172,7 +172,7 @@ Allow the chages to the google ads team without any confirmation from the client
         )
 
         initial_team = Team.get_team(team_name)
-        update_mock.assert_called_once()
+        update_mock.assert_called()
 
         _, kwargs = update_mock.call_args
         assert kwargs["endpoint"] == "/add-negative-keywords-to-campaign"

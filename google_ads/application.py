@@ -7,7 +7,6 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
-from google.ads.googleads.errors import GoogleAdsException
 from google.api_core import protobuf_helpers
 from google.protobuf import json_format
 from prisma.models import Task
@@ -224,15 +223,15 @@ async def search(
 
     try:
         for customer_id in customer_ids:
-            try:
-                response = service.search(customer_id=customer_id, query=query)
-                l = []  # noqa
-                for row in response:
-                    json_str = json_format.MessageToJson(row)
-                    l.append(json.loads(json_str))
-                campaign_data[customer_id] = l
-            except GoogleAdsException:
-                print(f"Exception for {customer_id}")
+            # try:
+            response = service.search(customer_id=customer_id, query=query)
+            l = []  # noqa
+            for row in response:
+                json_str = json_format.MessageToJson(row)
+                l.append(json.loads(json_str))
+            campaign_data[customer_id] = l
+            # except GoogleAdsException:
+            #     print(f"Exception for {customer_id}")
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
