@@ -51,10 +51,15 @@ class GoogleAdsTeam(Team):
         create_negative_keywords_config,
     ]
 
+    _shared_system_message = ("You have a strong SQL knowladge (and very experienced with PostgresSQL)."
+                              "If the client does not explicitly tell you which updates to make, you must double check with him before you make any changes!"
+                              "When replying to the client, give him a report of the information you retreived / changes that you have made."
+                              "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions")
+
     _default_roles = [
         {
             "Name": "Google_ads_specialist",
-            "Description": """You have a strong SQL knowladge (and very experienced with PostgresSQL).
+            "Description": f"""{_shared_system_message}
 Your job is to suggest and execute the command from the '## Commands' section when you are asked to""",
         },
         {
@@ -63,13 +68,13 @@ Your job is to suggest and execute the command from the '## Commands' section wh
         },
         {
             "Name": "Digital_strategist",
-            "Description": """You have a strong SQL knowladge (and very experienced with PostgresSQL).
-You are a digital strategist in the digital agency""",
+            "Description": f"""You are a digital strategist in the digital agency
+{_shared_system_message}""",
         },
         {
             "Name": "Account_manager",
-            "Description": """You are an account manager in the digital agency.
-You have a strong SQL knowladge (and very experienced with PostgresSQL). Your job is to coordinate all the team members
+            "Description": f"""You are an account manager in the digital agency.
+{_shared_system_message}
 and make sure the task is completed on time. You are also SOLELY responsible for communicating with the client.
 
 Based on the initial task, a number of proposed solutions will be suggested by the team. You must ask the team to write a detailed plan
@@ -193,10 +198,14 @@ you can retrieve negative keywords from the 'campaign_criterion' table (so do no
 23. NEVER suggest making changes which you can NOT perform!
 24. When ever you want to make some permenent changes (create/update/delete) you need to ask the client
 for the permission! You must tell the client exactly what changes you will make and wait for the permission!
-25. If the client does not explicitly tell tou which updates to make, you must double check with him
+25. If the client does not explicitly tell you which updates to make, you must double check with him
 before you make any changes! e.g. if you receive "optimize campaigns" task, you should analyse what can be done
 and suggest it to the client. If the client approves your suggestion, only then you can perform the updates.
-26. Finally, ensure that your responses are formatted using markdown syntax,
+Also, when you propose suggestion, you need to explain why you want to make these changes (and give the client the report about the information you retreived)
+26. Do not try to retrive to much information at once for the clients task, instead of that,
+ask the client subquestions and give him the report of the current work and things you have learned about 
+his Google Ads data
+27. Finally, ensure that your responses are formatted using markdown syntax,
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 
@@ -213,7 +222,9 @@ Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
 All team members have access to the following command:
-1. reply_to_client: Ask the client for additional information, params: (message: string)
+1. reply_to_client: Ask the client for additional information, params: (message: string, is_question: bool, completed: bool)
+The 'message' parameter must contain all information useful to the client, because the client does not see your team's conversation (only the information sent in the 'message' parameter)
+
 2. read_file: Read an existing file, params: (filename: string)
 
 ONLY Google ads specialist can suggest following commands:
