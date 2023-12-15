@@ -6,9 +6,9 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.create_dummy_team import (
-    create_dummy_task,
-    get_dummy_task_status,
+from captn.captn_agents.backend.teams_manager import (
+    create_team,
+    get_team_status,
 )
 from captn.google_ads.client import get_google_ads_team_capability
 
@@ -69,9 +69,7 @@ async def get_digital_marketing_campaign_support(
 ) -> Dict[str, Union[Optional[str], int]]:
     # team_name = f"GoogleAdsAgent_{conv_id}"
     team_name = TEAM_NAME.format(user_id, conv_id)
-    await create_dummy_task(
-        user_id, chat_id, conv_id, message, team_name, background_tasks
-    )
+    await create_team(user_id, chat_id, conv_id, message, team_name, background_tasks)
     return {
         "content": f"""Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
         "team_status": "inprogress",
@@ -164,7 +162,7 @@ async def _user_response_to_agent(
 ) -> Dict[str, Union[Optional[str], int]]:
     last_user_message = message[-1]["content"].split("<br/><br/>")[1]
     team_name = TEAM_NAME.format(user_id, user_answer_to_team_id)
-    await create_dummy_task(
+    await create_team(
         user_id,
         chat_id,
         user_answer_to_team_id,
@@ -192,7 +190,7 @@ class AzureOpenAIRequest(BaseModel):
 
 
 @router.post("/chat")
-async def create_item(
+async def chat(
     request: AzureOpenAIRequest, background_tasks: BackgroundTasks
 ) -> Dict[str, Union[Optional[str], int]]:
     message = request.message
@@ -219,9 +217,9 @@ class GetTeamStatusRequest(BaseModel):
 
 
 @router.post("/get-team-status")
-async def get_team_status(
+async def get_status(
     request: GetTeamStatusRequest,
 ) -> Dict[str, Union[str, bool, int]]:
     team_id = request.team_id
-    status = await get_dummy_task_status(team_id)
+    status = await get_team_status(team_id)
     return status
