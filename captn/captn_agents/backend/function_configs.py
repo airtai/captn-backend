@@ -305,6 +305,10 @@ update_ad_group_config = {
                 "type": "string",
                 "description": "Id of the Ad",
             },
+            "client_has_approved": {
+                "type": "boolean",
+                "description": "The client has approved the changes",
+            },
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -341,6 +345,10 @@ update_ad_config = {
                 "type": "string",
                 "description": "Id of the Ad",
             },
+            "client_has_approved": {
+                "type": "boolean",
+                "description": "The client has approved the changes",
+            },
             "cpc_bid_micros": {
                 "type": "integer",
                 "description": "Cost per click bid micros",
@@ -368,6 +376,10 @@ update_campaign_config = {
             "campaign_id": {
                 "type": "string",
                 "description": "Id of the campaign",
+            },
+            "client_has_approved": {
+                "type": "boolean",
+                "description": "The client has approved the changes",
             },
             "name": {
                 "type": "string",
@@ -399,6 +411,10 @@ update_ad_group_criterion_config = {
             "criterion_id": {
                 "type": "string",
                 "description": "Id of the Ad group criterion",
+            },
+            "client_has_approved": {
+                "type": "boolean",
+                "description": "The client has approved the changes",
             },
             "name": {
                 "type": "string",
@@ -454,6 +470,10 @@ create_negative_keywords_config = {
             "campaign_id": {
                 "type": "string",
                 "description": "Id of the campaign",
+            },
+            "client_has_approved": {
+                "type": "boolean",
+                "description": "The client has approved the changes",
             },
             "status": {
                 "type": "string",

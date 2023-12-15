@@ -86,8 +86,15 @@ def execute_query(
 
 
 def google_ads_create_update(
-    user_id: int, conv_id: int, ad: BaseModel, endpoint: str = "/update-ad"
-) -> Dict[str, Any]:
+    user_id: int,
+    conv_id: int,
+    client_has_approved: bool,
+    ad: BaseModel,
+    endpoint: str = "/update-ad",
+) -> Union[Dict[str, Any], str]:
+    if not client_has_approved:
+        return "You must aks the client for the permission first!!!"
+
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response
