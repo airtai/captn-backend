@@ -221,5 +221,6 @@ async def get_status(
     request: GetTeamStatusRequest,
 ) -> Dict[str, Union[str, bool, int]]:
     team_id = request.team_id
+    print(f"{team_id=}")
     status = await get_team_status(team_id)
     return status
