@@ -15,13 +15,13 @@ NOTIFICATION_MSG = """
 <br/>
 """
 
-TASK_STATUS: Dict[str, Dict[str, Union[str, bool, int]]] = {}
+TEAMS_STATUS: Dict[str, Dict[str, Union[str, bool, int]]] = {}
 
 
-def create_new_task(
+def add_to_teams_status(
     conversation_id: int, user_id: int, chat_id: int, team_name: str
 ) -> None:
-    TASK_STATUS[f"{conversation_id}"] = {
+    TEAMS_STATUS[f"{conversation_id}"] = {
         "team_id": conversation_id,
         "user_id": user_id,
         "chat_id": chat_id,
@@ -32,10 +32,10 @@ def create_new_task(
     }
 
 
-def update_task(
+def change_teams_status(
     conversation_id: int, team_status: str, message: str, is_question: bool
 ) -> None:
-    TASK_STATUS[f"{conversation_id}"].update(
+    TEAMS_STATUS[f"{conversation_id}"].update(
         {
             "team_status": team_status,
             "msg": message,
@@ -54,21 +54,21 @@ def chat_with_team(
     return response
 
 
-def execute_dummy_task(
+def teams_handler(
     user_id: int, chat_id: int, conversation_id: int, team_name: str, message: str
 ) -> None:
-    is_new_task = str(conversation_id) not in TASK_STATUS
+    is_new_team = str(conversation_id) not in TEAMS_STATUS
 
-    if is_new_task:
-        create_new_task(conversation_id, user_id, chat_id, team_name)
+    if is_new_team:
+        add_to_teams_status(conversation_id, user_id, chat_id, team_name)
     else:
         team_status = "inprogress"
         message = message
         is_question = False
-        update_task(conversation_id, team_status, message, is_question)
+        change_teams_status(conversation_id, team_status, message, is_question)
 
     response = chat_with_team(message, user_id, conversation_id)
-    update_task(
+    change_teams_status(
         conversation_id=conversation_id,
         team_status=response["status"],  # type: ignore
         message=NOTIFICATION_MSG.format(team_name, response["message"]),
@@ -76,7 +76,7 @@ def execute_dummy_task(
     )
 
 
-async def create_dummy_task(
+async def create_team(
     user_id: int,
     chat_id: int,
     conversation_id: int,
@@ -92,11 +92,11 @@ async def create_dummy_task(
     print(f"Message: {message}")
     print("======")
     background_tasks.add_task(
-        execute_dummy_task, user_id, chat_id, conversation_id, team_name, message
+        teams_handler, user_id, chat_id, conversation_id, team_name, message
     )
 
 
-async def get_dummy_task_status(
+async def get_team_status(
     conversation_id: int,
 ) -> Dict[str, Union[str, bool, int]]:
-    return TASK_STATUS.get(str(conversation_id), {})
+    return TEAMS_STATUS.get(str(conversation_id), {})
