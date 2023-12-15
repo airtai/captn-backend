@@ -51,10 +51,12 @@ class GoogleAdsTeam(Team):
         create_negative_keywords_config,
     ]
 
-    _shared_system_message = ("You have a strong SQL knowladge (and very experienced with PostgresSQL)."
-                              "If the client does not explicitly tell you which updates to make, you must double check with him before you make any changes!"
-                              "When replying to the client, give him a report of the information you retreived / changes that you have made."
-                              "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions")
+    _shared_system_message = (
+        "You have a strong SQL knowladge (and very experienced with PostgresSQL)."
+        "If the client does not explicitly tell you which updates to make, you must double check with him before you make any changes!"
+        "When replying to the client, give him a report of the information you retreived / changes that you have made."
+        "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions"
+    )
 
     _default_roles = [
         {
@@ -203,7 +205,7 @@ before you make any changes! e.g. if you receive "optimize campaigns" task, you 
 and suggest it to the client. If the client approves your suggestion, only then you can perform the updates.
 Also, when you propose suggestion, you need to explain why you want to make these changes (and give the client the report about the information you retreived)
 26. Do not try to retrive to much information at once for the clients task, instead of that,
-ask the client subquestions and give him the report of the current work and things you have learned about 
+ask the client subquestions and give him the report of the current work and things you have learned about
 his Google Ads data
 27. Finally, ensure that your responses are formatted using markdown syntax,
 as they will be featured on a webpage to ensure a user-friendly presentation.
