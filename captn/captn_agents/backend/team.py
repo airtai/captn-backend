@@ -1,5 +1,5 @@
-from typing import Any, Callable, Dict, List, Optional
 import json
+from typing import Any, Callable, Dict, List, Optional
 
 import autogen
 import openai
@@ -101,7 +101,7 @@ class Team:
         return llm_config
 
     def _create_groupchat_and_manager(self) -> None:
-        manager_llm_config = self.llm_config.copy()
+        manager_llm_config = self.llm_config.copy()  # type: ignore
         # GroupChatManager is not allowed to make function/tool calls (from version 0.2.2).
         manager_llm_config.pop("functions", None)
         manager_llm_config.pop("tools", None)
@@ -243,8 +243,7 @@ You can leverage access to the following resources:
         await self.manager.a_initiate_chat(self.manager, message=self.initial_message)
 
     def get_last_message(self, add_prefix: bool = True) -> str:
-
-        last_message = self.groupchat.messages[-1]["content"]  
+        last_message = self.groupchat.messages[-1]["content"]
         if isinstance(last_message, dict):
             last_message = json.dumps(last_message)
         last_message = last_message.replace("PAUSE", "").replace("TERMINATE", "")
@@ -252,7 +251,7 @@ You can leverage access to the following resources:
         if add_prefix:
             last_message = f"Response from team '{self.name}':\n{last_message}"
 
-        return last_message
+        return last_message  # type: ignore
 
     def continue_chat(self, message: str) -> None:
         message = f"Response from the client:\n{message}"

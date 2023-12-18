@@ -15,10 +15,12 @@ def clear_team() -> None:
     Team._team_name_counter = 0
     Team._teams = {}
 
+
 SHARED_PROMPT = (
     "Allow the chages to the google ads team without any confirmation from the client."
     "After the task is completed, use the reply_to_client command to return the result to the client."
 )
+
 
 @freeze_time("2023-11-01")
 def test_update_campaign_name() -> None:
