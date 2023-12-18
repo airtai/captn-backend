@@ -186,6 +186,37 @@ You have all the permissions to pause the ads, so do not ask me for any addition
         assert last_message_is_termination(initial_team)
 
 
+@freeze_time("2023-11-01")
+def test_add_regular_keywords() -> None:
+    task = f"""Add Btoad keyword 'pytest keyword' to the 'Ad group 1'.
+You have all the permissions to pause the ads, so do not ask me for any additional info, just do it!!
+{SHARED_PROMPT}"""
+
+    user_id = 1
+    conv_id = 17
+
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
+        side_effect=google_ads_create_update,
+    ) as update_mock:
+        team_name, last_message = start_conversation(
+            user_id=user_id,
+            conv_id=conv_id,
+            task=task,
+            max_round=80,
+            human_input_mode="NEVER",
+            class_name="captn_initial_team",
+        )
+
+        initial_team = Team.get_team(team_name)
+        update_mock.assert_called()
+
+        _, kwargs = update_mock.call_args
+        assert kwargs["endpoint"] == "/add-keywords-to-ad-group"
+
+        assert last_message_is_termination(initial_team)
+
+
 def test_search_query() -> None:
     # task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
     task = f"""Please give me the following attributes from campaigns: customer_id, ad_group_id, ad_id.
