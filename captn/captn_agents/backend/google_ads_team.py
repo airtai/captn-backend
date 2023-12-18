@@ -188,7 +188,7 @@ You can NOT execute anything else, so do not suggest changes which you can NOT p
 21. Here is a list of thing which you can and can NOT do:
 - You CAN retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - You CAN update the status (ENABLED / PAUSED) of the campaign, ad group and ad
-- You CAN create new NEGATIVE keywords (but you can NOT update them)
+- You CAN create new keywords (but you can NOT update them)
 - You can NOT create/update new (regular) keywords
 - You can NOT delete/remove ANYTHING
 22. When retreiving keywords, also retieve NEGATIVE keywords
@@ -272,6 +272,7 @@ This command can ONLY create NEGATIVE keywords assigned to the campaign
 client_has_approved: bool, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]])
 This command creates (regular and negative) keywords assigned to the ad group
+(Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
