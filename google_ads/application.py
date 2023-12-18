@@ -10,6 +10,7 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.api_core import protobuf_helpers
 from google.protobuf import json_format
 from prisma.models import Task
+from asyncer import asyncify
 
 from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
@@ -186,7 +187,7 @@ async def list_accessible_customers(user_id: int = Query(title="User ID")) -> Li
         user_credentials = await load_user_credentials(user_id)
         client = create_google_ads_client(user_credentials)
         customer_service = client.get_service("CustomerService")
-        accessible_customers = customer_service.list_accessible_customers()
+        accessible_customers = await asyncify(customer_service.list_accessible_customers)()
 
         customer_ids = [x.split("/")[-1] for x in accessible_customers.resource_names]
         return customer_ids
@@ -224,7 +225,7 @@ async def search(
     try:
         for customer_id in customer_ids:
             # try:
-            response = service.search(customer_id=customer_id, query=query)
+            response = await asyncify(service.search)(customer_id=customer_id, query=query)
             l = []  # noqa
             for row in response:
                 json_str = json_format.MessageToJson(row)
@@ -308,7 +309,7 @@ async def _update(
         mutate_function = getattr(
             service, service_operation_and_function_names["mutate"]
         )
-        response = mutate_function(customer_id=customer_id, operations=[operation])
+        response = await asyncify(mutate_function)(customer_id=customer_id, operations=[operation])
 
     except Exception as e:
         raise HTTPException(
@@ -425,7 +426,7 @@ async def _add(
             service, service_operation_and_function_names["mutate"]
         )
 
-        response = mutate_function(customer_id=customer_id, operations=[operation])
+        response = await asyncify(mutate_function)(customer_id=customer_id, operations=[operation])
 
     except Exception as e:
         raise HTTPException(
