@@ -17,5 +17,6 @@ def reply_to_client_2(
         # is_question must be true, otherwise text input box will not be displayed in the chat
         "is_question": True,  # is_question,
         "status": "completed" if completed else "pause",
+        "terminate_groupchat": True,
     }
     return return_msg

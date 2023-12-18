@@ -136,14 +136,9 @@ sure it is understandable by non-experts.
 
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
-        name = x.get("name")
         content = x.get("content")
 
-        return (
-            name == "reply_to_client"
-            and content is not None
-            and not content.startswith("Error:")
-        )
+        return content is not None and "terminate_groupchat" in content
 
     @classmethod
     def _get_team_name_prefix(cls) -> str:
