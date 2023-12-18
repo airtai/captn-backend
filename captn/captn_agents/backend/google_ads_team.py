@@ -191,7 +191,7 @@ You can NOT execute anything else, so do not suggest changes which you can NOT p
 - You CAN create new NEGATIVE keywords (but you can NOT update them)
 - You can NOT create/update new (regular) keywords
 - You can NOT delete/remove ANYTHING
-22. When retreiving keywords, also retieve NEGATIVE keywords (currently they are VERY important)
+22. When retreiving keywords, also retieve NEGATIVE keywords
 you can retrieve negative keywords from the 'campaign_criterion' table (so do not just check the
 'ad_group_criterion' table and give up if there are not in that table)
 23. NEVER suggest making changes which you can NOT perform!
