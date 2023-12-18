@@ -457,9 +457,9 @@ reply_to_client_2_config = {
     },
 }
 
-create_negative_keywords_config = {
-    "name": "create_negative_keywords",
-    "description": "Creates Negative keywords (CampaignCriterion)",
+create_negative_keyword_for_campaign_config = {
+    "name": "create_negative_keyword_for_campaign",
+    "description": "Creates Negative campaign keywords (CampaignCriterion)",
     "parameters": {
         "type": "object",
         "properties": {
@@ -499,6 +499,54 @@ create_negative_keywords_config = {
         "required": [
             "customer_id",
             "campaign_id",
+            "keyword_match_type",
+            "keyword_text",
+        ],
+    },
+}
+
+create_keyword_for_ad_group_config = {
+    "name": "create_keyword_for_ad_group",
+    "description": "Creates (regular and negative) keywords for Ad Group (AdGroupCriterion)",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "ad_group_id": {
+                "type": "string",
+                "description": "Id of the Ad group",
+            },
+            "client_has_approved": {
+                "type": "boolean",
+                "description": "The client has approved the changes",
+            },
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+            "keyword_match_type": {
+                "type": "string",
+                "description": "The match type of the keyword.",
+            },
+            "keyword_text": {
+                "type": "string",
+                "description": "The text of the keyword",
+            },
+            "negative": {
+                "type": "boolean",
+                "description": "Whether to target (false) or exclude (true) the criterion",
+            },
+            "bid_modifier": {
+                "type": "number",
+                "description": "The modifier for the bids when the criterion matches.",
+            },
+        },
+        "required": [
+            "customer_id",
+            "ad_group_id",
             "keyword_match_type",
             "keyword_text",
         ],

@@ -20,7 +20,8 @@ from ...google_ads.client import (
 )
 from .execution_team import get_read_file
 from .function_configs import (
-    create_negative_keywords_config,
+    create_keyword_for_ad_group_config,
+    create_negative_keyword_for_campaign_config,
     execute_query_config,
     list_accessible_customers_config,
     read_file_config,
@@ -48,7 +49,8 @@ class GoogleAdsTeam(Team):
         update_ad_group_config,
         update_campaign_config,
         update_ad_group_criterion_config,
-        create_negative_keywords_config,
+        create_negative_keyword_for_campaign_config,
+        create_keyword_for_ad_group_config,
     ]
 
     _shared_system_message = (
@@ -261,10 +263,15 @@ criterion_id: string, client_has_approved: bool, name: Optional[str], status: Op
 cpc_bid_micros: Optional[int])
 This command can only update ad group criterion name and status
 
-7. 'create_negative_keywords': Creates Negative keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
+7. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 client_has_approved: bool, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]])
-This command can ONLY create NEGATIVE keywords
+This command can ONLY create NEGATIVE keywords assigned to the campaign
+
+8. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
+client_has_approved: bool, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
+status: Optional[Literal["ENABLED", "PAUSED"]])
+This command creates (regular and negative) keywords assigned to the ad group
 
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
@@ -417,7 +424,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad-group-criterion",
         ),
-        "create_negative_keywords": lambda customer_id, campaign_id, keyword_text, keyword_match_type, client_has_approved=False, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+        "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, client_has_approved=False, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             client_has_approved=client_has_approved,
@@ -431,6 +438,21 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 bid_modifier=bid_modifier,
             ),
             endpoint="/add-negative-keywords-to-campaign",
+        ),
+        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, client_has_approved=False, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            client_has_approved=client_has_approved,
+            ad=AdGroupCriterion(
+                customer_id=customer_id,
+                ad_group_id=ad_group_id,
+                status=status,
+                keyword_match_type=keyword_match_type,
+                keyword_text=keyword_text,
+                negative=negative,
+                bid_modifier=bid_modifier,
+            ),
+            endpoint="/add-keywords-to-ad-group",
         ),
     }
 
