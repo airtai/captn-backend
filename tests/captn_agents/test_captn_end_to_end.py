@@ -16,6 +16,12 @@ def clear_team() -> None:
     Team._teams = {}
 
 
+SHARED_PROMPT = (
+    "Allow the chages to the google ads team without any confirmation from the client."
+    "After the task is completed, use the reply_to_client command to return the result to the client."
+)
+
+
 @freeze_time("2023-11-01")
 def test_update_campaign_name() -> None:
     # task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
@@ -26,9 +32,9 @@ def test_update_campaign_name() -> None:
     # task = "Enable all Ads for the 'Website traffic-Search-3' campaign"
     # task = "I need customer_id and campaign id for 'Website traffic-Search-3' campaign"
 
-    task = """To each campaign which name starts with: 'Website', add '-up' at the end of the name (add 'up' even if name already contains it)
+    task = f"""To each campaign which name starts with: 'Website', add '-up' at the end of the name (add 'up' even if name already contains it)
 You have all the permissions to update the campaign name, so do not ask me for any additional info, just do it!!
-Allow the chages to the google ads team without any confirmation from the client"""
+{SHARED_PROMPT}"""
 
     user_id = 1
     conv_id = 17
@@ -57,9 +63,9 @@ Allow the chages to the google ads team without any confirmation from the client
 
 @freeze_time("2023-11-01")
 def test_pause_campaigns() -> None:
-    task = """Pause all campaigns which start with 'Website' campaign. (Pause them even if they are already paused)
+    task = f"""Pause all campaigns which start with 'Website' campaign. (Pause them even if they are already paused)
 You have all the permissions to pause the campaign, so do not ask me for any additional info, just do it!!
-Allow the chages to the google ads team without any confirmation from the client"""
+{SHARED_PROMPT}"""
 
     user_id = 1
     conv_id = 17
@@ -88,9 +94,9 @@ Allow the chages to the google ads team without any confirmation from the client
 
 @freeze_time("2023-11-01")
 def test_pause_ad_groups() -> None:
-    task = """Pause all ad groups for the campaigns which name starts with 'Website' (do not pause the campains).
+    task = f"""Pause all ad groups for the campaigns which name starts with 'Website' (do not pause the campains).
 You have all the permissions to pause the ad groups, so do not ask me for any additional info, just do it!!
-Allow the chages to the google ads team without any confirmation from the client"""
+{SHARED_PROMPT}"""
 
     user_id = 1
     conv_id = 17
@@ -119,9 +125,9 @@ Allow the chages to the google ads team without any confirmation from the client
 
 @freeze_time("2023-11-01")
 def test_pause_ads() -> None:
-    task = """Pause all ads for the campaigns which name starts with 'Website' (do not pause tha campaign, just the ads).
+    task = f"""Pause all ads for the campaigns which name starts with 'Website' (do not pause tha campaign, just the ads).
 You have all the permissions to pause the ads, so do not ask me for any additional info, just do it!!
-Allow the chages to the google ads team without any confirmation from the client"""
+{SHARED_PROMPT}"""
 
     user_id = 1
     conv_id = 17
@@ -150,10 +156,10 @@ Allow the chages to the google ads team without any confirmation from the client
 
 @freeze_time("2023-11-01")
 def test_add_negative_keywords() -> None:
-    task = """Add negative kwyword for customer_id=2324127278, campaign_id=20761810762.
+    task = f"""Add negative kwyword for customer_id=2324127278, campaign_id=20761810762.
 Set keyword_text=new_keyword_testing and the keyqord match type should be Broad.
 You have all the permissions to pause the ads, so do not ask me for any additional info, just do it!!
-Allow the chages to the google ads team without any confirmation from the client"""
+{SHARED_PROMPT}"""
 
     user_id = 1
     conv_id = 17
@@ -182,9 +188,9 @@ Allow the chages to the google ads team without any confirmation from the client
 
 def test_search_query() -> None:
     # task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
-    task = """Please give me the following attributes from campaigns: customer_id, ad_group_id, ad_id.
+    task = f"""Please give me the following attributes from campaigns: customer_id, ad_group_id, ad_id.
 
-The user has already authenticated. And he allows all the changes that you suggest"""
+{SHARED_PROMPT}"""
     user_id = 1
     conv_id = 17
 
