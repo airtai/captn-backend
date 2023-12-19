@@ -19,6 +19,7 @@ def clear_team() -> None:
 SHARED_PROMPT = (
     "Allow the chages to the google ads team without any confirmation from the client."
     "After the task is completed, use the reply_to_client command to return the result to the client."
+    "Do not use reply_to_client command when you need clients approval"
 )
 
 
