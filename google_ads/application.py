@@ -1,7 +1,7 @@
 import json
 import urllib.parse
 from os import environ
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import httpx
 from asyncer import asyncify
@@ -288,29 +288,72 @@ def _set_fields(
     )
 
 
-async def _update(
-    user_id: int, model: AdBase, service_operation_and_function_names: Dict[str, Any]
-) -> str:
+async def _mutate(
+    service: Any, mutate_function_name: str, customer_id: str, operation: Any
+) -> Any:
+    mutate_function = getattr(service, mutate_function_name)
+    response = await asyncify(mutate_function)(
+        customer_id=customer_id, operations=[operation]
+    )
+    return response
+
+
+async def _get_necessary_parameters(
+    user_id: int,
+    model: AdBase,
+    service_operation_and_function_names: Dict[str, Any],
+    crud_operation_name: str,
+) -> Tuple[GoogleAdsClient, Any, Any, Dict[str, Any], str, Any, List[Any]]:
     client = await _get_client(user_id=user_id)
 
     service = client.get_service(service_operation_and_function_names["service"])
     operation = client.get_type(service_operation_and_function_names["operation"])
 
+    model_dict = model.model_dump()
+
+    mandatory_fields = service_operation_and_function_names["mandatory_fields"]
+    if "customer_id" in mandatory_fields:
+        mandatory_fields.remove("customer_id")
+    else:
+        raise KeyError("customer_id must be inside the mandatory_fields list")
+    customer_id = model_dict.pop("customer_id")
+
+    crud_operation = getattr(operation, crud_operation_name)
+
+    mandatory_fields_values = [
+        model_dict.pop(mandatory_field) for mandatory_field in mandatory_fields
+    ]
+
+    return (
+        client,
+        service,
+        operation,
+        model_dict,
+        customer_id,
+        crud_operation,
+        mandatory_fields_values,
+    )
+
+
+async def _update(
+    user_id: int, model: AdBase, service_operation_and_function_names: Dict[str, Any]
+) -> str:
+    (
+        client,
+        service,
+        operation,
+        model_dict,
+        customer_id,
+        operation_update,
+        mandatory_fields_values,
+    ) = await _get_necessary_parameters(
+        user_id=user_id,
+        model=model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        crud_operation_name="update",
+    )
+
     try:
-        model_dict = model.model_dump()
-
-        mandatory_fields = service_operation_and_function_names["mandatory_fields"]
-        if "customer_id" in mandatory_fields:
-            mandatory_fields.remove("customer_id")
-        else:
-            raise KeyError("customer_id must be inside the mandatory_fields list")
-        customer_id = model_dict.pop("customer_id")
-        operation_update = operation.update
-
-        mandatory_fields_values = [
-            model_dict.pop(mandatory_field) for mandatory_field in mandatory_fields
-        ]
-
         service_path_function = getattr(
             service, service_operation_and_function_names["service_path"]
         )
@@ -325,13 +368,12 @@ async def _update(
             operation_update=operation_update,
         )
 
-        mutate_function = getattr(
-            service, service_operation_and_function_names["mutate"]
+        response = await _mutate(
+            service,
+            service_operation_and_function_names["mutate"],
+            customer_id,
+            operation,
         )
-        response = await asyncify(mutate_function)(
-            customer_id=customer_id, operations=[operation]
-        )
-
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -412,26 +454,21 @@ async def update_ad_group_criterion(
 async def _add(
     user_id: int, model: AdBase, service_operation_and_function_names: Dict[str, Any]
 ) -> str:
-    client = await _get_client(user_id=user_id)
-
-    operation = client.get_type(service_operation_and_function_names["operation"])
-    service = client.get_service(service_operation_and_function_names["service"])
-
+    (
+        _,
+        service,
+        operation,
+        model_dict,
+        customer_id,
+        operation_create,
+        mandatory_fields_values,
+    ) = await _get_necessary_parameters(
+        user_id=user_id,
+        model=model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        crud_operation_name="create",
+    )
     try:
-        model_dict = model.model_dump()
-
-        mandatory_fields = service_operation_and_function_names["mandatory_fields"]
-        if "customer_id" in mandatory_fields:
-            mandatory_fields.remove("customer_id")
-        else:
-            raise KeyError("customer_id must be inside the mandatory_fields list")
-        customer_id = model_dict.pop("customer_id")
-        mandatory_fields_values = [
-            model_dict.pop(mandatory_field) for mandatory_field in mandatory_fields
-        ]
-
-        operation_create = operation.create
-
         setattr_func = service_operation_and_function_names["setattr_func"]
         setattr_func(model_dict=model_dict, operation_create=operation_create)
 
@@ -449,14 +486,12 @@ async def _add(
             service_path_function(customer_id, *mandatory_fields_values),
         )
 
-        mutate_function = getattr(
-            service, service_operation_and_function_names["mutate"]
+        response = await _mutate(
+            service,
+            service_operation_and_function_names["mutate"],
+            customer_id,
+            operation,
         )
-
-        response = await asyncify(mutate_function)(
-            customer_id=customer_id, operations=[operation]
-        )
-
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
