@@ -1,7 +1,7 @@
 import json
 import urllib.parse
 from os import environ
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Union
 
 import httpx
 from asyncer import asyncify
@@ -10,7 +10,6 @@ from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.api_core import protobuf_helpers
 from google.protobuf import json_format
-from prisma.models import Task
 
 from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
@@ -50,19 +49,31 @@ async def get_user(user_id: Union[int, str]) -> Any:
     return user
 
 
-async def get_user_id_chat_id_from_conversation(
-    conv_id: Union[int, str]
-) -> Tuple[Any, Any]:
+# async def get_user_id_chat_id_from_conversation(
+#     conv_id: Union[int, str]
+# ) -> Tuple[Any, Any]:
+#     wasp_db_url = await get_wasp_db_url()
+#     async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
+#         conversation = await db.query_first(
+#             f'SELECT * from "Conversation" where id={conv_id}'  # nosec: [B608]
+#         )
+#         if not conversation:
+#             raise HTTPException(status_code=404, detail=f"conv_id {conv_id} not found")
+#     user_id = conversation["userId"]
+#     chat_id = conversation["chatId"]
+#     return user_id, chat_id
+
+
+async def get_user_id_from_chat(chat_id: Union[int, str]) -> Any:
     wasp_db_url = await get_wasp_db_url()
     async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
-        conversation = await db.query_first(
-            f'SELECT * from "Conversation" where id={conv_id}'  # nosec: [B608]
+        chat = await db.query_first(
+            f'SELECT * from "Chat" where id={chat_id}'  # nosec: [B608]
         )
-        if not conversation:
-            raise HTTPException(status_code=404, detail=f"conv_id {conv_id} not found")
-    user_id = conversation["userId"]
-    chat_id = conversation["chatId"]
-    return user_id, chat_id
+        if not chat:
+            raise HTTPException(status_code=404, detail=f"chat {chat} not found")
+    user_id = chat["userId"]
+    return user_id
 
 
 async def is_authenticated_for_ads(user_id: int) -> bool:
@@ -81,6 +92,7 @@ async def get_login_url(
     request: Request,
     user_id: int = Query(title="User ID"),
     conv_id: int = Query(title="Conversation ID"),
+    # chat_id: int = Query(title="Chat ID"),
 ) -> Dict[str, str]:
     is_authenticated = await is_authenticated_for_ads(user_id=user_id)
     if is_authenticated:
@@ -91,6 +103,7 @@ async def get_login_url(
         f"&redirect_uri={oauth2_settings['redirectUri']}&response_type=code"
         f"&scope={urllib.parse.quote_plus('https://www.googleapis.com/auth/adwords email')}"
         f"&access_type=offline&prompt=consent&state={conv_id}"
+        # f"&access_type=offline&prompt=consent&state={chat_id}"
     )
     markdown_url = f"To navigate Google Ads waters, I require access to your account. Please [click here]({google_oauth_url}) to grant permission."
     return {"login_url": markdown_url}
@@ -101,8 +114,9 @@ async def get_login_url(
 async def login_callback(
     code: str = Query(title="Authorization Code"), state: str = Query(title="State")
 ) -> RedirectResponse:
-    conv_id = state
-    user_id, chat_id = await get_user_id_chat_id_from_conversation(conv_id)
+    chat_id = state
+    user_id = await get_user_id_from_chat(chat_id)
+    # user_id, chat_id = await get_user_id_chat_id_from_conversation(conv_id)
     user = await get_user(user_id=user_id)
 
     token_request_data = {
@@ -145,11 +159,12 @@ async def login_callback(
             },
         )
 
-    async with get_db_connection() as db:  # type: ignore[var-annotated]
-        task: Task = await db.task.find_unique_or_raise(where={"team_id": int(conv_id)})
+    # async with get_db_connection() as db:  # type: ignore[var-annotated]
+    #     task: Task = await db.task.find_unique_or_raise(where={"team_id": int(conv_id)})
     redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
     logged_in_message = "I have successfully logged in"
-    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}&team_id={task.team_id}&team_name={task.team_name}"
+    # redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}&team_id={task.team_id}&team_name={task.team_name}"
+    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}"
     return RedirectResponse(redirect_uri)
 
 

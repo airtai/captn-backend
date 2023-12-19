@@ -66,18 +66,17 @@ TEAM_NAME = "google_adsteam{}{}"
 async def get_digital_marketing_campaign_support(
     user_id: int,
     chat_id: int,
-    conv_id: int,
     message: str,
     background_tasks: BackgroundTasks,
 ) -> Dict[str, Union[Optional[str], int]]:
     # team_name = f"GoogleAdsAgent_{conv_id}"
-    team_name = TEAM_NAME.format(user_id, conv_id)
-    await create_team(user_id, chat_id, conv_id, message, team_name, background_tasks)
+    team_name = TEAM_NAME.format(user_id, chat_id)
+    await create_team(user_id, chat_id, message, team_name, background_tasks)
     return {
-        "content": f"""Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
+        # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
         "team_name": team_name,
-        "team_id": conv_id,
+        "team_id": chat_id,
     }
 
 
@@ -111,7 +110,6 @@ async def _get_openai_response(
     user_id: int,
     chat_id: int,
     message: List[Dict[str, str]],
-    conv_id: int,
     background_tasks: BackgroundTasks,
 ) -> Dict[str, Union[Optional[str], int]]:
     try:
@@ -146,7 +144,6 @@ async def _get_openai_response(
         function_response = await function_to_call(
             user_id=user_id,
             chat_id=chat_id,
-            conv_id=conv_id,
             background_tasks=background_tasks,
             **function_args,
         )
@@ -160,26 +157,22 @@ async def _user_response_to_agent(
     user_id: int,
     chat_id: int,
     message: List[Dict[str, str]],
-    user_answer_to_team_id: int,
     background_tasks: BackgroundTasks,
 ) -> Dict[str, Union[Optional[str], int]]:
-    last_user_message = message[-1]["content"].split("<br/><br/>")[1]
-    team_name = TEAM_NAME.format(user_id, user_answer_to_team_id)
+    last_user_message = message[-1]["content"]
+    team_name = TEAM_NAME.format(user_id, chat_id)
     await create_team(
         user_id,
         chat_id,
-        user_answer_to_team_id,
         last_user_message,
         team_name,
         background_tasks,
     )
     return {
-        "content": f"""**Thank you for your response!**
-
-**{team_name}** can now proceed with the work, and if we need any additional information, we'll reach out to you.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
+        # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
         "team_name": team_name,
-        "team_id": user_answer_to_team_id,
+        "team_id": chat_id,
     }
 
 
@@ -187,9 +180,7 @@ class AzureOpenAIRequest(BaseModel):
     chat_id: int
     message: List[Dict[str, str]]
     user_id: int
-    conv_id: int
-    is_answer_to_agent_question: bool
-    user_answer_to_team_id: Union[int, None]
+    team_id: Union[int, None]
 
 
 @router.post("/chat")
@@ -197,19 +188,17 @@ async def chat(
     request: AzureOpenAIRequest, background_tasks: BackgroundTasks
 ) -> Dict[str, Union[Optional[str], int]]:
     message = request.message
-    conv_id = request.conv_id
     chat_id = request.chat_id
     result = (
         await _user_response_to_agent(
             request.user_id,
             chat_id,
             message,
-            request.user_answer_to_team_id,
             background_tasks,
         )
-        if (request.is_answer_to_agent_question and request.user_answer_to_team_id)
+        if (request.team_id)
         else await _get_openai_response(
-            request.user_id, chat_id, message, conv_id, background_tasks
+            request.user_id, chat_id, message, background_tasks
         )
     )
     return result
