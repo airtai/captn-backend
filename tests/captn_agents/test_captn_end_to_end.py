@@ -19,26 +19,13 @@ def clear_team() -> None:
 SHARED_PROMPT = (
     "Allow the chages to the google ads team without any confirmation from the client."
     "After the task is completed, use the reply_to_client command to return the result to the client."
+    "Do not use reply_to_client command when you need clients approval"
 )
 
 
-@freeze_time("2023-11-01")
-def test_update_campaign_name() -> None:
-    # task = "Please optimize my Google ads campaigns, but don't change the budget. Propose and implement any solution as long it is legal and doesn't change the budget."
-    # task = "Please pause all of my Google ads campaigns. Finally return me the status for all of my campaigns."
-    # task = "Give me the names, ids and status for all of my campaignsf."
-    # task = "Pause 'Website traffic-Search-3' campaign"
-
-    # task = "Enable all Ads for the 'Website traffic-Search-3' campaign"
-    # task = "I need customer_id and campaign id for 'Website traffic-Search-3' campaign"
-
-    task = f"""To each campaign which name starts with: 'Website', add '-up' at the end of the name (add 'up' even if name already contains it)
-You have all the permissions to update the campaign name, so do not ask me for any additional info, just do it!!
-{SHARED_PROMPT}"""
-
-    user_id = 1
-    conv_id = 17
-
+def _test_google_ads_create_update(
+    user_id: int, conv_id: int, task: str, endpoint: str
+) -> None:
     with unittest.mock.patch(
         "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
         side_effect=google_ads_create_update,
@@ -56,9 +43,23 @@ You have all the permissions to update the campaign name, so do not ask me for a
         update_mock.assert_called()
 
         _, kwargs = update_mock.call_args
-        assert kwargs["endpoint"] == "/update-campaign"
+        assert kwargs["endpoint"] == endpoint
 
         assert last_message_is_termination(initial_team)
+
+
+@freeze_time("2023-11-01")
+def test_update_campaign_name() -> None:
+    task = f"""To each campaign which name starts with: 'Website', add '-up' at the end of the name (add 'up' even if name already contains it)
+You have all the permissions to update the campaign name, so do not ask me for any additional info, just do it!!
+{SHARED_PROMPT}"""
+
+    user_id = 1
+    conv_id = 17
+
+    _test_google_ads_create_update(
+        user_id=user_id, conv_id=conv_id, task=task, endpoint="/update-campaign"
+    )
 
 
 @freeze_time("2023-11-01")
@@ -70,26 +71,9 @@ You have all the permissions to pause the campaign, so do not ask me for any add
     user_id = 1
     conv_id = 17
 
-    with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
-        side_effect=google_ads_create_update,
-    ) as update_mock:
-        team_name, last_message = start_conversation(
-            user_id=user_id,
-            conv_id=conv_id,
-            task=task,
-            max_round=80,
-            human_input_mode="NEVER",
-            class_name="captn_initial_team",
-        )
-
-        initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
-
-        _, kwargs = update_mock.call_args
-        assert kwargs["endpoint"] == "/update-campaign"
-
-        assert last_message_is_termination(initial_team)
+    _test_google_ads_create_update(
+        user_id=user_id, conv_id=conv_id, task=task, endpoint="/update-campaign"
+    )
 
 
 @freeze_time("2023-11-01")
@@ -101,26 +85,9 @@ You have all the permissions to pause the ad groups, so do not ask me for any ad
     user_id = 1
     conv_id = 17
 
-    with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
-        side_effect=google_ads_create_update,
-    ) as update_mock:
-        team_name, last_message = start_conversation(
-            user_id=user_id,
-            conv_id=conv_id,
-            task=task,
-            max_round=80,
-            human_input_mode="NEVER",
-            class_name="captn_initial_team",
-        )
-
-        initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
-
-        _, kwargs = update_mock.call_args
-        assert kwargs["endpoint"] == "/update-ad-group"
-
-        assert last_message_is_termination(initial_team)
+    _test_google_ads_create_update(
+        user_id=user_id, conv_id=conv_id, task=task, endpoint="/update-ad-group"
+    )
 
 
 @freeze_time("2023-11-01")
@@ -132,26 +99,9 @@ You have all the permissions to pause the ads, so do not ask me for any addition
     user_id = 1
     conv_id = 17
 
-    with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
-        side_effect=google_ads_create_update,
-    ) as update_mock:
-        team_name, last_message = start_conversation(
-            user_id=user_id,
-            conv_id=conv_id,
-            task=task,
-            max_round=80,
-            human_input_mode="NEVER",
-            class_name="captn_initial_team",
-        )
-
-        initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
-
-        _, kwargs = update_mock.call_args
-        assert kwargs["endpoint"] == "/update-ad"
-
-        assert last_message_is_termination(initial_team)
+    _test_google_ads_create_update(
+        user_id=user_id, conv_id=conv_id, task=task, endpoint="/update-ad"
+    )
 
 
 @freeze_time("2023-11-01")
@@ -164,26 +114,12 @@ You have all the permissions to pause the ads, so do not ask me for any addition
     user_id = 1
     conv_id = 17
 
-    with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
-        side_effect=google_ads_create_update,
-    ) as update_mock:
-        team_name, last_message = start_conversation(
-            user_id=user_id,
-            conv_id=conv_id,
-            task=task,
-            max_round=80,
-            human_input_mode="NEVER",
-            class_name="captn_initial_team",
-        )
-
-        initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
-
-        _, kwargs = update_mock.call_args
-        assert kwargs["endpoint"] == "/add-negative-keywords-to-campaign"
-
-        assert last_message_is_termination(initial_team)
+    _test_google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        task=task,
+        endpoint="/add-negative-keywords-to-campaign",
+    )
 
 
 @freeze_time("2023-11-01")
@@ -195,26 +131,12 @@ You have all the permissions to pause the ads, so do not ask me for any addition
     user_id = 1
     conv_id = 17
 
-    with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.google_ads_create_update",
-        side_effect=google_ads_create_update,
-    ) as update_mock:
-        team_name, last_message = start_conversation(
-            user_id=user_id,
-            conv_id=conv_id,
-            task=task,
-            max_round=80,
-            human_input_mode="NEVER",
-            class_name="captn_initial_team",
-        )
-
-        initial_team = Team.get_team(team_name)
-        update_mock.assert_called()
-
-        _, kwargs = update_mock.call_args
-        assert kwargs["endpoint"] == "/add-keywords-to-ad-group"
-
-        assert last_message_is_termination(initial_team)
+    _test_google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        task=task,
+        endpoint="/add-keywords-to-ad-group",
+    )
 
 
 def test_search_query() -> None:
