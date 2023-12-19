@@ -16,7 +16,7 @@ def get_google_ads_team_capability() -> str:
     capabilities = [
         "Accessing detailed information about campaigns, ad groups, ads, and keywords.",
         "Modifying the status (ENABLED/PAUSED) of campaigns, ad groups, and ads.",
-        'Optimising ads capmaign. The only optimzation you can currently do is "creating new negative keywords for existing campaigns". You do not have anyother optimization capability yet.',
+        'Optimising ads capmaign. The only optimzation you can currently do is "creating new keywords for existing campaigns". You do not have anyother optimization capability yet.',
     ]
 
     return prefix + "- " + "\n- ".join(capabilities)

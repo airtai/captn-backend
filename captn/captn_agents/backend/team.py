@@ -1,3 +1,4 @@
+import json
 from typing import Any, Callable, Dict, List, Optional
 
 import autogen
@@ -100,12 +101,17 @@ class Team:
         return llm_config
 
     def _create_groupchat_and_manager(self) -> None:
+        manager_llm_config = self.llm_config.copy()  # type: ignore
+        # GroupChatManager is not allowed to make function/tool calls (from version 0.2.2).
+        manager_llm_config.pop("functions", None)
+        manager_llm_config.pop("tools", None)
+
         self.groupchat = autogen.GroupChat(
             agents=self.members, messages=[], max_round=self.max_round
         )
         self.manager = autogen.GroupChatManager(
             groupchat=self.groupchat,
-            llm_config=self.llm_config,
+            llm_config=manager_llm_config,
             is_termination_msg=self._is_termination_msg,
         )
 
@@ -237,15 +243,15 @@ You can leverage access to the following resources:
         await self.manager.a_initiate_chat(self.manager, message=self.initial_message)
 
     def get_last_message(self, add_prefix: bool = True) -> str:
-        last_message: str = self.manager.chat_messages[self.members[0]][-1]["content"]
-        last_message = last_message.replace("PAUSE", "").replace(
-            "TERMINATE", ""
-        )  # todo: ???
+        last_message = self.groupchat.messages[-1]["content"]
+        if isinstance(last_message, dict):
+            last_message = json.dumps(last_message)
+        last_message = last_message.replace("PAUSE", "").replace("TERMINATE", "")
 
         if add_prefix:
             last_message = f"Response from team '{self.name}':\n{last_message}"
 
-        return last_message
+        return last_message  # type: ignore
 
     def continue_chat(self, message: str) -> None:
         message = f"Response from the client:\n{message}"

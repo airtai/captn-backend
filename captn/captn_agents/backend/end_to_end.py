@@ -43,7 +43,8 @@ use the 'reply_to_client' command.""",
     },
     {
         "Name": "Account_manager",
-        "Description": "You are an account manager in the digital agency. Your job is to communicate with the User_proxy.",
+        "Description": """You are an account manager in the digital agency. Your job is to communicate with the User_proxy.
+When you want to ask the user a question directly or return to him a summary of what has been done, use the 'reply_to_client' command.""",
     },
 ]
 

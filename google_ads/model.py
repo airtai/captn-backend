@@ -22,12 +22,19 @@ class AdGroupAd(AdGroup):
     ad_id: str
 
 
-class AdGroupCriterion(AdGroup):
-    criterion_id: str
-
-
-class CampaignCriterion(Campaign):
-    keyword_match_type: Literal["EXACT", "BROAD"]
-    keyword_text: str
-    negative: Optional[bool] = True
+class Criterion(AdBase):
+    criterion_id: Optional[str] = None
+    keyword_text: Optional[str] = None
+    keyword_match_type: Optional[Literal["EXACT", "BROAD", "PHRASE"]] = None
+    negative: Optional[bool] = None
     bid_modifier: Optional[float] = None
+
+
+class AdGroupCriterion(Criterion):
+    ad_group_id: str
+    cpc_bid_micros: Optional[int] = None
+
+
+class CampaignCriterion(Criterion):
+    campaign_id: str
+    negative: Optional[bool] = True

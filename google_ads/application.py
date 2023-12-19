@@ -4,6 +4,7 @@ from os import environ
 from typing import Any, Dict, List, Union
 
 import httpx
+from asyncer import asyncify
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
@@ -201,7 +202,9 @@ async def list_accessible_customers(user_id: int = Query(title="User ID")) -> Li
         user_credentials = await load_user_credentials(user_id)
         client = create_google_ads_client(user_credentials)
         customer_service = client.get_service("CustomerService")
-        accessible_customers = customer_service.list_accessible_customers()
+        accessible_customers = await asyncify(
+            customer_service.list_accessible_customers
+        )()
 
         customer_ids = [x.split("/")[-1] for x in accessible_customers.resource_names]
         return customer_ids
@@ -239,7 +242,9 @@ async def search(
     try:
         for customer_id in customer_ids:
             # try:
-            response = service.search(customer_id=customer_id, query=query)
+            response = await asyncify(service.search)(
+                customer_id=customer_id, query=query
+            )
             l = []  # noqa
             for row in response:
                 json_str = json_format.MessageToJson(row)
@@ -323,7 +328,9 @@ async def _update(
         mutate_function = getattr(
             service, service_operation_and_function_names["mutate"]
         )
-        response = mutate_function(customer_id=customer_id, operations=[operation])
+        response = await asyncify(mutate_function)(
+            customer_id=customer_id, operations=[operation]
+        )
 
     except Exception as e:
         raise HTTPException(
@@ -428,19 +435,27 @@ async def _add(
         setattr_func = service_operation_and_function_names["setattr_func"]
         setattr_func(model_dict=model_dict, operation_create=operation_create)
 
-        campaign_service = client.get_service(
-            service_operation_and_function_names["root_service"]
+        service_path_function = getattr(
+            service, service_operation_and_function_names["service_path"]
         )
 
-        operation_create.campaign = campaign_service.campaign_path(
-            customer_id, *mandatory_fields_values
+        # e.g. if service_path is "ad_group_path" root_element will be "ad_group"
+        root_element = service_operation_and_function_names["service_path"].replace(
+            "_path", ""
+        )
+        setattr(
+            operation_create,
+            root_element,
+            service_path_function(customer_id, *mandatory_fields_values),
         )
 
         mutate_function = getattr(
             service, service_operation_and_function_names["mutate"]
         )
 
-        response = mutate_function(customer_id=customer_id, operations=[operation])
+        response = await asyncify(mutate_function)(
+            customer_id=customer_id, operations=[operation]
+        )
 
     except Exception as e:
         raise HTTPException(
@@ -449,7 +464,7 @@ async def _add(
     return f"Created {response.results[0].resource_name}."
 
 
-def add_keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> None:
+def _keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> None:
     for attribute_name, attribute_value in model_dict.items():
         if attribute_value:
             if "keyword_" in attribute_name:
@@ -460,20 +475,40 @@ def add_keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> N
 
 
 @router.get("/add-negative-keywords-to-campaign")
-async def add_keywords(
+async def add_negative_keywords_to_campaign(
     user_id: int, campaign_criterion_model: CampaignCriterion = Depends()
 ) -> str:
     key_service_operation = {
         "service": "CampaignCriterionService",
         "operation": "CampaignCriterionOperation",
-        "root_service": "CampaignService",
         "mutate": "mutate_campaign_criteria",
         "mandatory_fields": ["customer_id", "campaign_id"],
-        "setattr_func": add_keywords_setattr,
+        "service_path": "campaign_path",
+        "setattr_func": _keywords_setattr,
     }
 
     return await _add(
         user_id=user_id,
         model=campaign_criterion_model,
+        service_operation_and_function_names=key_service_operation,
+    )
+
+
+@router.get("/add-keywords-to-ad-group")
+async def add_keywords_to_ad_group(
+    user_id: int, model: AdGroupCriterion = Depends()
+) -> str:
+    key_service_operation = {
+        "service": "AdGroupCriterionService",
+        "operation": "AdGroupCriterionOperation",
+        "mutate": "mutate_ad_group_criteria",
+        "mandatory_fields": ["customer_id", "ad_group_id"],
+        "service_path": "ad_group_path",
+        "setattr_func": _keywords_setattr,
+    }
+
+    return await _add(
+        user_id=user_id,
+        model=model,
         service_operation_and_function_names=key_service_operation,
     )
