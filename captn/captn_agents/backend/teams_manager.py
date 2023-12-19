@@ -5,16 +5,6 @@ from fastapi import BackgroundTasks
 
 from captn.captn_agents.application import CaptnAgentRequest, chat
 
-NOTIFICATION_MSG = """
-## 📢 Notification from **{}**:
-
-<br/>
-
-{}
-
-<br/>
-"""
-
 TEAMS_STATUS: Dict[str, Dict[str, Union[str, bool, int]]] = {}
 
 
@@ -64,7 +54,7 @@ def teams_handler(user_id: int, chat_id: int, team_name: str, message: str) -> N
     change_teams_status(
         chat_id=chat_id,
         team_status=response["status"],  # type: ignore
-        message=NOTIFICATION_MSG.format(team_name, response["message"]),
+        message=response["message"],  # type: ignore
         is_question=response["is_question"],  # type: ignore
     )
 
@@ -77,7 +67,7 @@ async def create_team(
     background_tasks: BackgroundTasks,
 ) -> None:
     print("======")
-    print("New team is created with the following details:")
+    print("Team details:")
     print(f"User ID: {user_id}")
     print(f"Team ID: {chat_id}")
     print(f"Team Name: {team_name}")

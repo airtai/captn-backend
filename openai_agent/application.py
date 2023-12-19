@@ -70,7 +70,7 @@ async def get_digital_marketing_campaign_support(
     team_name = TEAM_NAME.format(user_id, chat_id)
     await create_team(user_id, chat_id, message, team_name, background_tasks)
     return {
-        "content": f"""Ahoy! Indeed, **{team_name}** is already working on your request, and it might take some time.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
+        # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": chat_id,
@@ -166,9 +166,7 @@ async def _user_response_to_agent(
         background_tasks,
     )
     return {
-        "content": f"""**Thank you for your response!**
-
-**{team_name}** can now proceed with the work, and if we need any additional information, we'll reach out to you.<br/><br/>While we're working on it, is there anything else I can assist you with, such as optimizing your ad campaigns, pausing/resuming your campaigns, or renaming your campaigns?""",
+        # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": chat_id,
