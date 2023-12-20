@@ -305,9 +305,9 @@ update_ad_group_config = {
                 "type": "string",
                 "description": "Id of the Ad",
             },
-            "client_has_approved": {
-                "type": "boolean",
-                "description": "The client has approved the changes",
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
             },
             "name": {
                 "type": "string",
@@ -345,9 +345,9 @@ update_ad_config = {
                 "type": "string",
                 "description": "Id of the Ad",
             },
-            "client_has_approved": {
-                "type": "boolean",
-                "description": "The client has approved the changes",
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
             },
             "cpc_bid_micros": {
                 "type": "integer",
@@ -377,9 +377,9 @@ update_campaign_config = {
                 "type": "string",
                 "description": "Id of the campaign",
             },
-            "client_has_approved": {
-                "type": "boolean",
-                "description": "The client has approved the changes",
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
             },
             "name": {
                 "type": "string",
@@ -412,9 +412,9 @@ update_ad_group_criterion_config = {
                 "type": "string",
                 "description": "Id of the Ad group criterion",
             },
-            "client_has_approved": {
-                "type": "boolean",
-                "description": "The client has approved the changes",
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
             },
             "name": {
                 "type": "string",
@@ -471,9 +471,9 @@ create_negative_keyword_for_campaign_config = {
                 "type": "string",
                 "description": "Id of the campaign",
             },
-            "client_has_approved": {
-                "type": "boolean",
-                "description": "The client has approved the changes",
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
             },
             "status": {
                 "type": "string",
@@ -519,9 +519,9 @@ create_keyword_for_ad_group_config = {
                 "type": "string",
                 "description": "Id of the Ad group",
             },
-            "client_has_approved": {
-                "type": "boolean",
-                "description": "The client has approved the changes",
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
             },
             "status": {
                 "type": "string",
