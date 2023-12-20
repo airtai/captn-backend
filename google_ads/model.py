@@ -40,7 +40,7 @@ class CampaignCriterion(Criterion):
     negative: Optional[bool] = True
 
 
-class RemoveResouce(BaseModel):
+class RemoveResource(BaseModel):
     customer_id: str
     parent_id: Optional[str] = None
     resource_id: str

@@ -552,3 +552,41 @@ create_keyword_for_ad_group_config = {
         ],
     },
 }
+
+remove_google_ads_resource_config = {
+    "name": "remove_google_ads_resource",
+    "description": "Removes the google ads resource",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "resource_id": {
+                "type": "string",
+                "description": "Id of the resource which will be removed",
+            },
+            "resource_type": {
+                "type": "string",
+                "description": """One of the following:
+Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion']""",
+            },
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
+            },
+            "parent_id": {
+                "type": "string",
+                "description": """Id of the parent resorce, campaign and ad group do not have parent,
+ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaign_id""",
+            },
+        },
+        "required": [
+            "customer_id",
+            "resource_id",
+            "resource_type",
+            "clients_approval_message",
+        ],
+    },
+}

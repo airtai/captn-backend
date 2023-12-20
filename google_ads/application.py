@@ -20,7 +20,7 @@ from .model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
-    RemoveResouce,
+    RemoveResource,
 )
 
 router = APIRouter()
@@ -580,7 +580,7 @@ async def add_keywords_to_ad_group(
 
 @router.get("/remove-google-ads-resource")
 async def remove_google_ads_resource(
-    user_id: int, model: RemoveResouce = Depends()
+    user_id: int, model: RemoveResource = Depends()
 ) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[model.resource_type]
@@ -608,9 +608,5 @@ async def remove_google_ads_resource(
         model.customer_id,
         operation,
     )
-
-    # response = service.mutate_campaigns(
-    #     customer_id=model.customer_id, operations=[operation]
-    # )
 
     return f"Removed {response.results[0].resource_name}."
