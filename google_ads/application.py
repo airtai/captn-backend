@@ -20,6 +20,7 @@ from .model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    RemoveResouce,
 )
 
 router = APIRouter()
@@ -359,7 +360,7 @@ async def _update(
 
     try:
         service_path_function = getattr(
-            service, service_operation_and_function_names["service_path"]
+            service, service_operation_and_function_names["service_path_update_delete"]
         )
         operation_update.resource_name = service_path_function(
             customer_id, *mandatory_fields_values
@@ -400,32 +401,36 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "service": "CampaignService",
         "operation": "CampaignOperation",
         "mutate": "mutate_campaigns",
-        "service_path": "campaign_path",
+        "service_path_create": None,  # TODO
+        "service_path_update_delete": "campaign_path",
     },
     "ad_group": {
         "service": "AdGroupService",
         "operation": "AdGroupOperation",
         "mutate": "mutate_ad_groups",
-        "service_path": "ad_group_path",
+        "service_path_create": "campaign_path",
+        "service_path_update_delete": "ad_group_path",
     },
     "ad": {
         "service": "AdGroupAdService",
         "operation": "AdGroupAdOperation",
         "mutate": "mutate_ad_group_ads",
-        "service_path": "ad_group_ad_path",
+        "service_path_update_delete": "ad_group_ad_path",
     },
     "ad_group_criterion": {
         "service": "AdGroupCriterionService",
         "operation": "AdGroupCriterionOperation",
         "mutate": "mutate_ad_group_criteria",
-        "service_path": "ad_group_path",
+        "service_path_create": "ad_group_path",
+        "service_path_update_delete": "ad_group_criterion_path",
         "setattr_func": _keywords_setattr,
     },
     "campaign_criterion": {
         "service": "CampaignCriterionService",
         "operation": "CampaignCriterionOperation",
         "mutate": "mutate_campaign_criteria",
-        "service_path": "campaign_path",
+        "service_path_create": "campaign_path",
+        "service_path_update_delete": "campaign_criterion_path",
         "setattr_func": _keywords_setattr,
     },
 }
@@ -513,13 +518,13 @@ async def _add(
         setattr_func(model_dict=model_dict, operation_create=operation_create)
 
         service_path_function = getattr(
-            service, service_operation_and_function_names["service_path"]
+            service, service_operation_and_function_names["service_path_create"]
         )
 
         # e.g. if service_path is "ad_group_path" root_element will be "ad_group"
-        root_element = service_operation_and_function_names["service_path"].replace(
-            "_path", ""
-        )
+        root_element = service_operation_and_function_names[
+            "service_path_create"
+        ].replace("_path", "")
         setattr(
             operation_create,
             root_element,
@@ -571,3 +576,41 @@ async def add_keywords_to_ad_group(
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id"],
     )
+
+
+@router.get("/remove-google-ads-resource")
+async def remove_google_ads_resource(
+    user_id: int, model: RemoveResouce = Depends()
+) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[model.resource_type]
+
+    client = await _get_client(user_id=user_id)
+
+    service = client.get_service(service_operation_and_function_names["service"])
+    operation = client.get_type(service_operation_and_function_names["operation"])
+
+    service_path_function = getattr(
+        service, service_operation_and_function_names["service_path_update_delete"]
+    )
+
+    if model.parent_id is not None:
+        resource_name = service_path_function(
+            model.customer_id, model.parent_id, model.resource_id
+        )
+    else:
+        resource_name = service_path_function(model.customer_id, model.resource_id)
+    operation.remove = resource_name
+
+    response = await _mutate(
+        service,
+        service_operation_and_function_names["mutate"],
+        model.customer_id,
+        operation,
+    )
+
+    # response = service.mutate_campaigns(
+    #     customer_id=model.customer_id, operations=[operation]
+    # )
+
+    return f"Removed {response.results[0].resource_name}."
