@@ -7,6 +7,8 @@ from captn.captn_agents.application import CaptnAgentRequest, chat
 
 TEAMS_STATUS: Dict[str, Dict[str, Union[str, bool, int]]] = {}
 
+TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It appears we've hit a temporary squall in the digital sea. Give it some time, and we'll be back to smooth sailing. Please try again later."
+
 
 def add_to_teams_status(user_id: int, chat_id: int, team_name: str) -> None:
     TEAMS_STATUS[f"{chat_id}"] = {
@@ -50,13 +52,21 @@ def teams_handler(user_id: int, chat_id: int, team_name: str, message: str) -> N
         is_question = False
         change_teams_status(chat_id, team_status, message, is_question)
 
-    response = chat_with_team(message, user_id, chat_id)
-    change_teams_status(
-        chat_id=chat_id,
-        team_status=response["status"],  # type: ignore
-        message=response["message"],  # type: ignore
-        is_question=response["is_question"],  # type: ignore
-    )
+    try:
+        response = chat_with_team(message, user_id, chat_id)
+        change_teams_status(
+            chat_id=chat_id,
+            team_status=response["status"],  # type: ignore
+            message=response["message"],  # type: ignore
+            is_question=response["is_question"],  # type: ignore
+        )
+    except Exception:
+        change_teams_status(
+            chat_id=chat_id,
+            team_status="completed",
+            message=TEAM_EXCEPTION_MESSAGE,
+            is_question=False,
+        )
 
 
 async def create_team(
