@@ -38,3 +38,12 @@ class AdGroupCriterion(Criterion):
 class CampaignCriterion(Criterion):
     campaign_id: str
     negative: Optional[bool] = True
+
+
+class RemoveResource(BaseModel):
+    customer_id: str
+    parent_id: Optional[str] = None
+    resource_id: str
+    resource_type: Literal[
+        "campaign", "ad_group", "ad", "ad_group_criterion", "campaign_criterion"
+    ]

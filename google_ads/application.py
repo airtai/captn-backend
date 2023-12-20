@@ -20,6 +20,7 @@ from .model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    RemoveResource,
 )
 
 router = APIRouter()
@@ -303,6 +304,7 @@ async def _get_necessary_parameters(
     model: AdBase,
     service_operation_and_function_names: Dict[str, Any],
     crud_operation_name: str,
+    mandatory_fields: List[str],
 ) -> Tuple[GoogleAdsClient, Any, Any, Dict[str, Any], str, Any, List[Any]]:
     client = await _get_client(user_id=user_id)
 
@@ -311,7 +313,6 @@ async def _get_necessary_parameters(
 
     model_dict = model.model_dump()
 
-    mandatory_fields = service_operation_and_function_names["mandatory_fields"]
     if "customer_id" in mandatory_fields:
         mandatory_fields.remove("customer_id")
     else:
@@ -336,7 +337,10 @@ async def _get_necessary_parameters(
 
 
 async def _update(
-    user_id: int, model: AdBase, service_operation_and_function_names: Dict[str, Any]
+    user_id: int,
+    model: AdBase,
+    service_operation_and_function_names: Dict[str, Any],
+    mandatory_fields: List[str],
 ) -> str:
     (
         client,
@@ -351,11 +355,12 @@ async def _update(
         model=model,
         service_operation_and_function_names=service_operation_and_function_names,
         crud_operation_name="update",
+        mandatory_fields=mandatory_fields,
     )
 
     try:
         service_path_function = getattr(
-            service, service_operation_and_function_names["service_path"]
+            service, service_operation_and_function_names["service_path_update_delete"]
         )
         operation_update.resource_name = service_path_function(
             customer_id, *mandatory_fields_values
@@ -381,54 +386,92 @@ async def _update(
     return f"Updated {response.results[0].resource_name}."
 
 
-@router.get("/update-ad")
-async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
-    key_service_operation = {
+def _keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> None:
+    for attribute_name, attribute_value in model_dict.items():
+        if attribute_value:
+            if "keyword_" in attribute_name:
+                attribute_name = attribute_name.replace("keyword_", "")
+                setattr(operation_create.keyword, attribute_name, attribute_value)
+            else:
+                setattr(operation_create, attribute_name, attribute_value)
+
+
+GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
+    "campaign": {
+        "service": "CampaignService",
+        "operation": "CampaignOperation",
+        "mutate": "mutate_campaigns",
+        "service_path_create": None,  # TODO
+        "service_path_update_delete": "campaign_path",
+    },
+    "ad_group": {
+        "service": "AdGroupService",
+        "operation": "AdGroupOperation",
+        "mutate": "mutate_ad_groups",
+        "service_path_create": "campaign_path",
+        "service_path_update_delete": "ad_group_path",
+    },
+    "ad": {
         "service": "AdGroupAdService",
         "operation": "AdGroupAdOperation",
         "mutate": "mutate_ad_group_ads",
-        "mandatory_fields": ["customer_id", "ad_group_id", "ad_id"],
-        "service_path": "ad_group_ad_path",
-    }
+        "service_path_update_delete": "ad_group_ad_path",
+    },
+    "ad_group_criterion": {
+        "service": "AdGroupCriterionService",
+        "operation": "AdGroupCriterionOperation",
+        "mutate": "mutate_ad_group_criteria",
+        "service_path_create": "ad_group_path",
+        "service_path_update_delete": "ad_group_criterion_path",
+        "setattr_func": _keywords_setattr,
+    },
+    "campaign_criterion": {
+        "service": "CampaignCriterionService",
+        "operation": "CampaignCriterionOperation",
+        "mutate": "mutate_campaign_criteria",
+        "service_path_create": "campaign_path",
+        "service_path_update_delete": "campaign_criterion_path",
+        "setattr_func": _keywords_setattr,
+    },
+}
+
+
+@router.get("/update-ad")
+async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
 
     return await _update(
         user_id=user_id,
         model=ad_model,
-        service_operation_and_function_names=key_service_operation,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "ad_group_id", "ad_id"],
     )
 
 
 @router.get("/update-ad-group")
 async def update_ad_group(user_id: int, ad_group_model: AdGroup = Depends()) -> str:
-    key_service_operation = {
-        "service": "AdGroupService",
-        "operation": "AdGroupOperation",
-        "mutate": "mutate_ad_groups",
-        "mandatory_fields": ["customer_id", "ad_group_id"],
-        "service_path": "ad_group_path",
-    }
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_group"]
 
     return await _update(
         user_id=user_id,
         model=ad_group_model,
-        service_operation_and_function_names=key_service_operation,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "ad_group_id"],
     )
 
 
 @router.get("/update-campaign")
 async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) -> str:
-    key_service_operation = {
-        "service": "CampaignService",
-        "operation": "CampaignOperation",
-        "mutate": "mutate_campaigns",
-        "mandatory_fields": ["customer_id", "campaign_id"],
-        "service_path": "campaign_path",
-    }
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["campaign"]
 
     return await _update(
         user_id=user_id,
         model=campaign_model,
-        service_operation_and_function_names=key_service_operation,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "campaign_id"],
     )
 
 
@@ -436,23 +479,24 @@ async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) ->
 async def update_ad_group_criterion(
     user_id: int, ad_group_criterion_model: AdGroupCriterion = Depends()
 ) -> str:
-    key_service_operation = {
-        "service": "AdGroupCriterionService",
-        "operation": "AdGroupCriterionOperation",
-        "mutate": "mutate_ad_group_criteria",
-        "mandatory_fields": ["customer_id", "ad_group_id", "criterion_id"],
-        "service_path": "ad_group_criterion_path",
-    }
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[
+        "ad_group_criterion"
+    ]
 
     return await _update(
         user_id=user_id,
         model=ad_group_criterion_model,
-        service_operation_and_function_names=key_service_operation,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "ad_group_id", "criterion_id"],
     )
 
 
 async def _add(
-    user_id: int, model: AdBase, service_operation_and_function_names: Dict[str, Any]
+    user_id: int,
+    model: AdBase,
+    service_operation_and_function_names: Dict[str, Any],
+    mandatory_fields: List[str],
 ) -> str:
     (
         _,
@@ -467,19 +511,20 @@ async def _add(
         model=model,
         service_operation_and_function_names=service_operation_and_function_names,
         crud_operation_name="create",
+        mandatory_fields=mandatory_fields,
     )
     try:
         setattr_func = service_operation_and_function_names["setattr_func"]
         setattr_func(model_dict=model_dict, operation_create=operation_create)
 
         service_path_function = getattr(
-            service, service_operation_and_function_names["service_path"]
+            service, service_operation_and_function_names["service_path_create"]
         )
 
         # e.g. if service_path is "ad_group_path" root_element will be "ad_group"
-        root_element = service_operation_and_function_names["service_path"].replace(
-            "_path", ""
-        )
+        root_element = service_operation_and_function_names[
+            "service_path_create"
+        ].replace("_path", "")
         setattr(
             operation_create,
             root_element,
@@ -499,33 +544,20 @@ async def _add(
     return f"Created {response.results[0].resource_name}."
 
 
-def _keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> None:
-    for attribute_name, attribute_value in model_dict.items():
-        if attribute_value:
-            if "keyword_" in attribute_name:
-                attribute_name = attribute_name.replace("keyword_", "")
-                setattr(operation_create.keyword, attribute_name, attribute_value)
-            else:
-                setattr(operation_create, attribute_name, attribute_value)
-
-
 @router.get("/add-negative-keywords-to-campaign")
 async def add_negative_keywords_to_campaign(
     user_id: int, campaign_criterion_model: CampaignCriterion = Depends()
 ) -> str:
-    key_service_operation = {
-        "service": "CampaignCriterionService",
-        "operation": "CampaignCriterionOperation",
-        "mutate": "mutate_campaign_criteria",
-        "mandatory_fields": ["customer_id", "campaign_id"],
-        "service_path": "campaign_path",
-        "setattr_func": _keywords_setattr,
-    }
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[
+        "campaign_criterion"
+    ]
 
     return await _add(
         user_id=user_id,
         model=campaign_criterion_model,
-        service_operation_and_function_names=key_service_operation,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "campaign_id"],
     )
 
 
@@ -533,17 +565,48 @@ async def add_negative_keywords_to_campaign(
 async def add_keywords_to_ad_group(
     user_id: int, model: AdGroupCriterion = Depends()
 ) -> str:
-    key_service_operation = {
-        "service": "AdGroupCriterionService",
-        "operation": "AdGroupCriterionOperation",
-        "mutate": "mutate_ad_group_criteria",
-        "mandatory_fields": ["customer_id", "ad_group_id"],
-        "service_path": "ad_group_path",
-        "setattr_func": _keywords_setattr,
-    }
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[
+        "ad_group_criterion"
+    ]
 
     return await _add(
         user_id=user_id,
         model=model,
-        service_operation_and_function_names=key_service_operation,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "ad_group_id"],
     )
+
+
+@router.get("/remove-google-ads-resource")
+async def remove_google_ads_resource(
+    user_id: int, model: RemoveResource = Depends()
+) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[model.resource_type]
+
+    client = await _get_client(user_id=user_id)
+
+    service = client.get_service(service_operation_and_function_names["service"])
+    operation = client.get_type(service_operation_and_function_names["operation"])
+
+    service_path_function = getattr(
+        service, service_operation_and_function_names["service_path_update_delete"]
+    )
+
+    if model.parent_id is not None:
+        resource_name = service_path_function(
+            model.customer_id, model.parent_id, model.resource_id
+        )
+    else:
+        resource_name = service_path_function(model.customer_id, model.resource_id)
+    operation.remove = resource_name
+
+    response = await _mutate(
+        service,
+        service_operation_and_function_names["mutate"],
+        model.customer_id,
+        operation,
+    )
+
+    return f"Removed {response.results[0].resource_name}."

@@ -11,6 +11,7 @@ from google_ads.model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    RemoveResource,
 )
 
 from ...google_ads.client import (
@@ -25,6 +26,7 @@ from .function_configs import (
     execute_query_config,
     list_accessible_customers_config,
     read_file_config,
+    remove_google_ads_resource_config,
     reply_to_client_2_config,
     update_ad_config,
     update_ad_group_config,
@@ -51,6 +53,7 @@ class GoogleAdsTeam(Team):
         update_ad_group_criterion_config,
         create_negative_keyword_for_campaign_config,
         create_keyword_for_ad_group_config,
+        remove_google_ads_resource_config,
     ]
 
     _shared_system_message = (
@@ -58,13 +61,15 @@ class GoogleAdsTeam(Team):
         "If the client does not explicitly tell you which updates to make, you must double check with him before you make any changes!"
         "When replying to the client, give him a report of the information you retreived / changes that you have made."
         "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions."
+        "You can NOT make any permanent changes without the client approval!!!"
     )
 
     _default_roles = [
         {
             "Name": "Google_ads_specialist",
             "Description": f"""{_shared_system_message}
-Your job is to suggest and execute the command from the '## Commands' section when you are asked to""",
+Your job is to suggest and execute the command from the '## Commands' section when you are asked to.
+You can NOT make any permanent changes without the client approval!!!""",
         },
         {
             "Name": "Copywriter",
@@ -188,9 +193,9 @@ You can NOT execute anything else, so do not suggest changes which you can NOT p
 - You CAN retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - You CAN update the status (ENABLED / PAUSED) of the campaign, ad group and ad
 - You CAN create new keywords (but you can NOT update them)
+- You CAN remove campaign/ ad group / ad / positive and negative keywords
 - You CAN NOT CREATE new ads / ad groups (you can just update the existing ones)
-- You can NOT create/update new keywords
-- You can NOT delete/remove ANYTHING
+- You can NOT update keywords
 - You can NOT make any changes with the Targeting settings (Demographic, Location, Device...), Ad Copy, Budgeting and Ad Scheduling! So do not suggest these changes!
 22. You can retrieve negative keywords from the 'campaign_criterion' table (so do not just check the
 'ad_group_criterion' table and give up if there are not in that table)
@@ -222,6 +227,7 @@ VERY IMPORTANT NOTE:
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes
 which we can do right away.
+If you are asked to optimize campaigns, start with creating/removing positive and negative keywords.
 """
 
     @property
@@ -284,10 +290,13 @@ status: Optional[Literal["ENABLED", "PAUSED"]])
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
+9. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
+resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
+clients_approval_message: string, parent_id: Optional[string])
+If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
-We do not support any delete/remove commands yet.
 For the actions which we do not support currently, tell the client that you currently do NOT support the wanted action,
 but if it is important to the client, you can give an advice on how to do it manually within the Google Ads UI.
 """
@@ -464,6 +473,18 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 bid_modifier=bid_modifier,
             ),
             endpoint="/add-keywords-to-ad-group",
+        ),
+        "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, parent_id=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            ad=RemoveResource(
+                customer_id=customer_id,
+                resource_id=resource_id,
+                resource_type=resource_type,
+                parent_id=parent_id,
+            ),
+            endpoint="/remove-google-ads-resource",
         ),
     }
 

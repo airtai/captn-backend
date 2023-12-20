@@ -124,7 +124,7 @@ You have all the permissions to pause the ads, so do not ask me for any addition
 
 @freeze_time("2023-11-01")
 def test_add_regular_keywords() -> None:
-    task = f"""Add Btoad keyword 'pytest keyword' to the 'Ad group 1'.
+    task = f"""Add Btoad keyword 'pytest keyword' to the 'Ad group 1' in the 'Search-1' campaign.
 You have all the permissions to pause the ads, so do not ask me for any additional info, just do it!!
 {SHARED_PROMPT}"""
 
