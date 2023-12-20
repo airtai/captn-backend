@@ -61,13 +61,15 @@ class GoogleAdsTeam(Team):
         "If the client does not explicitly tell you which updates to make, you must double check with him before you make any changes!"
         "When replying to the client, give him a report of the information you retreived / changes that you have made."
         "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions."
+        "You can NOT make any permanent changes without the client approval!!!"
     )
 
     _default_roles = [
         {
             "Name": "Google_ads_specialist",
             "Description": f"""{_shared_system_message}
-Your job is to suggest and execute the command from the '## Commands' section when you are asked to""",
+Your job is to suggest and execute the command from the '## Commands' section when you are asked to.
+You can NOT make any permanent changes without the client approval!!!""",
         },
         {
             "Name": "Copywriter",
