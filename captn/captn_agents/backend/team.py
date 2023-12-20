@@ -23,6 +23,12 @@ def _completions_create(
         if name and role != "function":
             # print(f"Removing name parameter from the following message:\n{message}")
             message.pop("name")
+
+    tokens_per_request = autogen.token_count_utils.count_token(
+        params["messages"], model="gpt-4-1106-preview"
+    )
+    print(f"Tokens per request: {tokens_per_request}")
+
     return _completions_create_original(self, client=client, params=params)
 
 
