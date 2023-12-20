@@ -88,11 +88,11 @@ def execute_query(
 def google_ads_create_update(
     user_id: int,
     conv_id: int,
-    client_has_approved: bool,
+    clients_approval_message: str,
     ad: BaseModel,
     endpoint: str = "/update-ad",
 ) -> Union[Dict[str, Any], str]:
-    if not client_has_approved:
+    if not clients_approval_message:
         return "You must aks the client for the permission first!!!"
 
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)

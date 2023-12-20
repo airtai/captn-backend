@@ -251,7 +251,7 @@ Suggestion: keyword_view table is a good place to start digging for info.
 If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRUE" for filtering.
 
 3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
-client_has_approved: bool, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
 This command can only update ads cpc_bid_micros and status
 
 Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
@@ -259,26 +259,26 @@ with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
 4. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
-client_has_approved: bool, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
 This command can only update ad groups name, cpc_bid_micros and status
 
 5. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
-client_has_approved: bool, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]])
+clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]])
 This command can only update campaigns name and status
 
 
 6. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
-criterion_id: string, client_has_approved: bool, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
+criterion_id: string, clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 cpc_bid_micros: Optional[int])
 This command can only update ad group criterion name and status
 
 7. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
-client_has_approved: bool, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
+clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]])
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
 8. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
-client_has_approved: bool, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
+clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]])
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
@@ -381,10 +381,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         #     work_dir=work_dir, file_name=file_name
         # ),
         "read_file": read_file,
-        "update_ad": lambda customer_id, ad_group_id, ad_id, client_has_approved=False, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            client_has_approved=client_has_approved,
+            clients_approval_message=clients_approval_message,
             ad=AdGroupAd(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -394,10 +394,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad",
         ),
-        "update_ad_group": lambda customer_id, ad_group_id, ad_id=None, client_has_approved=False, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, ad_id=None, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            client_has_approved=client_has_approved,
+            clients_approval_message=clients_approval_message,
             ad=AdGroup(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -408,10 +408,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad-group",
         ),
-        "update_campaign": lambda customer_id, campaign_id, client_has_approved=False, name=None, status=None: google_ads_create_update(
+        "update_campaign": lambda customer_id, campaign_id, clients_approval_message, name=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            client_has_approved=client_has_approved,
+            clients_approval_message=clients_approval_message,
             ad=Campaign(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -420,10 +420,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-campaign",
         ),
-        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, client_has_approved=False, name=None, status=None, cpc_bid_micros=None: google_ads_create_update(
+        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, clients_approval_message, name=None, status=None, cpc_bid_micros=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            client_has_approved=client_has_approved,
+            clients_approval_message=clients_approval_message,
             ad=AdGroupCriterion(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -434,10 +434,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad-group-criterion",
         ),
-        "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, client_has_approved=False, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+        "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            client_has_approved=client_has_approved,
+            clients_approval_message=clients_approval_message,
             ad=CampaignCriterion(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -449,10 +449,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/add-negative-keywords-to-campaign",
         ),
-        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, client_has_approved=False, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, clients_approval_message, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            client_has_approved=client_has_approved,
+            clients_approval_message=clients_approval_message,
             ad=AdGroupCriterion(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
