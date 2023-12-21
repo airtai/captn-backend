@@ -71,12 +71,12 @@ TEAM_NAME = "google_adsteam{}{}"
 async def get_digital_marketing_campaign_support(
     user_id: int,
     chat_id: int,
-    message: str,
+    customer_brief: str,
     background_tasks: BackgroundTasks,
 ) -> Dict[str, Union[Optional[str], int]]:
     # team_name = f"GoogleAdsAgent_{conv_id}"
     team_name = TEAM_NAME.format(user_id, chat_id)
-    await create_team(user_id, chat_id, message, team_name, background_tasks)
+    await create_team(user_id, chat_id, customer_brief, team_name, background_tasks)
     return {
         # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
@@ -85,6 +85,19 @@ async def get_digital_marketing_campaign_support(
     }
 
 
+CUSTOMER_BRIEF_DESCRIPTION = """
+A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
+
+Business:
+Goal:
+Current Situation:
+Website:
+Digital Marketing Objectives:
+Next Steps:
+Any Other Information Related to Customer Brief:
+Please extract and represent relevant details from the conversation under these headings
+"""
+
 FUNCTIONS = [
     {
         "name": "get_digital_marketing_campaign_support",
@@ -92,12 +105,12 @@ FUNCTIONS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "message": {
+                "customer_brief": {
                     "type": "string",
-                    "description": "The customer request message",
+                    "description": CUSTOMER_BRIEF_DESCRIPTION,
                 }
             },
-            "required": ["message"],
+            "required": ["customer_brief"],
         },
     },
 ]
@@ -105,8 +118,9 @@ FUNCTIONS = [
 
 ADDITIONAL_SYSTEM_MSG = """
 Additional guidelines:
+- To avoid confusion and engage the user effectively, ask the customer only one question at a time. You can follow up with more questions based on the customer's response.
 - Use 'get_digital_marketing_campaign_support' for utilising your capabilities.
-- Use the "get_digital_marketing_campaign_support" function only when necessary, based strictly on the user's latest message. Do not reference past conversations. This is an unbreakable rule.
+- Use the "get_digital_marketing_campaign_support" function only when necessary, based strictly on the customer's latest message. Do not reference past conversations. This is an unbreakable rule.
 - If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
 """
 
