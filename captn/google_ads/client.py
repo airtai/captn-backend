@@ -90,11 +90,15 @@ def google_ads_create_update(
     user_id: int,
     conv_id: int,
     clients_approval_message: str,
+    client_approved_modicifation_for_this_resource: bool,
     ad: BaseModel,
     endpoint: str = "/update-ad",
 ) -> Union[Dict[str, Any], str]:
-    if not clients_approval_message:
-        return "You must aks the client for the permission first!!!"
+    if (
+        not clients_approval_message
+        or not client_approved_modicifation_for_this_resource
+    ):
+        return "You must inform the client about all the parameters which will be used and ask for the permission first!!!"
 
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
