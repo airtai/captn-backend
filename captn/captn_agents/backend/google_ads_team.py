@@ -61,7 +61,7 @@ class GoogleAdsTeam(Team):
         "If the client does not explicitly tell you which updates to make, you must double check with him before you make any changes!"
         "When replying to the client, give him a report of the information you retreived / changes that you have made."
         "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions."
-        "You can NOT make any permanent changes without the client approval!!!"
+        "You can NOT make any permanent changes without the clients approval!!!"
         "When analysing, start with simple queries and use more complex ones only if needed"
     )
 
@@ -70,7 +70,7 @@ class GoogleAdsTeam(Team):
             "Name": "Google_ads_specialist",
             "Description": f"""{_shared_system_message}
 Your job is to suggest and execute the command from the '## Commands' section when you are asked to.
-You can NOT make any permanent changes without the client approval!!!
+You can NOT make any permanent changes without the clients approval!!!
 When analysing, start with simple queries and use more complex ones only if needed""",
         },
         {
@@ -163,6 +163,7 @@ The client has sent you the following task:
     def _guidelines(self) -> str:
         return """## Guidelines
 0. A general advise is to make a lot of small modification suggestions, otherwise the client will get lost.
+Do not try to analyse all campaigns at once, list the campaigns and ask the user in which one he is interested in.
 e.g.
 The campaign xy is paused, do you want to enable it?
 I suggest adding new keyword 'my-keyword' to the ad group xy (and the reason why). Do you approve it?
@@ -264,6 +265,13 @@ FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
 Suggestion: keyword_view table is a good place to start digging for info.
 
 If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRUE" for filtering.
+
+
+The following command make permanent changes. In all of them you must use the following two parameters:
+- clients_approval_message: With this message, the client confirms that he is aware of the changes you will make
+(if the message is not detailed enough, we are threatened with a lawsuit)
+- client_approved_modicifation_for_this_resource: You should set this to True only when the client approves the modification
+of ALL attributes for resource which will be modified/created
 
 3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
 clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
