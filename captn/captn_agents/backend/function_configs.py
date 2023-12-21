@@ -309,6 +309,12 @@ update_ad_group_config = {
                 "type": "string",
                 "description": "Client approval message",
             },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -322,7 +328,12 @@ update_ad_group_config = {
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
         },
-        "required": ["customer_id", "ad_group_id"],
+        "required": [
+            "customer_id",
+            "ad_group_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
     },
 }
 
@@ -349,6 +360,12 @@ update_ad_config = {
                 "type": "string",
                 "description": "Client approval message",
             },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
             "cpc_bid_micros": {
                 "type": "integer",
                 "description": "Cost per click bid micros",
@@ -358,7 +375,13 @@ update_ad_config = {
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
         },
-        "required": ["customer_id", "ad_group_id", "ad_id"],
+        "required": [
+            "customer_id",
+            "ad_group_id",
+            "ad_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
     },
 }
 
@@ -381,6 +404,12 @@ update_campaign_config = {
                 "type": "string",
                 "description": "Client approval message",
             },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -390,7 +419,12 @@ update_campaign_config = {
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
         },
-        "required": ["customer_id", "campaign_id"],
+        "required": [
+            "customer_id",
+            "campaign_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
     },
 }
 
@@ -416,6 +450,12 @@ update_ad_group_criterion_config = {
                 "type": "string",
                 "description": "Client approval message",
             },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -429,7 +469,13 @@ update_ad_group_criterion_config = {
                 "description": "Cost per click bid micros",
             },
         },
-        "required": ["customer_id", "ad_group_id", "criterion_id"],
+        "required": [
+            "customer_id",
+            "ad_group_id",
+            "criterion_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
     },
 }
 
@@ -475,6 +521,12 @@ create_negative_keyword_for_campaign_config = {
                 "type": "string",
                 "description": "Client approval message",
             },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -501,6 +553,8 @@ create_negative_keyword_for_campaign_config = {
             "campaign_id",
             "keyword_match_type",
             "keyword_text",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
         ],
     },
 }
@@ -522,6 +576,12 @@ create_keyword_for_ad_group_config = {
             "clients_approval_message": {
                 "type": "string",
                 "description": "Client approval message",
+            },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
             },
             "status": {
                 "type": "string",
@@ -549,6 +609,8 @@ create_keyword_for_ad_group_config = {
             "ad_group_id",
             "keyword_match_type",
             "keyword_text",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
         ],
     },
 }
@@ -576,6 +638,12 @@ Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'
                 "type": "string",
                 "description": "Client approval message",
             },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
             "parent_id": {
                 "type": "string",
                 "description": """Id of the parent resorce, campaign and ad group do not have parent,
@@ -587,6 +655,7 @@ ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaig
             "resource_id",
             "resource_type",
             "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
         ],
     },
 }

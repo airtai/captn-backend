@@ -62,6 +62,7 @@ class GoogleAdsTeam(Team):
         "When replying to the client, give him a report of the information you retreived / changes that you have made."
         "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions."
         "You can NOT make any permanent changes without the client approval!!!"
+        "When analysing, start with simple queries and use more complex ones only if needed"
     )
 
     _default_roles = [
@@ -69,7 +70,8 @@ class GoogleAdsTeam(Team):
             "Name": "Google_ads_specialist",
             "Description": f"""{_shared_system_message}
 Your job is to suggest and execute the command from the '## Commands' section when you are asked to.
-You can NOT make any permanent changes without the client approval!!!""",
+You can NOT make any permanent changes without the client approval!!!
+When analysing, start with simple queries and use more complex ones only if needed""",
         },
         {
             "Name": "Copywriter",
@@ -160,6 +162,12 @@ The client has sent you the following task:
     @property
     def _guidelines(self) -> str:
         return """## Guidelines
+0. A general advise is to make a lot of small modification suggestions, otherwise the client will get lost.
+e.g.
+The campaign xy is paused, do you want to enable it?
+I suggest adding new keyword 'my-keyword' to the ad group xy (and the reason why). Do you approve it?
+I suggest removing keyword 'my-keyword' from the ad group xy (and the reason why). Do you approve it?
+
 1. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
 questions using the 'reply_to_client' function.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
@@ -258,7 +266,8 @@ Suggestion: keyword_view table is a good place to start digging for info.
 If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRUE" for filtering.
 
 3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
-clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
+client_approved_modicifation_for_this_resource: boolean)
 This command can only update ads cpc_bid_micros and status
 
 Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
@@ -266,33 +275,35 @@ with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
 4. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
-clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]])
+clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
+client_approved_modicifation_for_this_resource: boolean)
 This command can only update ad groups name, cpc_bid_micros and status
 
 5. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
-clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]])
+clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
+client_approved_modicifation_for_this_resource: boolean)
 This command can only update campaigns name and status
 
 
 6. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
 criterion_id: string, clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
-cpc_bid_micros: Optional[int])
+cpc_bid_micros: Optional[int], client_approved_modicifation_for_this_resource: boolean)
 This command can only update ad group criterion name and status
 
 7. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]])
+status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean)
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
 8. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]])
+status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean)
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
 9. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
-clients_approval_message: string, parent_id: Optional[string])
+clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
@@ -391,10 +402,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         #     work_dir=work_dir, file_name=file_name
         # ),
         "read_file": read_file,
-        "update_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroupAd(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -404,10 +416,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad",
         ),
-        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, ad_id=None, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, ad_id=None, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroup(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -418,10 +431,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad-group",
         ),
-        "update_campaign": lambda customer_id, campaign_id, clients_approval_message, name=None, status=None: google_ads_create_update(
+        "update_campaign": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, name=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=Campaign(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -430,10 +444,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-campaign",
         ),
-        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, clients_approval_message, name=None, status=None, cpc_bid_micros=None: google_ads_create_update(
+        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, client_approved_modicifation_for_this_resource, clients_approval_message, name=None, status=None, cpc_bid_micros=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroupCriterion(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -444,10 +459,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad-group-criterion",
         ),
-        "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+        "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=CampaignCriterion(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -459,10 +475,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/add-negative-keywords-to-campaign",
         ),
-        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, clients_approval_message, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroupCriterion(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -474,10 +491,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/add-keywords-to-ad-group",
         ),
-        "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, parent_id=None: google_ads_create_update(
+        "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, client_approved_modicifation_for_this_resource, parent_id=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=RemoveResource(
                 customer_id=customer_id,
                 resource_id=resource_id,
