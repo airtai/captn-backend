@@ -21,6 +21,7 @@ from ...google_ads.client import (
 )
 from .execution_team import get_read_file
 from .function_configs import (
+    ask_client_for_approval_before_change_making_config,
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
@@ -33,7 +34,7 @@ from .function_configs import (
     update_ad_group_criterion_config,
     update_campaign_config,
 )
-from .functions import reply_to_client_2
+from .functions import ask_client_for_approval_before_change_making, reply_to_client_2
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -54,6 +55,7 @@ class GoogleAdsTeam(Team):
         create_negative_keyword_for_campaign_config,
         create_keyword_for_ad_group_config,
         remove_google_ads_resource_config,
+        ask_client_for_approval_before_change_making_config,
     ]
 
     _shared_system_message = (
@@ -202,6 +204,7 @@ You can NOT execute anything else, so do not suggest changes which you can NOT p
 23. NEVER suggest making changes which you can NOT perform!
 24. IMPORTANT: When ever you want to make some permenent changes (create/update/delete) you need to ask the client
 for the permission! You must tell the client exactly what changes you will make and wait for the permission!
+Use 'ask_client_for_approval_before_change_making' command for that.
 25. If the client does not explicitly tell you which updates to make, you must double check with him
 before you make any changes! e.g. if you receive "optimize campaigns" task, you should analyse what can be done
 and suggest it to the client. If the client approves your suggestion, only then you can perform the updates.
@@ -219,15 +222,20 @@ but the client does NOT need to know all the Google Ads details that you have re
 30. Suggest one change at the time, otherwise the client will get lost
 31. When using 'execute_query' command, try to use as small query as possible and retieve only the needed columns
 32. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
-33. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
+33. Use 'ask_client_for_approval_before_change_making' command only when you have a particualar change you want to make create_*, update_* or remove_*
+and you know exactly which resource (which id) you want to update/remove or you have a suugestion of an resource you want to create
+Otherwise, use 'reply_to_client' command.
+34. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 
-VERY IMPORTANT NOTE:
+VERY IMPORTANT NOTES:
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes
 which we can do right away.
 If you are asked to optimize campaigns, start with creating/removing positive and negative keywords.
+Before making any modifications, you must tell the client which attributes will be
+modified and the values to which these parameters will be set and wait for his approval (for these values)!!
 """
 
     @property
@@ -294,6 +302,12 @@ This command creates (regular and negative) keywords assigned to the ad group
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
 clients_approval_message: string, parent_id: Optional[string])
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
+
+10. 'ask_client_for_approval_before_change_making': Before making any permenant change (create/update/delete), asks the client for approval,
+params: (message: string, command_to_execute: string, command_to_execute: Literal["create", "update", "remove"])
+Use this command only when you already know which resource you want to create - you need to know it's ID, name...
+Do NOT use it for general questions like "Do you want to add new keywords"... The question must be precise and
+the client must be informed about all the parameters which will be set for that resource
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
@@ -486,6 +500,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/remove-google-ads-resource",
         ),
+        "ask_client_for_approval_before_change_making": ask_client_for_approval_before_change_making,
     }
 
     return function_map

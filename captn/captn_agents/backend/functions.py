@@ -20,3 +20,9 @@ def reply_to_client_2(
         "terminate_groupchat": True,
     }
     return return_msg
+
+
+def ask_client_for_approval_before_change_making(
+    message: str, command_to_execute: str, resource_to_modify: str
+) -> Dict[str, Any]:
+    return reply_to_client_2(message=message, is_question=True, completed=False)

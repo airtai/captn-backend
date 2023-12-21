@@ -457,6 +457,32 @@ reply_to_client_2_config = {
     },
 }
 
+ask_client_for_approval_before_change_making_config = {
+    "name": "ask_client_for_approval_before_change_making",
+    "description": """Asks the client if he approves some perticular change""",
+#(Make sure you describe all important parameters from command_input_parametes in the message).""",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string",
+                "description": """Message which asks the client for approval of some perticular change
+You must describe the exact resource which will bre created/updated/removed (which parameter will be set/changed etc.).
+This message should also describe commands input parameters which will be used.""",
+            },
+            "command_to_execute": {
+                "type": "string",
+                "description": """create, update or remove""",
+            },
+            "resource_to_modify": {
+                "type": "string",
+                "description": "Describe the resource which will be modified",
+            },
+        },
+        "required": ["message", "command_to_execute", "resource_to_modify"],
+    },
+}
+
 create_negative_keyword_for_campaign_config = {
     "name": "create_negative_keyword_for_campaign",
     "description": "Creates Negative campaign keywords (CampaignCriterion)",
