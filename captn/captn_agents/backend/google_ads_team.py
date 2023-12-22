@@ -237,6 +237,9 @@ Currently we are in a demo phase and clients need to see what we are CURRENTLY a
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes
 which we can do right away.
 If you are asked to optimize campaigns, start with creating/removing positive and negative keywords.
+ - analyse keywords and find out which are (i)relevant for clients business
+Never reply with "Please give us a moment to do xy". Each of your messages to the client should end with the last sentence
+being a question, where you ask the client for the following things that you should do (except if the client says you are done with all the tasks)
 """
 
     @property
