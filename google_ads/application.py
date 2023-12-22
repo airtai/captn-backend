@@ -587,26 +587,31 @@ async def remove_google_ads_resource(
 
     client = await _get_client(user_id=user_id)
 
-    service = client.get_service(service_operation_and_function_names["service"])
-    operation = client.get_type(service_operation_and_function_names["operation"])
+    try:
+        service = client.get_service(service_operation_and_function_names["service"])
+        operation = client.get_type(service_operation_and_function_names["operation"])
 
-    service_path_function = getattr(
-        service, service_operation_and_function_names["service_path_update_delete"]
-    )
-
-    if model.parent_id is not None:
-        resource_name = service_path_function(
-            model.customer_id, model.parent_id, model.resource_id
+        service_path_function = getattr(
+            service, service_operation_and_function_names["service_path_update_delete"]
         )
-    else:
-        resource_name = service_path_function(model.customer_id, model.resource_id)
-    operation.remove = resource_name
 
-    response = await _mutate(
-        service,
-        service_operation_and_function_names["mutate"],
-        model.customer_id,
-        operation,
-    )
+        if model.parent_id is not None:
+            resource_name = service_path_function(
+                model.customer_id, model.parent_id, model.resource_id
+            )
+        else:
+            resource_name = service_path_function(model.customer_id, model.resource_id)
+        operation.remove = resource_name
+
+        response = await _mutate(
+            service,
+            service_operation_and_function_names["mutate"],
+            model.customer_id,
+            operation,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
 
     return f"Removed {response.results[0].resource_name}."
