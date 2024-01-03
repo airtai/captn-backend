@@ -22,6 +22,15 @@ class AdGroupAd(AdGroup):
     ad_id: str
 
 
+class AdCopy(AdBase):
+    ad_id: str
+    headline: Optional[str] = None
+    description: Optional[str] = None
+    update_existing_position: Optional[int] = None
+    final_urls: Optional[str] = None
+    final_mobile_urls: Optional[str] = None
+
+
 class Criterion(AdBase):
     criterion_id: Optional[str] = None
     keyword_text: Optional[str] = None

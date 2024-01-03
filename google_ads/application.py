@@ -15,6 +15,7 @@ from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
 from .model import (
     AdBase,
+    AdCopy,
     AdGroup,
     AdGroupAd,
     AdGroupCriterion,
@@ -272,20 +273,88 @@ async def _get_client(user_id: int) -> GoogleAdsClient:
     return client
 
 
-def _set_fields(
+def _retrieve_field_mask(
     client: GoogleAdsClient,
-    model_dict: Dict[str, Any],
     operation: Any,
     operation_update: Any,
 ) -> None:
-    for attribute_name, attribute_value in model_dict.items():
-        if attribute_value:
-            setattr(operation_update, attribute_name, attribute_value)
-
     # Retrieve a FieldMask for the fields configured in the campaign/ad_group/ad_group_ad.
     client.copy_from(
         operation.update_mask,
         protobuf_helpers.field_mask(None, operation_update._pb),  # type: ignore[no-untyped-call]
+    )
+
+
+async def _set_fields(
+    client: GoogleAdsClient,
+    model_or_dict: Dict[str, Any],
+    operation: Any,
+    operation_update: Any,
+    user_id: int,
+) -> None:
+    for attribute_name, attribute_value in model_or_dict.items():
+        if attribute_value:
+            setattr(operation_update, attribute_name, attribute_value)
+
+    _retrieve_field_mask(
+        client=client, operation=operation, operation_update=operation_update
+    )
+
+
+async def _set_fields_ad_copy(
+    client: GoogleAdsClient,
+    model_or_dict: AdCopy,
+    operation: Any,
+    operation_update: Any,
+    user_id: int,
+) -> None:
+    # for attribute_name, attribute_value in model_dict.items():
+    #     if attribute_value:
+    #         setattr(operation_update, attribute_name, attribute_value)
+
+    query = f"""SELECT ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions
+FROM ad_group_ad
+WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""
+    search_result = await search(
+        user_id=user_id, customer_ids=[model_or_dict.customer_id], query=query
+    )
+    responsive_search_ad = search_result[model_or_dict.customer_id][0]["adGroupAd"][
+        "ad"
+    ]["responsiveSearchAd"]
+
+    if model_or_dict.headline or model_or_dict.description:
+        updated_fields = []
+        if model_or_dict.headline:
+            update_field = "headlines"
+            new_text = model_or_dict.headline
+        elif model_or_dict.description:
+            update_field = "descriptions"
+            new_text = model_or_dict.description
+
+        for head_or_desc in responsive_search_ad[update_field]:
+            text = head_or_desc["text"]
+            headline_or_description = client.get_type("AdTextAsset")
+            headline_or_description.text = text
+            updated_fields.append(headline_or_description)
+
+        if model_or_dict.update_existing_position is not None:
+            updated_fields[model_or_dict.update_existing_position].text = new_text
+        else:
+            headline_or_description = client.get_type("AdTextAsset")
+            headline_or_description.text = new_text
+            updated_fields.append(headline_or_description)
+
+        getattr(operation_update.responsive_search_ad, update_field).extend(
+            updated_fields
+        )
+
+    if model_or_dict.final_urls:
+        operation_update.final_urls.append(model_or_dict.final_urls)
+    if model_or_dict.final_mobile_urls:
+        operation_update.final_mobile_urls.append(model_or_dict.final_mobile_urls)
+
+    _retrieve_field_mask(
+        client=client, operation=operation, operation_update=operation_update
     )
 
 
@@ -366,11 +435,13 @@ async def _update(
             customer_id, *mandatory_fields_values
         )
 
-        _set_fields(
+        model_or_dict = model if isinstance(model, AdCopy) else model_dict
+        await service_operation_and_function_names["set_fields"](
             client=client,
-            model_dict=model_dict,
+            model_or_dict=model_or_dict,
             operation=operation,
             operation_update=operation_update,
+            user_id=user_id,
         )
 
         response = await _mutate(
@@ -403,6 +474,7 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_campaigns",
         "service_path_create": None,  # TODO
         "service_path_update_delete": "campaign_path",
+        "set_fields": _set_fields,
     },
     "ad_group": {
         "service": "AdGroupService",
@@ -410,12 +482,21 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_ad_groups",
         "service_path_create": "campaign_path",
         "service_path_update_delete": "ad_group_path",
+        "set_fields": _set_fields,
     },
     "ad": {
         "service": "AdGroupAdService",
         "operation": "AdGroupAdOperation",
         "mutate": "mutate_ad_group_ads",
         "service_path_update_delete": "ad_group_ad_path",
+        "set_fields": _set_fields,
+    },
+    "ad_copy": {
+        "service": "AdService",
+        "operation": "AdOperation",
+        "mutate": "mutate_ads",
+        "service_path_update_delete": "ad_path",
+        "set_fields": _set_fields_ad_copy,
     },
     "ad_group_criterion": {
         "service": "AdGroupCriterionService",
@@ -424,6 +505,7 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "service_path_create": "ad_group_path",
         "service_path_update_delete": "ad_group_criterion_path",
         "setattr_func": _keywords_setattr,
+        "set_fields": _set_fields,
     },
     "campaign_criterion": {
         "service": "CampaignCriterionService",
@@ -432,6 +514,7 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "service_path_create": "campaign_path",
         "service_path_update_delete": "campaign_criterion_path",
         "setattr_func": _keywords_setattr,
+        "set_fields": _set_fields,
     },
 }
 
@@ -446,6 +529,22 @@ async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
         model=ad_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id", "ad_id"],
+    )
+
+
+@router.get("/update-ad-copy")
+async def update_ad_copy(user_id: int, ad_model: AdCopy = Depends()) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_copy"]
+
+    if ad_model.headline and ad_model.description:
+        return "You can't modify header and description at the same time. Please modify one at the time."
+
+    return await _update(
+        user_id=user_id,
+        model=ad_model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "ad_id"],
     )
 
 
