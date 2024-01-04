@@ -26,7 +26,8 @@ class AdCopy(AdBase):
     ad_id: str
     headline: Optional[str] = Field(None, max_length=30)
     description: Optional[str] = Field(None, max_length=90)
-    update_existing_index: Optional[int] = None
+    update_existing_headline_index: Optional[int] = None
+    update_existing_description_index: Optional[int] = None
     final_urls: Optional[str] = None
     final_mobile_urls: Optional[str] = None
 

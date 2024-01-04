@@ -78,7 +78,8 @@ When analysing, start with simple queries and use more complex ones only if need
         },
         {
             "Name": "Copywriter",
-            "Description": "You are a Copywriter in the digital agency",
+            "Description": f"""You are a Copywriter in the digital agency
+{_shared_system_message}""",
         },
         {
             "Name": "Digital_strategist",
@@ -231,9 +232,9 @@ suggest which changes could benefit them
 but the client does NOT need to know all the Google Ads details that you have retrieved
 30. Suggest one change at the time, otherwise the client will get lost
 31. When using 'execute_query' command, try to use as small query as possible and retieve only the needed columns
-32. Ad Copy headline can have max 30 characters and description can have max 90 characters, NEVER suggest suggest headlines/descriptions which exceed that length!
+32. Ad Copy headline can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest suggest headlines/descriptions which exceed that length!
 33. If the client sends you invalid headline/description, do not try to modify it yourself! Explain the problems to him and suggest valid headline/description.
-34. Each Ad can have maximum 4 descriptions.
+34. Each Ad can have MAXIMUM 4 descriptions.
 35. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
 36. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
@@ -291,10 +292,9 @@ This command can only update ads cpc_bid_micros and status
 
 4. 'update_ad_copy': Update the Google Ads Copy, params: (customer_id: string, ad_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
-headline: Optional[str], description: Optional[str], update_existing_index: Optional[str],
+headline: Optional[str], description: Optional[str], update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str],
 final_urls: Optional[str], final_mobile_urls: Optional[str])
-Never try to update headline and description at the same time.
-Use 'update_existing_index' if you want to modify existing headline/description.
+Use 'update_existing_headline_index' if you want to modify existing headline and 'update_existing_description_index' to modify existing description.
 
 
 Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
@@ -443,7 +443,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad",
         ),
-        "update_ad_copy": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None, update_existing_index=None, final_urls=None, final_mobile_urls=None: google_ads_create_update(
+        "update_ad_copy": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None, update_existing_headline_index=None, update_existing_description_index=None, final_urls=None, final_mobile_urls=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
@@ -453,7 +453,8 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 ad_id=ad_id,
                 headline=headline,
                 description=description,
-                update_existing_index=update_existing_index,
+                update_existing_headline_index=update_existing_headline_index,
+                update_existing_description_index=update_existing_description_index,
                 final_urls=final_urls,
                 final_mobile_urls=final_mobile_urls,
             ),

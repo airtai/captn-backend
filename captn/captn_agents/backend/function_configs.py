@@ -511,9 +511,13 @@ Client must be informed about everything!""",
                 "type": "string",
                 "description": "Ad Copy Description, max_length=90",
             },
-            "update_existing_index": {
+            "update_existing_headline_index": {
                 "type": "string",
-                "description": "List index of the headline/description which needs to be updated.",
+                "description": "Index in the headlines list which needs to be updated. Index starts from 0.",
+            },
+            "update_existing_description_index": {
+                "type": "string",
+                "description": "Index in the descriptions list which needs to be updated. Index starts from 0.",
             },
             "final_urls": {
                 "type": "string",

@@ -1,7 +1,7 @@
 import json
 import urllib.parse
 from os import environ
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 from asyncer import asyncify
@@ -301,6 +301,32 @@ async def _set_fields(
     )
 
 
+def _set_headline_or_description(
+    client: GoogleAdsClient,
+    operation_update: Any,
+    update_field: str,
+    new_text: str,
+    update_existing_index: Optional[int],
+    responsive_search_ad: Dict[str, Any],
+) -> None:
+    updated_fields = []
+
+    for head_or_desc in responsive_search_ad[update_field]:
+        text = head_or_desc["text"]
+        headline_or_description = client.get_type("AdTextAsset")
+        headline_or_description.text = text
+        updated_fields.append(headline_or_description)
+
+    if update_existing_index is not None:
+        updated_fields[update_existing_index].text = new_text
+    else:
+        headline_or_description = client.get_type("AdTextAsset")
+        headline_or_description.text = new_text
+        updated_fields.append(headline_or_description)
+
+    getattr(operation_update.responsive_search_ad, update_field).extend(updated_fields)
+
+
 async def _set_fields_ad_copy(
     client: GoogleAdsClient,
     model_or_dict: AdCopy,
@@ -312,41 +338,40 @@ async def _set_fields_ad_copy(
     #     if attribute_value:
     #         setattr(operation_update, attribute_name, attribute_value)
 
-    query = f"""SELECT ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions
+    if model_or_dict.headline or model_or_dict.description:
+        query = f"""SELECT ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions
 FROM ad_group_ad
 WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
-    search_result = await search(
-        user_id=user_id, customer_ids=[model_or_dict.customer_id], query=query
-    )
-    responsive_search_ad = search_result[model_or_dict.customer_id][0]["adGroupAd"][
-        "ad"
-    ]["responsiveSearchAd"]
+        search_result = await search(
+            user_id=user_id, customer_ids=[model_or_dict.customer_id], query=query
+        )
+        responsive_search_ad = search_result[model_or_dict.customer_id][0]["adGroupAd"][
+            "ad"
+        ]["responsiveSearchAd"]
 
-    if model_or_dict.headline or model_or_dict.description:
-        updated_fields = []
         if model_or_dict.headline:
             update_field = "headlines"
             new_text = model_or_dict.headline
-        elif model_or_dict.description:
+            _set_headline_or_description(
+                client=client,
+                operation_update=operation_update,
+                update_field=update_field,
+                new_text=new_text,
+                update_existing_index=model_or_dict.update_existing_headline_index,
+                responsive_search_ad=responsive_search_ad,
+            )
+
+        if model_or_dict.description:
             update_field = "descriptions"
             new_text = model_or_dict.description
-
-        for head_or_desc in responsive_search_ad[update_field]:
-            text = head_or_desc["text"]
-            headline_or_description = client.get_type("AdTextAsset")
-            headline_or_description.text = text
-            updated_fields.append(headline_or_description)
-
-        if model_or_dict.update_existing_index is not None:
-            updated_fields[model_or_dict.update_existing_index].text = new_text
-        else:
-            headline_or_description = client.get_type("AdTextAsset")
-            headline_or_description.text = new_text
-            updated_fields.append(headline_or_description)
-
-        getattr(operation_update.responsive_search_ad, update_field).extend(
-            updated_fields
-        )
+            _set_headline_or_description(
+                client=client,
+                operation_update=operation_update,
+                update_field=update_field,
+                new_text=new_text,
+                update_existing_index=model_or_dict.update_existing_description_index,
+                responsive_search_ad=responsive_search_ad,
+            )
 
     if model_or_dict.final_urls:
         operation_update.final_urls.append(model_or_dict.final_urls)
@@ -536,9 +561,6 @@ async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
 async def update_ad_copy(user_id: int, ad_model: AdCopy = Depends()) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_copy"]
-
-    if ad_model.headline and ad_model.description:
-        return "You can't modify header and description at the same time. Please modify one at the time."
 
     return await _update(
         user_id=user_id,
