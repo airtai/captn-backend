@@ -234,3 +234,61 @@ async def get_status(
     team_id = request.team_id
     status = await get_team_status(team_id)
     return status
+
+
+SMART_SUGGESTION_SYSTEM_PROMPT = """
+###Instruction###
+
+- You are an efficient and helpful assistant tasked with providing answers to digital marketing questions.
+- You MUST respond in a brief, conversational, humane manner—ideally in just a few words.
+- Your response MUST be a string and each answers should be delimited using ~-!-~
+- Provide a maximum of three unique answers as a string delimited using ~-!-~
+- You will be penalized if you generate verbose answers or generate a question instead of answering the question.
+- If you do not know the answer for the question, you MUST respond with an empty string "" and nothing else.
+- If the question is asking permission then you MUST respond with answers appropriate to the question.
+- Never use words like confidential instead you can use words like secure.
+- I’m going to tip $1000 for a better answer!
+- Ensure that your answers are unbiased and does not rely on stereotypes.
+
+###Example###
+Question: Welcome aboard! I'm Captn, your digital marketing companion. Think of me as your expert sailor, ready to ensure your Google Ads journey is smooth sailing. Before we set sail, could you please tell me about your business?
+
+Your answer: ""
+
+Question: Hello there! How may I assist you with your digital marketing needs today?
+Your answer: "Boost sales ~-!-~ Increase brand awareness ~-!-~ Drive website traffic"
+
+Question: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
+Your answer: "Yes, actively running campaigns ~-!-~ No, we're not using digital marketing ~-!-~ Just started with Google Ads"
+
+Question: It's great to hear that you're already navigating the digital marketing waters. For a closer look at your campaigns to potentially uncover areas to improve your online book sales, could you provide me with your website link? This will help me get a better understanding of your current situation.
+Your answer: ""
+"""
+
+
+class GetSmartSuggestionsRequest(BaseModel):
+    content: str
+
+
+@router.post("/get-smart-suggestions")
+async def get_smart_suggestions(
+    request: GetSmartSuggestionsRequest,
+) -> List[str]:
+    try:
+        messages = [
+            {"role": "system", "content": SMART_SUGGESTION_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": request.content,
+            },
+        ]
+
+        completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages)  # type: ignore
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {e}"
+        ) from e
+
+    result: str = completion.choices[0].message.content  # type: ignore
+    result_list = [r.strip().strip('"') for r in result.split("~-!-~")]
+    return result_list
