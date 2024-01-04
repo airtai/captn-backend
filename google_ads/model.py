@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AdBase(BaseModel):
@@ -24,9 +24,9 @@ class AdGroupAd(AdGroup):
 
 class AdCopy(AdBase):
     ad_id: str
-    headline: Optional[str] = None
-    description: Optional[str] = None
-    update_existing_position: Optional[int] = None
+    headline: Optional[str] = Field(None, max_length=30)
+    description: Optional[str] = Field(None, max_length=90)
+    update_existing_index: Optional[int] = None
     final_urls: Optional[str] = None
     final_mobile_urls: Optional[str] = None
 

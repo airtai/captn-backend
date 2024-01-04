@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from google_ads.model import (
+    AdCopy,
     AdGroup,
     AdGroupAd,
     AdGroupCriterion,
@@ -29,6 +30,7 @@ from .function_configs import (
     remove_google_ads_resource_config,
     reply_to_client_2_config,
     update_ad_config,
+    update_ad_copy_config,
     update_ad_group_config,
     update_ad_group_criterion_config,
     update_campaign_config,
@@ -54,6 +56,7 @@ class GoogleAdsTeam(Team):
         create_negative_keyword_for_campaign_config,
         create_keyword_for_ad_group_config,
         remove_google_ads_resource_config,
+        update_ad_copy_config,
     ]
 
     _shared_system_message = (
@@ -201,11 +204,12 @@ You can NOT execute anything else, so do not suggest changes which you can NOT p
 21. Here is a list of thing which you can and can NOT do, NEVER suggest making changes of the things you can NOT do:
 - You CAN retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - You CAN update the status (ENABLED / PAUSED) of the campaign, ad group and ad
+- You CAN update Ad Copy
 - You CAN create new keywords (but you can NOT update them)
 - You CAN remove campaign/ ad group / ad / positive and negative keywords
 - You CAN NOT CREATE new ads / ad groups (you can just update the existing ones)
-- You can NOT update keywords
-- You can NOT make any changes with the Targeting settings (Demographic, Location, Device...), Ad Copy, Budgeting and Ad Scheduling! So do not suggest these changes!
+- You CAN NOT update keywords
+- You CAN NOT make any changes with the Targeting settings (Demographic, Location, Device...), Budgeting and Ad Scheduling! So do not suggest these changes!
 22. You can retrieve negative keywords from the 'campaign_criterion' table (so do not just check the
 'ad_group_criterion' table and give up if there are not in that table)
 23. NEVER suggest making changes which you can NOT perform!
@@ -227,8 +231,11 @@ suggest which changes could benefit them
 but the client does NOT need to know all the Google Ads details that you have retrieved
 30. Suggest one change at the time, otherwise the client will get lost
 31. When using 'execute_query' command, try to use as small query as possible and retieve only the needed columns
-32. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
-33. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
+32. Ad Copy headline can have max 30 characters and description can have max 90 characters, NEVER suggest suggest headlines/descriptions which exceed that length!
+33. If the client sends you invalid headline/description, do not try to modify it yourself! Explain the problems to him and suggest valid headline/description.
+34. Each Ad can have maximum 4 descriptions.
+35. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
+36. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 
@@ -236,8 +243,9 @@ VERY IMPORTANT NOTE:
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes
 which we can do right away.
-If you are asked to optimize campaigns, start with creating/removing positive and negative keywords.
+If you are asked to optimize campaigns, start with creating/removing positive and negative keywords or updating ad copy.
  - analyse keywords and find out which are (i)relevant for clients business
+ - Take a look at ad copy (headlines, descriptions, urls...) and make suggestions what should be changed
 Never reply with "Please give us a moment to do xy". Each of your messages to the client should end with the last sentence
 being a question, where you ask the client for the following things that you should do (except if the client says you are done with all the tasks)
 """
@@ -281,38 +289,46 @@ clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optiona
 client_approved_modicifation_for_this_resource: boolean)
 This command can only update ads cpc_bid_micros and status
 
+4. 'update_ad_copy': Update the Google Ads Copy, params: (customer_id: string, ad_id: string,
+clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
+headline: Optional[str], description: Optional[str], update_existing_index: Optional[str],
+final_urls: Optional[str], final_mobile_urls: Optional[str])
+Never try to update headline and description at the same time.
+Use 'update_existing_index' if you want to modify existing headline/description.
+
+
 Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
 with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
-4. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
+5. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
 clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
 client_approved_modicifation_for_this_resource: boolean)
 This command can only update ad groups name, cpc_bid_micros and status
 
-5. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
+6. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
 clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 client_approved_modicifation_for_this_resource: boolean)
 This command can only update campaigns name and status
 
 
-6. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
+7. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
 criterion_id: string, clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 cpc_bid_micros: Optional[int], client_approved_modicifation_for_this_resource: boolean)
 This command can only update ad group criterion name and status
 
-7. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
+8. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean)
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
-8. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
+9. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean)
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
-9. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
+10. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
 clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
@@ -426,6 +442,22 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 status=status,
             ),
             endpoint="/update-ad",
+        ),
+        "update_ad_copy": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None, update_existing_index=None, final_urls=None, final_mobile_urls=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            ad=AdCopy(
+                customer_id=customer_id,
+                ad_id=ad_id,
+                headline=headline,
+                description=description,
+                update_existing_index=update_existing_index,
+                final_urls=final_urls,
+                final_mobile_urls=final_mobile_urls,
+            ),
+            endpoint="/update-ad-copy",
         ),
         "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, ad_id=None, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,

@@ -314,7 +314,7 @@ async def _set_fields_ad_copy(
 
     query = f"""SELECT ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions
 FROM ad_group_ad
-WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""
+WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
     search_result = await search(
         user_id=user_id, customer_ids=[model_or_dict.customer_id], query=query
     )
@@ -337,8 +337,8 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""
             headline_or_description.text = text
             updated_fields.append(headline_or_description)
 
-        if model_or_dict.update_existing_position is not None:
-            updated_fields[model_or_dict.update_existing_position].text = new_text
+        if model_or_dict.update_existing_index is not None:
+            updated_fields[model_or_dict.update_existing_index].text = new_text
         else:
             headline_or_description = client.get_type("AdTextAsset")
             headline_or_description.text = new_text
