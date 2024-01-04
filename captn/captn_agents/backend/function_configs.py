@@ -479,6 +479,66 @@ Client must be informed about everything!""",
     },
 }
 
+update_ad_copy_config = {
+    "name": "update_ad_copy",
+    "description": "Update Google Ads Ad Copy",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "ad_id": {
+                "type": "string",
+                "description": "Id of the Ad",
+            },
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
+            },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
+            "headline": {
+                "type": "string",
+                "description": "Ad Copy Headline, max_length=30",
+            },
+            "description": {
+                "type": "string",
+                "description": "Ad Copy Description, max_length=90",
+            },
+            "update_existing_headline_index": {
+                "type": "string",
+                "description": """Index in the headlines list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing headline!""",
+            },
+            "update_existing_description_index": {
+                "type": "string",
+                "description": """Index in the descriptions list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing description!""",
+            },
+            "final_urls": {
+                "type": "string",
+                "description": "Ad Copy final_urls",
+            },
+            "final_mobile_urls": {
+                "type": "string",
+                "description": "Ad Copy final_mobile_urls",
+            },
+        },
+        "required": [
+            "customer_id",
+            "ad_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
 
 reply_to_client_2_config = {
     "name": "reply_to_client",

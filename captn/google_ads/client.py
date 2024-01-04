@@ -16,8 +16,9 @@ def get_google_ads_team_capability() -> str:
     capabilities = [
         "Accessing detailed information about campaigns, ad groups, ads, and keywords.",
         "Modifying the status (ENABLED/PAUSED) of campaigns, ad groups, and ads.",
-        "Creating new keywords for existing campaigns",
-        "Removing campaigns/ ad groups / ads / positive and negative keywords",
+        "Creating new keywords for existing campaigns.",
+        "Removing campaigns/ ad groups / ads / positive and negative keywords.",
+        "Updating Ad Copies.",
     ]
 
     return prefix + "- " + "\n- ".join(capabilities)
