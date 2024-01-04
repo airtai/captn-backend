@@ -513,11 +513,13 @@ Client must be informed about everything!""",
             },
             "update_existing_headline_index": {
                 "type": "string",
-                "description": "Index in the headlines list which needs to be updated. Index starts from 0.",
+                "description": """Index in the headlines list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing headline!""",
             },
             "update_existing_description_index": {
                 "type": "string",
-                "description": "Index in the descriptions list which needs to be updated. Index starts from 0.",
+                "description": """Index in the descriptions list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing description!""",
             },
             "final_urls": {
                 "type": "string",
