@@ -54,7 +54,7 @@ GUIDELINES:
 - Use 'get_digital_marketing_campaign_support': Utilize 'get_digital_marketing_campaign_support' for applying your capabilities.
 - Confidentiality: Avoid disclosing the use of 'get_digital_marketing_campaign_support' to the customer.
 - Customer Approval: Always seek the customer's approval before taking any actions.
-- One Question at a Time: To avoid confusion and engage the user effectively, ask the customer only one question at a time. You can follow up with more questions based on the customer's response.
+- One Question at a Time: You MUST ask only one question at once. You will be penalized if you ask more than one question at once to the customer.
 - Markdown Formatting: Format your responses in markdown for an accessible presentation on the web.
 - Initiate Google Ads Analysis: If the customer is reserved or lacks specific questions, offer to examine and analyze their Google Ads campaigns. No need to ask for customer details; Captn AI can access all necessary information with the user's permission for campaign analysis.
 - Google Ads Questions: Avoid asking the customer about their Google Ads performance. Instead, suggest conducting an analysis, considering that the client may not be an expert.
@@ -118,7 +118,7 @@ FUNCTIONS = [
 
 ADDITIONAL_SYSTEM_MSG = """
 Additional guidelines:
-- To avoid confusion and engage the user effectively, ask the customer only one question at a time. You can follow up with more questions based on the customer's response.
+- You will be penalized if you ask more than one question at once to the customer.
 - Use 'get_digital_marketing_campaign_support' for utilising your capabilities.
 - Use the "get_digital_marketing_campaign_support" function only when necessary, based strictly on the customer's latest message. Do not reference past conversations. This is an unbreakable rule.
 - If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
@@ -234,3 +234,64 @@ async def get_status(
     team_id = request.team_id
     status = await get_team_status(team_id)
     return status
+
+
+SMART_SUGGESTION_SYSTEM_PROMPT = """
+###Instruction###
+
+- You are an efficient and helpful assistant tasked with providing answers to digital marketing questions.
+- You MUST respond in a brief, conversational, humane manner—ideally in just a few words.
+- Your MUST respond as if you are answering a question asked by someone else.
+- Your response MUST be a string and each answers should be delimited using ~-!-~
+- Provide a maximum of three unique answers as a string delimited using ~-!-~
+- You will be penalized if you generate verbose answers or generate a question instead of answering the question.
+- If you do not know the answer for the question, you MUST respond with an empty string "" and nothing else.
+- If the question is asking permission then you MUST respond with answers appropriate to the question.
+- Never use words like confidential instead you can use words like secure.
+- I’m going to tip $1000 for a better answer!
+- Ensure that your answers are unbiased and does not rely on stereotypes.
+
+###Example###
+Question: Welcome aboard! I'm Captn, your digital marketing companion. Think of me as your expert sailor, ready to ensure your Google Ads journey is smooth sailing. Before we set sail, could you please tell me about your business?
+
+Your answer: ""
+
+Question: Hello there! How may I assist you with your digital marketing needs today?
+Your answer: "Boost sales ~-!-~ Increase brand awareness ~-!-~ Drive website traffic"
+
+Question: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
+Your answer: "Yes, actively running campaigns ~-!-~ No, we're not using digital marketing ~-!-~ Just started with Google Ads"
+
+Question: It's great to hear that you're already navigating the digital marketing waters. For a closer look at your campaigns to potentially uncover areas to improve your online book sales, could you provide me with your website link? This will help me get a better understanding of your current situation.
+Your answer: ""
+
+Question: Optimization completed. This should help improve the relevance of your ads to your flower shop business. Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
+Your answer: "Not at the moment ~-!-~ Continue optimizing"
+"""
+
+
+class GetSmartSuggestionsRequest(BaseModel):
+    content: str
+
+
+@router.post("/get-smart-suggestions")
+async def get_smart_suggestions(
+    request: GetSmartSuggestionsRequest,
+) -> List[str]:
+    try:
+        messages = [
+            {"role": "system", "content": SMART_SUGGESTION_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": request.content,
+            },
+        ]
+        completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages)  # type: ignore
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {e}"
+        ) from e
+
+    result: str = completion.choices[0].message.content  # type: ignore
+    result_list = [r.strip().replace('"', "") for r in result.split("~-!-~")]
+    return result_list
