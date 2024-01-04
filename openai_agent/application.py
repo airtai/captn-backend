@@ -124,6 +124,28 @@ Additional guidelines:
 - If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
 """
 
+# SMART_SUGGESTION_PROMPT = """
+# Generate a few answers seperated by ~-!-~ for the above chat history.
+# Your answers MUST be unique and brief ideally in just a few words.
+# You MUST respond as if you are answering a question asked by someone else.
+# You will be penalized if you generate verbose answers or provide incorrect/false answers.
+# If you do not know the answer, you MUST respond with an empty string "" and nothing else. Example, if the recent chat is asking for website link, or asking about your business
+# If the recent chat is asking permission then you MUST respond with answers appropriate to the question.
+# I’m going to tip $1000 for a better answer!
+# Ensure that your answers are unbiased and does not rely on stereotypes.
+# """
+
+SMART_SUGGESTION_PROMPT = """
+Respond with atmost three distinct answers to the above question.
+Seperate your answers by ~-!-~
+Your answers MUST be unique and brief ideally in just a few words.
+You will be penalized if you generate verbose answers or if your answers convey similar meanings.
+Do not end your answers with a period.
+If the question is asking for permission. Provide answers that are both affermative and negative.
+You MUST respond as if you are answering a question asked by someone else.
+You MUST respond with an empty string "" without the ~-!-~ for open-ended questions like tell me your website link or tell me more about your business.
+"""
+
 
 async def _get_openai_response(
     user_id: int,
@@ -169,7 +191,30 @@ async def _get_openai_response(
         return function_response
     else:
         result = completion.choices[0].message.content
-        return {"content": result}
+        messages = messages + [
+            {
+                "role": "assistant",
+                "content": result,
+            },
+            {
+                "role": "user",
+                "content": SMART_SUGGESTION_PROMPT,
+            },
+        ]
+        try:
+            smart_suggestion_completion = await aclient.chat.completions.create(
+                model=environ.get("AZURE_MODEL"), messages=messages
+            )
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Internal server error: {e}"
+            ) from e
+
+        smart_suggestion_results = smart_suggestion_completion.choices[
+            0
+        ].message.content
+        return {"content": result + "~-!-~smart suggestions~-!-~" + smart_suggestion_results }
 
 
 async def _user_response_to_agent(
@@ -278,20 +323,21 @@ class GetSmartSuggestionsRequest(BaseModel):
 async def get_smart_suggestions(
     request: GetSmartSuggestionsRequest,
 ) -> List[str]:
-    try:
-        messages = [
-            {"role": "system", "content": SMART_SUGGESTION_SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": request.content,
-            },
-        ]
-        completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages)  # type: ignore
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Internal server error: {e}"
-        ) from e
+    return [""]
+    # try:
+    #     messages = [
+    #         {"role": "system", "content": SMART_SUGGESTION_SYSTEM_PROMPT},
+    #         {
+    #             "role": "user",
+    #             "content": request.content,
+    #         },
+    #     ]
+    #     completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages)  # type: ignore
+    # except Exception as e:
+    #     raise HTTPException(
+    #         status_code=500, detail=f"Internal server error: {e}"
+    #     ) from e
 
-    result: str = completion.choices[0].message.content  # type: ignore
-    result_list = [r.strip().replace('"', "") for r in result.split("~-!-~")]
-    return result_list
+    # result: str = completion.choices[0].message.content  # type: ignore
+    # result_list = [r.strip().replace('"', "") for r in result.split("~-!-~")]
+    # return result_list
