@@ -193,7 +193,8 @@ Also, make sure that you explicitly tell the client which changes you want to ma
 14. The client can NOT see your conversation, he only receives the message which you send him by using the
 'reply_to_client' command
 15. Whenever you use a 'reply_to_client' command, your team is on the break until you get the response from the client.
-So use this command only when you have a question or some result for the client
+Use this command only when you have a question or some result for the client and do NOT send messages like:
+"Please give us a moment to do xy" or "We are working on it".
 16. If it seems like the converation with the client is over (He sends you "Thank you", "ok" etc.),
 use 'reply_to_client' command with the following message: "If there are any other tasks or questions, we are ready to assist."
 17. Do not overthink for general questions about the Google Ads, the team can discuss the task a bit,
@@ -266,6 +267,12 @@ Never reference 'client' within the message:
 e.g. "We need to ask client for the approval" should be changed to "Do you approve these changes?"
 'smart_suggestions' must contain explicit commands which the client can accept. e.g.: ["Yes", "No", "I approve", "I do not approve"].
 Do NOT create smart suggestions which require sub-questions e.g. ["I have an idea"].
+You should never suggest open ended questions or questions which require the clients input. In that case return empty list as a 'smart_suggestions' parameter.
+Never suggest multiple (almost) similar suggestions. e.g.: ["Yes", "Yes, I approve", "I approve"].
+When you expect some headlines/keywords etc. from the client, you can use 'smart_suggestions' to suggest them, 
+and you should also add something like "Can you please make some suggestions?".
+Also when a task is finished, you should use 'smart_suggestions' to suggest the next steps to the client.
+Each smart suggestion should focus only on one thing. e.g.: "Update ad copy" is a good suggestion, but "Update ad copy and add new keywords" is not.
 
 2. read_file: Read an existing file, params: (filename: string)
 
