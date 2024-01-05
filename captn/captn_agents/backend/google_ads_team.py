@@ -272,7 +272,7 @@ Never suggest multiple (almost) similar suggestions. e.g.: ["Yes", "Yes, I appro
 When you expect some headlines/keywords etc. from the client, you can use 'smart_suggestions' to suggest them, 
 and you should also add something like "Can you please make some suggestions?".
 Also when a task is finished, you should use 'smart_suggestions' to suggest the next steps to the client.
-Each smart suggestion should gocus only on one thing. e.g.: "Update ad copy" is a good suggestion, but "Update ad copy and add new keywords" is not.
+Each smart suggestion should focus only on one thing. e.g.: "Update ad copy" is a good suggestion, but "Update ad copy and add new keywords" is not.
 
 2. read_file: Read an existing file, params: (filename: string)
 
