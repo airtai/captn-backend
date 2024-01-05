@@ -550,6 +550,12 @@ reply_to_client_2_config = {
                 "type": "string",
                 "description": "Message for the client",
             },
+            "smart_suggestions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": """List of quick replies which the client can use for incoming message. e.g. ['Yes', 'No'].
+If you do not want to use smart suggestions, set this parameter to an empty list: []""",
+            },
             "is_question": {
                 "type": "boolean",
                 "description": "Is the message a question for additional info from the client",
@@ -559,7 +565,7 @@ reply_to_client_2_config = {
                 "description": "Has the team completed the task or are they waiting for additional info",
             },
         },
-        "required": ["message", "is_question", "completed"],
+        "required": ["message", "is_question", "completed", "smart_suggestions"],
     },
 }
 
