@@ -15,9 +15,6 @@ def reply_to_client_2(
     completed: bool,
     smart_suggestions: List[Optional[str]],
 ) -> Dict[str, Any]:
-    # REMOVE THIS LINE!!!!
-    message += "\n\nSMART SUGGESTIONS:\n" + str(smart_suggestions)
-
     return_msg = {
         "message": message,
         "smart_suggestions": smart_suggestions,

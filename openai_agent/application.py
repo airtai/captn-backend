@@ -294,7 +294,7 @@ class GetTeamStatusRequest(BaseModel):
 @router.post("/get-team-status")
 async def get_status(
     request: GetTeamStatusRequest,
-) -> Dict[str, Union[str, bool, int]]:
+) -> Dict[str, Union[str, bool, int, List[str]]]:
     team_id = request.team_id
     status = await get_team_status(team_id)
     return status
