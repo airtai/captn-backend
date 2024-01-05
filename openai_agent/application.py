@@ -73,7 +73,7 @@ async def get_digital_marketing_campaign_support(
     chat_id: int,
     customer_brief: str,
     background_tasks: BackgroundTasks,
-) -> Dict[str, Union[Optional[str], int]]:
+) -> Dict[str, Union[Optional[str], int, List[str]]]:
     # team_name = f"GoogleAdsAgent_{conv_id}"
     team_name = TEAM_NAME.format(user_id, chat_id)
     await create_team(user_id, chat_id, customer_brief, team_name, background_tasks)
@@ -124,17 +124,6 @@ Additional guidelines:
 - If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
 """
 
-# SMART_SUGGESTION_PROMPT = """
-# Generate a few answers seperated by ~-!-~ for the above chat history.
-# Your answers MUST be unique and brief ideally in just a few words.
-# You MUST respond as if you are answering a question asked by someone else.
-# You will be penalized if you generate verbose answers or provide incorrect/false answers.
-# If you do not know the answer, you MUST respond with an empty string "" and nothing else. Example, if the recent chat is asking for website link, or asking about your business
-# If the recent chat is asking permission then you MUST respond with answers appropriate to the question.
-# I’m going to tip $1000 for a better answer!
-# Ensure that your answers are unbiased and does not rely on stereotypes.
-# """
-
 SMART_SUGGESTION_PROMPT = """
 ###Instruction###
 
@@ -142,14 +131,15 @@ SMART_SUGGESTION_PROMPT = """
 - Seperate your answers by ~-!-~
 - Your answers MUST be unique and brief ideally in as little few words as possible. Preferrably with affermative and negative answers.
 - You will be penalized if you are not responding in a tone if you are answering a question asked by someone else.
-- You will be penalized if you use your or you're in your answers or offer assistance in your answers.
+- You will be penalized if your answer contains "your" or "you're" or your answers offer assistance.
 - You will be penalized if you generate verbose answers or if your answers convey similar meanings.
 - Do not end your answers with a period.
 - If the question is asking for permission. Provide answers that are both affermative and negative.
+- You MUST respond to questions that are asking for your marketing goals. Else you will be penalized.
 - You MUST respond with an empty string "" without the ~-!-~ for open-ended questions like tell me your website link or tell me more about your business.
 
 ###Example###
-Question: Hello there! How may I assist you with your digital marketing needs today?
+Question: What goals do you have for your marketing efforts?
 Your answer: "Boost sales ~-!-~ Increase brand awareness ~-!-~ Drive website traffic"
 
 Question: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
@@ -167,50 +157,6 @@ Your answer: "No further assistance needed ~-!-~ Yes, please help me with campai
 Question: When you're ready to optimize, I'm here to help chart the course to smoother waters for your online sales.
 Your answer: "No further assistance needed ~-!-~ Yes, please help me with campaign optimization"
 """
-
-# SMART_SUGGESTION_PROMPT = """
-# ###Instruction###
-
-# - You are an efficient and helpful assistant tasked with providing answers to digital marketing questions.
-# - You MUST respond in a brief, conversational, humane manner—ideally in just a few words.
-# - Your MUST respond as if you are answering a question asked by someone else.
-# - Your response MUST be a string and each answers should be delimited using ~-!-~
-# - Provide a maximum of three unique answers as a string delimited using ~-!-~
-# - You will be penalized if you generate verbose answers or generate a question instead of answering the question.
-# - If you do not know the answer for the question, you MUST respond with an empty string "" and nothing else.
-# - If the question is asking permission then you MUST respond with answers appropriate to the question.
-# - Never use words like confidential instead you can use words like secure.
-# - I’m going to tip $1000 for a better answer!
-# - Ensure that your answers are unbiased and does not rely on stereotypes.
-
-# ###Example###
-# Question: Welcome aboard! I'm Captn, your digital marketing companion. Think of me as your expert sailor, ready to ensure your Google Ads journey is smooth sailing. Before we set sail, could you please tell me about your business?
-# Your answer: ""
-
-# Question: Hello there! How may I assist you with your digital marketing needs today?
-# Your answer: "Boost sales ~-!-~ Increase brand awareness ~-!-~ Drive website traffic"
-
-# Question: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
-# Your answer: "Yes, actively running campaigns ~-!-~ No, we're not using digital marketing ~-!-~ Just started with Google Ads"
-
-# Question: It's great to hear that you're already navigating the digital marketing waters. For a closer look at your campaigns to potentially uncover areas to improve your online book sales, could you provide me with your website link? This will help me get a better understanding of your current situation.
-# Your answer: ""
-
-# Question: Optimization completed. This should help improve the relevance of your ads to your flower shop business. Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
-# Your answer: "Not at the moment ~-!-~ Continue optimizing"
-# """
-
-# SMART_SUGGESTION_PROMPT = """
-# ###Instruction###
-
-# - Provide a maximum of three distinct answers to the above question, separated by ~-!-~
-# - Ensure unique, concise answers with affirmative and negative options. Avoid similarity.
-# - You will be penalized if you are not maintaining an appropriate tone when answering the questions.
-# - Omit periods at the end of your responses.
-# - For permission-related questions, give both affirmative and negative answers.
-# - You MUST respond with an empty string "" without the ~-!-~ for open-ended questions like tell me your website link or tell me more about your business.
-
-# """
 
 
 async def _get_openai_response(
@@ -256,7 +202,7 @@ async def _get_openai_response(
         )
         return function_response
     else:
-        result = completion.choices[0].message.content
+        result: str = completion.choices[0].message.content  # type: ignore
         messages = messages + [
             {
                 "role": "assistant",
@@ -269,7 +215,7 @@ async def _get_openai_response(
         ]
         try:
             smart_suggestion_completion = await aclient.chat.completions.create(
-                model=environ.get("AZURE_MODEL"), messages=messages
+                model=environ.get("AZURE_MODEL"), messages=messages  # type: ignore
             )
 
         except Exception as e:
@@ -280,11 +226,14 @@ async def _get_openai_response(
         smart_suggestion_results = smart_suggestion_completion.choices[
             0
         ].message.content
-        print("*" *20)
-        print(smart_suggestion_results)
         # return {"content": result}
-        smart_suggestion_results = smart_suggestion_results if smart_suggestion_results else ""
-        return {"content": result, "smart_suggestions": smart_suggestion_results.split("~-!-~")}
+        smart_suggestion_results = (
+            smart_suggestion_results if smart_suggestion_results else ""
+        )
+        smart_suggestions_list = [
+            r.strip().replace('"', "") for r in smart_suggestion_results.split("~-!-~")
+        ]
+        return {"content": result, "smart_suggestions": smart_suggestions_list}
 
 
 async def _user_response_to_agent(
@@ -335,8 +284,7 @@ async def chat(
             request.user_id, chat_id, message, background_tasks
         )
     )
-    print(result)
-    return result
+    return result  # type: ignore
 
 
 class GetTeamStatusRequest(BaseModel):
@@ -350,65 +298,3 @@ async def get_status(
     team_id = request.team_id
     status = await get_team_status(team_id)
     return status
-
-
-SMART_SUGGESTION_SYSTEM_PROMPT = """
-###Instruction###
-
-- You are an efficient and helpful assistant tasked with providing answers to digital marketing questions.
-- You MUST respond in a brief, conversational, humane manner—ideally in just a few words.
-- Your MUST respond as if you are answering a question asked by someone else.
-- Your response MUST be a string and each answers should be delimited using ~-!-~
-- Provide a maximum of three unique answers as a string delimited using ~-!-~
-- You will be penalized if you generate verbose answers or generate a question instead of answering the question.
-- If you do not know the answer for the question, you MUST respond with an empty string "" and nothing else.
-- If the question is asking permission then you MUST respond with answers appropriate to the question.
-- Never use words like confidential instead you can use words like secure.
-- I’m going to tip $1000 for a better answer!
-- Ensure that your answers are unbiased and does not rely on stereotypes.
-
-###Example###
-Question: Welcome aboard! I'm Captn, your digital marketing companion. Think of me as your expert sailor, ready to ensure your Google Ads journey is smooth sailing. Before we set sail, could you please tell me about your business?
-
-Your answer: ""
-
-Question: Hello there! How may I assist you with your digital marketing needs today?
-Your answer: "Boost sales ~-!-~ Increase brand awareness ~-!-~ Drive website traffic"
-
-Question: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
-Your answer: "Yes, actively running campaigns ~-!-~ No, we're not using digital marketing ~-!-~ Just started with Google Ads"
-
-Question: It's great to hear that you're already navigating the digital marketing waters. For a closer look at your campaigns to potentially uncover areas to improve your online book sales, could you provide me with your website link? This will help me get a better understanding of your current situation.
-Your answer: ""
-
-Question: Optimization completed. This should help improve the relevance of your ads to your flower shop business. Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
-Your answer: "Not at the moment ~-!-~ Continue optimizing"
-"""
-
-
-class GetSmartSuggestionsRequest(BaseModel):
-    content: str
-
-
-@router.post("/get-smart-suggestions")
-async def get_smart_suggestions(
-    request: GetSmartSuggestionsRequest,
-) -> List[str]:
-    return [""]
-    # try:
-    #     messages = [
-    #         {"role": "system", "content": SMART_SUGGESTION_SYSTEM_PROMPT},
-    #         {
-    #             "role": "user",
-    #             "content": request.content,
-    #         },
-    #     ]
-    #     completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages)  # type: ignore
-    # except Exception as e:
-    #     raise HTTPException(
-    #         status_code=500, detail=f"Internal server error: {e}"
-    #     ) from e
-
-    # result: str = completion.choices[0].message.content  # type: ignore
-    # result_list = [r.strip().replace('"', "") for r in result.split("~-!-~")]
-    # return result_list
