@@ -479,6 +479,66 @@ Client must be informed about everything!""",
     },
 }
 
+update_ad_copy_config = {
+    "name": "update_ad_copy",
+    "description": "Update Google Ads Ad Copy",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer",
+            },
+            "ad_id": {
+                "type": "string",
+                "description": "Id of the Ad",
+            },
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Client approval message",
+            },
+            "client_approved_modicifation_for_this_resource": {
+                "type": "boolean",
+                "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+            },
+            "headline": {
+                "type": "string",
+                "description": "Ad Copy Headline, max_length=30",
+            },
+            "description": {
+                "type": "string",
+                "description": "Ad Copy Description, max_length=90",
+            },
+            "update_existing_headline_index": {
+                "type": "string",
+                "description": """Index in the headlines list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing headline!""",
+            },
+            "update_existing_description_index": {
+                "type": "string",
+                "description": """Index in the descriptions list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing description!""",
+            },
+            "final_urls": {
+                "type": "string",
+                "description": "Ad Copy final_urls",
+            },
+            "final_mobile_urls": {
+                "type": "string",
+                "description": "Ad Copy final_mobile_urls",
+            },
+        },
+        "required": [
+            "customer_id",
+            "ad_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
 
 reply_to_client_2_config = {
     "name": "reply_to_client",
@@ -490,6 +550,12 @@ reply_to_client_2_config = {
                 "type": "string",
                 "description": "Message for the client",
             },
+            "smart_suggestions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": """List of quick replies which the client can use for incoming message. e.g. ['Yes', 'No'].
+If you do not want to use smart suggestions, set this parameter to an empty list: []""",
+            },
             "is_question": {
                 "type": "boolean",
                 "description": "Is the message a question for additional info from the client",
@@ -499,7 +565,7 @@ reply_to_client_2_config = {
                 "description": "Has the team completed the task or are they waiting for additional info",
             },
         },
-        "required": ["message", "is_question", "completed"],
+        "required": ["message", "is_question", "completed", "smart_suggestions"],
     },
 }
 
