@@ -542,7 +542,26 @@ Use this parameter ONLY when you want to modify existing description!""",
 
 reply_to_client_2_config = {
     "name": "reply_to_client",
-    "description": "Respond to the client (answer to his task or question for additional information)",
+    "description": """Respond to the client (answer to his task or question for additional information).
+If you want to suggest some changes to the client, you can use smart suggestions.
+But do NOT use smart suggestions for questions which require clients input!
+
+Here is a list of things which you CAN do:
+- retrieve the information about your campaigns, ad groups, ads, keywords etc.
+- update the status (ENABLED / PAUSED) of the campaign, ad group and ad
+- update Ad Copy
+- create new keywords (but you can NOT update them)
+- remove campaign/ ad group / ad / positive and negative keywords
+
+Here is a list of thing which you can NOT do, NEVER suggest making changes of the things you can NOT do:
+- CREATE new ads / ad groups (you can just update the existing ones)
+- update keywords
+- remove ad headlines / descriptions (you can just update the existing ones or add new ones)
+You CAN NOT make ANY (create/update/remove) changes for the following:
+- Targeting settings
+- Ad Extensions
+- Budgeting
+- Ad Scheduling""",
     "parameters": {
         "type": "object",
         "properties": {
@@ -553,8 +572,20 @@ reply_to_client_2_config = {
             "smart_suggestions": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": """List of quick replies which the client can use for incoming message. e.g. ['Yes', 'No'].
-If you do not want to use smart suggestions, set this parameter to an empty list: []""",
+                "description": """List of quick replies which the client can use for replying to the incoming message.
+These suggestions will be displayed to the client and he can click on them (the suggestions represents the clients replies to the message),
+so never use word 'client' within the suggestions or "I need more information about your bussines", otherwise you will be penalized!
+smart suggestions must contain explicit commands which the client can accept. e.g.: ["Yes", "No", "I approve", "I do not approve"].
+Do NOT use smart suggestions which require sub-questions e.g. ["I have an idea"] or ["I have a specific xy in mind."],
+for that kind of replies the client will use chat box and reply manually, smart suggestions can NOT and should NOT be used for that.
+Smart suggestions should NOT be open ended questions or questions which require the clients input.
+If the clients input is required, smart suggestions should be an empty list or it should have an option which will guide the client with examples e.g.:
+["Can you please make some suggestions?"] etc.
+Never suggest multiple (almost) similar suggestions. e.g.: ["Yes", "Yes, I approve", "I approve"].
+When you expect some headlines/keywords etc. from the client, you can use smart suggestions to suggest them,
+and you should also add smart suggestion like "Can you please make some suggestions?".
+Also when a task is finished, smart suggestions should suggest the next steps to the client.
+Each smart suggestion should focus only on one thing. e.g.: "Update ad copy" is a good suggestion, but "Update ad copy and add new keywords" is not.""",
             },
             "is_question": {
                 "type": "boolean",
