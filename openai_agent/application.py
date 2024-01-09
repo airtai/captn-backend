@@ -156,7 +156,7 @@ is_open_ended_query: false
 answer_to_customer_query: Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
 is_open_ended_query: false
 
-answer_to_customer_query: answer_to_customer_query: Brilliant! Having a website is like having an online flagship ready to showcase your floral wonders. Could you please share the link to your website? It'll help me to better understand your online presence.
+answer_to_customer_query: answer_to_customer_query: Could you please share the link to your website?
 is_open_ended_query: true
 
 answer_to_customer_query: Do you have a website?
@@ -224,6 +224,7 @@ async def _get_openai_response(
     chat_id: int,
     message: List[Dict[str, str]],
     background_tasks: BackgroundTasks,
+    max_retry: int = 3,
 ) -> Dict[str, Union[Optional[str], int, List[str]]]:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
@@ -269,8 +270,12 @@ async def _get_openai_response(
             )
         return function_response  # type: ignore
     else:
-        result: str = completion.choices[0].message.content  # type: ignore
-        return {"content": result, "smart_suggestions": [""]}
+        if max_retry < 1:
+            result: str = completion.choices[0].message.content  # type: ignore
+            return {"content": result, "smart_suggestions": [""]}
+        return await _get_openai_response(
+            user_id, chat_id, message, background_tasks, max_retry - 1
+        )
 
 
 async def _user_response_to_agent(
