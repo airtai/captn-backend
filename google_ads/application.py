@@ -557,8 +557,8 @@ async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
     )
 
 
-@router.get("/update-ad-copy")
-async def update_ad_copy(user_id: int, ad_model: AdCopy = Depends()) -> str:
+@router.get("/create-update-ad-copy")
+async def create_update_ad_copy(user_id: int, ad_model: AdCopy = Depends()) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_copy"]
 

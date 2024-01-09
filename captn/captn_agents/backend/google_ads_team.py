@@ -22,6 +22,7 @@ from ...google_ads.client import (
 )
 from .execution_team import get_read_file
 from .function_configs import (
+    create_ad_copy_headline_or_description_config,
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
@@ -57,6 +58,7 @@ class GoogleAdsTeam(Team):
         create_keyword_for_ad_group_config,
         remove_google_ads_resource_config,
         update_ad_copy_config,
+        create_ad_copy_headline_or_description_config,
     ]
 
     _shared_system_message = (
@@ -285,16 +287,15 @@ clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optiona
 client_approved_modicifation_for_this_resource: boolean)
 This command can only update ads cpc_bid_micros and status
 
+Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
+with the 'execute_query' command and the following 'query':
+"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
+
 4. 'update_ad_copy': Update the Google Ads Copy, params: (customer_id: string, ad_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 headline: Optional[str], description: Optional[str], update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str],
 final_urls: Optional[str], final_mobile_urls: Optional[str])
-Use 'update_existing_headline_index' if you want to modify existing headline and 'update_existing_description_index' to modify existing description.
-
-
-Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
-with the 'execute_query' command and the following 'query':
-"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
+Use 'update_existing_headline_index' if you want to modify existing headline and/or 'update_existing_description_index' to modify existing description.
 
 5. 'update_ad_group': Update the Google Ads Grooup, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
 clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
@@ -323,7 +324,11 @@ status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
-10. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
+10. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the Google Ads Copy, params: (customer_id: string, ad_id: string,
+clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
+headline: Optional[str], description: Optional[str])
+
+11. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
 clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
@@ -438,7 +443,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/update-ad",
         ),
-        "update_ad_copy": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None, update_existing_headline_index=None, update_existing_description_index=None, final_urls=None, final_mobile_urls=None: google_ads_create_update(
+        "create_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
@@ -448,13 +453,14 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 ad_id=ad_id,
                 headline=headline,
                 description=description,
-                update_existing_headline_index=update_existing_headline_index,
-                update_existing_description_index=update_existing_description_index,
-                final_urls=final_urls,
-                final_mobile_urls=final_mobile_urls,
+                update_existing_headline_index=None,
+                update_existing_description_index=None,
+                final_urls=None,
+                final_mobile_urls=None,
             ),
-            endpoint="/update-ad-copy",
+            endpoint="/create-update-ad-copy",
         ),
+        "update_ad_copy": _get_update_ad_copy(user_id, conv_id),
         "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, ad_id=None, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
@@ -546,6 +552,65 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
     }
 
     return function_map
+
+
+def _get_update_ad_copy(
+    user_id: int, conv_id: int
+) -> Callable[
+    [
+        str,
+        str,
+        str,
+        bool,
+        Optional[str],
+        Optional[str],
+        Optional[int],
+        Optional[int],
+        Optional[str],
+        Optional[str],
+    ],
+    Union[Dict[str, Any], str],
+]:
+    def _update_ad_copy(
+        customer_id: str,
+        ad_id: str,
+        clients_approval_message: str,
+        client_approved_modicifation_for_this_resource: bool,
+        headline: Optional[str] = None,
+        description: Optional[str] = None,
+        update_existing_headline_index: Optional[int] = None,
+        update_existing_description_index: Optional[int] = None,
+        final_urls: Optional[str] = None,
+        final_mobile_urls: Optional[str] = None,
+    ) -> Union[Dict[str, Any], str]:
+        if headline and not update_existing_headline_index:
+            raise ValueError(
+                "If you want to update existing headline, you must specify update_existing_headline_index"
+            )
+        if description and not update_existing_description_index:
+            raise ValueError(
+                "If you want to update existing description, you must specify update_existing_description_index"
+            )
+
+        return google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            ad=AdCopy(
+                customer_id=customer_id,
+                ad_id=ad_id,
+                headline=headline,
+                description=description,
+                update_existing_headline_index=update_existing_headline_index,
+                update_existing_description_index=update_existing_description_index,
+                final_urls=final_urls,
+                final_mobile_urls=final_mobile_urls,
+            ),
+            endpoint="/create-update-ad-copy",
+        )
+
+    return _update_ad_copy
 
 
 def get_create_google_ads_team(
