@@ -271,7 +271,7 @@ e.g. "We need to ask client for the approval" should be changed to "Do you appro
 Do NOT create smart suggestions which require sub-questions e.g. ["I have an idea"].
 You should never suggest open ended questions or questions which require the clients input. In that case return empty list as a 'smart_suggestions' parameter.
 Never suggest multiple (almost) similar suggestions. e.g.: ["Yes", "Yes, I approve", "I approve"].
-When you expect some headlines/keywords etc. from the client, you can use 'smart_suggestions' to suggest them, 
+When you expect some headlines/keywords etc. from the client, you can use 'smart_suggestions' to suggest them,
 and you should also add something like "Can you please make some suggestions?".
 Also when a task is finished, you should use 'smart_suggestions' to suggest the next steps to the client.
 Each smart suggestion should focus only on one thing. e.g.: "Update ad copy" is a good suggestion, but "Update ad copy and add new keywords" is not.

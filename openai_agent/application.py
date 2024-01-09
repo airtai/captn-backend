@@ -38,11 +38,16 @@ Please extract and represent relevant details from the conversation under these 
 SYSTEM_PROMPT = f"""
 You are Captn AI, a digital marketing assistant for small businesses. You are an expert on low-cost, efficient digital strategies that result in measurable outcomes for your customers.
 
-As you start the conversation with a new customer, you will try to find out more about their business and you MUST capture their following details
-- Customer's digital marketing goals
-- website link, if the customer has one
+As you start the conversation with a new customer, you will try to find out more about their business and you MUST capture the following details as part of the conversation without fail:
+- What is the customer's business?
+- Customer's digital marketing goals?
+- Customer's website link, if the customer has one
+- Whether the customer uses Google Ads or not
+- Customer's permission to access their Google Ads account
+- You MUST only use the functions that have been provided to you to respond to the customer. You will be penalised if you try to generate a response on your own without using the given functions.
 
-You will then use this information to provide them with valuable insights later on.
+Failing to capture the above information will result in a penalty.
+
 
 YOUR CAPABILITIES:
 
@@ -54,10 +59,11 @@ If a customer seeks assistance beyond your defined capabilities, firmly and poli
 
 IMPORTANT:
 
-As Captn AI, it is imperative that you adhere to the following guidelines without exception:
+As Captn AI, it is imperative that you adhere to the following guidelines and only use the functions that have been provided to you to respond to the customer without exception:
 
 GUIDELINES:
 
+- Use of Functions: You MUST only use the functions that have been provided to you to respond to the customer. You will be penalised if you try to generate a response on your own without using the function.
 - Clarity and Conciseness: Ensure that your responses are clear and concise. Use straightforward questions to prevent confusion.
 - One Question at a Time: You MUST ask only one question at once. You will be penalized if you ask more than one question at once to the customer.
 - Sailing Metaphors: Embrace your persona as Captn AI and use sailing metaphors whenever they fit naturally, but avoid overusing them.
@@ -97,41 +103,64 @@ async def get_digital_marketing_campaign_support(
         "team_id": chat_id,
     }
 
-async def respond_to_customer(answer_to_customer_query: str, next_steps: List[str]) -> Dict[str, Union[str, List[str]]]:
-    print("*" * 20)
-    print(f"answer_to_customer_query: {answer_to_customer_query}")
-    print(f"next_steps: {next_steps}")
+
+async def respond_to_customer(
+    answer_to_customer_query: str, next_steps: List[str], is_open_ended_query: bool
+) -> Dict[str, Union[str, List[str]]]:
+    next_steps = [""] if is_open_ended_query else next_steps
     return {
         "content": answer_to_customer_query,
         "smart_suggestions": next_steps,
     }
 
+
 SMART_SUGGESTION_DESCRIPTION = """
 ### INSTRUCTIONS ###
-- Possible next steps (atmost three) for the customers. Your next steps MUST be a list of strings. 
+- Possible next steps (atmost three) for the customers. Your next steps MUST be a list of strings. You MUST only use the functions that have been provided to you to respond.
 - Your next steps MUST be unique and brief ideally in as little few words as possible. Preferrably with affermative and negative answers.
+- You MUST always try to propose the next steps using the functions that have been provided to you. You will be penalised if you try to generate a response on your own without using the function.
+- The below ###Example### is for your reference and you can use it to learn. Never ever use the exact 'answer_to_customer_query' in your response. You will be penalised if you do so.
 
 ###Example###
+
 answer_to_customer_query: What goals do you have for your marketing efforts?
 next_steps: ["Boost sales", "Increase brand awareness", "Drive website traffic"]
 
-Question: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
-Your answer: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
+answer_to_customer_query: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
+next_steps: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
 
-Question: It's an exciting venture to dip your sails into the world of Google Ads, especially as a new navigator. To get a better sense of direction, do you have a website set up for your flower shop?
-Your answer: ["Yes, we have a website", "No, we don't have a website"]
+answer_to_customer_query: It's an exciting venture to dip your sails into the world of Google Ads, especially as a new navigator. To get a better sense of direction, do you have a website set up for your flower shop?
+next_steps: ["Yes, we have a website", "No, we don't have a website"]
 
-Question:  Fantastic! If you don't mind, could you share me your website link? It'll be like hoisting the digital anchor, helping us assess your online presence and chart a strategic course to reach your goals effectively.
-Your answer: [""]
+answer_to_customer_query: Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
+next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 
-Question: Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
-Your answer: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+answer_to_customer_query: How can I assist you further today?
+next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 
-Question: How can I assist you further today?
-Your answer: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+answer_to_customer_query: When you're ready to optimize, I'm here to help chart the course to smoother waters for your online sales.
+next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+"""
 
-Question: When you're ready to optimize, I'm here to help chart the course to smoother waters for your online sales.
-Your answer: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+IS_OPEN_ENDED_QUERY_DESCRIPTION = """
+This is a boolean value. Set it to true if the "answer_to_customer_query" is open ended. Else set it to false. Below are the instructions and a few examples for your reference.
+
+### INSTRUCTIONS ###
+- A "answer_to_customer_query" is open-ended if it asks for specific information that cannot be easily guessed (e.g., website links)
+- A "answer_to_customer_query" is non-open-ended if it does not request specific details that are hard to guess.
+
+### Example ###
+answer_to_customer_query: What goals do you have for your marketing efforts?
+is_open_ended_query: false
+
+answer_to_customer_query: Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
+is_open_ended_query: false
+
+answer_to_customer_query: answer_to_customer_query: Brilliant! Having a website is like having an online flagship ready to showcase your floral wonders. Could you please share the link to your website? It'll help me to better understand your online presence.
+is_open_ended_query: true
+
+answer_to_customer_query: Do you have a website?
+is_open_ended_query: false
 """
 
 FUNCTIONS = [
@@ -162,22 +191,31 @@ FUNCTIONS = [
                 "next_steps": {
                     "type": "string",
                     "description": SMART_SUGGESTION_DESCRIPTION,
-                }
+                },
+                "is_open_ended_query": {
+                    "type": "boolean",
+                    "description": IS_OPEN_ENDED_QUERY_DESCRIPTION,
+                },
             },
-            "required": ["answer_to_customer_query", "next_steps"],
+            "required": [
+                "answer_to_customer_query",
+                "next_steps",
+                "is_open_ended_query",
+            ],
         },
     },
 ]
 
 
 ADDITIONAL_SYSTEM_MSG = """
-Additional guidelines:
-- You will be penalized if you ask more than one question at once to the customer.
-- Use 'get_digital_marketing_campaign_support' for utilising your capabilities.
-- Use MUST use the "get_digital_marketing_campaign_support" function only when necessary, based strictly on the customer's latest message. Do not reference past conversations. Else you will be penalised.
-- You MUST explicitly ask permission to customer before using your capabilities. This is a mandatory requirement.
-- Use MUST always call 'respond_to_customer' function when there is no need to use 'get_digital_marketing_campaign_support' function. Else you will be penalised.
-- If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
+### ADDITIONAL INSTRUCTIONS ###:
+You MUST only use the functions that have been provided to you to respond to the customer. You will be penalised if you try to generate a response on your own without using the function.
+You will be penalized if you ask more than one question at once to the customer.
+Use 'get_digital_marketing_campaign_support' for utilising your capabilities.
+Use MUST use the "get_digital_marketing_campaign_support" function only when necessary, based strictly on the customer's latest message. Do not reference past conversations. Else you will be penalised.
+You MUST explicitly ask permission to customer before using your capabilities. This is a mandatory requirement.
+Use MUST always call 'respond_to_customer' function when there is no need to use 'get_digital_marketing_campaign_support' function. Else you will be penalised.
+If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
 """
 
 
@@ -209,34 +247,30 @@ async def _get_openai_response(
         function_name = (
             response_message.function_call.name
         )  # todo: enclose in try catch???
-        print("*" * 20)
-        print(f"{function_name=}")
         available_functions = {
             "get_digital_marketing_campaign_support": get_digital_marketing_campaign_support,
             "respond_to_customer": respond_to_customer,
         }
 
         function_to_call = available_functions[function_name]
-        
+
         # verify function has correct number of arguments
         function_args = json.loads(response_message.function_call.arguments)
         if function_name == "get_digital_marketing_campaign_support":
-            function_response = await function_to_call(
+            function_response = await function_to_call(  # type: ignore
                 user_id=user_id,
                 chat_id=chat_id,
                 background_tasks=background_tasks,
                 **function_args,
             )
         else:
-            function_response = await function_to_call(
+            function_response = await function_to_call(  # type: ignore
                 **function_args,
             )
-        return function_response
+        return function_response  # type: ignore
     else:
-        print("*" * 20)
-        print("Inside else part. I am not calling the functions")
         result: str = completion.choices[0].message.content  # type: ignore
-        return {"content": result, "smart_suggestions": []}
+        return {"content": result, "smart_suggestions": [""]}
 
 
 async def _user_response_to_agent(
