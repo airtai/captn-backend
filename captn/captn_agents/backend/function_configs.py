@@ -559,34 +559,49 @@ Do NOT suggest making changes of the following things:
                 "type": "string",
                 "description": "Message for the client",
             },
-            "smart_suggestions": {
+            "smart_suggestions_list": {
                 "type": "array",
                 "items": {"type": "string"},
                 "description": """List of quick replies which the client can use for replying to the incoming message.
 These suggestions will be displayed to the client and he can click on them (the suggestions represents the clients replies to the message),
 so never use word 'client' within the suggestions or "I need more information about your bussines", otherwise you will be penalized!
-smart suggestions must contain explicit commands which the client can accept. e.g.: ["Yes", "No", "I approve", "I do not approve"].
+smart suggestions must contain explicit commands which the client can accept. e.g.: ["Yes", "No"].
 Do NOT use smart suggestions which require sub-questions e.g. ["I have an idea"] or ["I have a specific xy in mind."],
 for that kind of replies the client will use chat box and reply manually, smart suggestions can NOT and should NOT be used for that.
 Smart suggestions should NOT be open ended questions or questions which require the clients input.
 If the clients input is required, smart suggestions should be an empty list or it should have an option which will guide the client with examples e.g.:
 ["Can you please make some suggestions?"] etc.
-Never suggest multiple (almost) similar suggestions. e.g.: ["Yes", "Yes, I approve", "I approve"].
+Never suggest multiple (almost) similar suggestions. e.g.: ["Yes, I approve", "I approve"].
 When you expect some headlines/keywords etc. from the client, you can use smart suggestions to suggest them,
 and you should also add smart suggestion like "Can you please make some suggestions?".
 Also when a task is finished, smart suggestions should suggest the next steps to the client.
-Each smart suggestion should focus only on one thing. e.g.: "Update ad copy" is a good suggestion, but "Update ad copy and add new keywords" is not.""",
+Each smart suggestion should focus only on one thing. e.g.: "Update ad copy xy" is a good suggestion, but "Update ad copy xy and add new keywords yz" is not.
+When there are multiple changes possible, create multiple suggestions like "Add keyword x", "Add keyword y".
+Do NOT suggest changing multiple things as one suggestion. e.g.: "Add all keywords" is not a good suggestion.
+Be precise and specific with your suggestions. e.g.: "Add keyword x" is a good suggestion, but "Add keyword" is not.""",
             },
-            "is_question": {
-                "type": "boolean",
-                "description": "Is the message a question for additional info from the client",
+            "suggestions_type": {
+                "type": "string",
+                "description": """Type of the smart suggestions.
+One of the following: Literal['Button', 'Checkbox'].
+If suggestions_type is 'Button', the client can click on only one suggestion.
+If suggestions_type is 'Checkbox', the client can click on multiple suggestions.
+Use Chceckbox for suggestions which are not mutually exclusive and for smaller tasks for the same resource (e.g. ["Add keyword x", "Add keyword y"]).
+Use Button for suggestions which are mutually exclusive and for bigger tasks
+(e.g. 'Add new keywords', 'Remove a keyword', 'Change match type', 'Optimize ad copy').
+Use Button when one of the suggestions is a question, e.g.: ["Can you please make some suggestions?"].""",
             },
             "completed": {
                 "type": "boolean",
                 "description": "Has the team completed the task or are they waiting for additional info",
             },
         },
-        "required": ["message", "is_question", "completed", "smart_suggestions"],
+        "required": [
+            "message",
+            "completed",
+            "smart_suggestions_list",
+            "suggestions_type",
+        ],
     },
 }
 

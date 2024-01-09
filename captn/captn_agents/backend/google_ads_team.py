@@ -101,7 +101,7 @@ is executed, you must write down the accomplished work and forward it to the cli
 
 Once the initial task given to the team is completed by implementing proposed solutions, you must write down the
 accomplished work and execute the 'reply_to_client' command. That message will be forwarded to the client so make
-sure it is understandable by non-experts. When possible, use 'smart_suggestions' in the 'reply_to_client' command to suggest the next steps to the client.
+sure it is understandable by non-experts. When possible, use 'smart_suggestions_list' in the 'reply_to_client' command to suggest the next steps to the client.
 """,
         },
     ]
@@ -261,7 +261,8 @@ Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
 All team members have access to the following command:
-1. reply_to_client: Ask the client for additional information, params: (message: string, is_question: bool, completed: bool, smart_suggestions: List[Optional[str]])
+1. reply_to_client: Ask the client for additional information, params: (message: string, completed: bool, smart_suggestions_list: List[str],
+suggestions_type: Literal['Button', 'Checkbox'])
 The 'message' parameter must contain all information useful to the client, because the client does not see your team's conversation (only the information sent in the 'message' parameter)
 As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
 Never reference 'client' within the message:
