@@ -287,42 +287,67 @@ analyze_query_response_config = {
     },
 }
 
+
+properties_config = {
+    "customer_id": {
+        "type": "string",
+        "description": "Id of the customer",
+    },
+    "campaign_id": {
+        "type": "string",
+        "description": "Id of the campaign",
+    },
+    "ad_group_id": {
+        "type": "string",
+        "description": "Id of the Ad group",
+    },
+    "ad_id": {
+        "type": "string",
+        "description": "Id of the Ad",
+    },
+    "clients_approval_message": {
+        "type": "string",
+        "description": "Client approval message",
+    },
+    "client_approved_modicifation_for_this_resource": {
+        "type": "boolean",
+        "description": """The team must inform the client about all changes which will be made
+and which values will be modified (e.g. name, status...).
+Client must be informed about everything!""",
+    },
+    "cpc_bid_micros": {
+        "type": "integer",
+        "description": "Cost per click bid micros",
+    },
+    "headline": {
+        "type": "string",
+        "description": "Ad Copy Headline, max_length=30",
+    },
+    "description": {
+        "type": "string",
+        "description": "Ad Copy Description, max_length=90",
+    },
+}
+
+
 update_ad_group_config = {
     "name": "update_ad_group",
     "description": "Update Google Ad Group",
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
-            "ad_group_id": {
-                "type": "string",
-                "description": "Id of the Ad group",
-            },
-            "ad_id": {
-                "type": "string",
-                "description": "Id of the Ad",
-            },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
+            "customer_id": properties_config["customer_id"],
+            "ad_group_id": properties_config["ad_group_id"],
+            "ad_id": properties_config["ad_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
             },
-            "cpc_bid_micros": {
-                "type": "integer",
-                "description": "Cost per click bid micros",
-            },
+            "cpc_bid_micros": properties_config["cpc_bid_micros"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -344,32 +369,14 @@ update_ad_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
-            "ad_group_id": {
-                "type": "string",
-                "description": "Id of the Ad group",
-            },
-            "ad_id": {
-                "type": "string",
-                "description": "Id of the Ad",
-            },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
-            "cpc_bid_micros": {
-                "type": "integer",
-                "description": "Cost per click bid micros",
-            },
+            "customer_id": properties_config["customer_id"],
+            "ad_group_id": properties_config["ad_group_id"],
+            "ad_id": properties_config["ad_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "cpc_bid_micros": properties_config["cpc_bid_micros"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -392,24 +399,12 @@ update_campaign_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
-            "campaign_id": {
-                "type": "string",
-                "description": "Id of the campaign",
-            },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
+            "customer_id": properties_config["customer_id"],
+            "campaign_id": properties_config["campaign_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -434,28 +429,16 @@ update_ad_group_criterion_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
-            "ad_group_id": {
-                "type": "string",
-                "description": "Id of the Ad group",
-            },
+            "customer_id": properties_config["customer_id"],
+            "ad_group_id": properties_config["ad_group_id"],
             "criterion_id": {
                 "type": "string",
                 "description": "Id of the Ad group criterion",
             },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -464,15 +447,36 @@ Client must be informed about everything!""",
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
-            "cpc_bid_micros": {
-                "type": "integer",
-                "description": "Cost per click bid micros",
-            },
+            "cpc_bid_micros": properties_config["cpc_bid_micros"],
         },
         "required": [
             "customer_id",
             "ad_group_id",
             "criterion_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
+create_ad_copy_headline_or_description_config = {
+    "name": "create_ad_copy_headline_or_description",
+    "description": " Create new headline and/or description in the the Google Ads Copy",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "ad_id": properties_config["ad_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "headline": properties_config["headline"],
+            "description": properties_config["description"],
+        },
+        "required": [
+            "customer_id",
+            "ad_id",
             "clients_approval_message",
             "client_approved_modicifation_for_this_resource",
         ],
@@ -485,32 +489,14 @@ update_ad_copy_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
-            "ad_id": {
-                "type": "string",
-                "description": "Id of the Ad",
-            },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
-            "headline": {
-                "type": "string",
-                "description": "Ad Copy Headline, max_length=30",
-            },
-            "description": {
-                "type": "string",
-                "description": "Ad Copy Description, max_length=90",
-            },
+            "customer_id": properties_config["customer_id"],
+            "ad_id": properties_config["ad_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "headline": properties_config["headline"],
+            "description": properties_config["description"],
             "update_existing_headline_index": {
                 "type": "string",
                 "description": """Index in the headlines list which needs to be updated. Index starts from 0.
@@ -557,7 +543,7 @@ Here is a list of thing which you can NOT do, NEVER suggest making changes of th
 - CREATE new ads / ad groups (you can just update the existing ones)
 - update keywords
 - remove ad headlines / descriptions (you can just update the existing ones or add new ones)
-You CAN NOT make ANY (create/update/remove) changes for the following:
+Do NOT suggest making changes of the following things:
 - Targeting settings
 - Ad Extensions
 - Budgeting
@@ -606,24 +592,12 @@ create_negative_keyword_for_campaign_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
-            "campaign_id": {
-                "type": "string",
-                "description": "Id of the campaign",
-            },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
+            "customer_id": properties_config["customer_id"],
+            "campaign_id": properties_config["campaign_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -662,24 +636,12 @@ create_keyword_for_ad_group_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
-            "ad_group_id": {
-                "type": "string",
-                "description": "Id of the Ad group",
-            },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
+            "customer_id": properties_config["customer_id"],
+            "ad_group_id": properties_config["ad_group_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -718,10 +680,7 @@ remove_google_ads_resource_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "customer_id": {
-                "type": "string",
-                "description": "Id of the customer",
-            },
+            "customer_id": properties_config["customer_id"],
             "resource_id": {
                 "type": "string",
                 "description": "Id of the resource which will be removed",
@@ -731,16 +690,10 @@ remove_google_ads_resource_config = {
                 "description": """One of the following:
 Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion']""",
             },
-            "clients_approval_message": {
-                "type": "string",
-                "description": "Client approval message",
-            },
-            "client_approved_modicifation_for_this_resource": {
-                "type": "boolean",
-                "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
-Client must be informed about everything!""",
-            },
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
             "parent_id": {
                 "type": "string",
                 "description": """Id of the parent resorce, campaign and ad group do not have parent,
