@@ -107,8 +107,12 @@ async def get_digital_marketing_campaign_support(
 
 
 async def respond_to_customer(
-    answer_to_customer_query: str, next_steps: List[str], is_open_ended_query: bool
+    answer_to_customer_query: str,
+    next_steps: List[str],
+    next_steps_type: str,
+    is_open_ended_query: bool,
 ) -> Dict[str, Union[str, List[str]]]:
+    # smart_suggestions = SmartSuggestions(suggestions=next_steps, suggestions_type = next_steps_type)
     next_steps = [""] if is_open_ended_query else next_steps
     return {
         "content": answer_to_customer_query,
@@ -165,6 +169,24 @@ answer_to_customer_query: Do you have a website?
 is_open_ended_query: false
 """
 
+SMART_SUGGESTION_TYPE_DESCRIPTION = """
+- Can have either 'Button' or 'Checkbox' as valid response.
+- If 'next_steps' includes options that are binary 'yes or no' then return 'Button.' else return 'Checkbox.'
+
+### Example ###
+next_steps: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
+next_steps_type: "Checkbox"
+
+next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+next_steps_type: "Button"
+
+next_steps: ["Boost sales", "Increase brand awareness", "Drive website traffic"]
+next_steps_type: "Checkbox"
+
+next_steps: ["No, I'm not ready for that", "Yes, you have my permission"]
+next_steps_type: "Button"
+"""
+
 FUNCTIONS = [
     {
         "name": "get_digital_marketing_campaign_support",
@@ -194,6 +216,10 @@ FUNCTIONS = [
                     "type": "string",
                     "description": SMART_SUGGESTION_DESCRIPTION,
                 },
+                "next_steps_type": {
+                    "type": "string",
+                    "description": SMART_SUGGESTION_TYPE_DESCRIPTION,
+                },
                 "is_open_ended_query": {
                     "type": "boolean",
                     "description": IS_OPEN_ENDED_QUERY_DESCRIPTION,
@@ -202,6 +228,7 @@ FUNCTIONS = [
             "required": [
                 "answer_to_customer_query",
                 "next_steps",
+                "next_steps_type",
                 "is_open_ended_query",
             ],
         },
