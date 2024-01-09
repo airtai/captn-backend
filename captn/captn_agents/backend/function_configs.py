@@ -307,7 +307,9 @@ properties_config = {
     },
     "clients_approval_message": {
         "type": "string",
-        "description": "Client approval message",
+        "description": """Clients approval message.
+This message is sent by the client to the team when he approves the changes.
+NEVER create this message automatically, or modify it in any way! Otherwise you will be penalized!""",
     },
     "client_approved_modicifation_for_this_resource": {
         "type": "boolean",
@@ -461,7 +463,8 @@ update_ad_group_criterion_config = {
 
 create_ad_copy_headline_or_description_config = {
     "name": "create_ad_copy_headline_or_description",
-    "description": " Create new headline and/or description in the the Google Ads Copy",
+    "description": """Create NEW headline and/or description in the the Google Ads Copy.
+This method should NOT be used for updating existing headlines or descriptions.""",
     "parameters": {
         "type": "object",
         "properties": {
@@ -485,7 +488,8 @@ create_ad_copy_headline_or_description_config = {
 
 update_ad_copy_config = {
     "name": "update_ad_copy",
-    "description": "Update Google Ads Ad Copy",
+    "description": """Updates existing Google Ads Ad Copy.
+Use 'update_existing_headline_index' if you want to modify existing headline and/or 'update_existing_description_index' to modify existing description.""",
     "parameters": {
         "type": "object",
         "properties": {
