@@ -299,6 +299,12 @@ The following command make permanent changes. In all of them you must use the fo
 - client_approved_modicifation_for_this_resource: You should set this to True only when the client approves the modification
 of ALL attributes for resource which will be modified/created
 
+If you want to make any kind of permanent changes, you MUST ask the client for approval before you make any changes!
+You must explicitly tell the client which changes you want to make, which resource will be affected and wait for the permission!
+Also, if you receive a message like "I want to Add new headlines and Add new descriptions" from the client,
+the first step is to suggest which changes you want to make and wait for the permission.
+Only after you get the permission, you can make the changes.
+
 3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
 clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
 client_approved_modicifation_for_this_resource: boolean)
