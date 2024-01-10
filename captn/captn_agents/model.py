@@ -25,10 +25,11 @@ type_description = """Type of the smart suggestions.
 One of the following: Literal['oneOf', 'manyOf'].
 If 'type' is 'oneOf', the client can click on only one suggestion.
 If 'type' is 'manyOf', the client can click on multiple suggestions.
-Use Chceckbox for suggestions which are not mutually exclusive and for smaller tasks for the same resource (e.g. ["Add keyword x", "Add keyword y"]).
+Use 'manyOf' for suggestions which are not mutually exclusive and for smaller tasks for the same resource
+(e.g. ["Add keyword x", "Add keyword y"] or ['Suggest new headlines for the ad', 'Suggest new descriptions for the ad']).
 Use 'oneOf' for suggestions which are mutually exclusive and for bigger tasks
 (e.g. 'Add new keywords', 'Remove a keyword', 'Change match type', 'Optimize ad copy').
-Also, use it when one of the suggestions is a question, e.g.: ["Can you please make some suggestions?"]."""
+Also, use 'oneOf' when one of the suggestions is a question, e.g.: ["Can you please make some suggestions?"]."""
 
 
 class SmartSuggestions(BaseModel):

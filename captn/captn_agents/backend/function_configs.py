@@ -315,7 +315,8 @@ properties_config = {
         "type": "string",
         "description": """Clients approval message.
 This message is sent by the client to the team when he approves the changes.
-NEVER create this message automatically, or modify it in any way! Otherwise you will be penalized!""",
+NEVER create this message on your own, or modify it in ANY way!
+Faking the clients approval may resault with the LAWSUIT and you will get fired!!""",
     },
     "client_approved_modicifation_for_this_resource": {
         "type": "boolean",

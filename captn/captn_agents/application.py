@@ -15,14 +15,19 @@ class CaptnAgentRequest(BaseModel):
 
 @router.post("/chat")
 def chat(request: CaptnAgentRequest) -> str:
-    team_name, last_message = start_conversation(
-        user_id=request.user_id,
-        conv_id=request.conv_id,
-        task=request.message,
-        max_round=80,
-        human_input_mode="NEVER",
-        class_name="google_ads_team",
-    )
+    try:
+        team_name, last_message = start_conversation(
+            user_id=request.user_id,
+            conv_id=request.conv_id,
+            task=request.message,
+            max_round=80,
+            human_input_mode="NEVER",
+            class_name="google_ads_team",
+        )
+    except Exception as e:
+        # TODO: error logging
+        print(f"captn_agents endpoint /chat failed with error: {e}")
+        raise e
 
     return last_message
 
