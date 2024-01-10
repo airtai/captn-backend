@@ -5,4 +5,4 @@ from pydantic import BaseModel
 
 class SmartSuggestions(BaseModel):
     suggestions: List[str]
-    suggestions_type: Literal["Button", "Checkbox"]
+    type: Literal["oneOf", "manyOf"]

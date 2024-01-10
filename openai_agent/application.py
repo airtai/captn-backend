@@ -11,6 +11,7 @@ from captn.captn_agents.backend.teams_manager import (
     get_team_status,
 )
 from captn.google_ads.client import get_google_ads_team_capability
+from openai_agent.model import SmartSuggestions
 
 router = APIRouter()
 
@@ -108,15 +109,15 @@ async def get_digital_marketing_campaign_support(
 
 async def respond_to_customer(
     answer_to_customer_query: str,
-    next_steps: List[str],
-    next_steps_type: str,
+    suggestions: List[str],
+    type: str,
     is_open_ended_query: bool,
-) -> Dict[str, Union[str, List[str]]]:
-    # smart_suggestions = SmartSuggestions(suggestions=next_steps, suggestions_type = next_steps_type)
-    next_steps = [""] if is_open_ended_query else next_steps
+) -> Dict[str, Union[str, SmartSuggestions]]:
+    smart_suggestions = SmartSuggestions(suggestions=suggestions, type=type)
+    suggestions = [""] if is_open_ended_query else suggestions
     return {
         "content": answer_to_customer_query,
-        "smart_suggestions": next_steps,
+        "smart_suggestions": smart_suggestions,
     }
 
 
@@ -130,22 +131,22 @@ SMART_SUGGESTION_DESCRIPTION = """
 ###Example###
 
 answer_to_customer_query: What goals do you have for your marketing efforts?
-next_steps: ["Boost sales", "Increase brand awareness", "Drive website traffic"]
+suggestions: ["Boost sales", "Increase brand awareness", "Drive website traffic"]
 
 answer_to_customer_query: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
-next_steps: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
+suggestions: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
 
 answer_to_customer_query: It's an exciting venture to dip your sails into the world of Google Ads, especially as a new navigator. To get a better sense of direction, do you have a website set up for your flower shop?
-next_steps: ["Yes, we have a website", "No, we don't have a website"]
+suggestions: ["Yes, we have a website", "No, we don't have a website"]
 
 answer_to_customer_query: Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
-next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 
 answer_to_customer_query: How can I assist you further today?
-next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 
 answer_to_customer_query: When you're ready to optimize, I'm here to help chart the course to smoother waters for your online sales.
-next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 """
 
 IS_OPEN_ENDED_QUERY_DESCRIPTION = """
@@ -170,21 +171,21 @@ is_open_ended_query: false
 """
 
 SMART_SUGGESTION_TYPE_DESCRIPTION = """
-- Can have either 'Button' or 'Checkbox' as valid response.
-- If 'next_steps' includes options that are binary 'yes or no' then return 'Button.' else return 'Checkbox.'
+- Can have either 'oneOf' or 'manyOf' as valid response.
+- If 'suggestions' includes options that are binary 'yes or no' then return 'oneOf.' else return 'manyOf.'
 
 ### Example ###
-next_steps: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
-next_steps_type: "Checkbox"
+suggestions: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
+type: "oneOf"
 
-next_steps: ["No further assistance needed", "Yes, please help me with campaign optimization"]
-next_steps_type: "Button"
+suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
+type: "oneOf"
 
-next_steps: ["Boost sales", "Increase brand awareness", "Drive website traffic"]
-next_steps_type: "Checkbox"
+suggestions: ["Boost sales", "Increase brand awareness", "Drive website traffic"]
+type: "manyOf"
 
-next_steps: ["No, I'm not ready for that", "Yes, you have my permission"]
-next_steps_type: "Button"
+suggestions: ["No, I'm not ready for that", "Yes, you have my permission"]
+type: "oneOf"
 """
 
 FUNCTIONS = [
@@ -212,11 +213,11 @@ FUNCTIONS = [
                     "type": "string",
                     "description": "Your reply to customer's question. This cannot be empty.",
                 },
-                "next_steps": {
+                "suggestions": {
                     "type": "string",
                     "description": SMART_SUGGESTION_DESCRIPTION,
                 },
-                "next_steps_type": {
+                "type": {
                     "type": "string",
                     "description": SMART_SUGGESTION_TYPE_DESCRIPTION,
                 },
@@ -227,8 +228,8 @@ FUNCTIONS = [
             },
             "required": [
                 "answer_to_customer_query",
-                "next_steps",
-                "next_steps_type",
+                "suggestions",
+                "type",
                 "is_open_ended_query",
             ],
         },
@@ -248,13 +249,13 @@ If a customer requests assistance beyond your capabilities, politely inform them
 """
 
 
-async def _get_openai_response(
+async def _get_openai_response(  # type: ignore
     user_id: int,
     chat_id: int,
     message: List[Dict[str, str]],
     background_tasks: BackgroundTasks,
     retry_attempt: int = 0,
-) -> Dict[str, Union[Optional[str], int, List[str]]]:
+) -> Dict[str, Union[Optional[str], int, Union[str, SmartSuggestions]]]:
     try:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + message
         messages.append(
@@ -294,14 +295,19 @@ async def _get_openai_response(
                 **function_args,
             )
         else:
-            function_response = await function_to_call(  # type: ignore
-                **function_args,
-            )
-        return function_response  # type: ignore
+            try:
+                function_response = await function_to_call(  # type: ignore
+                    **function_args,
+                )
+                return function_response  # type: ignore
+            except Exception:
+                return await _get_openai_response(
+                    user_id, chat_id, message, background_tasks
+                )
     else:
         if retry_attempt >= MAX_RETRIES:
             result: str = completion.choices[0].message.content  # type: ignore
-            return {"content": result, "smart_suggestions": [""]}
+            return {"content": result, "smart_suggestions": [""]}  # type: ignore
         return await _get_openai_response(
             user_id, chat_id, message, background_tasks, retry_attempt + 1
         )
@@ -340,7 +346,7 @@ class AzureOpenAIRequest(BaseModel):
 @router.post("/chat")
 async def chat(
     request: AzureOpenAIRequest, background_tasks: BackgroundTasks
-) -> Dict[str, Union[Optional[str], int, List[str]]]:
+) -> Dict[str, Union[Optional[str], int, Union[str, SmartSuggestions]]]:
     message = request.message
     chat_id = request.chat_id
     result = (
