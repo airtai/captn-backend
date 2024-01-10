@@ -5,7 +5,9 @@ from fastapi import BackgroundTasks
 
 from captn.captn_agents.application import CaptnAgentRequest, chat
 
-TEAMS_STATUS: Dict[str, Dict[str, Union[str, bool, int, List[str]]]] = {}
+TEAMS_STATUS: Dict[
+    str, Dict[str, Union[str, bool, int, Dict[str, Union[str, List[str]]]]]
+] = {}
 
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It appears we've hit a temporary squall in the digital sea. Give it some time, and we'll be back to smooth sailing. Please try again later."
 
@@ -18,7 +20,7 @@ def add_to_teams_status(user_id: int, chat_id: int, team_name: str) -> None:
         "team_status": "inprogress",
         "msg": "",
         "is_question": False,
-        "smart_suggestions": [""],
+        "smart_suggestions": {"suggestions": [""], "type": ""},
     }
 
 
@@ -27,7 +29,7 @@ def change_teams_status(
     team_status: str,
     message: str,
     is_question: bool,
-    smart_suggestions: List[str],
+    smart_suggestions: Dict[str, Union[str, List[str]]],
 ) -> None:
     TEAMS_STATUS[f"{chat_id}"].update(
         {
@@ -56,7 +58,10 @@ def teams_handler(user_id: int, chat_id: int, team_name: str, message: str) -> N
         team_status = "inprogress"
         message = message
         is_question = False
-        smart_suggestions = [""]
+        smart_suggestions: Dict[str, Union[str, List[str]]] = {
+            "suggestions": [""],
+            "type": "",
+        }
         change_teams_status(
             chat_id, team_status, message, is_question, smart_suggestions
         )
@@ -76,7 +81,7 @@ def teams_handler(user_id: int, chat_id: int, team_name: str, message: str) -> N
             team_status="completed",
             message=TEAM_EXCEPTION_MESSAGE,
             is_question=False,
-            smart_suggestions=[""],
+            smart_suggestions={"suggestions": [""], "type": ""},
         )
 
 
@@ -99,5 +104,5 @@ async def create_team(
 
 async def get_team_status(
     chat_id: int,
-) -> Dict[str, Union[str, bool, int, List[str]]]:
+) -> Dict[str, Union[str, bool, int, Dict[str, Union[str, List[str]]]]]:
     return TEAMS_STATUS.get(str(chat_id), {})
