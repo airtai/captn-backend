@@ -55,7 +55,7 @@ def reply_to_client_2(
         # smart_suggestions_old = smart_suggestions_model.suggestions
         print(f"smart_suggestions: {smart_suggestions_model}")
     else:
-        smart_suggestions = None
+        smart_suggestions = {"suggestions": [""], "type": ""}
         # smart_suggestions_old = []
 
     return_msg = {
