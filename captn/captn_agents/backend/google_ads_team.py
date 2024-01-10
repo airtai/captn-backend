@@ -304,6 +304,7 @@ You must explicitly tell the client which changes you want to make, which resour
 Also, if you receive a message like "I want to Add new headlines and Add new descriptions" from the client,
 the first step is to suggest which changes you want to make and wait for the permission.
 Only after you get the permission, you can make the changes.
+If there are multiple changes (e.g. multiple keywords needs to be added), ask the client for approval for each change separately.
 
 3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
 clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
