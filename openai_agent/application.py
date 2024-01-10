@@ -6,12 +6,15 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
+from captn.captn_agents.backend.function_configs import (  # type: ignore
+    smart_suggestions_description,
+)
 from captn.captn_agents.backend.teams_manager import (
     create_team,
     get_team_status,
 )
+from captn.captn_agents.model import SmartSuggestions
 from captn.google_ads.client import get_google_ads_team_capability
-from openai_agent.model import SmartSuggestions
 
 router = APIRouter()
 
@@ -81,6 +84,28 @@ GUIDELINES:
 - Access to Google Ads: Do not concern yourself with obtaining access to the customer's Google Ads account; that is beyond your scope.
 - Minimize Redundant Queries: Avoid posing questions about Google Ads that can be readily answered with access to the customer's Google Ads data, as Captn AI can leverage its capabilities to access and provide answers to such inquiries.
 - Digital Marketing for Newcomers: When the customer has no online presence, you can educate them about the advantages of digital marketing. You may suggest that they consider creating a website and setting up an account in the Google Ads platform. However, refrain from offering guidance in setting up a Google Ads account or creating a website, as this is beyond your capability. Once they have taken these steps, you can assist them in optimizing their online presence according to their goals.
+- When using 'respond_to_customer' funciton, It is VERY important that you ALWAYS use the 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible!
+Here is an example of the smart_suggestions parameter:
+###Example###
+"smart_suggestions": {{
+    "type":"oneOf",
+    "suggestions": ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
+}}
+"smart_suggestions": {{
+    "type":"oneOf",
+    "suggestions": ["No further assistance needed", "Yes, please help me with campaign optimization"]
+}}
+
+"smart_suggestions": {{
+    "type":"manyOf",
+    "suggestions": ["Boost sales", "Increase brand awareness", "Drive website traffic"]
+}}
+
+"smart_suggestions": {{
+    "type":""oneOf"",
+    "suggestions": ["No, I'm not ready for that", "Yes, you have my permission"]
+}}
+The above ###Example### is for your reference and you can use it to learn. Never ever use the exact 'smart_suggestions' in your response. You will be penalised if you do so.
 
 Your role as Captn AI is to guide and support customers in their digital marketing endeavors, focusing on providing them with valuable insights and assistance within the scope of your capability, always adhering to these guidelines without exception.
 """
@@ -109,17 +134,39 @@ async def get_digital_marketing_campaign_support(
 
 async def respond_to_customer(
     answer_to_customer_query: str,
-    suggestions: List[str],
-    type: str,
+    smart_suggestions: Dict[str, Union[str, List[str]]],
     is_open_ended_query: bool,
 ) -> Dict[str, Union[str, SmartSuggestions]]:
-    smart_suggestions = SmartSuggestions(suggestions=suggestions, type=type)
-    suggestions = [""] if is_open_ended_query else suggestions
+    smart_suggestions_model = SmartSuggestions(**smart_suggestions)
+    smart_suggestions_model.suggestions = (
+        [""] if is_open_ended_query else smart_suggestions_model.suggestions
+    )
     return {
         "content": answer_to_customer_query,
-        "smart_suggestions": smart_suggestions,
+        "smart_suggestions": smart_suggestions_model,
     }
 
+
+IS_OPEN_ENDED_QUERY_DESCRIPTION = """
+This is a boolean value. Set it to true if the "answer_to_customer_query" is open ended. Else set it to false. Below are the instructions and a few examples for your reference.
+
+### INSTRUCTIONS ###
+- A "answer_to_customer_query" is open-ended if it asks for specific information that cannot be easily guessed (e.g., website links)
+- A "answer_to_customer_query" is non-open-ended if it does not request specific details that are hard to guess.
+
+### Example ###
+answer_to_customer_query: What goals do you have for your marketing efforts?
+is_open_ended_query: false
+
+answer_to_customer_query: Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
+is_open_ended_query: false
+
+answer_to_customer_query: Could you please share the link to your website?
+is_open_ended_query: true
+
+answer_to_customer_query: Do you have a website?
+is_open_ended_query: false
+"""
 
 SMART_SUGGESTION_DESCRIPTION = """
 ### INSTRUCTIONS ###
@@ -149,27 +196,6 @@ answer_to_customer_query: When you're ready to optimize, I'm here to help chart 
 suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 """
 
-IS_OPEN_ENDED_QUERY_DESCRIPTION = """
-This is a boolean value. Set it to true if the "answer_to_customer_query" is open ended. Else set it to false. Below are the instructions and a few examples for your reference.
-
-### INSTRUCTIONS ###
-- A "answer_to_customer_query" is open-ended if it asks for specific information that cannot be easily guessed (e.g., website links)
-- A "answer_to_customer_query" is non-open-ended if it does not request specific details that are hard to guess.
-
-### Example ###
-answer_to_customer_query: What goals do you have for your marketing efforts?
-is_open_ended_query: false
-
-answer_to_customer_query: Is there anything else you would like to analyze or optimize within your Google Ads campaigns?
-is_open_ended_query: false
-
-answer_to_customer_query: Could you please share the link to your website?
-is_open_ended_query: true
-
-answer_to_customer_query: Do you have a website?
-is_open_ended_query: false
-"""
-
 SMART_SUGGESTION_TYPE_DESCRIPTION = """
 - Can have either 'oneOf' or 'manyOf' as valid response.
 - If 'suggestions' includes options that are binary 'yes or no' then return 'oneOf.' else return 'manyOf.'
@@ -187,6 +213,32 @@ type: "manyOf"
 suggestions: ["No, I'm not ready for that", "Yes, you have my permission"]
 type: "oneOf"
 """
+
+smart_suggestions_schema = {
+    "$ref": "#/definitions/SmartSuggestions",
+    "definitions": {
+        "SmartSuggestions": {
+            "title": "SmartSuggestions",
+            "type": "object",
+            "properties": {
+                "suggestions": {
+                    "title": "Suggestions",
+                    "description": SMART_SUGGESTION_DESCRIPTION,
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "type": {
+                    "title": "Type",
+                    "description": SMART_SUGGESTION_TYPE_DESCRIPTION,
+                    "enum": ["oneOf", "manyOf"],
+                    "type": "string",
+                },
+            },
+            "required": ["suggestions", "type"],
+        }
+    },
+    "description": smart_suggestions_description,
+}
 
 FUNCTIONS = [
     {
@@ -213,14 +265,7 @@ FUNCTIONS = [
                     "type": "string",
                     "description": "Your reply to customer's question. This cannot be empty.",
                 },
-                "suggestions": {
-                    "type": "string",
-                    "description": SMART_SUGGESTION_DESCRIPTION,
-                },
-                "type": {
-                    "type": "string",
-                    "description": SMART_SUGGESTION_TYPE_DESCRIPTION,
-                },
+                "smart_suggestions": smart_suggestions_schema,
                 "is_open_ended_query": {
                     "type": "boolean",
                     "description": IS_OPEN_ENDED_QUERY_DESCRIPTION,
@@ -228,8 +273,7 @@ FUNCTIONS = [
             },
             "required": [
                 "answer_to_customer_query",
-                "suggestions",
-                "type",
+                "smart_suggestions",
                 "is_open_ended_query",
             ],
         },
@@ -271,7 +315,6 @@ async def _get_openai_response(  # type: ignore
         ) from e
 
     response_message = completion.choices[0].message
-
     # Check if the model wants to call a function
     if response_message.function_call:
         # Call the function. The JSON response may not always be valid so make sure to handle errors
@@ -288,7 +331,7 @@ async def _get_openai_response(  # type: ignore
         # verify function has correct number of arguments
         function_args = json.loads(response_message.function_call.arguments)
         if function_name == "get_digital_marketing_campaign_support":
-            function_response = await function_to_call(  # type: ignore
+            return await function_to_call(  # type: ignore
                 user_id=user_id,
                 chat_id=chat_id,
                 background_tasks=background_tasks,
@@ -296,13 +339,13 @@ async def _get_openai_response(  # type: ignore
             )
         else:
             try:
-                function_response = await function_to_call(  # type: ignore
+                return await function_to_call(  # type: ignore
                     **function_args,
                 )
-                return function_response  # type: ignore
-            except Exception:
+            except Exception as e:
+                message_with_error = message + [{"role": "user", "content": str(e)}]
                 return await _get_openai_response(
-                    user_id, chat_id, message, background_tasks
+                    user_id, chat_id, message_with_error, background_tasks
                 )
     else:
         if retry_attempt >= MAX_RETRIES:
@@ -371,7 +414,7 @@ class GetTeamStatusRequest(BaseModel):
 @router.post("/get-team-status")
 async def get_status(
     request: GetTeamStatusRequest,
-) -> Dict[str, Union[str, bool, int, List[str]]]:
+) -> Dict[str, Union[str, bool, int, Dict[str, Union[str, List[str]]]]]:
     team_id = request.team_id
     status = await get_team_status(team_id)
     return status
