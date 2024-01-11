@@ -173,6 +173,7 @@ SMART_SUGGESTION_DESCRIPTION = """
 - Possible next steps (atmost three) for the customers. Your next steps MUST be a list of strings. You MUST only use the functions that have been provided to you to respond.
 - Your next steps MUST be unique and brief ideally in as little few words as possible. Preferrably with affermative and negative answers.
 - You MUST always try to propose the next steps using the functions that have been provided to you. You will be penalised if you try to generate a response on your own without using the function.
+- While answering questions like "do you have a website?". DO NOT give suggestions like "Yes, here's my website link". Instead, give suggestions like "Yes, I have a website" or "No, I don't have a website". You will be penalised if you do not follow this instruction.
 - The below ###Example### is for your reference and you can use it to learn. Never ever use the exact 'answer_to_customer_query' in your response. You will be penalised if you do so.
 
 ###Example###
@@ -289,6 +290,7 @@ Use 'get_digital_marketing_campaign_support' for utilising your capabilities.
 Use MUST use the "get_digital_marketing_campaign_support" function only when necessary, based strictly on the customer's latest message. Do not reference past conversations. Else you will be penalised.
 You MUST explicitly ask permission to customer before using your capabilities. This is a mandatory requirement.
 Use MUST always call 'respond_to_customer' function when there is no need to use 'get_digital_marketing_campaign_support' function. Else you will be penalised.
+While answering questions like "do you have a website?". DO NOT give "smart_suggestions like "Yes, here's my website link". Instead, give suggestions like "Yes, I have a website" or "No, I don't have a website". You will be penalised if you do not follow this instruction.
 If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
 """
 
