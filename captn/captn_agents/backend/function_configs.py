@@ -182,9 +182,8 @@ execute_query_config = {
         "type": "object",
         "properties": {
             "customer_ids": {
-                "type": "string",
-                # "type": "array",
-                # "items": {"type": "string"},
+                "type": "array",
+                "items": {"type": "string"},
                 "description": "List of customer ids",
             },
             "query": {
@@ -294,6 +293,9 @@ analyze_query_response_config = {
 }
 
 
+MODIFICATION_WARNING = """DO NOT call this function without the clients explicit approval to modify the resource!!!.
+The client must also approve ALL the parameters which will be used for the modification. Otherwise you will be penalized!"""
+
 properties_config = {
     "customer_id": {
         "type": "string",
@@ -341,7 +343,7 @@ Client must be informed about everything!""",
 
 update_ad_group_config = {
     "name": "update_ad_group",
-    "description": "Update Google Ad Group",
+    "description": f"Update Google Ad Group. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -374,7 +376,7 @@ update_ad_group_config = {
 
 update_ad_config = {
     "name": "update_ad",
-    "description": "Update Google Ad",
+    "description": f"Update Google Ad. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -404,7 +406,7 @@ update_ad_config = {
 
 update_campaign_config = {
     "name": "update_campaign",
-    "description": "Update Google Ads Campaign",
+    "description": f"Update Google Ads Campaign. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -434,7 +436,7 @@ update_campaign_config = {
 
 update_ad_group_criterion_config = {
     "name": "update_ad_group_criterion",
-    "description": "Update Google Ads Group Criterion",
+    "description": f"Update Google Ads Group Criterion. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -470,8 +472,9 @@ update_ad_group_criterion_config = {
 
 create_ad_copy_headline_or_description_config = {
     "name": "create_ad_copy_headline_or_description",
-    "description": """Create NEW headline and/or description in the the Google Ads Copy.
-This method should NOT be used for updating existing headlines or descriptions.""",
+    "description": f"""Create NEW headline and/or description in the the Google Ads Copy.
+This method should NOT be used for updating existing headlines or descriptions.
+{MODIFICATION_WARNING}""",
     "parameters": {
         "type": "object",
         "properties": {
@@ -495,8 +498,9 @@ This method should NOT be used for updating existing headlines or descriptions."
 
 update_ad_copy_config = {
     "name": "update_ad_copy",
-    "description": """Updates existing Google Ads Ad Copy.
-Use 'update_existing_headline_index' if you want to modify existing headline and/or 'update_existing_description_index' to modify existing description.""",
+    "description": f"""Updates existing Google Ads Ad Copy.
+Use 'update_existing_headline_index' if you want to modify existing headline and/or 'update_existing_description_index' to modify existing description.
+{MODIFICATION_WARNING}""",
     "parameters": {
         "type": "object",
         "properties": {
@@ -581,7 +585,7 @@ reply_to_client_2_config = {
 
 create_negative_keyword_for_campaign_config = {
     "name": "create_negative_keyword_for_campaign",
-    "description": "Creates Negative campaign keywords (CampaignCriterion)",
+    "description": f"Creates Negative campaign keywords (CampaignCriterion). {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -625,7 +629,7 @@ create_negative_keyword_for_campaign_config = {
 
 create_keyword_for_ad_group_config = {
     "name": "create_keyword_for_ad_group",
-    "description": "Creates (regular and negative) keywords for Ad Group (AdGroupCriterion)",
+    "description": f"Creates (regular and negative) keywords for Ad Group (AdGroupCriterion). {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -669,7 +673,7 @@ create_keyword_for_ad_group_config = {
 
 remove_google_ads_resource_config = {
     "name": "remove_google_ads_resource",
-    "description": "Removes the google ads resource",
+    "description": f"Removes the google ads resource. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
