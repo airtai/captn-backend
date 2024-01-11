@@ -540,6 +540,38 @@ Use this parameter ONLY when you want to modify existing description!""",
     },
 }
 
+remove_ad_copy_headline_or_description_config = {
+    "name": "remove_ad_copy_headline_or_description",
+    "description": f"""Removes existing Google Ads Ad Copy headline or/and description.
+Use 'update_existing_headline_index' if you want to remove existing headline and/or 'update_existing_description_index' to remove existing description.
+{MODIFICATION_WARNING}""",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "ad_id": properties_config["ad_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "update_existing_headline_index": {
+                "type": "string",
+                "description": """Index in the headlines list which needs to be removed. Index starts from 0.""",
+            },
+            "update_existing_description_index": {
+                "type": "string",
+                "description": """Index in the descriptions list which needs to be removed. Index starts from 0.""",
+            },
+        },
+        "required": [
+            "customer_id",
+            "ad_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
 smart_suggestions_schema = {
     "$ref": "#/definitions/SmartSuggestions",
     "definitions": {

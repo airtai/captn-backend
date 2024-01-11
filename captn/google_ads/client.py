@@ -1,7 +1,4 @@
-import json
-from datetime import datetime
 from os import environ
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import requests
@@ -75,16 +72,16 @@ def execute_query(
 
     response_json = response.json()
 
-    file_name = "query_" + datetime.now().isoformat() + ".json"
-    path = Path(work_dir) / file_name
-
     if not response_json:
         return "The query resulted with an empty response."
 
-    with open(path, "w") as f:
-        json.dump(response_json, f)
+    # file_name = "query_" + datetime.now().isoformat() + ".json"
+    # path = Path(work_dir) / file_name
+    # with open(path, "w") as f:
+    #     json.dump(response_json, f)
 
-    return f"The result of the query saved at: {file_name}"
+    # return f"The result of the query saved at: {file_name}"
+    return str(response_json)
 
 
 def google_ads_create_update(

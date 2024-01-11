@@ -20,14 +20,13 @@ But do NOT use smart suggestions for questions which require clients input!
 Here is a list of things which you CAN do:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - update the status (ENABLED / PAUSED) of the campaign, ad group and ad
-- update Ad Copy
+- create/update/remove headlines and descriptions in the Ad Copy
 - create new keywords (but you can NOT update them)
 - remove campaign/ ad group / ad / positive and negative keywords
 
 Here is a list of thing which you can NOT do, NEVER suggest making changes of the things you can NOT do:
 - CREATE new ads / ad groups (you can just update the existing ones)
 - update keywords
-- remove ad headlines / descriptions (you can just update the existing ones or add new ones)
 Do NOT suggest making changes of the following things:
 - Targeting settings
 - Ad Extensions
@@ -52,16 +51,12 @@ def reply_to_client_2(
     if smart_suggestions:
         smart_suggestions_model = SmartSuggestions(**smart_suggestions)
         smart_suggestions = smart_suggestions_model.model_dump()
-        # smart_suggestions_old = smart_suggestions_model.suggestions
-        print(f"smart_suggestions: {smart_suggestions_model}")
     else:
         smart_suggestions = {"suggestions": [""], "type": ""}
-        # smart_suggestions_old = []
 
     return_msg = {
         "message": message,
         "smart_suggestions": smart_suggestions,
-        # "smart_suggestions": smart_suggestions_old,
         # is_question must be true, otherwise text input box will not be displayed in the chat
         "is_question": True,
         "status": "completed" if completed else "pause",

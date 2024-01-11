@@ -28,6 +28,7 @@ from .function_configs import (
     execute_query_config,
     list_accessible_customers_config,
     read_file_config,
+    remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
     reply_to_client_2_config,
     update_ad_config,
@@ -59,6 +60,7 @@ class GoogleAdsTeam(Team):
         remove_google_ads_resource_config,
         update_ad_copy_config,
         create_ad_copy_headline_or_description_config,
+        remove_ad_copy_headline_or_description_config,
     ]
 
     _shared_system_message = (
@@ -375,6 +377,10 @@ resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'camp
 clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
+12. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
+params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
+update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
+
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
 For the actions which we do not support currently, tell the client that you currently do NOT support the wanted action,
@@ -590,6 +596,23 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 parent_id=parent_id,
             ),
             endpoint="/remove-google-ads-resource",
+        ),
+        "remove_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, update_existing_headline_index=None, update_existing_description_index=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            ad=AdCopy(
+                customer_id=customer_id,
+                ad_id=ad_id,
+                headline=None,
+                description=None,
+                update_existing_headline_index=update_existing_headline_index,
+                update_existing_description_index=update_existing_description_index,
+                final_urls=None,
+                final_mobile_urls=None,
+            ),
+            endpoint="/create-update-ad-copy",
         ),
     }
 

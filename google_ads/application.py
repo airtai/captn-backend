@@ -305,7 +305,7 @@ def _set_headline_or_description(
     client: GoogleAdsClient,
     operation_update: Any,
     update_field: str,
-    new_text: str,
+    new_text: Optional[str],
     update_existing_index: Optional[int],
     responsive_search_ad: Dict[str, Any],
 ) -> None:
@@ -318,7 +318,12 @@ def _set_headline_or_description(
         updated_fields.append(headline_or_description)
 
     if update_existing_index is not None:
-        updated_fields[update_existing_index].text = new_text
+        if new_text:
+            # update headline or description
+            updated_fields[update_existing_index].text = new_text
+        else:
+            # delete headline or description
+            updated_fields.pop(update_existing_index)
     else:
         headline_or_description = client.get_type("AdTextAsset")
         headline_or_description.text = new_text
@@ -338,7 +343,16 @@ async def _set_fields_ad_copy(
     #     if attribute_value:
     #         setattr(operation_update, attribute_name, attribute_value)
 
-    if model_or_dict.headline or model_or_dict.description:
+    modify_headlines = (
+        model_or_dict.headline
+        or model_or_dict.update_existing_headline_index is not None
+    )
+    modify_descriptions = (
+        model_or_dict.description
+        or model_or_dict.update_existing_description_index is not None
+    )
+
+    if modify_headlines or modify_descriptions:
         query = f"""SELECT ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions
 FROM ad_group_ad
 WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
@@ -349,7 +363,7 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
             "ad"
         ]["responsiveSearchAd"]
 
-        if model_or_dict.headline:
+        if modify_headlines:
             update_field = "headlines"
             new_text = model_or_dict.headline
             _set_headline_or_description(
@@ -361,7 +375,7 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
                 responsive_search_ad=responsive_search_ad,
             )
 
-        if model_or_dict.description:
+        if modify_descriptions:
             update_field = "descriptions"
             new_text = model_or_dict.description
             _set_headline_or_description(
