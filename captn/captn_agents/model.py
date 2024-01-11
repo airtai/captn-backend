@@ -17,17 +17,15 @@ When you expect some headlines/keywords etc. from the client, you can use smart 
 and you should also add smart suggestion like "Can you please make some suggestions?".
 Also when a task is finished, smart suggestions should suggest the next steps to the client.
 Each smart suggestion should focus only on one thing. e.g.: "Update ad copy xy" is a good suggestion, but "Update ad copy xy and add new keywords yz" is not.
-When there are multiple changes possible, create multiple suggestions like "Add keyword x", "Add keyword y".
-Do NOT suggest changing multiple things as one suggestion. e.g.: "Add all keywords" is not a good suggestion.
-Be precise and specific with your suggestions. e.g.: "Add keyword x" is a good suggestion, but "Add keyword" is not."""
+When there are multiple changes possible, create multiple suggestions like "Add keyword x", "Add keyword y"."""
 
 type_description = """Type of the smart suggestions.
 One of the following: Literal['oneOf', 'manyOf'].
 If 'type' is 'oneOf', the client can click on only one suggestion.
 If 'type' is 'manyOf', the client can click on multiple suggestions.
-Use 'manyOf' for suggestions which are not mutually exclusive and for smaller tasks for the same resource
+Use 'manyOf' for suggestions which are not mutually exclusive.
 (e.g. ["Add keyword x", "Add keyword y"] or ['Suggest new headlines for the ad', 'Suggest new descriptions for the ad']).
-Use 'oneOf' for suggestions which are mutually exclusive and for bigger tasks
+Use 'oneOf' for suggestions which are mutually exclusive and for bigger tasks which require multiple steps.
 (e.g. 'Add new keywords', 'Remove a keyword', 'Change match type', 'Optimize ad copy').
 Also, use 'oneOf' when one of the suggestions is a question, e.g.: ["Can you please make some suggestions?"]."""
 

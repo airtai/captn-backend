@@ -112,5 +112,5 @@ def google_ads_create_update(
     if not response.ok:
         raise ValueError(response.content)
 
-    response_dict: Dict[str, Any] = response.json()  # type: ignore[no-any-return]
+    response_dict: Union[Dict[str, Any], str] = response.json()
     return response_dict
