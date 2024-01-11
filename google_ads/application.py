@@ -343,8 +343,14 @@ async def _set_fields_ad_copy(
     #     if attribute_value:
     #         setattr(operation_update, attribute_name, attribute_value)
 
-    modify_headlines = model_or_dict.headline or model_or_dict.update_existing_headline_index is not None
-    modify_descriptions = model_or_dict.description or model_or_dict.update_existing_description_index is not None
+    modify_headlines = (
+        model_or_dict.headline
+        or model_or_dict.update_existing_headline_index is not None
+    )
+    modify_descriptions = (
+        model_or_dict.description
+        or model_or_dict.update_existing_description_index is not None
+    )
 
     if modify_headlines or modify_descriptions:
         query = f"""SELECT ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions
