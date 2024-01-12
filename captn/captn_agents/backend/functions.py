@@ -15,23 +15,7 @@ def reply_to_client(message: str) -> str:
 
 reply_to_client_2_description = """Respond to the client (answer to his task or question for additional information).
 Use 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible, or you will be penalized!
-But do NOT use smart suggestions for questions which require clients input!
-
-Here is a list of things which you CAN do:
-- retrieve the information about your campaigns, ad groups, ads, keywords etc.
-- update the status (ENABLED / PAUSED) of the campaign, ad group and ad
-- create/update/remove headlines and descriptions in the Ad Copy
-- create new keywords (but you can NOT update them)
-- remove campaign/ ad group / ad / positive and negative keywords
-
-Here is a list of thing which you can NOT do, NEVER suggest making changes of the things you can NOT do:
-- CREATE new ads / ad groups (you can just update the existing ones)
-- update keywords
-Do NOT suggest making changes of the following things:
-- Targeting settings
-- Ad Extensions
-- Budgeting
-- Ad Scheduling"""
+But do NOT use smart suggestions for questions which require clients input!"""
 
 smart_suggestions_description = """Quick replies which the client can use for replying to the incoming message.
 This parameter must be dictionary with two keys: 'suggestions': List[str] and 'type': Literal["oneOf", "manyOf"].
