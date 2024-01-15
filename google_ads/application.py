@@ -21,6 +21,7 @@ from .model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    Criterion,
     RemoveResource,
 )
 
@@ -625,6 +626,19 @@ async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) ->
     )
 
 
+def _copy_keyword_text_and_match_type(
+    model: Criterion, criterion_copy: Dict[str, Any]
+) -> None:
+    model.keyword_text = (
+        model.keyword_text if model.keyword_text else criterion_copy["keyword"]["text"]
+    )
+    model.keyword_match_type = (
+        model.keyword_match_type
+        if model.keyword_match_type
+        else criterion_copy["keyword"]["matchType"]
+    )
+
+
 async def _remove_existing_create_new_ad_group_criterion(
     user_id: int, ad_group_criterion_model: AdGroupCriterion
 ) -> str:
@@ -655,15 +669,9 @@ async def _remove_existing_create_new_ad_group_criterion(
         if ad_group_criterion_model.negative
         else ad_group_criterion_copy["negative"]
     )
-    ad_group_criterion_model.keyword_text = (
-        ad_group_criterion_model.keyword_text
-        if ad_group_criterion_model.keyword_text
-        else ad_group_criterion_copy["keyword"]["text"]
-    )
-    ad_group_criterion_model.keyword_match_type = (
-        ad_group_criterion_model.keyword_match_type
-        if ad_group_criterion_model.keyword_match_type
-        else ad_group_criterion_copy["keyword"]["matchType"]
+
+    _copy_keyword_text_and_match_type(
+        model=ad_group_criterion_model, criterion_copy=ad_group_criterion_copy
     )
     return await add_keywords_to_ad_group(
         user_id=user_id,
@@ -764,6 +772,58 @@ async def add_negative_keywords_to_campaign(
         model=campaign_criterion_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "campaign_id"],
+    )
+
+
+async def _get_existing_campaign_criterion(
+    user_id: int,
+    customer_id: str,
+    criterion_id: str,
+) -> Any:
+    query = f"""SELECT campaign_criterion.keyword.match_type, campaign_criterion.keyword.text
+FROM campaign_criterion
+WHERE campaign_criterion.criterion_id = {criterion_id}"""  # nosec: [B608]
+    campaign_criterion = await search(
+        user_id=user_id, customer_ids=[customer_id], query=query
+    )
+    return campaign_criterion[customer_id][0]["campaignCriterion"]
+
+
+@router.get("/update-campaigns-negative-keywords")
+async def update_campaigns_negative_keywords(
+    user_id: int, campaign_criterion_model: CampaignCriterion = Depends()
+) -> str:
+    if (
+        campaign_criterion_model.keyword_text is None
+        and campaign_criterion_model.keyword_match_type is None
+    ):
+        return "Only keyword text and match type can be updated for negative keywords."
+
+    campaign_criterion_copy = await _get_existing_campaign_criterion(
+        user_id=user_id,
+        customer_id=campaign_criterion_model.customer_id,
+        criterion_id=campaign_criterion_model.criterion_id,
+    )
+
+    remove_resource = RemoveResource(
+        customer_id=campaign_criterion_model.customer_id,
+        resource_id=campaign_criterion_model.criterion_id,
+        resource_type="campaign_criterion",
+        parent_id=campaign_criterion_model.campaign_id,
+    )
+    remove_response = await remove_google_ads_resource(
+        user_id=user_id,
+        model=remove_resource,
+    )
+    print(f"First remove existing resource: {remove_response}")
+
+    _copy_keyword_text_and_match_type(
+        model=campaign_criterion_model, criterion_copy=campaign_criterion_copy
+    )
+
+    return await add_negative_keywords_to_campaign(
+        user_id=user_id,
+        campaign_criterion_model=campaign_criterion_model,
     )
 
 
