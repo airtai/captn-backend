@@ -87,7 +87,7 @@ testing = [
 
 agents = [
     "fastapi==0.104.1",
-    "prisma==0.11.0",
+    "prisma==0.12.0",
     "google-ads==22.1.0",
     "httpx==0.25.2",
     "uvicorn==0.25.0",
