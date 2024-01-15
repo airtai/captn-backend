@@ -444,6 +444,21 @@ async def _get_necessary_parameters(
     )
 
 
+async def _get_existing_ad_group_criterion(
+    user_id: int,
+    customer_id: str,
+    criterion_id: str,
+) -> Any:
+    query = f"""SELECT ad_group_criterion.status, ad_group_criterion.negative,
+ad_group_criterion.keyword.match_type, ad_group_criterion.keyword.text
+FROM ad_group_criterion
+WHERE ad_group_criterion.criterion_id = {criterion_id}"""  # nosec: [B608]
+    ad_group_criterion = await search(
+        user_id=user_id, customer_ids=[customer_id], query=query
+    )
+    return ad_group_criterion[customer_id][0]["adGroupCriterion"]
+
+
 async def _update(
     user_id: int,
     model: AdBase,
@@ -610,10 +625,66 @@ async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) ->
     )
 
 
+async def _remove_existing_create_new_ad_group_criterion(
+    user_id: int, ad_group_criterion_model: AdGroupCriterion
+) -> str:
+    ad_group_criterion_copy = await _get_existing_ad_group_criterion(
+        user_id=user_id,
+        customer_id=ad_group_criterion_model.customer_id,
+        criterion_id=ad_group_criterion_model.criterion_id,
+    )
+    remove_resource = RemoveResource(
+        customer_id=ad_group_criterion_model.customer_id,
+        resource_id=ad_group_criterion_model.criterion_id,
+        resource_type="ad_group_criterion",
+        parent_id=ad_group_criterion_model.ad_group_id,
+    )
+    remove_response = await remove_google_ads_resource(
+        user_id=user_id,
+        model=remove_resource,
+    )
+    print(f"First remove existing resource: {remove_response}")
+
+    ad_group_criterion_model.status = (
+        ad_group_criterion_model.status
+        if ad_group_criterion_model.status
+        else ad_group_criterion_copy["status"]
+    )
+    ad_group_criterion_model.negative = (
+        ad_group_criterion_model.negative
+        if ad_group_criterion_model.negative
+        else ad_group_criterion_copy["negative"]
+    )
+    ad_group_criterion_model.keyword_text = (
+        ad_group_criterion_model.keyword_text
+        if ad_group_criterion_model.keyword_text
+        else ad_group_criterion_copy["keyword"]["text"]
+    )
+    ad_group_criterion_model.keyword_match_type = (
+        ad_group_criterion_model.keyword_match_type
+        if ad_group_criterion_model.keyword_match_type
+        else ad_group_criterion_copy["keyword"]["matchType"]
+    )
+    return await add_keywords_to_ad_group(
+        user_id=user_id,
+        model=ad_group_criterion_model,
+    )
+
+
 @router.get("/update-ad-group-criterion")
 async def update_ad_group_criterion(
     user_id: int, ad_group_criterion_model: AdGroupCriterion = Depends()
 ) -> str:
+    # keyword text and match type can NOT be updated - NEW ad_group_criterion must be created
+    if (
+        ad_group_criterion_model.keyword_text
+        or ad_group_criterion_model.keyword_match_type
+    ):
+        return await _remove_existing_create_new_ad_group_criterion(
+            user_id=user_id,
+            ad_group_criterion_model=ad_group_criterion_model,
+        )
+
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[
         "ad_group_criterion"
