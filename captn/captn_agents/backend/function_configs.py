@@ -338,6 +338,14 @@ Client must be informed about everything!""",
         "type": "string",
         "description": "Ad Copy Description, max_length=90",
     },
+    "keyword_match_type": {
+        "type": "string",
+        "description": "The match type of the keyword.",
+    },
+    "keyword_text": {
+        "type": "string",
+        "description": "The text of the keyword",
+    },
 }
 
 
@@ -450,15 +458,13 @@ update_ad_group_criterion_config = {
             "client_approved_modicifation_for_this_resource": properties_config[
                 "client_approved_modicifation_for_this_resource"
             ],
-            "name": {
-                "type": "string",
-                "description": "The name of the Ad",
-            },
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "keyword_match_type": properties_config["keyword_match_type"],
+            "keyword_text": properties_config["keyword_text"],
         },
         "required": [
             "customer_id",
@@ -631,14 +637,8 @@ create_negative_keyword_for_campaign_config = {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
-            "keyword_match_type": {
-                "type": "string",
-                "description": "The match type of the keyword.",
-            },
-            "keyword_text": {
-                "type": "string",
-                "description": "The text of the keyword",
-            },
+            "keyword_match_type": properties_config["keyword_match_type"],
+            "keyword_text": properties_config["keyword_text"],
             "negative": {
                 "type": "boolean",
                 "description": "Whether to target (false) or exclude (true) the criterion",
@@ -653,6 +653,35 @@ create_negative_keyword_for_campaign_config = {
             "campaign_id",
             "keyword_match_type",
             "keyword_text",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
+update_campaigns_negative_keywords_config = {
+    "name": "update_campaigns_negative_keywords",
+    "description": f"Update the Google Ads keywords (on campaign level). {MODIFICATION_WARNING}",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "campaign_id": properties_config["campaign_id"],
+            "criterion_id": {
+                "type": "string",
+                "description": "Id of the Campaign criterion",
+            },
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "keyword_match_type": properties_config["keyword_match_type"],
+            "keyword_text": properties_config["keyword_text"],
+        },
+        "required": [
+            "customer_id",
+            "campaign_id",
+            "criterion_id",
             "clients_approval_message",
             "client_approved_modicifation_for_this_resource",
         ],
@@ -675,14 +704,8 @@ create_keyword_for_ad_group_config = {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
-            "keyword_match_type": {
-                "type": "string",
-                "description": "The match type of the keyword.",
-            },
-            "keyword_text": {
-                "type": "string",
-                "description": "The text of the keyword",
-            },
+            "keyword_match_type": properties_config["keyword_match_type"],
+            "keyword_text": properties_config["keyword_text"],
             "negative": {
                 "type": "boolean",
                 "description": "Whether to target (false) or exclude (true) the criterion",
@@ -691,6 +714,7 @@ create_keyword_for_ad_group_config = {
                 "type": "number",
                 "description": "The modifier for the bids when the criterion matches.",
             },
+            "cpc_bid_micros": properties_config["cpc_bid_micros"],
         },
         "required": [
             "customer_id",
