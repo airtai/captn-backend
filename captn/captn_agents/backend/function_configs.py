@@ -382,8 +382,8 @@ update_ad_group_config = {
 }
 
 
-update_ad_config = {
-    "name": "update_ad",
+update_ad_group_ad_config = {
+    "name": "update_ad_group_ad",
     "description": f"Update Google Ad. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",

@@ -644,8 +644,8 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
 }
 
 
-@router.get("/update-ad")
-async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
+@router.get("/update-ad-group-ad")
+async def update_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
 
@@ -657,8 +657,8 @@ async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
     )
 
 
-@router.get("/create-ad")
-async def create_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
+@router.get("/create-ad-group-ad")
+async def create_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
     print(ad_model)
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]

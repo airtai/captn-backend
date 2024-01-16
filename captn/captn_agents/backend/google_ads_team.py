@@ -31,8 +31,8 @@ from .function_configs import (
     remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
     reply_to_client_2_config,
-    update_ad_config,
     update_ad_copy_config,
+    update_ad_group_ad_config,
     update_ad_group_config,
     update_ad_group_criterion_config,
     update_campaign_config,
@@ -52,7 +52,7 @@ class GoogleAdsTeam(Team):
         reply_to_client_2_config,
         # analyze_query_response_config,
         read_file_config,
-        update_ad_config,
+        update_ad_group_ad_config,
         update_ad_group_config,
         update_campaign_config,
         update_ad_group_criterion_config,
@@ -352,12 +352,12 @@ If there are multiple changes (e.g. multiple keywords need to be added), ask the
 After EACH change you make, you MUST send a message to the client with the information about the change you made and the suggestion about the next steps.
 Do NOT do multiple changes at once and inform the client about all the changes at once you are done with all of them.
 
-3. 'update_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
+3. 'update_ad_group_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
 clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
 client_approved_modicifation_for_this_resource: boolean)
 This command can only update ads cpc_bid_micros and status
 
-Before executing the 'update_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
+Before executing the 'update_ad_group_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
 with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
@@ -507,7 +507,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         #     work_dir=work_dir, file_name=file_name
         # ),
         "read_file": read_file,
-        "update_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
@@ -518,8 +518,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 ad_id=ad_id,
                 cpc_bid_micros=cpc_bid_micros,
                 status=status,
+                headlines=None,
+                descriptions=None,
             ),
-            endpoint="/update-ad",
+            endpoint="/update-ad-group-ad",
         ),
         "create_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None: google_ads_create_update(
             user_id=user_id,

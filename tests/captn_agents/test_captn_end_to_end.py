@@ -100,7 +100,7 @@ You have all the permissions to pause the ads, so do not ask me for any addition
     conv_id = 17
 
     _test_google_ads_create_update(
-        user_id=user_id, conv_id=conv_id, task=task, endpoint="/update-ad"
+        user_id=user_id, conv_id=conv_id, task=task, endpoint="/update-ad-group-ad"
     )
 
 
