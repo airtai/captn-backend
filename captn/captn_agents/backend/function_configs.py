@@ -659,6 +659,35 @@ create_negative_keyword_for_campaign_config = {
     },
 }
 
+update_campaigns_negative_keywords_config = {
+    "name": "update_campaigns_negative_keywords",
+    "description": f"Update the Google Ads keywords (on campaign level). {MODIFICATION_WARNING}",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "campaign_id": properties_config["campaign_id"],
+            "criterion_id": {
+                "type": "string",
+                "description": "Id of the Campaign criterion",
+            },
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "keyword_match_type": properties_config["keyword_match_type"],
+            "keyword_text": properties_config["keyword_text"],
+        },
+        "required": [
+            "customer_id",
+            "campaign_id",
+            "criterion_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
 create_keyword_for_ad_group_config = {
     "name": "create_keyword_for_ad_group",
     "description": f"Creates (regular and negative) keywords for Ad Group (AdGroupCriterion). {MODIFICATION_WARNING}",

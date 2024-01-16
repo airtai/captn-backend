@@ -639,6 +639,9 @@ def _copy_keyword_text_and_match_type(
     )
 
 
+REMOVE_EXISTING_AND_CREATE_NEW_CRITERION = "When updating keyword text or match type, a NEW keyword is created and the old one is removed:"
+
+
 async def _remove_existing_create_new_ad_group_criterion(
     user_id: int, ad_group_criterion_model: AdGroupCriterion
 ) -> str:
@@ -647,17 +650,6 @@ async def _remove_existing_create_new_ad_group_criterion(
         customer_id=ad_group_criterion_model.customer_id,
         criterion_id=ad_group_criterion_model.criterion_id,
     )
-    remove_resource = RemoveResource(
-        customer_id=ad_group_criterion_model.customer_id,
-        resource_id=ad_group_criterion_model.criterion_id,
-        resource_type="ad_group_criterion",
-        parent_id=ad_group_criterion_model.ad_group_id,
-    )
-    remove_response = await remove_google_ads_resource(
-        user_id=user_id,
-        model=remove_resource,
-    )
-    print(f"First remove existing resource: {remove_response}")
 
     ad_group_criterion_model.status = (
         ad_group_criterion_model.status
@@ -673,10 +665,26 @@ async def _remove_existing_create_new_ad_group_criterion(
     _copy_keyword_text_and_match_type(
         model=ad_group_criterion_model, criterion_copy=ad_group_criterion_copy
     )
-    return await add_keywords_to_ad_group(
+
+    create_response = await add_keywords_to_ad_group(
         user_id=user_id,
         model=ad_group_criterion_model,
     )
+
+    remove_resource = RemoveResource(
+        customer_id=ad_group_criterion_model.customer_id,
+        resource_id=ad_group_criterion_model.criterion_id,
+        resource_type="ad_group_criterion",
+        parent_id=ad_group_criterion_model.ad_group_id,
+    )
+    remove_response = await remove_google_ads_resource(
+        user_id=user_id,
+        model=remove_resource,
+    )
+
+    response = f"{REMOVE_EXISTING_AND_CREATE_NEW_CRITERION}\n{create_response}\n{remove_response}"
+
+    return response
 
 
 @router.get("/update-ad-group-criterion")
@@ -805,6 +813,15 @@ async def update_campaigns_negative_keywords(
         criterion_id=campaign_criterion_model.criterion_id,
     )
 
+    _copy_keyword_text_and_match_type(
+        model=campaign_criterion_model, criterion_copy=campaign_criterion_copy
+    )
+
+    create_response = await add_negative_keywords_to_campaign(
+        user_id=user_id,
+        campaign_criterion_model=campaign_criterion_model,
+    )
+
     remove_resource = RemoveResource(
         customer_id=campaign_criterion_model.customer_id,
         resource_id=campaign_criterion_model.criterion_id,
@@ -815,16 +832,9 @@ async def update_campaigns_negative_keywords(
         user_id=user_id,
         model=remove_resource,
     )
-    print(f"First remove existing resource: {remove_response}")
+    response = f"{REMOVE_EXISTING_AND_CREATE_NEW_CRITERION}\n{create_response}\n{remove_response}"
 
-    _copy_keyword_text_and_match_type(
-        model=campaign_criterion_model, criterion_copy=campaign_criterion_copy
-    )
-
-    return await add_negative_keywords_to_campaign(
-        user_id=user_id,
-        campaign_criterion_model=campaign_criterion_model,
-    )
+    return response
 
 
 @router.get("/add-keywords-to-ad-group")

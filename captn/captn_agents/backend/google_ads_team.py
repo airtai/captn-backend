@@ -36,6 +36,7 @@ from .function_configs import (
     update_ad_group_config,
     update_ad_group_criterion_config,
     update_campaign_config,
+    update_campaigns_negative_keywords_config,
 )
 from .functions import reply_to_client_2
 
@@ -61,6 +62,7 @@ class GoogleAdsTeam(Team):
         update_ad_copy_config,
         create_ad_copy_headline_or_description_config,
         remove_ad_copy_headline_or_description_config,
+        update_campaigns_negative_keywords_config,
     ]
 
     _shared_system_message = (
@@ -264,8 +266,9 @@ Currently we are in a demo phase and clients need to see what we are CURRENTLY a
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes
 which we can do right away.
 If you are asked to optimize campaigns, start with updating ad copy or creating/removing positive and negative keywords.
+- analyse keywords and find out which are (i)relevant for clients business and suggest some create/update/remove actions
 - Take a look at ad copy (headlines, descriptions, urls...) and make suggestions on what should be changed (create/update/remove headlines etc.)
-- analyse keywords and find out which are (i)relevant for clients business
+
 Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
 
 When you ask the client for some suggestions (e.g. which headline should be added), you should also generate smart suggestions like:
@@ -307,7 +310,7 @@ Also, use smart_suggestions' to suggest multiple options of what can be done:
 If the 'message' parameter already contains a list of suggestions, you should use it!
 e.g. if the 'message' parameter contains:
 - Add keyword x
-- Add keyword y
+- Update keyword y
 
 Do NOT suggest changing multiple things as one suggestion. e.g.: ["Add all keywords"].
 EACH change should be a separate suggestion. e.g.: ["Add keyword x", "Add keyword y", ...]
@@ -379,27 +382,32 @@ criterion_id: string, clients_approval_message: string, status: Optional[Literal
 keyword_match_type: string, keyword_text: string,
 cpc_bid_micros: Optional[int], client_approved_modicifation_for_this_resource: boolean)
 
-8. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
+8. 'update_campaigns_negative_keywords': Update the Google Ads keywords (on campaign level), params: (customer_id: string, campaign_id: string,
+criterion_id: string, clients_approval_message: string, keyword_match_type: string, keyword_text: string,
+client_approved_modicifation_for_this_resource: boolean)
+This command can only update campaigns negative keywords keyword_match_type and keyword_text
+
+9. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean)
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
-9. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
+10. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean, cpc_bid_micros: Optional[int])
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
-10. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the Google Ads Copy, params: (customer_id: string, ad_id: string,
+11. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the Google Ads Copy, params: (customer_id: string, ad_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 headline: Optional[str], description: Optional[str])
 
-11. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
+12. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
 clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
-12. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
+13. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
@@ -574,6 +582,20 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 keyword_match_type=keyword_match_type,
             ),
             endpoint="/update-ad-group-criterion",
+        ),
+        "update_campaigns_negative_keywords": lambda customer_id, campaign_id, criterion_id, clients_approval_message, client_approved_modicifation_for_this_resource, keyword_match_type=None, keyword_text=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            ad=CampaignCriterion(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                criterion_id=criterion_id,
+                keyword_text=keyword_text,
+                keyword_match_type=keyword_match_type,
+            ),
+            endpoint="/update-campaigns-negative-keywords",
         ),
         "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
