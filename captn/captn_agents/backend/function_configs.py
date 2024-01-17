@@ -526,6 +526,7 @@ update_ad_group_criterion_config = {
 create_ad_copy_headline_or_description_config = {
     "name": "create_ad_copy_headline_or_description",
     "description": f"""Create NEW headline and/or description in the the Google Ads Copy.
+This method does NOT create new Ad Copy, it only creates new headlines and/or descriptions for the existing Ad Copy.
 This method should NOT be used for updating existing headlines or descriptions.
 {MODIFICATION_WARNING}""",
     "parameters": {

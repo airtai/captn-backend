@@ -404,7 +404,7 @@ status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
-11. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the Google Ads Copy, params: (customer_id: string, ad_id: string,
+11. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the EXISTING Google Ads Copy, params: (customer_id: string, ad_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 headline: Optional[str], description: Optional[str])
 
