@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional
 
 from fastapi import Query
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class AdBase(BaseModel):
@@ -46,7 +46,7 @@ class AdGroupAd(AdGroup):
 
         return field
 
-    @validator("headlines")
+    @field_validator("headlines")
     def headlines_validator(cls, headlines: Optional[List[str]]) -> Optional[List[str]]:
         return cls.validate_field(
             field_name="headlines",
@@ -55,7 +55,7 @@ class AdGroupAd(AdGroup):
             max_string_length=30,
         )
 
-    @validator("descriptions")
+    @field_validator("descriptions")
     def descriptions_validator(
         cls, descriptions: Optional[List[str]]
     ) -> Optional[List[str]]:
