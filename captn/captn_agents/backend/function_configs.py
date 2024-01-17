@@ -316,14 +316,15 @@ properties_config = {
     "clients_approval_message": {
         "type": "string",
         "description": """Clients approval message.
-This message is sent by the client to the team when he approves the changes.
-NEVER create this message on your own, or modify it in ANY way!
+Clients meassage in which he approves the changes.
+NEVER create this message on your own, or modify clients message in ANY way!
 Faking the clients approval may resault with the LAWSUIT and you will get fired!!""",
     },
     "client_approved_modicifation_for_this_resource": {
         "type": "boolean",
         "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...).
+and which values will be modified (e.g. name, status...). Once the client approves the changes, the team can call the function.
+Until the client approves the changes, the team must NOT call the function! and this parameter MUST be set to False.
 Client must be informed about everything!""",
     },
     "cpc_bid_micros": {
@@ -345,6 +346,10 @@ Client must be informed about everything!""",
     "keyword_text": {
         "type": "string",
         "description": "The text of the keyword",
+    },
+    "final_url": {
+        "type": "string",
+        "description": "The page on the website that people reach when they click the ad. final_url must use HTTP or HTTPS protocol. The url should only contain the website domain WITHOUT the path. e.g. https://www.example.com",
     },
 }
 
@@ -411,6 +416,48 @@ update_ad_group_ad_config = {
     },
 }
 
+
+create_ad_group_ad_config = {
+    "name": "create_ad_group_ad",
+    "description": f"""Create Google Ad.
+Use this method only when the client approves the creation of the new Ad, ALL the headlines, descriptions and final_url.
+{MODIFICATION_WARNING}""",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "ad_group_id": properties_config["ad_group_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+            "headlines": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of headlines, min_length=3, max_length=15. Each headline must be less than 30 characters!",
+            },
+            "descriptions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of descriptions, min_length=2, max_length=4. Each description must be less than 90 characters!",
+            },
+            "final_url": properties_config["final_url"],
+        },
+        "required": [
+            "customer_id",
+            "ad_group_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+            "headlines",
+            "descriptions",
+            "final_url",
+        ],
+    },
+}
 
 update_campaign_config = {
     "name": "update_campaign",
@@ -528,10 +575,7 @@ Use this parameter ONLY when you want to modify existing headline!""",
                 "description": """Index in the descriptions list which needs to be updated. Index starts from 0.
 Use this parameter ONLY when you want to modify existing description!""",
             },
-            "final_urls": {
-                "type": "string",
-                "description": "Ad Copy final_urls",
-            },
+            "final_url": properties_config["final_url"],
             "final_mobile_urls": {
                 "type": "string",
                 "description": "Ad Copy final_mobile_urls",

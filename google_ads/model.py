@@ -21,7 +21,7 @@ class AdGroup(AdBase):
 
 class AdGroupAd(AdGroup):
     ad_id: Optional[str] = None
-    final_urls: Optional[str] = None
+    final_url: Optional[str] = None
     headlines: Optional[List[str]] = Field(Query(default=None), max_length=15)
     descriptions: Optional[List[str]] = Field(Query(default=None), max_length=4)
 
@@ -73,7 +73,7 @@ class AdCopy(AdBase):
     description: Optional[str] = Field(None, max_length=90)
     update_existing_headline_index: Optional[int] = None
     update_existing_description_index: Optional[int] = None
-    final_urls: Optional[str] = None
+    final_url: Optional[str] = None
     final_mobile_urls: Optional[str] = None
 
 

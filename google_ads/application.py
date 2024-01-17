@@ -388,8 +388,10 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
                 responsive_search_ad=responsive_search_ad,
             )
 
-    if model_or_dict.final_urls:
-        operation_update.final_urls.append(model_or_dict.final_urls)
+    if model_or_dict.final_url:
+        final_url = model_or_dict.final_url
+        final_url = final_url if final_url.startswith("http") else f"http://{final_url}"
+        operation_update.final_urls.append(final_url)
     if model_or_dict.final_mobile_urls:
         operation_update.final_mobile_urls.append(model_or_dict.final_mobile_urls)
 
@@ -552,10 +554,15 @@ def _create_ad_group_ad_set_attr(
     # https://developers.google.com/google-ads/api/reference/rpc/v11/ResponsiveSearchAdInfo
 
     # The list of possible final URLs after all cross-domain redirects for the ad.
-    if "final_urls" not in model_dict:
+    if "final_url" not in model_dict:
         raise KeyError("Final_urls must be provided for creating an ad!")
 
-    operation_create.ad.final_urls.append(model_dict["final_urls"])
+    final_url = (
+        model_dict["final_url"]
+        if model_dict["final_url"].startswith("http")
+        else f"http://{model_dict['final_url']}"
+    )
+    operation_create.ad.final_urls.append(final_url)
 
     # Set a pinning to always choose this asset for HEADLINE_1. Pinning is
     # optional; if no pinning is set, then headlines and descriptions will be
