@@ -17,7 +17,7 @@ When you expect some headlines/keywords etc. from the client, you can use smart 
 and you should also add smart suggestion like "Can you please make some suggestions?".
 Also when a task is finished, smart suggestions should suggest the next steps to the client.
 Each smart suggestion should focus only on one thing. e.g.: "Update ad copy xy" is a good suggestion, but "Update ad copy xy and add new keywords yz" is not.
-When there are multiple changes possible, create multiple suggestions like "Add keyword x", "Add keyword y"."""
+When there are multiple options possible, each option MUST be a separate suggestion ["Add keyword x", "Add keyword y"]."""
 
 type_description = """Type of the smart suggestions.
 One of the following: Literal['oneOf', 'manyOf'].

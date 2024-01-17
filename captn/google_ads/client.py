@@ -90,7 +90,7 @@ def google_ads_create_update(
     clients_approval_message: str,
     client_approved_modicifation_for_this_resource: bool,
     ad: BaseModel,
-    endpoint: str = "/update-ad",
+    endpoint: str = "/update-ad-group-ad",
 ) -> Union[Dict[str, Any], str]:
     if (
         not clients_approval_message

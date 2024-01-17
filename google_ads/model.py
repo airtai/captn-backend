@@ -1,6 +1,7 @@
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from fastapi import Query
+from pydantic import BaseModel, Field, field_validator
 
 
 class AdBase(BaseModel):
@@ -19,7 +20,51 @@ class AdGroup(AdBase):
 
 
 class AdGroupAd(AdGroup):
-    ad_id: str
+    ad_id: Optional[str] = None
+    final_url: Optional[str] = None
+    headlines: Optional[List[str]] = Field(Query(default=None), max_length=15)
+    descriptions: Optional[List[str]] = Field(Query(default=None), max_length=4)
+
+    @classmethod
+    def validate_field(
+        cls,
+        field_name: str,
+        field: Optional[List[str]],
+        min_list_length: int,
+        max_string_length: int,
+    ) -> Optional[List[str]]:
+        if field is not None:
+            if len(field) < min_list_length:
+                raise ValueError(
+                    f"{field_name} must have at least {min_list_length} items!"
+                )
+            for item in field:
+                if len(item) > max_string_length:
+                    raise ValueError(
+                        f"Each {field_name} must be less than {max_string_length} characters!\nLength of {item} is {len(item)}"
+                    )
+
+        return field
+
+    @field_validator("headlines")
+    def headlines_validator(cls, headlines: Optional[List[str]]) -> Optional[List[str]]:
+        return cls.validate_field(
+            field_name="headlines",
+            field=headlines,
+            min_list_length=3,
+            max_string_length=30,
+        )
+
+    @field_validator("descriptions")
+    def descriptions_validator(
+        cls, descriptions: Optional[List[str]]
+    ) -> Optional[List[str]]:
+        return cls.validate_field(
+            field_name="descriptions",
+            field=descriptions,
+            min_list_length=2,
+            max_string_length=90,
+        )
 
 
 class AdCopy(AdBase):
@@ -28,7 +73,7 @@ class AdCopy(AdBase):
     description: Optional[str] = Field(None, max_length=90)
     update_existing_headline_index: Optional[int] = None
     update_existing_description_index: Optional[int] = None
-    final_urls: Optional[str] = None
+    final_url: Optional[str] = None
     final_mobile_urls: Optional[str] = None
 
 

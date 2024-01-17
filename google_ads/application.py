@@ -388,8 +388,10 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
                 responsive_search_ad=responsive_search_ad,
             )
 
-    if model_or_dict.final_urls:
-        operation_update.final_urls.append(model_or_dict.final_urls)
+    if model_or_dict.final_url:
+        final_url = model_or_dict.final_url
+        final_url = final_url if final_url.startswith("http") else f"http://{final_url}"
+        operation_update.final_urls.append(final_url)
     if model_or_dict.final_mobile_urls:
         operation_update.final_mobile_urls.append(model_or_dict.final_mobile_urls)
 
@@ -512,7 +514,9 @@ async def _update(
     return f"Updated {response.results[0].resource_name}."
 
 
-def _keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> None:
+def _keywords_setattr(
+    model_dict: Dict[str, Any], operation_create: Any, client: Any
+) -> None:
     for attribute_name, attribute_value in model_dict.items():
         if attribute_value:
             if "keyword_" in attribute_name:
@@ -520,6 +524,77 @@ def _keywords_setattr(model_dict: Dict[str, Any], operation_create: Any) -> None
                 setattr(operation_create.keyword, attribute_name, attribute_value)
             else:
                 setattr(operation_create, attribute_name, attribute_value)
+
+
+def _create_ad_text_asset(client: Any, text: str, pinned_field: str = None) -> Any:  # type: ignore
+    """Create an AdTextAsset.
+    Args:
+        client: an initialized GoogleAdsClient instance.
+        text: text for headlines and descriptions.
+        pinned_field: to pin a text asset so it always shows in the ad.
+
+    Returns:
+        An AdTextAsset.
+    """
+    ad_text_asset = client.get_type("AdTextAsset")
+    ad_text_asset.text = text
+    if pinned_field:
+        ad_text_asset.pinned_field = pinned_field
+    return ad_text_asset
+
+
+def _create_ad_group_ad_set_attr(
+    model_dict: Dict[str, Any], operation_create: Any, client: Any
+) -> None:
+    print(model_dict)
+    if "status" in model_dict:
+        operation_create.status = client.enums.AdGroupAdStatusEnum.ENABLED
+
+    # Set responsive search ad info.
+    # https://developers.google.com/google-ads/api/reference/rpc/v11/ResponsiveSearchAdInfo
+
+    # The list of possible final URLs after all cross-domain redirects for the ad.
+    if "final_url" not in model_dict:
+        raise KeyError("Final_urls must be provided for creating an ad!")
+
+    final_url = (
+        model_dict["final_url"]
+        if model_dict["final_url"].startswith("http")
+        else f"http://{model_dict['final_url']}"
+    )
+    operation_create.ad.final_urls.append(final_url)
+
+    # Set a pinning to always choose this asset for HEADLINE_1. Pinning is
+    # optional; if no pinning is set, then headlines and descriptions will be
+    # rotated and the ones that perform best will be used more often.
+
+    # Headline 1
+    served_asset_enum = client.enums.ServedAssetFieldTypeEnum.HEADLINE_1
+    pinned_headline = _create_ad_text_asset(
+        client, model_dict["headlines"][0], served_asset_enum
+    )
+
+    # Headlines 2-15
+    headlines = [pinned_headline]
+    headlines += [
+        _create_ad_text_asset(client, headline)
+        for headline in model_dict["headlines"][1:]
+    ]
+    operation_create.ad.responsive_search_ad.headlines.extend(headlines)
+
+    descriptions = [
+        _create_ad_text_asset(client, desc) for desc in model_dict["descriptions"]
+    ]
+
+    operation_create.ad.responsive_search_ad.descriptions.extend(descriptions)
+
+    # TODO:
+    # Paths
+    # First and second part of text that can be appended to the URL in the ad.
+    # If you use the examples below, the ad will show
+    # https://www.example.com/all-inclusive/deals
+    # operation_create.ad.responsive_search_ad.path1 = "all-inclusive"
+    # operation_create.ad.responsive_search_ad.path2 = "deals"
 
 
 GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
@@ -543,7 +618,9 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "service": "AdGroupAdService",
         "operation": "AdGroupAdOperation",
         "mutate": "mutate_ad_group_ads",
+        "service_path_create": "ad_group_path",
         "service_path_update_delete": "ad_group_ad_path",
+        "setattr_func": _create_ad_group_ad_set_attr,
         "set_fields": _set_fields,
     },
     "ad_copy": {
@@ -574,8 +651,8 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
 }
 
 
-@router.get("/update-ad")
-async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
+@router.get("/update-ad-group-ad")
+async def update_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
 
@@ -584,6 +661,20 @@ async def update_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
         model=ad_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id", "ad_id"],
+    )
+
+
+@router.get("/create-ad-group-ad")
+async def create_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
+    print(ad_model)
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
+
+    return await _add(
+        user_id=user_id,
+        model=ad_model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "ad_group_id"],
     )
 
 
@@ -721,7 +812,7 @@ async def _add(
     mandatory_fields: List[str],
 ) -> str:
     (
-        _,
+        client,
         service,
         operation,
         model_dict,
@@ -737,7 +828,9 @@ async def _add(
     )
     try:
         setattr_func = service_operation_and_function_names["setattr_func"]
-        setattr_func(model_dict=model_dict, operation_create=operation_create)
+        setattr_func(
+            model_dict=model_dict, operation_create=operation_create, client=client
+        )
 
         service_path_function = getattr(
             service, service_operation_and_function_names["service_path_create"]
