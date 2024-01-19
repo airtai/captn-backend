@@ -272,8 +272,17 @@ If you are asked to optimize campaigns, start with updating ad copy or creating/
 - Take a look at ad copy (headlines, descriptions, urls...) and make suggestions on what should be changed (create/update/remove headlines etc.)
 
 Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
-Do NOT use smart suggestions for open ended questions or questions which require the clients input. Question e.g.:
-'Could you please provide us with the final URL where users should be directed after clicking the ad?'
+Do NOT use smart suggestions for open ended questions or questions which require the clients input.
+e.g. of VERY BAD smart suggestions:
+['Could you please provide us with the final URL where users should be directed after clicking the ad?',
+'Please provide specific headlines for the new ads.']
+
+e.g. of GOOD smart suggestions:
+"Can you please make headlines suggestions?", "Can you please make descriptions suggestions?" "I will provide the final_url once we agree about the headlines and descriptions"] (with type 'manyOf')
+
+e.g. of GOOD smart suggestions:
+"Use headline x", "Use headline y", "Use headline z", "Use description w" ...] (with type 'manyOf')
+
 
 When you ask the client for some suggestions (e.g. which headline should be added), you should also generate smart suggestions like:
 "smart_suggestions": {
@@ -338,6 +347,7 @@ FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
 Suggestion: keyword_view table is a good place to start digging for info.
 
 If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRUE" for filtering.
+Unless told differently, do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!
 
 
 The following commands make permanent changes. In all of them you must use the following two parameters:
@@ -411,7 +421,8 @@ headline: Optional[str], description: Optional[str])
 12 'create_ad_group_ad': Create new ad group ad, params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean, status: Optional[Literal["ENABLED", "PAUSED"]],
 headlines: List[str], descriptions: List[str], final_url: List[str])
-Do NOT suggest final_url within the smart suggestions, because it must be provided by the client.
+You can suggest final_url within the smart suggestions if the client has provided it in the customer brief.
+If not, do not suggest the final_url, it must be provided by the client.
 
 13. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],

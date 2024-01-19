@@ -188,7 +188,8 @@ execute_query_config = {
             },
             "query": {
                 "type": "string",
-                "description": "Database query",
+                "description": """Database query.
+Unless told differently, do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!""",
             },
         },
     },

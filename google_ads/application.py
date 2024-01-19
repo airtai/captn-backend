@@ -390,7 +390,9 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
 
     if model_or_dict.final_url:
         final_url = model_or_dict.final_url
-        final_url = final_url if final_url.startswith("http") else f"http://{final_url}"
+        final_url = (
+            final_url if final_url.startswith("http") else f"https://{final_url}"
+        )
         operation_update.final_urls.append(final_url)
     if model_or_dict.final_mobile_urls:
         operation_update.final_mobile_urls.append(model_or_dict.final_mobile_urls)
@@ -560,7 +562,7 @@ def _create_ad_group_ad_set_attr(
     final_url = (
         model_dict["final_url"]
         if model_dict["final_url"].startswith("http")
-        else f"http://{model_dict['final_url']}"
+        else f"https://{model_dict['final_url']}"
     )
     operation_create.ad.final_urls.append(final_url)
 
