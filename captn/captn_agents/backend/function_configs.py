@@ -189,7 +189,8 @@ execute_query_config = {
             "query": {
                 "type": "string",
                 "description": """Database query.
-Unless told differently, do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!""",
+Unless told differently, do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!
+NEVER try to retrieve field "ad_group_ad.ad.strength" because field "strength" does NOT exist!""",
             },
         },
     },
