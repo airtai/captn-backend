@@ -18,6 +18,8 @@ def _completions_create(
     params: Dict[str, Any],
 ) -> Any:
     for message in params["messages"]:
+        if "function_call" in message and message["function_call"] is None:
+            message.pop("function_call", None)
         name = message.get("name")
         role = message.get("role")
         if name and role != "function":
