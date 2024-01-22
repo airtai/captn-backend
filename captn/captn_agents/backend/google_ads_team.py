@@ -27,6 +27,7 @@ from .function_configs import (
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
+    get_web_page_summary_config,
     list_accessible_customers_config,
     read_file_config,
     remove_ad_copy_headline_or_description_config,
@@ -39,7 +40,7 @@ from .function_configs import (
     update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
-from .functions import reply_to_client_2
+from .functions import get_web_page_summary, reply_to_client_2
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -65,6 +66,7 @@ class GoogleAdsTeam(Team):
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
         create_ad_group_ad_config,
+        get_web_page_summary_config,
     ]
 
     _shared_system_message = (
@@ -245,7 +247,11 @@ but the client does NOT need to know all the Google Ads details that you have re
 34. Each Ad can have MAXIMUM 4 descriptions.
 35. When updating headlines and descriptions lists, make sure to ask the user if he wants to add new or modify existing headline/description.
 36. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
-37. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
+37. Use the 'get_web_page_summary' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
+e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for suggesting keywords, headlines, descriptions etc.
+You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
+and try to figure out the rest yourself.
+38. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 Here is a list of things which you CAN do:
@@ -432,6 +438,8 @@ If not explicitly asked, you MUST ask the client for approval before removing an
 14. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
+
+14. 'get_web_page_summary': Get the summary of the web page, params: (url: string)
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
@@ -699,6 +707,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/create-update-ad-copy",
         ),
+        "get_web_page_summary": get_web_page_summary,
     }
 
     return function_map

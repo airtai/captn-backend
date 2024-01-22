@@ -42,7 +42,15 @@ CONFIG_LIST = [
     #     "api_key": "NULL", # just a placeholder  # pragma: allowlist secret
     # },
     {
-        "model": "airt-gpt4",
+        "model": "gpt-4",
+        "api_key": api_key_sweeden,
+        "api_base": api_base_sweeden,
+        "base_url": api_base_sweeden,
+        "api_type": openai.api_type,
+        "api_version": openai.api_version,
+    },
+    {
+        "model": "gpt-35-turbo-16k",
         "api_key": api_key_sweeden,
         "api_base": api_base_sweeden,
         "base_url": api_base_sweeden,

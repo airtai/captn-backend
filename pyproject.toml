@@ -92,7 +92,7 @@ agents = [
     "httpx==0.26.0",
     "uvicorn==0.25.0",
     "python-dotenv==1.0.0",
-    "pyautogen==0.2.7",
+    "pyautogen[websurfer] @ git+https://github.com/microsoft/autogen.git@main",
     "pandas>=2.1",
     "fastcore==1.5.29",
     "asyncer==0.0.2",
@@ -112,6 +112,9 @@ Source = "https://github.com/airtai/captn-backend"
 
 [tool.hatch.version]
 path = "captn/__about__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build]
 skip-excluded-dirs = true

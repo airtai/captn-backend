@@ -809,3 +809,19 @@ ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaig
         ],
     },
 }
+
+
+get_web_page_summary_config = {
+    "name": "get_web_page_summary",
+    "description": "Get the summary of the web page content",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "url": {
+                "type": "string",
+                "description": "The url of the web page which needs to be summarized",
+            },
+        },
+        "required": ["url"],
+    },
+}

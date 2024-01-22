@@ -1,6 +1,11 @@
 from typing import Any, Dict, List, Optional, Union
 
+import autogen
+from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
+from autogen.oai.openai_utils import filter_config
 from typing_extensions import Annotated
+
+from captn.captn_agents.backend.config import CONFIG_LIST
 
 from ..model import SmartSuggestions
 
@@ -48,3 +53,43 @@ def reply_to_client_2(
         "terminate_groupchat": True,
     }
     return return_msg
+
+
+config_list_gpt_3_5 = filter_config(CONFIG_LIST, {"model": "gpt-35-turbo-16k"})
+config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "gpt-4"})
+
+llm_config = {
+    "timeout": 600,
+    "config_list": config_list_gpt_4,
+    "temperature": 0,
+}
+
+summarizer_llm_config = {
+    "timeout": 600,
+    "config_list": config_list_gpt_3_5,
+    "temperature": 0,
+}
+
+
+def get_web_page_summary(url: str) -> str:
+    web_surfer = WebSurferAgent(
+        "web_surfer",
+        llm_config=llm_config,
+        summarizer_llm_config=summarizer_llm_config,
+        browser_config={"viewport_size": 4096, "bing_api_key": None},
+    )
+
+    user_proxy = autogen.UserProxyAgent(
+        "user_proxy",
+        human_input_mode="NEVER",
+        code_execution_config=False,
+        default_auto_reply="",
+        is_termination_msg=lambda x: True,
+    )
+
+    task1 = f"Get all info from the {url}"
+    user_proxy.initiate_chat(web_surfer, message=task1)
+
+    task2 = "Summarize the content of the scraped page."
+    user_proxy.initiate_chat(web_surfer, message=task2, clear_history=False)
+    return str(user_proxy.last_message()["content"])
