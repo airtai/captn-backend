@@ -813,7 +813,10 @@ ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaig
 
 get_web_page_summary_config = {
     "name": "get_web_page_summary",
-    "description": "Get the summary of the web page content",
+    "description": """Get the summary of the web page content.
+There is no need to test this function (by sending url: https://www.example.com).
+NEVER use this function for scraping Google Ads pages (e.g. https://ads.google.com/aw/campaigns?campaignId=1212121212)
+""",
     "parameters": {
         "type": "object",
         "properties": {

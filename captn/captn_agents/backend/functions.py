@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional, Union
+from unittest.mock import patch
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
@@ -67,26 +68,42 @@ summarizer_llm_config = {
 }
 
 
+# WebSurferAgent is implemented to always aks for the human input at the end of the chat.
+# This patch will reply with "exit" to the input() function.
+@patch("builtins.input", lambda *args: "exit")
 def get_web_page_summary(url: str, summary_creation_guidelines: str) -> str:
+    google_ads_url = "ads.google.com"
+    if google_ads_url in url:
+        return "FAILED: This function should NOT be used for scraping google ads!"
+
     web_surfer = WebSurferAgent(
         "web_surfer",
         llm_config=llm_config,
         summarizer_llm_config=summarizer_llm_config,
         browser_config={"viewport_size": 4096, "bing_api_key": None},
+        is_termination_msg=lambda x: "SUMMARY" in x["content"]
+        or "FAILED" in x["content"],
     )
 
+    user_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
+web_surfer is able to click on links, scroll down, and scrape the content of the web page. e.g. you cen tell him: "Click the 'Getting Started' result".
+Do NOT try to click all the links on the page, but only the ones which are RELEVANT for the task!
+Your final goal is to summarize the content of the scraped page. The summary must be in English!
+GUIDELINES: {summary_creation_guidelines}
+
+If successful, your last message needs to start with "SUMMARY:" and then you need to write the summary.
+
+Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
+"""
     user_proxy = autogen.UserProxyAgent(
         "user_proxy",
         human_input_mode="NEVER",
         code_execution_config=False,
-        default_auto_reply="",
-        is_termination_msg=lambda x: True,
+        llm_config=llm_config,
+        system_message=user_system_message,
     )
 
     task1 = f"Get all info from the {url}"
     user_proxy.initiate_chat(web_surfer, message=task1)
 
-    task2 = "Summarize the content of the scraped page. The summary must be in English!"
-    task2 += f"\nGUIDELINES: {summary_creation_guidelines}"
-    user_proxy.initiate_chat(web_surfer, message=task2, clear_history=False)
     return str(user_proxy.last_message()["content"])
