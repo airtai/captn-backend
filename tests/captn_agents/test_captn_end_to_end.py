@@ -4,6 +4,7 @@ import pytest
 from freezegun import freeze_time
 
 from captn.captn_agents.backend.end_to_end import start_conversation
+from captn.captn_agents.backend.functions import get_web_page_summary
 from captn.captn_agents.backend.team import Team
 from captn.google_ads.client import google_ads_create_update
 
@@ -124,7 +125,7 @@ You have all the permissions to pause the ads, so do not ask me for any addition
 
 @freeze_time("2023-11-01")
 def test_add_regular_keywords() -> None:
-    task = f"""Add Btoad keyword 'pytest keyword' to the 'Ad group 1' in the 'Search-1' campaign.
+    task = f"""Add keyword 'pytest keyword' to the 'Ad group 1' in the 'Search-1' campaign.
 You have all the permissions to pause the ads, so do not ask me for any additional info, just do it!!
 {SHARED_PROMPT}"""
 
@@ -137,6 +138,37 @@ You have all the permissions to pause the ads, so do not ask me for any addition
         task=task,
         endpoint="/add-keywords-to-ad-group",
     )
+
+
+def test_summerize_web_page() -> None:
+    task = f"""Which brokers does faststream support, their web page is: faststream.airt.ai/latest
+{SHARED_PROMPT}"""
+
+    user_id = 1
+    conv_id = 17
+
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.google_ads_team.get_web_page_summary",
+        side_effect=get_web_page_summary,
+    ) as get_web_page_summary_mock:
+        team_name, last_message = start_conversation(
+            user_id=user_id,
+            conv_id=conv_id,
+            task=task,
+            max_round=80,
+            human_input_mode="NEVER",
+            class_name="captn_initial_team",
+        )
+
+        initial_team = Team.get_team(team_name)
+        get_web_page_summary_mock.assert_called()
+
+        brokers = ["kafka", "rabbitmq", "nats"]
+        last_message = last_message.lower()
+        for broker in brokers:
+            assert broker in last_message
+
+        assert last_message_is_termination(initial_team)
 
 
 def test_search_query() -> None:

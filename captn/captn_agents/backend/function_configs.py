@@ -821,7 +821,11 @@ get_web_page_summary_config = {
                 "type": "string",
                 "description": "The url of the web page which needs to be summarized",
             },
+            "summary_creation_guidelines": {
+                "type": "string",
+                "description": "Guidelines for for the creation of the summary. What information are we looking for, what questions need to be answered, etc",
+            },
         },
-        "required": ["url"],
+        "required": ["url", "summary_creation_guidelines"],
     },
 }

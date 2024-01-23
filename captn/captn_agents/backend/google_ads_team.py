@@ -439,7 +439,7 @@ If not explicitly asked, you MUST ask the client for approval before removing an
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
-14. 'get_web_page_summary': Get the summary of the web page, params: (url: string)
+14. 'get_web_page_summary': Get the summary of the web page, params: (url: string, summary_creation_guidelines: string)
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.

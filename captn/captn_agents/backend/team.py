@@ -3,10 +3,9 @@ from typing import Any, Callable, Dict, List, Optional
 
 import autogen
 import openai
-from autogen.oai.openai_utils import filter_config
 from fastcore.basics import patch
 
-from .config import CONFIG_LIST
+from .config import config_list_gpt_4
 
 _completions_create_original = autogen.oai.client.OpenAIWrapper._completions_create
 
@@ -40,7 +39,6 @@ class Team:
     _functions: Optional[List[Dict[str, Any]]] = None
 
     _teams: Dict[str, "Team"] = {}
-    _config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "gpt-4"})
 
     @staticmethod
     def _store_team(team_name: str, team: "Team") -> None:
@@ -102,7 +100,7 @@ class Team:
     @classmethod
     def get_llm_config(cls, seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
         llm_config = {
-            "config_list": cls._config_list_gpt_4,
+            "config_list": config_list_gpt_4,
             "seed": seed,
             "temperature": temperature,
             "functions": cls._functions,
