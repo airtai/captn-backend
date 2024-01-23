@@ -5,7 +5,7 @@ import autogen
 import openai
 from fastcore.basics import patch
 
-from .config import CONFIG_LIST
+from .config import config_list_gpt_4
 
 _completions_create_original = autogen.oai.client.OpenAIWrapper._completions_create
 
@@ -100,7 +100,7 @@ class Team:
     @classmethod
     def get_llm_config(cls, seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
         llm_config = {
-            "config_list": CONFIG_LIST,
+            "config_list": config_list_gpt_4,
             "seed": seed,
             "temperature": temperature,
             "functions": cls._functions,

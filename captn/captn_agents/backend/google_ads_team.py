@@ -27,6 +27,7 @@ from .function_configs import (
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
+    get_web_page_summary_config,
     list_accessible_customers_config,
     read_file_config,
     remove_ad_copy_headline_or_description_config,
@@ -39,7 +40,7 @@ from .function_configs import (
     update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
-from .functions import reply_to_client_2
+from .functions import get_web_page_summary, reply_to_client_2
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -65,6 +66,7 @@ class GoogleAdsTeam(Team):
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
         create_ad_group_ad_config,
+        get_web_page_summary_config,
     ]
 
     _shared_system_message = (
@@ -240,12 +242,19 @@ suggest which changes could benefit them
 but the client does NOT need to know all the Google Ads details that you have retrieved
 30. Suggest one change at the time, otherwise the client will get lost
 31. When using 'execute_query' command, try to use as small query as possible and retrieve only the needed columns
-32. Ad Copy headline can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length!
+32. Ad Copy headline can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length or you will be penalized!
 33. If the client sends you invalid headline/description, do not try to modify it yourself! Explain the problems to him and suggest valid headline/description.
 34. Each Ad can have MAXIMUM 4 descriptions.
 35. When updating headlines and descriptions lists, make sure to ask the user if he wants to add new or modify existing headline/description.
 36. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
-37. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
+37. Use the 'get_web_page_summary' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
+e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for suggesting keywords, headlines, descriptions etc.
+You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
+and try to figure out the rest yourself.
+38. If you want to create a new Ad Copy, ask the client ONLY for the final_url and use the 'get_web_page_summary' command to get the summary of the web page.
+Once you have the summary, you can use it for suggesting headlines and descriptions.
+The final_url MUST be provided by the client, do NOT suggest it yourself nor use smart suggestions like "Please provide the final URL for the new ad." or you will be penalized!
+39. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 Here is a list of things which you CAN do:
@@ -268,21 +277,27 @@ Currently we are in a demo phase and clients need to see what we are CURRENTLY a
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes
 which we can do right away.
 If you are asked to optimize campaigns, start with updating ad copy or creating/removing positive and negative keywords.
+- Use 'get_web_page_summary' command when the client provides you some url or for already existing ad copies (based on the final_url).
+This command can be very useful for figuring out the clients business and what he wants to achieve.
+Before asking the client for additional information, ask him for his company/product url and try to figure out as much as possible yourself.
 - analyse keywords and find out which are (i)relevant for clients business and suggest some create/update/remove actions
 - Take a look at ad copy (headlines, descriptions, urls...) and make suggestions on what should be changed (create/update/remove headlines etc.)
+- Headlines can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length!
 
 Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
 Do NOT use smart suggestions for open ended questions or questions which require the clients input.
-e.g. of VERY BAD smart suggestions:
-['Could you please provide us with the final URL where users should be directed after clicking the ad?',
-'Please provide specific headlines for the new ads.']
 
-e.g. of GOOD smart suggestions:
-"Can you please make headlines suggestions?", "Can you please make descriptions suggestions?" "I will provide the final_url once we agree about the headlines and descriptions"] (with type 'manyOf')
+e.g.1 message: Could you please provide the final URL where users should be directed after clicking the ad?
+VERY BAD smart suggestions:
+['Could you please provide us with the final URL where users should be directed after clicking the ad?', 'Please provide specific headlines for the new ads.'] -
+Smart reply represents the message which the CLIENT can send to US.
+And in the case above that is NOT the case!! It is much better NOT to use smart suggestions at all then to use them in this (WRONG) way.
 
-e.g. of GOOD smart suggestions:
-"Use headline x", "Use headline y", "Use headline z", "Use description w" ...] (with type 'manyOf')
 
+e.g.2 message: "I suggest the following headlines: 'x', 'y', 'z'..."
+GOOD smart suggestions:
+["Use headline x", "Use headline y", "Use headline z", "Use description w" ...] (with type 'manyOf')
+- When message suggests multiple headlines/descriptions/keywods, use 'manyOf' type and add each item as a separate suggestion.
 
 When you ask the client for some suggestions (e.g. which headline should be added), you should also generate smart suggestions like:
 "smart_suggestions": {
@@ -432,6 +447,9 @@ If not explicitly asked, you MUST ask the client for approval before removing an
 14. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
+
+14. 'get_web_page_summary': Get the summary of the web page, params: (url: string, summary_creation_guidelines: string)
+It should be used only for the clients web page(s), final_url(s) etc.
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
@@ -699,6 +717,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/create-update-ad-copy",
         ),
+        "get_web_page_summary": get_web_page_summary,
     }
 
     return function_map

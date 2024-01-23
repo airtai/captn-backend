@@ -2,6 +2,7 @@ import os
 
 import openai
 from autogen import __version__ as autogen_version
+from autogen.oai.openai_utils import filter_config
 from dotenv import load_dotenv
 
 __all__ = ["CONFIG_LIST"]
@@ -49,6 +50,14 @@ CONFIG_LIST = [
         "api_type": openai.api_type,
         "api_version": openai.api_version,
     },
+    {
+        "model": "gpt-35-turbo-16k",
+        "api_key": api_key_sweeden,
+        "api_base": api_base_sweeden,
+        "base_url": api_base_sweeden,
+        "api_type": openai.api_type,
+        "api_version": openai.api_version,
+    },
     # {
     #     "model": "gpt-4",
     #     "api_key": api_key_canada,
@@ -71,3 +80,6 @@ for config in CONFIG_LIST:
     else:
         config.pop("api_base")
         # config.pop("api_type")
+
+config_list_gpt_3_5 = filter_config(CONFIG_LIST, {"model": "gpt-35-turbo-16k"})
+config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "airt-gpt4"})
