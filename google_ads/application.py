@@ -495,7 +495,7 @@ async def _update(
         )
 
         model_or_dict = model if isinstance(model, AdCopy) else model_dict
-        await service_operation_and_function_names["set_fields"](
+        await service_operation_and_function_names["setattr_update_func"](
             client=client,
             model_or_dict=model_or_dict,
             operation=operation,
@@ -514,6 +514,14 @@ async def _update(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
     return f"Updated {response.results[0].resource_name}."
+
+
+def _create_ad_group_setattr(
+    model_dict: Dict[str, Any], operation_create: Any, client: Any
+) -> None:
+    for attribute_name, attribute_value in model_dict.items():
+        if attribute_value:
+            setattr(operation_create, attribute_name, attribute_value)
 
 
 def _keywords_setattr(
@@ -606,7 +614,7 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_campaigns",
         "service_path_create": None,  # TODO
         "service_path_update_delete": "campaign_path",
-        "set_fields": _set_fields,
+        "setattr_update_func": _set_fields,
     },
     "ad_group": {
         "service": "AdGroupService",
@@ -614,7 +622,8 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_ad_groups",
         "service_path_create": "campaign_path",
         "service_path_update_delete": "ad_group_path",
-        "set_fields": _set_fields,
+        "setattr_create_func": _create_ad_group_setattr,
+        "setattr_update_func": _set_fields,
     },
     "ad": {
         "service": "AdGroupAdService",
@@ -622,15 +631,15 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_ad_group_ads",
         "service_path_create": "ad_group_path",
         "service_path_update_delete": "ad_group_ad_path",
-        "setattr_func": _create_ad_group_ad_set_attr,
-        "set_fields": _set_fields,
+        "setattr_create_func": _create_ad_group_ad_set_attr,
+        "setattr_update_func": _set_fields,
     },
     "ad_copy": {
         "service": "AdService",
         "operation": "AdOperation",
         "mutate": "mutate_ads",
         "service_path_update_delete": "ad_path",
-        "set_fields": _set_fields_ad_copy,
+        "setattr_update_func": _set_fields_ad_copy,
     },
     "ad_group_criterion": {
         "service": "AdGroupCriterionService",
@@ -638,8 +647,8 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_ad_group_criteria",
         "service_path_create": "ad_group_path",
         "service_path_update_delete": "ad_group_criterion_path",
-        "setattr_func": _keywords_setattr,
-        "set_fields": _set_fields,
+        "setattr_create_func": _keywords_setattr,
+        "setattr_update_func": _set_fields,
     },
     "campaign_criterion": {
         "service": "CampaignCriterionService",
@@ -647,8 +656,8 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_campaign_criteria",
         "service_path_create": "campaign_path",
         "service_path_update_delete": "campaign_criterion_path",
-        "setattr_func": _keywords_setattr,
-        "set_fields": _set_fields,
+        "setattr_create_func": _keywords_setattr,
+        "setattr_update_func": _set_fields,
     },
 }
 
@@ -666,9 +675,21 @@ async def update_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> s
     )
 
 
+@router.get("/create-ad-group")
+async def create_ad_group(user_id: int, ad_model: AdGroup = Depends()) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_group"]
+
+    return await _add(
+        user_id=user_id,
+        model=ad_model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "campaign_id"],
+    )
+
+
 @router.get("/create-ad-group-ad")
 async def create_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
-    print(ad_model)
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
 
@@ -829,7 +850,7 @@ async def _add(
         mandatory_fields=mandatory_fields,
     )
     try:
-        setattr_func = service_operation_and_function_names["setattr_func"]
+        setattr_func = service_operation_and_function_names["setattr_create_func"]
         setattr_func(
             model_dict=model_dict, operation_create=operation_create, client=client
         )

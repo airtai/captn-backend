@@ -24,6 +24,7 @@ from .execution_team import get_read_file
 from .function_configs import (
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
+    create_ad_group_config,
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
@@ -67,6 +68,7 @@ class GoogleAdsTeam(Team):
         update_campaigns_negative_keywords_config,
         create_ad_group_ad_config,
         get_web_page_summary_config,
+        create_ad_group_config,
     ]
 
     _shared_system_message = (
@@ -266,7 +268,7 @@ Here is a list of things which you CAN do:
 - remove campaign/ ad group / ad / positive and negative keywords
 
 Here is a list of thing which you can NOT do, NEVER suggest making changes of the things you can NOT do:
-- CREATE new ads / ad groups (you can just update the existing ones)
+- CREATE new campaigns (you can just update the existing ones)
 Do NOT suggest making changes of the following things:
 - Targeting settings
 - Ad Extensions
@@ -398,7 +400,7 @@ clients_approval_message: string, client_approved_modicifation_for_this_resource
 headline: Optional[str], description: Optional[str], update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str],
 final_url: Optional[str], final_mobile_urls: Optional[str])
 
-5. 'update_ad_group': Update the Google Ads Group, params: (customer_id: string, ad_group_id: string, ad_id: Optional[string],
+5. 'update_ad_group': Update the Google Ads Group, params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
 client_approved_modicifation_for_this_resource: boolean)
 This command can only update ad groups name, cpc_bid_micros and status
@@ -419,37 +421,41 @@ criterion_id: string, clients_approval_message: string, keyword_match_type: stri
 client_approved_modicifation_for_this_resource: boolean)
 This command can only update campaigns negative keywords keyword_match_type and keyword_text
 
-9. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
+9. 'create_ad_group': Create the Google Ads Group, params: (customer_id: string, campaign_id: string, clients_approval_message: string,
+name: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
+client_approved_modicifation_for_this_resource: boolean)
+
+10. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean)
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
-10. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
+11. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
 status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean, cpc_bid_micros: Optional[int])
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
-11. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the EXISTING Google Ads Copy, params: (customer_id: string, ad_id: string,
+12. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the EXISTING Google Ads Copy, params: (customer_id: string, ad_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 headline: Optional[str], description: Optional[str])
 
-12 'create_ad_group_ad': Create new ad group ad, params: (customer_id: string, ad_group_id: string,
+13. 'create_ad_group_ad': Create new ad group ad, params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean, status: Optional[Literal["ENABLED", "PAUSED"]],
 headlines: List[str], descriptions: List[str], final_url: List[str])
 You can suggest final_url within the smart suggestions if the client has provided it in the customer brief.
 If not, do not suggest the final_url, it must be provided by the client.
 
-13. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
+14. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
 clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
-14. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
+15. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
-14. 'get_web_page_summary': Get the summary of the web page, params: (url: string, summary_creation_guidelines: string)
+16. 'get_web_page_summary': Get the summary of the web page, params: (url: string, summary_creation_guidelines: string)
 It should be used only for the clients web page(s), final_url(s) etc.
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
@@ -582,7 +588,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             endpoint="/create-update-ad-copy",
         ),
         "update_ad_copy": _get_update_ad_copy(user_id, conv_id),
-        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, ad_id=None, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
@@ -590,12 +596,25 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ad=AdGroup(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
-                ad_id=ad_id,
                 name=name,
                 cpc_bid_micros=cpc_bid_micros,
                 status=status,
             ),
             endpoint="/update-ad-group",
+        ),
+        "create_ad_group": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, name, cpc_bid_micros=None, status=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            ad=AdGroup(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                name=name,
+                cpc_bid_micros=cpc_bid_micros,
+                status=status,
+            ),
+            endpoint="/create-ad-group",
         ),
         "update_campaign": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, name=None, status=None: google_ads_create_update(
             user_id=user_id,

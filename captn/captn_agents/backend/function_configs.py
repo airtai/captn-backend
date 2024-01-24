@@ -364,24 +364,55 @@ update_ad_group_config = {
         "properties": {
             "customer_id": properties_config["customer_id"],
             "ad_group_id": properties_config["ad_group_id"],
-            "ad_id": properties_config["ad_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
             "client_approved_modicifation_for_this_resource": properties_config[
                 "client_approved_modicifation_for_this_resource"
             ],
             "name": {
                 "type": "string",
-                "description": "The name of the Ad",
+                "description": "The name of the Ad Group",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
             "status": {
                 "type": "string",
-                "description": "The status of the Ad (ENABLED or PAUSED)",
+                "description": "The status of the Ad Group (ENABLED or PAUSED)",
             },
         },
         "required": [
             "customer_id",
             "ad_group_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
+create_ad_group_config = {
+    "name": "create_ad_group",
+    "description": f"Create Google Ad Group. {MODIFICATION_WARNING}",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "campaign_id": properties_config["campaign_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "name": {
+                "type": "string",
+                "description": "The name of the Ad Group",
+            },
+            "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad Group (ENABLED or PAUSED)",
+            },
+        },
+        "required": [
+            "customer_id",
+            "campaign_id",
+            "name",
             "clients_approval_message",
             "client_approved_modicifation_for_this_resource",
         ],
