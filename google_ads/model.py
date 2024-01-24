@@ -11,11 +11,11 @@ class AdBase(BaseModel):
 
 
 class Campaign(AdBase):
-    campaign_id: str
+    campaign_id: Optional[str] = None
 
 
-class AdGroup(AdBase):
-    ad_group_id: str
+class AdGroup(Campaign):
+    ad_group_id: Optional[str] = None
     cpc_bid_micros: Optional[int] = None
 
 

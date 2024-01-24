@@ -516,6 +516,14 @@ async def _update(
     return f"Updated {response.results[0].resource_name}."
 
 
+def _create_ad_group_setattr(
+    model_dict: Dict[str, Any], operation_create: Any, client: Any
+) -> None:
+    for attribute_name, attribute_value in model_dict.items():
+        if attribute_value:
+            setattr(operation_create, attribute_name, attribute_value)
+
+
 def _keywords_setattr(
     model_dict: Dict[str, Any], operation_create: Any, client: Any
 ) -> None:
@@ -614,6 +622,7 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "mutate": "mutate_ad_groups",
         "service_path_create": "campaign_path",
         "service_path_update_delete": "ad_group_path",
+        "setattr_func": _create_ad_group_setattr,
         "set_fields": _set_fields,
     },
     "ad": {
@@ -666,9 +675,21 @@ async def update_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> s
     )
 
 
+@router.get("/create-ad-group")
+async def create_ad_group(user_id: int, ad_model: AdGroup = Depends()) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_group"]
+
+    return await _add(
+        user_id=user_id,
+        model=ad_model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        mandatory_fields=["customer_id", "campaign_id"],
+    )
+
+
 @router.get("/create-ad-group-ad")
 async def create_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
-    print(ad_model)
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
 
