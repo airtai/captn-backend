@@ -185,6 +185,7 @@ I suggest removing keyword 'my-keyword' from the ad group xy (and the reason why
 
 1. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
 questions using the 'reply_to_client' function.
+Also, if a Website is provided in the client brief, use the 'get_web_page_summary' command to get the summary of the web page.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
 3. If you receive a login url, forward it to the client by using the 'reply_to_client' function.
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.

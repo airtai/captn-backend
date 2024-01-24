@@ -36,6 +36,8 @@ Digital Marketing Objectives:
 Next Steps:
 Any Other Information Related to Customer Brief:
 Please extract and represent relevant details from the conversation under these headings
+
+Note: If the customer has provided an url to their website, 'Next Steps' should start with "First step is to get the summary of the Website.
 """
 
 
