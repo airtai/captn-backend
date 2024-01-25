@@ -4,7 +4,7 @@ import pytest
 from freezegun import freeze_time
 
 from captn.captn_agents.backend.end_to_end import start_conversation
-from captn.captn_agents.backend.functions import get_web_page_summary
+from captn.captn_agents.backend.functions import get_info_from_the_web_page
 from captn.captn_agents.backend.team import Team
 from captn.google_ads.client import google_ads_create_update
 
@@ -148,9 +148,9 @@ def test_summerize_web_page() -> None:
     conv_id = 17
 
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.get_web_page_summary",
-        side_effect=get_web_page_summary,
-    ) as get_web_page_summary_mock:
+        "captn.captn_agents.backend.google_ads_team.get_info_from_the_web_page",
+        side_effect=get_info_from_the_web_page,
+    ) as get_info_from_the_web_page_mock:
         team_name, last_message = start_conversation(
             user_id=user_id,
             conv_id=conv_id,
@@ -161,7 +161,7 @@ def test_summerize_web_page() -> None:
         )
 
         initial_team = Team.get_team(team_name)
-        get_web_page_summary_mock.assert_called()
+        get_info_from_the_web_page_mock.assert_called()
 
         brokers = ["kafka", "rabbitmq", "nats"]
         last_message = last_message.lower()
