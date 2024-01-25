@@ -295,8 +295,12 @@ analyze_query_response_config = {
 }
 
 
-MODIFICATION_WARNING = """DO NOT call this function without the clients explicit approval to modify the resource!!!.
-The client must also approve ALL the parameters which will be used for the modification. Otherwise you will be penalized!"""
+MODIFICATION_WARNING = """VERY IMPORTANT:
+DO NOT call this function without the clients explicit approval to modify the resource!!!.
+The client must also approve ALL the parameters which will be used for the modification. Otherwise you will be penalized!
+If a client only asks for some suggestions, then clients_approval_message parameter MUST be set to None and
+client_approved_modicifation_for_this_resource parameter MUST be set to False! Otherwise you will be penalized!
+"""
 
 properties_config = {
     "customer_id": {
@@ -325,7 +329,7 @@ Faking the clients approval may resault with the LAWSUIT and you will get fired!
     "client_approved_modicifation_for_this_resource": {
         "type": "boolean",
         "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...). Once the client approves the changes, the team can call the function.
+and which values will be modified (e.g. name, status...). ONLY if the client APPROVES the changes, the team can use this function.
 Until the client approves the changes, the team must NOT call the function! and this parameter MUST be set to False.
 Client must be informed about everything!""",
     },
@@ -335,11 +339,11 @@ Client must be informed about everything!""",
     },
     "headline": {
         "type": "string",
-        "description": "Ad Copy Headline, max_length=30",
+        "description": "Ad Copy Headline, MAXIMUM 30 characters!",
     },
     "description": {
         "type": "string",
-        "description": "Ad Copy Description, max_length=90",
+        "description": "Ad Copy Description, MAXIMUM 90 characters!",
     },
     "keyword_match_type": {
         "type": "string",
@@ -471,12 +475,12 @@ Use this method only when the client approves the creation of the new Ad, ALL th
             "headlines": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "List of headlines, min_length=3, max_length=15. Each headline must be less than 30 characters!",
+                "description": "List of headlines, MINIMUM 3, MAXIMUM 15 headlines. Each headline MUST be LESS than 30 characters!",
             },
             "descriptions": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "List of descriptions, min_length=2, max_length=4. Each description must be less than 90 characters!",
+                "description": "List of descriptions, MINIMUM 2, MAXIMUM 4 descriptions. Each description MUST be LESS than 90 characters!",
             },
             "final_url": properties_config["final_url"],
         },
@@ -842,9 +846,9 @@ ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaig
 }
 
 
-get_web_page_summary_config = {
-    "name": "get_web_page_summary",
-    "description": """Get the summary of the web page content.
+get_info_from_the_web_page_config = {
+    "name": "get_info_from_the_web_page",
+    "description": """Retrieve wanted information from the web page.
 There is no need to test this function (by sending url: https://www.example.com).
 NEVER use this function for scraping Google Ads pages (e.g. https://ads.google.com/aw/campaigns?campaignId=1212121212)
 """,
@@ -855,11 +859,26 @@ NEVER use this function for scraping Google Ads pages (e.g. https://ads.google.c
                 "type": "string",
                 "description": "The url of the web page which needs to be summarized",
             },
-            "summary_creation_guidelines": {
+            "task": {
                 "type": "string",
-                "description": "Guidelines for for the creation of the summary. What information are we looking for, what questions need to be answered, etc",
+                "description": """Task which needs to be solved.
+This parameter should NOT mention that we are working on some Google Ads task.
+The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc
+
+Example 1:
+task='Get all info about the clients business from the provided url.'
+Example 2:
+task='Get me the all the links that are present in the main navigation in the url. You need to return the output with the absolute urls.' """,
+            },
+            "task_guidelines": {
+                "type": "string",
+                "description": """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
+This parameter should NOT mention that we are working on some Google Ads task.
+
+Example 1:
+task_guidelines='Get me all the main navigation links on the home page. I need only internal links.' """,
             },
         },
-        "required": ["url", "summary_creation_guidelines"],
+        "required": ["url", "task", "task_guidelines"],
     },
 }

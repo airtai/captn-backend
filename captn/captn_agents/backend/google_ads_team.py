@@ -28,7 +28,7 @@ from .function_configs import (
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
-    get_web_page_summary_config,
+    get_info_from_the_web_page_config,
     list_accessible_customers_config,
     read_file_config,
     remove_ad_copy_headline_or_description_config,
@@ -41,7 +41,7 @@ from .function_configs import (
     update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
-from .functions import get_web_page_summary, reply_to_client_2
+from .functions import get_info_from_the_web_page, reply_to_client_2
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -67,7 +67,7 @@ class GoogleAdsTeam(Team):
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
         create_ad_group_ad_config,
-        get_web_page_summary_config,
+        get_info_from_the_web_page_config,
         create_ad_group_config,
     ]
 
@@ -187,7 +187,7 @@ I suggest removing keyword 'my-keyword' from the ad group xy (and the reason why
 
 1. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
 questions using the 'reply_to_client' function.
-Also, if a Website is provided in the client brief, use the 'get_web_page_summary' command to get the summary of the web page.
+Also, if a Website is provided in the client brief, use the 'get_info_from_the_web_page' command to get the summary of the web page.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
 3. If you receive a login url, forward it to the client by using the 'reply_to_client' function.
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
@@ -245,19 +245,24 @@ suggest which changes could benefit them
 but the client does NOT need to know all the Google Ads details that you have retrieved
 30. Suggest one change at the time, otherwise the client will get lost
 31. When using 'execute_query' command, try to use as small query as possible and retrieve only the needed columns
-32. Ad Copy headline can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length or you will be penalized!
+32. Ad Copy headlines can have MAXIMUM 30 characters and descriptions can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length or you will be penalized!
 33. If the client sends you invalid headline/description, do not try to modify it yourself! Explain the problems to him and suggest valid headline/description.
-34. Each Ad can have MAXIMUM 4 descriptions.
+34. Ad rules:
+- MINIMUM 3 and MAXIMUM 15 headlines.
+- MINIMUM 2 and MAXIMUM 4 descriptions.
+- It is recomended to use the MAXIMUM number of headlines and descriptions.
 35. When updating headlines and descriptions lists, make sure to ask the user if he wants to add new or modify existing headline/description.
 36. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
-37. Use the 'get_web_page_summary' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
-e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for suggesting keywords, headlines, descriptions etc.
+37. Use the 'get_info_from_the_web_page' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
+e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for SUGGESTING (NEVER modify without permision!) keywords, headlines, descriptions etc.
 You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
-and try to figure out the rest yourself.
-38. If you want to create a new Ad Copy, ask the client ONLY for the final_url and use the 'get_web_page_summary' command to get the summary of the web page.
-Once you have the summary, you can use it for suggesting headlines and descriptions.
+and try get_info_from_the_web_page.
+38. If you want to create a new Ad Copy, ask the client ONLY for the final_url and use the 'get_info_from_the_web_page' command to get the summary of the web page.
+Once you have the summary, you can use it for SUGGESTING (NEVER modify without permision!) headlines and descriptions.
 The final_url MUST be provided by the client, do NOT suggest it yourself nor use smart suggestions like "Please provide the final URL for the new ad." or you will be penalized!
-39. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
+39. ALWAYS use 'get_info_from_the_web_page' before suggesting keywords, headlines, descriptions etc. This way you will get the insight into the content of the clients web page(s)
+and you will be able to give MUCH BETTER suggestions.
+40. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 Here is a list of things which you CAN do:
@@ -276,13 +281,16 @@ Do NOT suggest making changes of the following things:
 - Ad Scheduling
 
 VERY IMPORTANT NOTES:
+The first and the MOST IMPORTANT thing is that you can NOT make any permanent changes without the clients approval!!!
+Make sure that you explicitly tell the client which changes you want, which resource and attribute will be affected and wait for the permission!
+This rule applies to ALL the commands which make permanent changes (create/update/delete)!!!
+
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
-So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes
-which we can do right away.
+So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes which we can do right away.
 If you are asked to optimize campaigns, start with updating ad copy or creating/removing positive and negative keywords.
-- Use 'get_web_page_summary' command when the client provides you some url or for already existing ad copies (based on the final_url).
+- Use 'get_info_from_the_web_page' command when the client provides you some url or for already existing ad copies (based on the final_url).
 This command can be very useful for figuring out the clients business and what he wants to achieve.
-Before asking the client for additional information, ask him for his company/product url and try to figure out as much as possible yourself.
+Before asking the client for additional information, ask him for his company/product url and try to figure out as much as possible yourself (WITHOUT doing any permanent modifications).
 - analyse keywords and find out which are (i)relevant for clients business and suggest some create/update/remove actions
 - Take a look at ad copy (headlines, descriptions, urls...) and make suggestions on what should be changed (create/update/remove headlines etc.)
 - Headlines can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length!
@@ -455,8 +463,10 @@ If not explicitly asked, you MUST ask the client for approval before removing an
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
-16. 'get_web_page_summary': Get the summary of the web page, params: (url: string, summary_creation_guidelines: string)
+16. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
 It should be used only for the clients web page(s), final_url(s) etc.
+This command should be used for retrieving the information from clients web page.
+
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
@@ -737,7 +747,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/create-update-ad-copy",
         ),
-        "get_web_page_summary": get_web_page_summary,
+        "get_info_from_the_web_page": get_info_from_the_web_page,
     }
 
     return function_map

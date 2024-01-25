@@ -71,7 +71,7 @@ summarizer_llm_config = {
 # WebSurferAgent is implemented to always aks for the human input at the end of the chat.
 # This patch will reply with "exit" to the input() function.
 @patch("builtins.input", lambda *args: "exit")
-def get_web_page_summary(url: str, summary_creation_guidelines: str) -> str:
+def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str:
     google_ads_url = "ads.google.com"
     if google_ads_url in url:
         return "FAILED: This function should NOT be used for scraping google ads!"
@@ -87,13 +87,19 @@ def get_web_page_summary(url: str, summary_creation_guidelines: str) -> str:
 
     user_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
 web_surfer is able to click on links, scroll down, and scrape the content of the web page. e.g. you cen tell him: "Click the 'Getting Started' result".
-Do NOT try to click all the links on the page, but only the ones which are RELEVANT for the task!
-Your final goal is to summarize the content of the scraped page. The summary must be in English!
-GUIDELINES: {summary_creation_guidelines}
+Do NOT try to click all the links on the page, but only the ones which are RELEVANT for the task! Web pages can be very long and you will be penalized if spend too much time on this task!
+Your final goal is to summarize the findings for the given task. The summary must be in English!
+GUIDELINES: {task_guidelines}
+
+It is also useful to include in the summary relevant links where more information can be found.
+e.g. If the page is offering to sell TVs, you can include a link to the TV section of the page.
 
 If successful, your last message needs to start with "SUMMARY:" and then you need to write the summary.
+Note: NEVER suggest the next steps in the summary! It is NOT your job to do that!
 
+If you get some 40x error, please do NOT give up immediately, but try to navigate to another page and continue with the task. Give up only if you get 40x error on all the pages which you tried to navigate to.
 Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
+You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
 """
     user_proxy = autogen.UserProxyAgent(
         "user_proxy",
@@ -103,7 +109,7 @@ Otherwise, your last message needs to start with "FAILED:" and then you need to 
         system_message=user_system_message,
     )
 
-    task1 = f"Get all info from the {url}"
-    user_proxy.initiate_chat(web_surfer, message=task1)
+    initial_message = f"URL: {url}\nTASK: {task}"
+    user_proxy.initiate_chat(web_surfer, message=initial_message)
 
     return str(user_proxy.last_message()["content"])
