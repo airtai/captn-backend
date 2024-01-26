@@ -692,7 +692,11 @@ reply_to_client_2_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "message": {"type": "string", "description": "Message for the client"},
+            "message": {
+                "type": "string",
+                "description": """Message for the client.
+Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!""",
+            },
             "completed": {
                 "type": "boolean",
                 "description": "Has the team completed the task or are they waiting for additional info",

@@ -97,6 +97,31 @@ e.g. If the page is offering to sell TVs, you can include a link to the TV secti
 If successful, your last message needs to start with "SUMMARY:" and then you need to write the summary.
 Note: NEVER suggest the next steps in the summary! It is NOT your job to do that!
 
+
+Suggest 15 relevant headlines where each headline has MAXIMUM 30 characters (including spaces). (headlines are often similar to keywords)
+Suggest 4 relevant descriptions where each description has MAXIMUM 90 characters (including spaces).
+Pay attention to the length of the headlines and descriptions! You will be penalized if you exceed the limits!
+
+Example:
+SUMMARY:
+
+Page content: The store offers a variety of electronic categories including Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, and Refrigerators.
+Relevant links:
+- Air Conditioners: https://store-eg.net/product-category/air-conditioner/
+- Kitchen Appliances: https://store-eg.net/product-category/kitchen-appliances/
+- PCs & Laptops: https://store-eg.net/product-category/pcs-laptop/
+- Gadgets: https://store-eg.net/product-category/gadgets/
+- Smart Home: https://store-eg.net/product-category/smart-home/
+- Home Appliances: https://store-eg.net/product-category/home-appliances/
+- Audio & Video: https://store-eg.net/product-category/audio-video/
+- Refrigerators: https://store-eg.net/product-category/refrigerator/
+- New Arrivals: https://store-eg.net/new-arrivals/
+
+Keywords: store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators
+Headlines: store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators, New Arrivals
+Descriptions: Best store for electronic devices in Europe, Buy electronic devices online, Save 20% on electronic devices, Top quality electronic devices
+
+
 If you get some 40x error, please do NOT give up immediately, but try to navigate to another page and continue with the task. Give up only if you get 40x error on all the pages which you tried to navigate to.
 Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
 You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
