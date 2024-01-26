@@ -268,7 +268,7 @@ as they will be featured on a webpage to ensure a user-friendly presentation.
 Here is a list of things which you CAN do:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - update the status (ENABLED / PAUSED) of the campaign, ad group and ad
-- create/update/remove headlines and descriptions in the Ad Copy
+- create/update/remove headlines and descriptions in the Ad Copy. Make sure to follow the restrictions for the headlines and descriptions (MAXIMUM 30 characters for headlines and MAXIMUM 90 characters for descriptions)
 - create/update/remove new keywords
 - remove campaign/ ad group / ad / positive and negative keywords
 
