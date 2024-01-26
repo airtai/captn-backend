@@ -97,15 +97,16 @@ e.g. If the page is offering to sell TVs, you can include a link to the TV secti
 If successful, your last message needs to start with "SUMMARY:" and then you need to write the summary.
 Note: NEVER suggest the next steps in the summary! It is NOT your job to do that!
 
+
+Suggest 15 relevant headlines where each headline has MAXIMUM 30 characters (including spaces). (headlines are often similar to keywords)
+Suggest 4 relevant descriptions where each description has MAXIMUM 90 characters (including spaces).
+Pay attention to the length of the headlines and descriptions! You will be penalized if you exceed the limits!
+
 Example:
 SUMMARY:
-The Electronic Store's "New Arrivals" page features a selection of the latest products available in their inventory. The store offers a variety of electronic categories including Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, and Refrigerators.
 
-For creating Google Ads, ad groups can be structured around these product categories. Each ad group could focus on one category, with keywords tailored to the specific types of products within that category. For example, an ad group for "Smart Home" could include keywords like "smart home devices," "home automation products," and "latest smart home technology."
-
-Ad copies should highlight the benefits of shopping with the Electronic Store, such as their 24/7 customer service (1-800-234-5678), shipping & return policies, and the convenience of tracking orders online. Promotional banners on the "New Arrivals" page can be used as inspiration for creating visually appealing display ads.
-
-Relevant links for the ad groups could include:
+Page content: The store offers a variety of electronic categories including Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, and Refrigerators.
+Relevant links:
 - Air Conditioners: https://store-eg.net/product-category/air-conditioner/
 - Kitchen Appliances: https://store-eg.net/product-category/kitchen-appliances/
 - PCs & Laptops: https://store-eg.net/product-category/pcs-laptop/
@@ -116,6 +117,9 @@ Relevant links for the ad groups could include:
 - Refrigerators: https://store-eg.net/product-category/refrigerator/
 - New Arrivals: https://store-eg.net/new-arrivals/
 
+Keywords: store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators
+Headlines: store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators, New Arrivals
+Descriptions: Best store for electronic devices in Europe, Buy electronic devices online, Save 20% on electronic devices, Top quality electronic devices
 
 
 If you get some 40x error, please do NOT give up immediately, but try to navigate to another page and continue with the task. Give up only if you get 40x error on all the pages which you tried to navigate to.
