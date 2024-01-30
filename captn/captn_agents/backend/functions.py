@@ -131,15 +131,16 @@ Relevant links:
 - Refrigerators: https://store-eg.net/product-category/refrigerator/
 - New Arrivals: https://store-eg.net/new-arrivals/
 
-Keywords: store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators
-Headlines (MAX 30 char each): store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators, New Arrivals
-Descriptions (MAX 90 char each): Best store for electronic devices in Europe, Buy electronic devices online, Save 20% on electronic devices, Top quality electronic devices
+## Keywords: store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators
+## Headlines (MAX 30 char each): store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators, New Arrivals
+## Descriptions (MAX 90 char each): Best store for electronic devices in Europe, Buy electronic devices online, Save 20% on electronic devices, Top quality electronic devices
 (VERY IMPORTANT: each headline has LESS than 30 characters and each description has LESS than 90 characters)
 
 Use these information to SUGGEST the next steps to the client, but do NOT make any permanent changes without the client's approval!
 '''
 
 Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
+If some links are not working, try navigating to the previous page or the home page and continue with the task.
 You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
 """
     user_proxy = autogen.UserProxyAgent(
