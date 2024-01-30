@@ -155,3 +155,25 @@ You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY inform
     user_proxy.initiate_chat(web_surfer, message=initial_message)
 
     return str(user_proxy.last_message()["content"])
+
+
+def send_email(
+    client_email: str,
+    daily_analysis: str,
+    proposed_user_actions: List[str],
+) -> Dict[str, Any]:
+    final_message = "Daily Analysis:\n" + daily_analysis + "\n\n"
+
+    conv_id = 409
+    proposed_user_actions_paragraph = "Proposed User Actions:\n"
+    for i, action in enumerate(proposed_user_actions):
+        proposed_user_actions_paragraph += f"{i+1}. {action} (https://captn.ai/chat/{conv_id}?selected_user_action={i+1})\n"
+
+    final_message += proposed_user_actions_paragraph
+
+    print(final_message)
+    return_msg = {
+        "final_message": final_message,
+        "terminate_groupchat": True,
+    }
+    return return_msg
