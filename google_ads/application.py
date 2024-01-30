@@ -1,5 +1,6 @@
 import json
 import urllib.parse
+import uuid
 from os import environ
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -294,7 +295,7 @@ async def _set_fields(
     user_id: int,
 ) -> None:
     for attribute_name, attribute_value in model_or_dict.items():
-        if attribute_value:
+        if attribute_value is not None:
             setattr(operation_update, attribute_name, attribute_value)
 
     _retrieve_field_mask(
@@ -341,7 +342,7 @@ async def _set_fields_ad_copy(
     user_id: int,
 ) -> None:
     # for attribute_name, attribute_value in model_dict.items():
-    #     if attribute_value:
+    #     if attribute_value is not None:
     #         setattr(operation_update, attribute_name, attribute_value)
 
     modify_headlines = (
@@ -520,15 +521,48 @@ def _create_ad_group_setattr(
     model_dict: Dict[str, Any], operation_create: Any, client: Any
 ) -> None:
     for attribute_name, attribute_value in model_dict.items():
-        if attribute_value:
+        if attribute_value is not None:
             setattr(operation_create, attribute_name, attribute_value)
+
+
+def _create_campaign_setattr(
+    model_dict: Dict[str, Any], operation_create: Any, client: Any
+) -> None:
+    for attribute_name, attribute_value in model_dict.items():
+        if attribute_value is not None:
+            if "network_settings" in attribute_name:
+                attribute_name = attribute_name.replace("network_settings_", "")
+                setattr(
+                    operation_create.network_settings, attribute_name, attribute_value
+                )
+            else:
+                setattr(operation_create, attribute_name, attribute_value)
+
+    operation_create.advertising_channel_type = (
+        client.enums.AdvertisingChannelTypeEnum.SEARCH
+    )
+
+    # Set the bidding strategy and budget.
+    # The bidding strategy for Maximize Clicks is TargetSpend.
+    # The target_spend_micros is deprecated so don't put any value.
+    # See other bidding strategies you can select in the link below.
+    # https://developers.google.com/google-ads/api/reference/rpc/v11/Campaign#campaign_bidding_strategy
+    operation_create.target_spend.target_spend_micros = 0
+
+    # # Optional: Set the start date.
+    # start_time = datetime.date.today() + datetime.timedelta(days=1)
+    # campaign.start_date = datetime.date.strftime(start_time, _DATE_FORMAT)
+
+    # # Optional: Set the end date.
+    # end_time = start_time + datetime.timedelta(weeks=4)
+    # campaign.end_date = datetime.date.strftime(end_time, _DATE_FORMAT)
 
 
 def _keywords_setattr(
     model_dict: Dict[str, Any], operation_create: Any, client: Any
 ) -> None:
     for attribute_name, attribute_value in model_dict.items():
-        if attribute_value:
+        if attribute_value is not None:
             if "keyword_" in attribute_name:
                 attribute_name = attribute_name.replace("keyword_", "")
                 setattr(operation_create.keyword, attribute_name, attribute_value)
@@ -612,8 +646,8 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "service": "CampaignService",
         "operation": "CampaignOperation",
         "mutate": "mutate_campaigns",
-        "service_path_create": None,  # TODO
         "service_path_update_delete": "campaign_path",
+        "setattr_create_func": _create_campaign_setattr,
         "setattr_update_func": _set_fields,
     },
     "ad_group": {
@@ -673,6 +707,80 @@ async def update_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> s
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id", "ad_id"],
     )
+
+
+def _create_campaign_budget(client: Any, customer_id: str, amount_micros: int) -> Any:
+    """Creates campaign budget resource.
+
+    Args:
+      client: an initialized GoogleAdsClient instance.
+      customer_id: a client customer ID.
+
+    Returns:
+      Campaign budget resource name.
+    """
+    # Create a budget, which can be shared by multiple campaigns.
+    campaign_budget_service = client.get_service("CampaignBudgetService")
+    campaign_budget_operation = client.get_type("CampaignBudgetOperation")
+    campaign_budget = campaign_budget_operation.create
+    campaign_budget.name = f"Campaign budget {uuid.uuid4()}"
+    campaign_budget.delivery_method = client.enums.BudgetDeliveryMethodEnum.STANDARD
+    campaign_budget.amount_micros = amount_micros
+
+    # Add budget.
+    campaign_budget_response = campaign_budget_service.mutate_campaign_budgets(
+        customer_id=customer_id, operations=[campaign_budget_operation]
+    )
+
+    return campaign_budget_response.results[0].resource_name
+
+
+@router.get("/create-campaign")
+async def create_campaign(user_id: int, ad_model: Campaign = Depends()) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["campaign"]
+
+    (
+        client,
+        service,
+        operation,
+        model_dict,
+        customer_id,
+        operation_create,
+        _,
+    ) = await _get_necessary_parameters(
+        user_id=user_id,
+        model=ad_model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        crud_operation_name="create",
+        mandatory_fields=["customer_id"],
+    )
+    try:
+        # Create a campaign budget resource.
+        campaign_budget = _create_campaign_budget(
+            client=client,
+            customer_id=customer_id,
+            amount_micros=ad_model.budget_amount_micros,  # type: ignore
+        )
+        model_dict.pop("budget_amount_micros")
+        operation_create.campaign_budget = campaign_budget
+
+        setattr_func = service_operation_and_function_names["setattr_create_func"]
+        setattr_func(
+            model_dict=model_dict, operation_create=operation_create, client=client
+        )
+
+        response = await _mutate(
+            service,
+            service_operation_and_function_names["mutate"],
+            customer_id,
+            operation,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    return f"Created {response.results[0].resource_name}."
 
 
 @router.get("/create-ad-group")

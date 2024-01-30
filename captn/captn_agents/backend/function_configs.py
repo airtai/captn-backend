@@ -526,6 +526,65 @@ update_campaign_config = {
     },
 }
 
+create_campaign_config = {
+    "name": "create_campaign",
+    "description": f"Creates Google Ads Campaign. {MODIFICATION_WARNING}",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "name": {
+                "type": "string",
+                "description": "The name of the Ad",
+            },
+            "status": {
+                "type": "string",
+                "description": "The status of the Ad (ENABLED or PAUSED)",
+            },
+            "budget_amount_micros": {
+                "type": "number",
+                "description": """The amount of the budget, in the LOCAL CURRENCY for the account (defined in the local_currency parameter).
+Amount is specified in micros, where one million is equivalent to one currency unit. Monthly spend is capped at 30.4 times this amount.
+Make sure that the client APPROVES the budget amount, otherwise you will be penalized!
+This is the MOST IMPORTANT parameter, because it determines how much money will be spent on the ads!""",
+            },
+            "local_currency": {
+                "type": "string",
+                "description": """The currency which will be used for the budget amount.
+This value MUST be found in the 'customer' table! query example: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'""",
+            },
+            "network_settings_target_google_search": {
+                "type": "boolean",
+                "description": "Whether ads will be served with google.com search results.",
+            },
+            "network_settings_target_search_network": {
+                "type": "boolean",
+                "description": "Whether ads will be served on partner sites in the Google Search Network (requires network_settings_target_google_search to also be true).",
+            },
+            "network_settings_target_content_network": {
+                "type": "boolean",
+                "description": "Whether ads will be served on specified placements in the Google Display Network. Placements are specified using the Placement criterion.",
+            },
+            # "network_settings_target_partner_search_network": {
+            #     "type": "boolean",
+            #     "description": "Whether ads will be served on the Google Partner Network. This is available only to some select Google partner accounts.",
+            # },
+        },
+        "required": [
+            "customer_id",
+            "name",
+            "budget_amount_micros",
+            "local_currency",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
 update_ad_group_criterion_config = {
     "name": "update_ad_group_criterion",
     "description": f"Update Google Ads Group Criterion. {MODIFICATION_WARNING}",

@@ -96,6 +96,7 @@ agents = [
     "pandas>=2.1",
     "fastcore==1.5.29",
     "asyncer==0.0.2",
+    "pydantic==2.5.3",
 ]
 
 
