@@ -15,8 +15,7 @@ class Campaign(AdBase):
     budget_amount_micros: Optional[int] = None
     network_settings_target_google_search: Optional[bool] = None
     network_settings_target_search_network: Optional[bool] = None
-    network_settings_target_display_network: Optional[bool] = None
-    network_settings_target_partner_search_network: Optional[bool] = None
+    # network_settings_target_partner_search_network: Optional[bool] = None
     network_settings_target_content_network: Optional[bool] = None
 
 

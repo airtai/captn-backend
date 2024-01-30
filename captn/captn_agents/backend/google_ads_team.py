@@ -25,6 +25,7 @@ from .function_configs import (
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
     create_ad_group_config,
+    create_campaign_config,
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
@@ -69,6 +70,7 @@ class GoogleAdsTeam(Team):
         create_ad_group_ad_config,
         get_info_from_the_web_page_config,
         create_ad_group_config,
+        create_campaign_config,
     ]
 
     _shared_system_message = (
@@ -179,7 +181,7 @@ The client has sent you the following task:
     def _guidelines(self) -> str:
         return """## Guidelines
 0. A general advice is to make a lot of small modification suggestions, otherwise the client will get lost.
-Do not try to analyse all campaigns at once, list the campaigns and ask the user in which one he is interested in.
+Do not try to analyse all campaigns at once, list the campaigns and ask the user in which one he is interested in (or suggest creating a new one).
 e.g.
 The campaign xy is paused, do you want to enable it?
 I suggest adding new keyword 'my-keyword' to the ad group xy (and the reason why). Do you approve of it?
@@ -263,7 +265,9 @@ The final_url MUST be provided by the client, do NOT suggest it yourself nor use
 39. Use 'get_info_from_the_web_page' when you want to retrieve the information about some product, category etc. from the clients web page.
 e.g. if you want to retrieve the information about the TVs and you already know the url of the TVs section, you can use this command to get the summary of that web page section.
 By doing that, you will be able to recommend MUCH BETTER keywords, headlines, descriptions etc. to the client.
-40. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
+40. Before setting any kind of budget, check the default currency from the customer table and convert the budget to that currency.
+You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
+41. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 Here is a list of things which you CAN do:
@@ -271,10 +275,8 @@ Here is a list of things which you CAN do:
 - update the status (ENABLED / PAUSED) of the campaign, ad group and ad
 - create/update/remove headlines and descriptions in the Ad Copy. Make sure to follow the restrictions for the headlines and descriptions (MAXIMUM 30 characters for headlines and MAXIMUM 90 characters for descriptions)
 - create/update/remove new keywords
-- remove campaign/ ad group / ad / positive and negative keywords
+- create/update/remove campaign/ ad group / ad / positive and negative keywords
 
-Here is a list of thing which you can NOT do, NEVER suggest making changes of the things you can NOT do:
-- CREATE new campaigns (you can just update the existing ones)
 Do NOT suggest making changes of the following things:
 - Targeting settings
 - Ad Extensions
@@ -457,16 +459,26 @@ If not, do not suggest the final_url, it must be provided by the client.
 When suggesting headlines and descriptions, use 15 headlines and 4 descriptions (if not explicitly told differently).
 And make sure to follow the restrictions for the headlines and descriptions (MAXIMUM 30 characters for headlines and MAXIMUM 90 characters for descriptions)
 
-14. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
+14. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
+network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
+clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean)
+Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
+You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
+For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
+If the client specifies the 'budget_amount_micros' in another currency, you must convert it to the local currency!
+Otherwise, incorrect budget will be set for the campaign!
+
+
+15. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
 clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
-15. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
+16. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
-16. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
+17. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
 It should be used only for the clients web page(s), final_url(s) etc.
 This command should be used for retrieving the information from clients web page.
 
@@ -719,6 +731,22 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 final_url=final_url,
             ),
             endpoint="/create-ad-group-ad",
+        ),
+        "create_campaign": lambda customer_id, name, budget_amount_micros, local_currency, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, network_settings_target_google_search=None, network_settings_target_search_network=None, network_settings_target_content_network=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            ad=Campaign(
+                customer_id=customer_id,
+                name=name,
+                budget_amount_micros=budget_amount_micros,
+                status=status,
+                network_settings_target_google_search=network_settings_target_google_search,
+                network_settings_target_search_network=network_settings_target_search_network,
+                network_settings_target_content_network=network_settings_target_content_network,
+            ),
+            endpoint="/create-campaign",
         ),
         "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, client_approved_modicifation_for_this_resource, parent_id=None: google_ads_create_update(
             user_id=user_id,
