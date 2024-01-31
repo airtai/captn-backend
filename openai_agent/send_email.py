@@ -11,7 +11,9 @@ INFOBIP_BASE_URL = environ["INFOBIP_BASE_URL"]
 def send_email(
     *, from_email: str = "info@airt.ai", to_email: str, subject: str, body_text: str
 ) -> Dict[str, Any]:
-    conn = http.client.HTTPSConnection(INFOBIP_BASE_URL) # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
+    conn = http.client.HTTPSConnection(
+        INFOBIP_BASE_URL
+    )  # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
     dataList = []
     boundary = "wL36Yn8afVp8Ag7AmP8qZ0SA4n1v9T"
     dataList.append(encode("--" + boundary))
