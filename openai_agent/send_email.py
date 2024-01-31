@@ -21,7 +21,3 @@ def send_email(
 
     if not email_response.status_code.value == 200:
         raise ValueError(email_response)
-
-
-if __name__ == "__main__":
-    send_email(to_email="kumaran@airt.ai", subject="Hi there!", body="It is me, SDK!")
