@@ -87,7 +87,7 @@ def test_send_email(  # type: ignore [no-untyped-def]
     response_data,
     expected_exception,
 ):
-    from openai_agent.send_email import send_email
+    from captn.email import send_email
 
     if expected_exception:
         with pytest.raises(Exception) as exc_info:
