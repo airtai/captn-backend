@@ -2,15 +2,15 @@ import http.client
 import json
 from codecs import encode
 from os import environ
-from typing import Any
+from typing import Any, Dict
 
-INFOBIP_API_KEY = environ.get("INFOBIP_API_KEY")
-INFOBIP_BASE_URL = environ.get("INFOBIP_BASE_URL")
+INFOBIP_API_KEY = environ["INFOBIP_API_KEY"]
+INFOBIP_BASE_URL = environ["INFOBIP_BASE_URL"]
 
 
 def send_email(
     *, from_email: str = "info@airt.ai", to_email: str, subject: str, body_text: str
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     conn = http.client.HTTPSConnection(INFOBIP_BASE_URL)
     dataList = []
     boundary = "wL36Yn8afVp8Ag7AmP8qZ0SA4n1v9T"
@@ -56,7 +56,7 @@ def send_email(
     res = conn.getresponse()
 
     data = res.read()
-    decoded = json.loads(data.decode("utf-8"))
+    decoded: Dict[str, Any] = json.loads(data.decode("utf-8"))
 
     if res.status != 200:
         raise Exception(f"Failed to send email: {res.status}, {decoded}")

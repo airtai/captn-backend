@@ -1,33 +1,34 @@
 import http.client
 import json
+from typing import Any, Dict
 from unittest.mock import MagicMock
 
 import pytest
 
 
 class DummyResponse:
-    def __init__(self, status, d, **kwargs) -> None:
+    def __init__(self, status: int, d: Dict[str, Any], **kwargs) -> None:  # type: ignore [no-untyped-def]
         self.status = status
         self.d = d
 
-    def read(self, *args, **kwargs):
+    def read(self, *args, **kwargs):  # type: ignore [no-untyped-def]
         return str.encode(json.dumps(self.d))
 
 
 @pytest.fixture
-def mock_https_connection(monkeypatch):
+def mock_https_connection(monkeypatch):  # type: ignore [no-untyped-def]
     monkeypatch.setattr(http.client.HTTPSConnection, "request", MagicMock())
 
 
 @pytest.fixture
-def set_env_variables(monkeypatch):
+def set_env_variables(monkeypatch):  # type: ignore [no-untyped-def]
     monkeypatch.setenv("INFOBIP_API_KEY", "123")
     monkeypatch.setenv("INFOBIP_BASE_URL", "dummy.base.com")
 
 
 @pytest.fixture
-def mock_response(monkeypatch, status_code, response_data):
-    def _mock_response(*args, **kwargs):
+def mock_response(monkeypatch, status_code, response_data):  # type: ignore [no-untyped-def]
+    def _mock_response(*args, **kwargs):  # type: ignore [no-untyped-def]
         return DummyResponse(status=status_code, d=response_data)
 
     monkeypatch.setattr(http.client.HTTPSConnection, "getresponse", _mock_response)
@@ -78,7 +79,7 @@ def mock_response(monkeypatch, status_code, response_data):
         ),
     ],
 )
-def test_send_email(
+def test_send_email(  # type: ignore [no-untyped-def]
     mock_https_connection,
     set_env_variables,
     mock_response,
