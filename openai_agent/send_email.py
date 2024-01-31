@@ -8,8 +8,9 @@ INFOBIP_API_KEY = environ["INFOBIP_API_KEY"]
 INFOBIP_BASE_URL = environ["INFOBIP_BASE_URL"]
 
 
+# ToDo: Create support@captn.ai and add to infobip portal
 def send_email(
-    *, from_email: str = "info@airt.ai", to_email: str, subject: str, body_text: str
+    *, from_email: str = "harish@airt.ai", to_email: str, subject: str, body_text: str
 ) -> Dict[str, Any]:
     conn = http.client.HTTPSConnection(  # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
         INFOBIP_BASE_URL
@@ -68,7 +69,7 @@ def send_email(
 
 if __name__ == "__main__":
     r = send_email(
-        from_email="kumaran@airt.ai",
+        from_email="harish@airt.ai",
         to_email="kumaran@airt.ai",
         subject="Hi there!",
         body_text="It is me, SDK!",
