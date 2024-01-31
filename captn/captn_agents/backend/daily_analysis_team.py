@@ -1,9 +1,11 @@
 __all__ = ["DailyAnalysisTeam"]
 
 import ast
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
-from datetime import datetime, timedelta
+
+from pydantic import BaseModel
 
 from ...google_ads.client import (
     execute_query,
@@ -12,24 +14,38 @@ from ...google_ads.client import (
 )
 from .function_configs import (
     execute_query_config,
+    get_daily_report_config,
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
     send_email_config,
-    get_daily_report_config,
 )
 from .functions import get_info_from_the_web_page, send_email
 from .team import Team
 
 
-
-from typing import List
-
-from pydantic import BaseModel
-
-from captn.google_ads.client import list_accessible_customers
-from datetime import datetime, timedelta
+class Campaign(BaseModel):
+    id: str
+    name: str
 
 
+class AdGroup(BaseModel):
+    id: str
+    name: str
+
+
+class Metrics(BaseModel):
+    impressions: int
+    clicks: int
+    interactions: int
+    conversions: int
+    cost_micros: int
+
+
+class AdGroupAd(BaseModel):
+    ad_id: str
+    campaign: Campaign
+    ad_group: AdGroup
+    metrics: Metrics
 
 
 class DailyCampaignReport(BaseModel):
@@ -45,41 +61,81 @@ class DailyCampaignReport(BaseModel):
 
 class DailyCustomerReport(BaseModel):
     customer_id: str
-    daily_campaign_reports: List[DailyCampaignReport]
+    daily_ad_group_ads_report: List[AdGroupAd]
+
 
 class DailyReport(BaseModel):
     daily_customer_reports: List[DailyCustomerReport]
 
-def get_campaign_ids(user_id: int, conv_id: int, customer_id: str) -> List[str]:
-    query = "SELECT campaign.id FROM campaign WHERE campaign.status != 'REMOVED'"
-    query_result = execute_query(user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query)
-    campaigns = ast.literal_eval(query_result)[customer_id]
-    return [campaign["campaign"]["id"] for campaign in campaigns]
-    
 
-def get_daily_report_for_campaign(campaign_id: str, date: str) -> DailyCampaignReport:
-    raise NotImplementedError()
+def get_daily_ad_group_ads_report(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> List[AdGroupAd]:
+    query = f"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros FROM ad_group_ad WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
-def get_daily_report_for_customer(customer_id: str, date: str) -> DailyCustomerReport:
-    campaign_ids: List[str] = get_campaign_ids(customer_id=customer_id)
-    daily_campaign_reports = [get_daily_report_for_campaign(campaign_id=campaign_id, date=date) for campaign_id in campaign_ids]
+    ad_group_ads = []
+    for customer_result in customer_results:
+        campaign = customer_result["campaign"]
+        ad_group = customer_result["adGroup"]
+        ad_group_ad = customer_result["adGroupAd"]["ad"]
+        metrics = customer_result["metrics"]
+
+        ad_group_ad = AdGroupAd(
+            ad_id=customer_result["adGroupAd"]["ad"]["id"],
+            campaign=Campaign(
+                id=campaign["id"],
+                name=campaign["name"],
+            ),
+            ad_group=AdGroup(
+                id=ad_group["id"],
+                name=ad_group["name"],
+            ),
+            metrics=Metrics(
+                impressions=metrics["impressions"],
+                clicks=metrics["clicks"],
+                interactions=metrics["interactions"],
+                conversions=metrics["conversions"],
+                cost_micros=metrics["costMicros"],
+            ),
+        )
+
+        ad_group_ads.append(ad_group_ad)
+    return ad_group_ads
+
+
+def get_daily_report_for_customer(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> DailyCustomerReport:
+    daily_ad_group_ads_report = get_daily_ad_group_ads_report(
+        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
+    )
 
     return DailyCustomerReport(
         customer_id=customer_id,
-        daily_campaign_reports=daily_campaign_reports,
+        daily_ad_group_ads_report=daily_ad_group_ads_report,
     )
 
 
-
 def get_daily_report(date: Optional[str] = None, *, user_id: int, conv_id: int) -> str:
-    # last_week = today - timedelta(7)
     if date is None:
         date = datetime.today().date().isoformat()
 
-    customer_ids: List[str] = list_accessible_customers(user_id=user_id, conv_id=conv_id)
-    daily_customer_reports = [get_daily_report_for_customer(customer_id=customer_id, date=date) for customer_id in customer_ids]
-    return DailyReport(daily_customer_reports=daily_customer_reports).model_dump_json(indent=2)
-
+    customer_ids: List[str] = list_accessible_customers(
+        user_id=user_id, conv_id=conv_id
+    )  # type: ignore
+    daily_customer_reports = [
+        get_daily_report_for_customer(
+            user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
+        )
+        for customer_id in customer_ids
+    ]
+    return DailyReport(daily_customer_reports=daily_customer_reports).model_dump_json(
+        indent=2
+    )
 
 
 class DailyAnalysisTeam(Team):
@@ -202,7 +258,11 @@ If the user isn't logged in, we will NOT be able to access the Google Ads API.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
 6. Before doing anything else, get the daily report for the campaigns from the previous day by using the 'get_daily_report' command.
-6. Use the 'execute_query' command for finding the necessary informations.
+Use ONLY the 'get_daily_report' command for retrieving Google Ads metrics (impressions, clicks, conversions, cost_micros etc.).
+DO NOT USE execute_query command for retrieving Google Ads metrics! Otherwise you will be penalized!
+7. Use the 'execute_query' command for finding the necessary informations about the campaigns, ad groups, ads, keywords etc.
+Do NOT use 'execute_query' command for retrieving Google Ads metrics (impressions, clicks, conversions, cost_micros etc.)!
+
 7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
 8. You can NOT ask the client anything!
 9. Never repeat the content from (received) previous messages
@@ -211,10 +271,11 @@ Don't repeat your self and others and do not use any filler words.
 'send_email' command
 Here an example on how to use the 'send_email' command:
 {
-    "daily_analysis": "Below is your daily analysis of your Google Ads campaigns for the date 2024-01-27:
-    Clicks:         124 clicks ( +3.12%)
-    Spend:           $6.54 USD ( -1.12%)
-    Cost per click:  $0.05 USD (+12.00%)
+    "daily_analysis": "Below is your daily analysis of your Google Ads campaigns for the date 2024-01-27.
+    Campaign - Furniture, Ad Group - Living room, Ad (https://ads.google.com/aw/ads/edit/search?adId=1221212&adGroupIdForAd=44545454)
+    Clicks:          124 clicks (+3.12% since last week)
+    Conversions:     $6.54 USD  (-1.12% since last week)
+    Cost per click:  $0.05 USD  (+12.00% since last week)
     ",
     "proposed_user_actions": ["Remove 'Free' keyword because it is not performing well", "Increase budget from $10/day to $20/day",
     "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'", "Select some or all of them"]
@@ -243,8 +304,6 @@ Do NOT suggest making changes of the following things, otherwise you will be pen
 - Budgeting
 - Ad Scheduling
 
-13. Here is an example of a query which you can use for retrieving the information about the campaigns performance BETWEEN '2024-01-27' AND '2024-01-29':
-SELECT campaign.id, campaign.name, metrics.cost_micros, metrics.conversions, segments.date FROM campaign WHERE segments.date BETWEEN '2024-01-27' AND '2024-01-29' AND campaign.status != 'REMOVED'"
 14. You can retrieve negative keywords from the 'campaign_criterion' table (so do not just check the
 'ad_group_criterion' table and give up if there are not in that table)
 15. Whenever you want to mention the ID of some resource (campaign, ad group, ad, keyword etc.), you must also mention the name of that resource.
@@ -282,7 +341,7 @@ So please recommend some of these changes to the client by using the 'proposed_u
 Do NOT suggest making changes of the following things:
 - Targeting settings
 - Ad Extensions
-- Budgeting
+- Budget updates (increase/decrease)
 - Ad Scheduling
 
 VERY IMPORTANT NOTES:
@@ -313,12 +372,19 @@ ONLY Google ads specialist can suggest following commands:
 1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
 2. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
 Example of customer_ids parameter: ["12", "44", "111"]
-You can use optional parameter 'query' for writing SQL queries. e.g.:
-"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name
-FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
+You can use optional parameter 'query' for writing SQL queries.
+Do NOT try to JOIN tables, otherwise you will be penalized!
+Do NOT try to use multiple tables in the FROM clause (e.g. FROM ad_group_ad, ad_group, campaign), otherwise you will be penalized!
 
 If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRUE" for filtering.
 Do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!
+Always add the following condition to your query: "WHERE campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"
+Here is few useful queries:
+SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad
+SELECT ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, ad_group_criterion.negative FROM ad_group_criterion WHERE ad_group_criterion.ad_group = 'customers/2324127278/adGroups/161283342474'
+SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criterion.keyword.text, campaign_criterion.negative FROM campaign_criterion WHERE campaign_criterion.campaign = 'customers/2324127278/campaigns/20978334367' AND campaign_criterion.negative=TRUE"
+
+NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
 
 3. 'get_daily_report': Retrieve daily report for the campaigns, params: (date: str)
 """

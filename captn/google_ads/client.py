@@ -1,9 +1,9 @@
+import json
 from os import environ
 from typing import Any, Dict, List, Optional, Union
 
 import requests
 from pydantic import BaseModel
-import json
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
@@ -49,12 +49,14 @@ def list_accessible_customers(
 
 
 def clean_error_response(content: bytes) -> str:
-    content = str(content, "utf-8")
+    content_str = str(content, "utf-8")
 
-    detail = json.loads(content)["detail"]
+    detail = json.loads(content_str)["detail"]
     detail_list = detail.split("\n")
 
-    return "\n".join([row for row in detail_list if "message" in row and "created_time" not in row])
+    return "\n".join(
+        [row for row in detail_list if "message" in row and "created_time" not in row]
+    )
 
 
 def execute_query(
