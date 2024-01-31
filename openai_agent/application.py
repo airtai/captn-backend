@@ -9,10 +9,7 @@ from pydantic import BaseModel
 from captn.captn_agents.backend.function_configs import (  # type: ignore
     smart_suggestions_description,
 )
-from captn.captn_agents.backend.teams_manager import (
-    create_team,
-    get_team_status,
-)
+from captn.captn_agents.backend.teams_manager import create_team, get_team_status
 from captn.captn_agents.model import SmartSuggestions
 from captn.google_ads.client import get_google_ads_team_capability
 
@@ -360,18 +357,58 @@ async def _get_openai_response(  # type: ignore
         )
 
 
+def _format_proposed_user_action(proposed_user_action: Optional[List[str]]) -> str:
+    if proposed_user_action is None:
+        return ""
+    return "\n".join(
+        [f"{i+1}. {action}" for i, action in enumerate(proposed_user_action)]
+    )
+
+
+def _get_message_as_string(
+    messages: List[Dict[str, str]],
+    proposed_user_action: Optional[List[str]],
+    agent_chat_history: Optional[str],
+) -> str:
+    ret_val = f"""
+### History ###
+This is the JSON encoded history of your conversation that made the Daily Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
+
+{agent_chat_history}
+
+### Daily Analysis ###
+{messages[0]["content"]}
+
+### Proposed User Action ###
+{_format_proposed_user_action(proposed_user_action)}
+
+### User Action ###
+{messages[-1]["content"]}
+
+"""
+    return ret_val
+
+
 async def _user_response_to_agent(
     user_id: int,
+    team_id: Optional[int],
     chat_id: int,
+    chat_type: Optional[str],
+    agent_chat_history: Optional[str],
+    proposed_user_action: Optional[List[str]],
     message: List[Dict[str, str]],
     background_tasks: BackgroundTasks,
 ) -> Dict[str, Union[Optional[str], int]]:
-    last_user_message = message[-1]["content"]
+    message_to_team = (
+        _get_message_as_string(message, proposed_user_action, agent_chat_history)
+        if (chat_type and not team_id)
+        else message[-1]["content"]
+    )
     team_name = TEAM_NAME.format(user_id, chat_id)
     await create_team(
         user_id,
         chat_id,
-        last_user_message,
+        message_to_team,
         team_name,
         background_tasks,
     )
@@ -388,6 +425,9 @@ class AzureOpenAIRequest(BaseModel):
     message: List[Dict[str, str]]
     user_id: int
     team_id: Union[int, None]
+    chat_type: Union[str, None]
+    agent_chat_history: Union[str, None]
+    proposed_user_action: Optional[List[str]]
 
 
 @router.post("/chat")
@@ -396,14 +436,21 @@ async def chat(
 ) -> Dict[str, Union[Optional[str], int, Union[str, SmartSuggestions]]]:
     message = request.message
     chat_id = request.chat_id
+    chat_type = request.chat_type
+    agent_chat_history = request.agent_chat_history
+    proposed_user_action = request.proposed_user_action
     result = (
         await _user_response_to_agent(
             request.user_id,
+            request.team_id,
             chat_id,
+            chat_type,
+            agent_chat_history,
+            proposed_user_action,
             message,
             background_tasks,
         )
-        if (request.team_id)
+        if (request.team_id or chat_type)
         else await _get_openai_response(
             request.user_id, chat_id, message, background_tasks
         )
