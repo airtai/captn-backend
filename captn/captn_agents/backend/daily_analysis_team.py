@@ -3,6 +3,7 @@ __all__ = ["DailyAnalysisTeam"]
 import ast
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
+from datetime import datetime, timedelta
 
 from ...google_ads.client import (
     execute_query,
@@ -14,9 +15,71 @@ from .function_configs import (
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
     send_email_config,
+    get_daily_report_config,
 )
 from .functions import get_info_from_the_web_page, send_email
 from .team import Team
+
+
+
+from typing import List
+
+from pydantic import BaseModel
+
+from captn.google_ads.client import list_accessible_customers
+from datetime import datetime, timedelta
+
+
+
+
+class DailyCampaignReport(BaseModel):
+    campaign_id: str
+    campaign_name: str
+    impressions: int
+    clicks: int
+    interactions: int
+    conversions: int
+    cost_micros: int
+    date: str
+
+
+class DailyCustomerReport(BaseModel):
+    customer_id: str
+    daily_campaign_reports: List[DailyCampaignReport]
+
+class DailyReport(BaseModel):
+    daily_customer_reports: List[DailyCustomerReport]
+
+def get_campaign_ids(user_id: int, conv_id: int, customer_id: str) -> List[str]:
+    query = "SELECT campaign.id FROM campaign WHERE campaign.status != 'REMOVED'"
+    query_result = execute_query(user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query)
+    campaigns = ast.literal_eval(query_result)[customer_id]
+    return [campaign["campaign"]["id"] for campaign in campaigns]
+    
+
+def get_daily_report_for_campaign(campaign_id: str, date: str) -> DailyCampaignReport:
+    raise NotImplementedError()
+
+def get_daily_report_for_customer(customer_id: str, date: str) -> DailyCustomerReport:
+    campaign_ids: List[str] = get_campaign_ids(customer_id=customer_id)
+    daily_campaign_reports = [get_daily_report_for_campaign(campaign_id=campaign_id, date=date) for campaign_id in campaign_ids]
+
+    return DailyCustomerReport(
+        customer_id=customer_id,
+        daily_campaign_reports=daily_campaign_reports,
+    )
+
+
+
+def get_daily_report(date: Optional[str] = None, *, user_id: int, conv_id: int) -> str:
+    # last_week = today - timedelta(7)
+    if date is None:
+        date = datetime.today().date().isoformat()
+
+    customer_ids: List[str] = list_accessible_customers(user_id=user_id, conv_id=conv_id)
+    daily_customer_reports = [get_daily_report_for_customer(customer_id=customer_id, date=date) for customer_id in customer_ids]
+    return DailyReport(daily_customer_reports=daily_customer_reports).model_dump_json(indent=2)
+
 
 
 class DailyAnalysisTeam(Team):
@@ -25,6 +88,7 @@ class DailyAnalysisTeam(Team):
         execute_query_config,
         send_email_config,
         get_info_from_the_web_page_config,
+        get_daily_report_config,
     ]
 
     _shared_system_message = (
@@ -137,6 +201,7 @@ If the user isn't logged in, we will NOT be able to access the Google Ads API.
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
+6. Before doing anything else, get the daily report for the campaigns from the previous day by using the 'get_daily_report' command.
 6. Use the 'execute_query' command for finding the necessary informations.
 7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
 8. You can NOT ask the client anything!
@@ -254,6 +319,8 @@ FROM keyword_view WHERE segments.date DURING LAST_30_DAYS"
 
 If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRUE" for filtering.
 Do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!
+
+3. 'get_daily_report': Retrieve daily report for the campaigns, params: (date: str)
 """
 
 
@@ -291,6 +358,9 @@ def _get_function_map(
             client_email=client_email,
         ),
         "get_info_from_the_web_page": get_info_from_the_web_page,
+        "get_daily_report": lambda date: get_daily_report(
+            date=date, user_id=user_id, conv_id=conv_id
+        ),
     }
 
     return function_map

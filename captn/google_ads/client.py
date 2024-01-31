@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 from pydantic import BaseModel
+import json
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
@@ -47,10 +48,19 @@ def list_accessible_customers(
     # return json.dumps(response.json())
 
 
+def clean_error_response(content: bytes) -> str:
+    content = str(content, "utf-8")
+
+    detail = json.loads(content)["detail"]
+    detail_list = detail.split("\n")
+
+    return "\n".join([row for row in detail_list if "message" in row and "created_time" not in row])
+
+
 def execute_query(
     user_id: int,
     conv_id: int,
-    work_dir: str,
+    work_dir: Optional[str] = None,
     customer_ids: Optional[List[str]] = None,
     query: Optional[str] = None,
 ) -> Union[str, Dict[str, str]]:
@@ -68,7 +78,8 @@ def execute_query(
 
     response = requests.get(f"{BASE_URL}/search", params=params, timeout=60)
     if not response.ok:
-        raise ValueError(response.content)
+        content = clean_error_response(response.content)
+        raise ValueError(content)
 
     response_json = response.json()
 
