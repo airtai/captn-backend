@@ -1,23 +1,74 @@
+import http.client
+import json
+from codecs import encode
 from os import environ
-
-from infobip_channels.email.channel import EmailChannel
+from typing import Any
 
 INFOBIP_API_KEY = environ.get("INFOBIP_API_KEY")
 INFOBIP_BASE_URL = environ.get("INFOBIP_BASE_URL")
 
 
 def send_email(
-    *, from_email: str = "info@airt.ai", to_email: str, subject: str, body: str
-) -> None:
-    channel = EmailChannel.from_auth_params(
-        {"base_url": INFOBIP_BASE_URL, "api_key": INFOBIP_API_KEY}
+    *, from_email: str = "info@airt.ai", to_email: str, subject: str, body_text: str
+) -> dict[str, Any]:
+    conn = http.client.HTTPSConnection(INFOBIP_BASE_URL)
+    dataList = []
+    boundary = "wL36Yn8afVp8Ag7AmP8qZ0SA4n1v9T"
+    dataList.append(encode("--" + boundary))
+    dataList.append(encode("Content-Disposition: form-data; name=from;"))
+
+    dataList.append(encode("Content-Type: {}".format("text/plain")))
+    dataList.append(encode(""))
+
+    dataList.append(encode(from_email))
+    dataList.append(encode("--" + boundary))
+    dataList.append(encode("Content-Disposition: form-data; name=subject;"))
+
+    dataList.append(encode("Content-Type: {}".format("text/plain")))
+    dataList.append(encode(""))
+
+    dataList.append(encode(subject))
+    dataList.append(encode("--" + boundary))
+    dataList.append(encode("Content-Disposition: form-data; name=to;"))
+
+    dataList.append(encode("Content-Type: {}".format("text/plain")))
+    dataList.append(encode(""))
+
+    dataList.append(encode('{"to":"' + to_email + '"}'))
+    dataList.append(encode("--" + boundary))
+    dataList.append(encode("Content-Disposition: form-data; name=text;"))
+
+    dataList.append(encode("Content-Type: {}".format("text/plain")))
+    dataList.append(encode(""))
+
+    dataList.append(encode(body_text))
+    dataList.append(encode("--" + boundary + "--"))
+    dataList.append(encode(""))
+    body = b"\r\n".join(dataList)
+    payload = body
+    headers = {
+        "Authorization": f"App {INFOBIP_API_KEY}",
+        "Accept": "application/json",
+        "Content-type": f"multipart/form-data; boundary={boundary}",
+    }
+
+    conn.request("POST", "/email/3/send", payload, headers)
+    res = conn.getresponse()
+
+    data = res.read()
+    decoded = json.loads(data.decode("utf-8"))
+
+    if res.status != 200:
+        raise Exception(f"Failed to send email: {res.status}, {decoded}")
+
+    return decoded
+
+
+if __name__ == "__main__":
+    r = send_email(
+        from_email="kumaran@airt.ai",
+        to_email="kumaran@airt.ai",
+        subject="Hi there!",
+        body_text="It is me, SDK!",
     )
-
-    email_response = channel.send_email_message(
-        {"from": from_email, "to": to_email, "subject": subject, "text": body}
-    )
-
-    print(email_response)
-
-    if not email_response.status_code.value == 200:
-        raise ValueError(email_response)
+    print(r)

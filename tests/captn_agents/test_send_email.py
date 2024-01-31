@@ -1,71 +1,102 @@
+import http.client
+import json
+from unittest.mock import MagicMock
+
 import pytest
-from infobip_channels.core.models import ResponseStatus
-from infobip_channels.email.channel import EmailChannel
-from infobip_channels.email.models.response.send_email import (
-    SendEmailResponse,
-    SendEmailResponseMessage,
+
+
+class DummyResponse:
+    def __init__(self, status, d, **kwargs) -> None:
+        self.status = status
+        self.d = d
+
+    def read(self, *args, **kwargs):
+        return str.encode(json.dumps(self.d))
+
+
+@pytest.fixture
+def mock_https_connection(monkeypatch):
+    monkeypatch.setattr(http.client.HTTPSConnection, "request", MagicMock())
+
+
+@pytest.fixture
+def set_env_variables(monkeypatch):
+    monkeypatch.setenv("INFOBIP_API_KEY", "123")
+    monkeypatch.setenv("INFOBIP_BASE_URL", "dummy.base.com")
+
+
+@pytest.fixture
+def mock_response(monkeypatch, status_code, response_data):
+    def _mock_response(*args, **kwargs):
+        return DummyResponse(status=status_code, d=response_data)
+
+    monkeypatch.setattr(http.client.HTTPSConnection, "getresponse", _mock_response)
+
+
+@pytest.mark.parametrize(
+    "status_code, response_data, expected_exception",
+    [
+        (
+            200,
+            {
+                "bulkId": "t3j7tho5rk69t2f3bruh",
+                "messages": [
+                    {
+                        "to": "test@airt.ai",
+                        "messageId": "692g3652bq2tpvps2nk2",
+                        "status": {
+                            "groupId": 1,
+                            "groupName": "PENDING",
+                            "id": 26,
+                            "name": "PENDING_ACCEPTED",
+                            "description": "Message accepted, pending for delivery.",
+                        },
+                    }
+                ],
+            },
+            None,
+        ),
+        (
+            500,
+            {
+                "bulkId": "t3j7tho5rk69t2f3bruh",
+                "messages": [
+                    {
+                        "to": "test@airt.ai",
+                        "messageId": "692g3652bq2tpvps2nk2",
+                        "status": {
+                            "groupId": 1,
+                            "groupName": "PENDING",
+                            "id": 26,
+                            "name": "REJECTED",
+                            "description": "Message rejected.",
+                        },
+                    }
+                ],
+            },
+            "Failed to send email: 500",
+        ),
+    ],
 )
-from requests.models import Response
-
-
-def test_send_email(monkeypatch):
-    monkeypatch.setenv("INFOBIP_API_KEY", "123")
-    monkeypatch.setenv("INFOBIP_BASE_URL", "dummy.base.com")
-
+def test_send_email(
+    mock_https_connection,
+    set_env_variables,
+    mock_response,
+    status_code,
+    response_data,
+    expected_exception,
+):
     from openai_agent.send_email import send_email
 
-    def mock_response(*args, **kwargs):
-        response = Response()
-        response.status_code = 200
+    if expected_exception:
+        with pytest.raises(Exception) as exc_info:
+            send_email(
+                to_email="test@airt.ai", subject="Hi there!", body_text="It is me, SDK!"
+            )
 
-        dummy_response_status = ResponseStatus(
-            group_id=1,
-            group_name="PENDING",
-            id=26,
-            name="PENDING_ACCEPTED",
-            description="Message accepted, pending for delivery.",
-            action=None,
+        assert expected_exception in str(exc_info.value)
+    else:
+        response = send_email(
+            to_email="test@airt.ai", subject="Hi there!", body_text="It is me, SDK!"
         )
-        email_response = SendEmailResponse(
-            status_code=200,
-            rawResponse=response,
-            messages=[SendEmailResponseMessage(status=dummy_response_status)],
-        )
-
-        return email_response
-
-    monkeypatch.setattr(EmailChannel, "send_email_message", mock_response)
-
-    send_email(to_email="test@airt.ai", subject="Hi there!", body="It is me, SDK!")
-
-
-def test_send_email_raise_exception(monkeypatch):
-    monkeypatch.setenv("INFOBIP_API_KEY", "123")
-    monkeypatch.setenv("INFOBIP_BASE_URL", "dummy.base.com")
-
-    from openai_agent.send_email import send_email
-
-    def mock_response(*args, **kwargs):
-        response = Response()
-        response.status_code = 500
-
-        dummy_response_status = ResponseStatus(
-            group_id=1,
-            group_name="PENDING",
-            id=26,
-            name="PENDING_ACCEPTED",
-            description="Message accepted, pending for delivery.",
-            action=None,
-        )
-        email_response = SendEmailResponse(
-            status_code=500,
-            rawResponse=response,
-            messages=[SendEmailResponseMessage(status=dummy_response_status)],
-        )
-
-        return email_response
-
-    monkeypatch.setattr(EmailChannel, "send_email_message", mock_response)
-
-    with pytest.raises(ValueError):
-        send_email(to_email="test@airt.ai", subject="Hi there!", body="It is me, SDK!")
+        assert response == response_data
