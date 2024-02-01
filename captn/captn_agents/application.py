@@ -1,8 +1,10 @@
 from typing import Any
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .backend.end_to_end import start_conversation
+
 # from openai_agent.websocket import CustomWebSocket
 
 router = APIRouter()
@@ -16,7 +18,9 @@ class CaptnAgentRequest(BaseModel):
 
 
 @router.post("/chat")
-def chat(request: CaptnAgentRequest, websocket: Any) -> str: # todo: websocket: CustomWebSocket
+def chat(
+    request: CaptnAgentRequest, websocket: Any
+) -> str:  # todo: websocket: CustomWebSocket
     try:
         team_name, last_message = start_conversation(
             user_id=request.user_id,
@@ -42,7 +46,8 @@ if __name__ == "__main__":
         conv_id=5,
     )
 
-    last_message = chat(request=request)
+    # todo: fix the below and pass in a websocket
+    last_message = chat(request=request)  # type: ignore
     print("*" * 100)
     print(f"User will receive the following message:\n{last_message}")
     print("*" * 100)
@@ -52,7 +57,8 @@ if __name__ == "__main__":
         user_id=3,
         conv_id=5,
     )
-    last_message = chat(request=request)
+    # todo: fix the below and pass in a websocket
+    last_message = chat(request=request)  # type: ignore
     print("*" * 100)
     print(f"User will receive the following message:\n{last_message}")
     print("*" * 100)

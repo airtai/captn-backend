@@ -2,7 +2,7 @@ import ast
 import asyncio
 import secrets
 import string
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 from fastapi import BackgroundTasks, WebSocket
 
@@ -16,7 +16,7 @@ TEAMS_STATUS: Dict[
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It appears we've hit a temporary squall in the digital sea. Give it some time, and we'll be back to smooth sailing. Please try again later."
 
 
-websocket_clients = {}
+websocket_clients: Dict[str, Any] = {}
 
 
 def generate_random_string(length: int = 1) -> str:
@@ -70,7 +70,9 @@ def chat_with_team(
     message: str, user_id: int, chat_id: int
 ) -> Dict[str, Union[str, bool]]:
     request_obj = CaptnAgentRequest(message=message, user_id=user_id, conv_id=chat_id)
-    response: Dict[str, Union[str, bool]] = ast.literal_eval(chat(request_obj, websocket_clients[user_id]))
+    response: Dict[str, Union[str, bool]] = ast.literal_eval(
+        chat(request_obj, websocket_clients[str(user_id)])
+    )
     return response
 
 
