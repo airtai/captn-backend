@@ -2,16 +2,27 @@ import json
 from os import environ
 from typing import Dict, List, Optional, Union
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
 from captn.captn_agents.backend.function_configs import (  # type: ignore
     smart_suggestions_description,
 )
-from captn.captn_agents.backend.teams_manager import create_team, get_team_status
+from captn.captn_agents.backend.teams_manager import (
+    create_team,
+    get_team_status,
+    send_message_in_socket,
+)
 from captn.captn_agents.model import SmartSuggestions
 from captn.google_ads.client import get_google_ads_team_capability
+from openai_agent.connection_manager import ConnectionManager
 
 router = APIRouter()
 
@@ -469,3 +480,20 @@ async def get_status(
     team_id = request.team_id
     status = await get_team_status(team_id)
     return status
+
+
+manager = ConnectionManager()  # type: ignore
+
+
+@router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int) -> None:
+    await manager.connect(websocket)
+    try:
+        while True:
+            # data = await websocket.receive_text()
+            await send_message_in_socket(manager, websocket)
+            # await manager.send_personal_message(f"You are beautiful", websocket)
+            # await manager.broadcast(f"Client #{client_id} says: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        await manager.broadcast(f"Client #{client_id} left the chat")

@@ -1,15 +1,32 @@
 import ast
+import asyncio
+import secrets
+import string
 from typing import Dict, List, Union
 
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, WebSocket
 
 from captn.captn_agents.application import CaptnAgentRequest, chat
+from openai_agent.connection_manager import ConnectionManager
 
 TEAMS_STATUS: Dict[
     str, Dict[str, Union[str, bool, int, Dict[str, Union[str, List[str]]]]]
 ] = {}
 
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It appears we've hit a temporary squall in the digital sea. Give it some time, and we'll be back to smooth sailing. Please try again later."
+
+
+def generate_random_string(length: int = 10) -> str:
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
+async def send_message_in_socket(
+    manager: ConnectionManager, websocket: WebSocket
+) -> None:
+    for _ in range(10):
+        await manager.send_personal_message(generate_random_string(), websocket)
+        await asyncio.sleep(1)
 
 
 def add_to_teams_status(user_id: int, chat_id: int, team_name: str) -> None:
