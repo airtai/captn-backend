@@ -105,6 +105,13 @@ def get_email(user_id: int) -> str:
     return response.json()  # type: ignore[no-any-return]
 
 
+def get_user_ids_and_emails() -> str:
+    response = requests.get(f"{BASE_URL}/get-user-ids-and-emails", timeout=60)
+    if not response.ok:
+        raise ValueError(response.content)
+    return response.json()  # type: ignore[no-any-return]
+
+
 def google_ads_create_update(
     user_id: int,
     conv_id: int,

@@ -1,3 +1,4 @@
+from os import environ
 from typing import Any, Dict, List, Optional, Union
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ from typing_extensions import Annotated
 
 from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
 
+from ...email.send_email import send_email as send_email_infobip
 from ..model import SmartSuggestions
 
 
@@ -157,6 +159,9 @@ You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY inform
     return str(user_proxy.last_message()["content"])
 
 
+REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
+
+
 def send_email(
     client_email: str,
     daily_analysis: str,
@@ -171,7 +176,30 @@ def send_email(
 
     final_message += proposed_user_actions_paragraph
 
-    print(final_message)
+    # params = {
+    #     "userId": "1",
+    #     "messages": """[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]""",
+    #     "initial_message_in_chat": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)",
+    #     "email_content": "<html></html>",
+    #     "proposed_user_action": [
+    #         "Remove 'Free' keyword because it is not performing well",
+    #         "Increase budget from $10/day to $20/day",
+    #         "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'",
+    #         "Select some or all of them",
+    #     ],
+    # }
+    # response = requests.get(
+    #     f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", params=params, timeout=60
+    # )
+    # print(response)
+    # print(response.content)
+    # print(response.json())
+
+    send_email_infobip(
+        to_email=client_email,
+        subject="Captn.ai Daily Analysis",
+        body_text=final_message,
+    )
     return_msg = {
         "final_message": final_message,
         "terminate_groupchat": True,

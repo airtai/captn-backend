@@ -42,6 +42,14 @@ oauth2_settings = {
 }
 
 
+async def get_users() -> Any:
+    wasp_db_url = await get_wasp_db_url()
+    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
+        users = await db.query_raw('SELECT * from "User"')
+
+    return users
+
+
 async def get_user(user_id: Union[int, str]) -> Any:
     wasp_db_url = await get_wasp_db_url()
     async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
@@ -262,6 +270,14 @@ async def search(
         ) from e
 
     return campaign_data
+
+
+# Route 5: Fetch user's email
+@router.get("/get-user-ids-and-emails")
+async def get_user_ids_and_emails() -> str:
+    users = await get_users()
+    id_email_dict = {user["id"]: user["email"] for user in users}
+    return json.dumps(id_email_dict)  # type: ignore
 
 
 # Route 5: Fetch user's email

@@ -1,6 +1,7 @@
 __all__ = ["DailyAnalysisTeam"]
 
 import ast
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -10,6 +11,7 @@ from pydantic import BaseModel
 from ...google_ads.client import (
     execute_query,
     get_email,
+    get_user_ids_and_emails,
     list_accessible_customers,
 )
 from .function_configs import (
@@ -454,3 +456,37 @@ def get_create_daily_analysis_team(
         return last_message
 
     return create_daily_analysis_team
+
+
+def execute_daily_analysis() -> None:
+    print("Starting daily analysis.")
+    id_email_dict = json.loads(get_user_ids_and_emails())
+    for user_id, email in id_email_dict.items():
+        current_date = datetime.today().strftime("%Y-%m-%d")
+        task = f"""
+    Current date is: {current_date}.
+    You need compare the ads performance between yesterday and the same day of the previous week (-7 days).
+    - Clicks
+    - Conversions
+    - Cost per click (display in customer local currency)
+
+    Check which ads have the highest cost and which have the highest number of conversions.
+    If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
+    At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
+    - pause the ads with the highest cost and the lowest number of conversions.
+    - keywords analysis (add negative keywords, add positive keywords, change match type etc).
+    - ad copy analysis (change the ad copy, add more ads etc).
+        """
+
+        conv_id = 100
+        daily_analysis_team = DailyAnalysisTeam(
+            task=task,
+            user_id=user_id,
+            conv_id=conv_id,
+        )
+        try:
+            # daily_analysis_team.initiate_chat()
+            pass
+        finally:
+            Team.pop_team(team_name=daily_analysis_team.name)
+    print("Daily analysis completed.")
