@@ -272,15 +272,18 @@ Do NOT use 'execute_query' command for retrieving Google Ads metrics (impression
 'send_email' command
 Here an example on how to use the 'send_email' command:
 {
-    "daily_analysis": "Below is your daily analysis of your Google Ads campaigns for the date 2024-01-27.
-    Campaign - Furniture, Ad Group - Living room, Ad (https://ads.google.com/aw/ads/edit/search?adId=1221212&adGroupIdForAd=44545454)
-    Clicks:          124 clicks (+3.12% since last week)
-    Conversions:     $6.54 USD  (-1.12% since last week)
-    Cost per click:  $0.05 USD  (+12.00% since last week)
-    ",
+    "daily_analysis": "<p>Below is your daily analysis of your Google Ads campaigns for the date 2024-01-31 compared to 2024-01-24 for customer ID 2324127278.</p>
+
+<p><strong>Campaign - xy</strong>, <strong>Ad Group - xy</strong>, Ad (<a href="https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518">Link to Ad</a>)</p>
+<ul>
+    <li>Clicks: xy clicks (xy% since last week)</li>
+    <li>Conversions: INR xy (-xy% since last week)</li>
+    <li>Cost per click: Decreased since last week</li>
+</ul>",
     "proposed_user_actions": ["Remove 'Free' keyword because it is not performing well", "Increase budget from $10/day to $20/day",
     "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'", "Select some or all of them"]
 }
+daily_analysis parameter will be used insid the HTML body of the email so make sure it has valid HTML tags!!!!
 
 propose_user_actions should NOT be general, but specific.
 'proposed_user_actions' BAD EXAMPLES:
@@ -328,7 +331,6 @@ e.g. if you want to retrieve the information about the TVs and you already know 
 By doing that, you will be able to recommend MUCH BETTER keywords, headlines, descriptions etc. to the client.
 21. Before suggesting any kind of budget, check the default currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
-22. Ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 23. Once you have completed daily analysis, you must send a summary of the work done to the client by using the 'send_email' command.
 
@@ -434,6 +436,35 @@ REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
 REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
 
 
+def _create_final_html_message(
+    initial_message_in_chat: str, proposed_user_action: List[str], conv_id: int
+) -> str:
+    final_message = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captn.ai Daily Analysis</title>
+</head>
+<body>
+
+<h2>Daily Analysis:</h2>
+{initial_message_in_chat}
+"""
+
+    proposed_user_actions_paragraph = "<h3>Proposed User Actions:</h3>\n<ol>\n"
+
+    for i, action in enumerate(proposed_user_action):
+        proposed_user_actions_paragraph += f"<li>{action} (<a href='{REDIRECT_DOMAIN}/chat/{conv_id}?selected_user_action={i+1}'>Link</a>)</li>"
+
+    final_message += proposed_user_actions_paragraph
+    final_message += """</ol>
+
+</body>
+</html>"""
+    return final_message
+
+
 def _get_conv_id_and_send_email(
     user_id: int,
     client_email: str,
@@ -455,20 +486,16 @@ def _get_conv_id_and_send_email(
     if response.status_code != 200:
         raise ValueError(response.content)
 
-    final_message = "Daily Analysis:\n" + initial_message_in_chat + "\n\n"
-
     conv_id = response.json()["chatID"]
-    proposed_user_actions_paragraph = "Proposed User Actions:\n"
-    for i, action in enumerate(proposed_user_action):
-        proposed_user_actions_paragraph += f"{i+1}. {action} ({REDIRECT_DOMAIN}/chat/{conv_id}?selected_user_action={i+1})\n"
-
-    final_message += proposed_user_actions_paragraph
+    final_html_message = _create_final_html_message(
+        initial_message_in_chat, proposed_user_action, conv_id
+    )
 
     send_email_infobip(
         to_email=client_email,
         from_email="info@airt.ai",
         subject="Captn.ai Daily Analysis",
-        body_text=final_message,
+        body_text=final_html_message,
     )
 
     return conv_id  # type: ignore
