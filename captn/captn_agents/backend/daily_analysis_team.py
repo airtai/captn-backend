@@ -4,12 +4,12 @@ import ast
 import json
 from datetime import datetime
 from os import environ
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from pydantic import BaseModel
 import requests
+from pydantic import BaseModel
 
+from ...email.send_email import send_email as send_email_infobip
 from ...google_ads.client import (
     execute_query,
     get_user_ids_and_emails,
@@ -24,7 +24,6 @@ from .function_configs import (
 )
 from .functions import get_info_from_the_web_page, send_email
 from .team import Team
-from ...email.send_email import send_email as send_email_infobip
 
 
 class Campaign(BaseModel):
@@ -196,18 +195,14 @@ sure it is understandable by non-experts.
         task: str,
         user_id: int,
         conv_id: int,
-        client_email: str,
         work_dir: str = "daily_analysis",
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        self.client_email = client_email
-        print(f"User {user_id}, email: {self.client_email}")
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
             user_id=user_id,
             conv_id=conv_id,
-            client_email=self.client_email,
             work_dir=work_dir,
         )
         roles: List[Dict[str, str]] = DailyAnalysisTeam._default_roles
@@ -395,9 +390,7 @@ NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
 """
 
 
-def _get_function_map(
-    user_id: int, conv_id: int, client_email: str, work_dir: str
-) -> Dict[str, Any]:
+def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
     def _string_to_list(
         customer_ids: Optional[Union[List[str], str]]
     ) -> Optional[List[str]]:
@@ -426,8 +419,6 @@ def _get_function_map(
         "send_email": lambda daily_analysis, proposed_user_actions: send_email(
             daily_analysis=daily_analysis,
             proposed_user_actions=proposed_user_actions,
-            client_email=client_email,
-            user_id=user_id,
         ),
         "get_info_from_the_web_page": get_info_from_the_web_page,
         "get_daily_report": lambda date: get_daily_report(
@@ -441,7 +432,14 @@ def _get_function_map(
 REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
 REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
 
-def _get_conv_id_and_send_email(user_id: int, client_email:str, messages: str, initial_message_in_chat: str, proposed_user_action: List[str]) -> int:
+
+def _get_conv_id_and_send_email(
+    user_id: int,
+    client_email: str,
+    messages: str,
+    initial_message_in_chat: str,
+    proposed_user_action: List[str],
+) -> int:
     data = {
         "userId": user_id,
         "messages": messages,
@@ -452,10 +450,10 @@ def _get_conv_id_and_send_email(user_id: int, client_email:str, messages: str, i
     response = requests.post(
         f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", json=data, timeout=60
     )
-    
+
     if response.status_code != 200:
         raise ValueError(response.content)
-    
+
     final_message = "Daily Analysis:\n" + initial_message_in_chat + "\n\n"
 
     conv_id = response.json()["chatID"]
@@ -471,16 +469,21 @@ def _get_conv_id_and_send_email(user_id: int, client_email:str, messages: str, i
         subject="Captn.ai Daily Analysis",
         body_text=final_message,
     )
-    print("Final message:\n", final_message)
+
+    return conv_id  # type: ignore
 
 
-
-
-
-def execute_daily_analysis(task: Optional[str]) -> None:
+def execute_daily_analysis(task: Optional[str] = None) -> None:
     print("Starting daily analysis.")
     id_email_dict = json.loads(get_user_ids_and_emails())
+
+    send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
     for user_id, email in id_email_dict.items():
+        if email not in send_only_to_emails:
+            print(
+                f"Skipping user_id: {user_id} - email {email} (current implementation)"
+            )
+            continue
         current_date = datetime.today().strftime("%Y-%m-%d")
         if task is None:
             task = f"""
@@ -503,7 +506,6 @@ def execute_daily_analysis(task: Optional[str]) -> None:
             task=task,
             user_id=user_id,
             conv_id=conv_id,
-            client_email=email,
         )
         try:
             daily_analysis_team.initiate_chat()
@@ -511,17 +513,29 @@ def execute_daily_analysis(task: Optional[str]) -> None:
 
             messages_list = daily_analysis_team.groupchat.messages
             check_if_send_email = messages_list[-2]
-            if "function_call" in check_if_send_email and check_if_send_email["function_call"]["name"] == "send_email":
-                print("Send email function!!")
+            if (
+                "function_call" in check_if_send_email
+                and check_if_send_email["function_call"]["name"] == "send_email"
+            ):
                 if len(messages_list) < 3:
                     messages = "[]"
                 else:
                     # Don't include the first message (task) and the last message (send_email)
                     messages = json.dumps(messages_list[1:-1])
                 last_message_json = ast.literal_eval(last_message)
-                _get_conv_id_and_send_email(user_id=user_id, client_email=email, messages=messages, initial_message_in_chat=last_message_json["initial_message_in_chat"], proposed_user_action=last_message_json["proposed_user_action"])
+                _get_conv_id_and_send_email(
+                    user_id=user_id,
+                    client_email=email,
+                    messages=messages,
+                    initial_message_in_chat=last_message_json[
+                        "initial_message_in_chat"
+                    ],
+                    proposed_user_action=last_message_json["proposed_user_action"],
+                )
             else:
-                raise ValueError(f"Send email function is not called for user_id: {user_id} - email {email}!")
+                raise ValueError(
+                    f"Send email function is not called for user_id: {user_id} - email {email}!"
+                )
         finally:
             Team.pop_team(team_name=daily_analysis_team.name)
     print("Daily analysis completed.")

@@ -1,4 +1,3 @@
-from os import environ
 from typing import Any, Dict, List, Optional, Union
 from unittest.mock import patch
 
@@ -6,11 +5,8 @@ import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from typing_extensions import Annotated
 
-import requests
-
 from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
 
-from ...email.send_email import send_email as send_email_infobip
 from ..model import SmartSuggestions
 
 
@@ -161,45 +157,11 @@ You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY inform
     return str(user_proxy.last_message()["content"])
 
 
-REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
-
-
 def send_email(
-    user_id: int,
-    client_email: str,
     daily_analysis: str,
     proposed_user_actions: List[str],
 ) -> Dict[str, Any]:
-    # data = {
-    #     "userId": user_id,
-    #     "messages": """[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]""",
-    #     "initial_message_in_chat": daily_analysis,
-    #     "email_content": "<html></html>",
-    #     "proposed_user_action": proposed_user_actions,
-    # }
-    # response = requests.post(
-    #     f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", json=data, timeout=60
-    # )
-
-    # if response.status_code != 200:
-    #     raise ValueError(response.content)
-    
-    # final_message = "Daily Analysis:\n" + daily_analysis + "\n\n"
-
-    # conv_id = response.json()["chatID"]
-    # proposed_user_actions_paragraph = "Proposed User Actions:\n"
-    # for i, action in enumerate(proposed_user_actions):
-    #     proposed_user_actions_paragraph += f"{i+1}. {action} (https://captn.ai/chat/{conv_id}?selected_user_action={i+1})\n"
-
-    # final_message += proposed_user_actions_paragraph
-
-    # send_email_infobip(
-    #     to_email=client_email,
-    #     subject="Captn.ai Daily Analysis",
-    #     body_text=final_message,
-    # )
     return_msg = {
-        "to_email": client_email,
         "subject": "Captn.ai Daily Analysis",
         "initial_message_in_chat": daily_analysis,
         "email_content": "<html></html>",

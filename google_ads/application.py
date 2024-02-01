@@ -280,7 +280,6 @@ async def get_user_ids_and_emails() -> str:
     return json.dumps(id_email_dict)  # type: ignore
 
 
-
 AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad", "ad_group_criterion"]
 
 
