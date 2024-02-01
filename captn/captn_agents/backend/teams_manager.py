@@ -16,7 +16,7 @@ TEAMS_STATUS: Dict[
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It appears we've hit a temporary squall in the digital sea. Give it some time, and we'll be back to smooth sailing. Please try again later."
 
 
-def generate_random_string(length: int = 10) -> str:
+def generate_random_string(length: int = 1) -> str:
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(length))
 
@@ -24,9 +24,17 @@ def generate_random_string(length: int = 10) -> str:
 async def send_message_in_socket(
     manager: ConnectionManager, websocket: WebSocket
 ) -> None:
-    for _ in range(10):
-        await manager.send_personal_message(generate_random_string(), websocket)
-        await asyncio.sleep(1)
+    print("Inside send_message_in_socket")
+    # await manager.send_personal_message(generate_random_string(), websocket)
+    for _ in range(100):
+        try:
+            await manager.send_personal_message(generate_random_string(), websocket)
+            await asyncio.sleep(0.1)
+        except Exception as e:
+            # todo: capture connection closed error only
+            print("Something went wrong")
+            print(e)
+            # break
 
 
 def add_to_teams_status(user_id: int, chat_id: int, team_name: str) -> None:
