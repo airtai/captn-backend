@@ -6,6 +6,8 @@ import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from typing_extensions import Annotated
 
+import requests
+
 from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
 
 from ...email.send_email import send_email as send_email_infobip
@@ -163,45 +165,45 @@ REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
 
 
 def send_email(
+    user_id: int,
     client_email: str,
     daily_analysis: str,
     proposed_user_actions: List[str],
 ) -> Dict[str, Any]:
-    final_message = "Daily Analysis:\n" + daily_analysis + "\n\n"
-
-    conv_id = 409
-    proposed_user_actions_paragraph = "Proposed User Actions:\n"
-    for i, action in enumerate(proposed_user_actions):
-        proposed_user_actions_paragraph += f"{i+1}. {action} (https://captn.ai/chat/{conv_id}?selected_user_action={i+1})\n"
-
-    final_message += proposed_user_actions_paragraph
-
-    # params = {
-    #     "userId": "1",
+    # data = {
+    #     "userId": user_id,
     #     "messages": """[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]""",
-    #     "initial_message_in_chat": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)",
+    #     "initial_message_in_chat": daily_analysis,
     #     "email_content": "<html></html>",
-    #     "proposed_user_action": [
-    #         "Remove 'Free' keyword because it is not performing well",
-    #         "Increase budget from $10/day to $20/day",
-    #         "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'",
-    #         "Select some or all of them",
-    #     ],
+    #     "proposed_user_action": proposed_user_actions,
     # }
-    # response = requests.get(
-    #     f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", params=params, timeout=60
+    # response = requests.post(
+    #     f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", json=data, timeout=60
     # )
-    # print(response)
-    # print(response.content)
-    # print(response.json())
 
-    send_email_infobip(
-        to_email=client_email,
-        subject="Captn.ai Daily Analysis",
-        body_text=final_message,
-    )
+    # if response.status_code != 200:
+    #     raise ValueError(response.content)
+    
+    # final_message = "Daily Analysis:\n" + daily_analysis + "\n\n"
+
+    # conv_id = response.json()["chatID"]
+    # proposed_user_actions_paragraph = "Proposed User Actions:\n"
+    # for i, action in enumerate(proposed_user_actions):
+    #     proposed_user_actions_paragraph += f"{i+1}. {action} (https://captn.ai/chat/{conv_id}?selected_user_action={i+1})\n"
+
+    # final_message += proposed_user_actions_paragraph
+
+    # send_email_infobip(
+    #     to_email=client_email,
+    #     subject="Captn.ai Daily Analysis",
+    #     body_text=final_message,
+    # )
     return_msg = {
-        "final_message": final_message,
+        "to_email": client_email,
+        "subject": "Captn.ai Daily Analysis",
+        "initial_message_in_chat": daily_analysis,
+        "email_content": "<html></html>",
+        "proposed_user_action": proposed_user_actions,
         "terminate_groupchat": True,
     }
     return return_msg

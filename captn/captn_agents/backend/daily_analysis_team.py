@@ -3,14 +3,15 @@ __all__ = ["DailyAnalysisTeam"]
 import ast
 import json
 from datetime import datetime
+from os import environ
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from pydantic import BaseModel
+import requests
 
 from ...google_ads.client import (
     execute_query,
-    get_email,
     get_user_ids_and_emails,
     list_accessible_customers,
 )
@@ -23,6 +24,7 @@ from .function_configs import (
 )
 from .functions import get_info_from_the_web_page, send_email
 from .team import Team
+from ...email.send_email import send_email as send_email_infobip
 
 
 class Campaign(BaseModel):
@@ -194,12 +196,13 @@ sure it is understandable by non-experts.
         task: str,
         user_id: int,
         conv_id: int,
+        client_email: str,
         work_dir: str = "daily_analysis",
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        self.client_email = get_email(user_id=user_id)
+        self.client_email = client_email
         print(f"User {user_id}, email: {self.client_email}")
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
             user_id=user_id,
@@ -424,6 +427,7 @@ def _get_function_map(
             daily_analysis=daily_analysis,
             proposed_user_actions=proposed_user_actions,
             client_email=client_email,
+            user_id=user_id,
         ),
         "get_info_from_the_web_page": get_info_from_the_web_page,
         "get_daily_report": lambda date: get_daily_report(
@@ -434,59 +438,90 @@ def _get_function_map(
     return function_map
 
 
-def get_create_daily_analysis_team(
-    user_id: int, conv_id: int, working_dir: Path
-) -> Callable[[Any], Any]:
-    def create_daily_analysis_team(
-        task: str,
-        user_id: int = user_id,
-        conv_id: int = conv_id,
-    ) -> str:
-        daily_analysis_team = DailyAnalysisTeam(
-            task=task,
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=str(working_dir),
-        )
+REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
+REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
 
-        daily_analysis_team.initiate_chat()
+def _get_conv_id_and_send_email(user_id: int, client_email:str, messages: str, initial_message_in_chat: str, proposed_user_action: List[str]) -> int:
+    data = {
+        "userId": user_id,
+        "messages": messages,
+        "initial_message_in_chat": initial_message_in_chat,
+        "email_content": "<html></html>",
+        "proposed_user_action": proposed_user_action,
+    }
+    response = requests.post(
+        f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", json=data, timeout=60
+    )
+    
+    if response.status_code != 200:
+        raise ValueError(response.content)
+    
+    final_message = "Daily Analysis:\n" + initial_message_in_chat + "\n\n"
 
-        last_message = daily_analysis_team.get_last_message()
+    conv_id = response.json()["chatID"]
+    proposed_user_actions_paragraph = "Proposed User Actions:\n"
+    for i, action in enumerate(proposed_user_action):
+        proposed_user_actions_paragraph += f"{i+1}. {action} ({REDIRECT_DOMAIN}/chat/{conv_id}?selected_user_action={i+1})\n"
 
-        return last_message
+    final_message += proposed_user_actions_paragraph
 
-    return create_daily_analysis_team
+    send_email_infobip(
+        to_email=client_email,
+        from_email="info@airt.ai",
+        subject="Captn.ai Daily Analysis",
+        body_text=final_message,
+    )
+    print("Final message:\n", final_message)
 
 
-def execute_daily_analysis() -> None:
+
+
+
+def execute_daily_analysis(task: Optional[str]) -> None:
     print("Starting daily analysis.")
     id_email_dict = json.loads(get_user_ids_and_emails())
     for user_id, email in id_email_dict.items():
         current_date = datetime.today().strftime("%Y-%m-%d")
-        task = f"""
-    Current date is: {current_date}.
-    You need compare the ads performance between yesterday and the same day of the previous week (-7 days).
-    - Clicks
-    - Conversions
-    - Cost per click (display in customer local currency)
+        if task is None:
+            task = f"""
+        Current date is: {current_date}.
+        You need compare the ads performance between yesterday and the same day of the previous week (-7 days).
+        - Clicks
+        - Conversions
+        - Cost per click (display in customer local currency)
 
-    Check which ads have the highest cost and which have the highest number of conversions.
-    If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
-    At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
-    - pause the ads with the highest cost and the lowest number of conversions.
-    - keywords analysis (add negative keywords, add positive keywords, change match type etc).
-    - ad copy analysis (change the ad copy, add more ads etc).
-        """
+        Check which ads have the highest cost and which have the highest number of conversions.
+        If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
+        At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
+        - pause the ads with the highest cost and the lowest number of conversions.
+        - keywords analysis (add negative keywords, add positive keywords, change match type etc).
+        - ad copy analysis (change the ad copy, add more ads etc).
+            """
 
         conv_id = 100
         daily_analysis_team = DailyAnalysisTeam(
             task=task,
             user_id=user_id,
             conv_id=conv_id,
+            client_email=email,
         )
         try:
-            # daily_analysis_team.initiate_chat()
-            pass
+            daily_analysis_team.initiate_chat()
+            last_message = daily_analysis_team.get_last_message(add_prefix=False)
+
+            messages_list = daily_analysis_team.groupchat.messages
+            check_if_send_email = messages_list[-2]
+            if "function_call" in check_if_send_email and check_if_send_email["function_call"]["name"] == "send_email":
+                print("Send email function!!")
+                if len(messages_list) < 3:
+                    messages = "[]"
+                else:
+                    # Don't include the first message (task) and the last message (send_email)
+                    messages = json.dumps(messages_list[1:-1])
+                last_message_json = ast.literal_eval(last_message)
+                _get_conv_id_and_send_email(user_id=user_id, client_email=email, messages=messages, initial_message_in_chat=last_message_json["initial_message_in_chat"], proposed_user_action=last_message_json["proposed_user_action"])
+            else:
+                raise ValueError(f"Send email function is not called for user_id: {user_id} - email {email}!")
         finally:
             Team.pop_team(team_name=daily_analysis_team.name)
     print("Daily analysis completed.")

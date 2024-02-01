@@ -97,14 +97,6 @@ def execute_query(
     return str(response_json)
 
 
-def get_email(user_id: int) -> str:
-    params = {"user_id": user_id}
-    response = requests.get(f"{BASE_URL}/get-email", params=params, timeout=60)
-    if not response.ok:
-        raise ValueError(response.content)
-    return response.json()  # type: ignore[no-any-return]
-
-
 def get_user_ids_and_emails() -> str:
     response = requests.get(f"{BASE_URL}/get-user-ids-and-emails", timeout=60)
     if not response.ok:
