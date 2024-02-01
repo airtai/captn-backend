@@ -264,6 +264,13 @@ async def search(
     return campaign_data
 
 
+# Route 5: Fetch user's email
+@router.get("/get-email")
+async def get_email(user_id: int = Query(title="User ID")) -> str:
+    user = await get_user(user_id=user_id)
+    return user["email"]  # type: ignore
+
+
 AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad", "ad_group_criterion"]
 
 

@@ -945,3 +945,40 @@ task_guidelines='Get me all the main navigation links on the home page. I need o
         "required": ["url", "task", "task_guidelines"],
     },
 }
+
+
+send_email_config = {
+    "name": "send_email",
+    "description": "Send email to the client.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "daily_analysis": {
+                "type": "string",
+                "description": "Daily analysis of the campaign performance paragraph",
+            },
+            "proposed_user_actions": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of proposed user actions",
+            },
+        },
+        "required": ["daily_analysis", "proposed_user_actions"],
+    },
+}
+
+
+get_daily_report_config = {
+    "name": "get_daily_report",
+    "description": "Get Google Ads daily report",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "date": {
+                "type": "string",
+                "description": "Date for which the report needs to be generated",
+            },
+        },
+        "required": ["date"],
+    },
+}

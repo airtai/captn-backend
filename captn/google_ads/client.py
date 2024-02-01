@@ -1,3 +1,4 @@
+import json
 from os import environ
 from typing import Any, Dict, List, Optional, Union
 
@@ -47,10 +48,21 @@ def list_accessible_customers(
     # return json.dumps(response.json())
 
 
+def clean_error_response(content: bytes) -> str:
+    content_str = str(content, "utf-8")
+
+    detail = json.loads(content_str)["detail"]
+    detail_list = detail.split("\n")
+
+    return "\n".join(
+        [row for row in detail_list if "message" in row and "created_time" not in row]
+    )
+
+
 def execute_query(
     user_id: int,
     conv_id: int,
-    work_dir: str,
+    work_dir: Optional[str] = None,
     customer_ids: Optional[List[str]] = None,
     query: Optional[str] = None,
 ) -> Union[str, Dict[str, str]]:
@@ -68,7 +80,8 @@ def execute_query(
 
     response = requests.get(f"{BASE_URL}/search", params=params, timeout=60)
     if not response.ok:
-        raise ValueError(response.content)
+        content = clean_error_response(response.content)
+        raise ValueError(content)
 
     response_json = response.json()
 
@@ -82,6 +95,14 @@ def execute_query(
 
     # return f"The result of the query saved at: {file_name}"
     return str(response_json)
+
+
+def get_email(user_id: int) -> str:
+    params = {"user_id": user_id}
+    response = requests.get(f"{BASE_URL}/get-email", params=params, timeout=60)
+    if not response.ok:
+        raise ValueError(response.content)
+    return response.json()  # type: ignore[no-any-return]
 
 
 def google_ads_create_update(
