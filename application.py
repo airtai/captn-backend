@@ -18,8 +18,8 @@ import openai_agent  # noqa
 async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        execute_daily_analysis, "cron", minute="*/5"
-    )  # second="*/59") # use hour="*/22" for production
+        execute_daily_analysis, "cron", hour="14", minute="10"
+    )  # second="*/59") # use hour="22" for production
     scheduler.start()
     yield
 
