@@ -490,7 +490,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int) -> None:
     await manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
+            # data = await websocket.receive_text()
+            await websocket.receive_text()
             await send_message_in_socket(manager, websocket)
             # await manager.send_personal_message(f"You are beautiful {client_id}", websocket)
             # await manager.broadcast(f"Client #{client_id} says: {data}")
