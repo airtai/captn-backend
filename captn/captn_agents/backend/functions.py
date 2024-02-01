@@ -158,22 +158,14 @@ You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY inform
 
 
 def send_email(
-    client_email: str,
     daily_analysis: str,
     proposed_user_actions: List[str],
 ) -> Dict[str, Any]:
-    final_message = "Daily Analysis:\n" + daily_analysis + "\n\n"
-
-    conv_id = 409
-    proposed_user_actions_paragraph = "Proposed User Actions:\n"
-    for i, action in enumerate(proposed_user_actions):
-        proposed_user_actions_paragraph += f"{i+1}. {action} (https://captn.ai/chat/{conv_id}?selected_user_action={i+1})\n"
-
-    final_message += proposed_user_actions_paragraph
-
-    print(final_message)
     return_msg = {
-        "final_message": final_message,
+        "subject": "Captn.ai Daily Analysis",
+        "initial_message_in_chat": daily_analysis,
+        "email_content": "<html></html>",
+        "proposed_user_action": proposed_user_actions,
         "terminate_groupchat": True,
     }
     return return_msg
