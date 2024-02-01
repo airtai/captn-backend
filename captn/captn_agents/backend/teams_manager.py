@@ -16,6 +16,9 @@ TEAMS_STATUS: Dict[
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It appears we've hit a temporary squall in the digital sea. Give it some time, and we'll be back to smooth sailing. Please try again later."
 
 
+websocket_clients = {}
+
+
 def generate_random_string(length: int = 1) -> str:
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(length))
@@ -67,7 +70,7 @@ def chat_with_team(
     message: str, user_id: int, chat_id: int
 ) -> Dict[str, Union[str, bool]]:
     request_obj = CaptnAgentRequest(message=message, user_id=user_id, conv_id=chat_id)
-    response: Dict[str, Union[str, bool]] = ast.literal_eval(chat(request_obj))
+    response: Dict[str, Union[str, bool]] = ast.literal_eval(chat(request_obj, websocket_clients[user_id]))
     return response
 
 

@@ -4,6 +4,7 @@ __all__ = [
 ]
 
 from pathlib import Path
+from typing import Any
 from typing import Dict, List, Optional, Tuple
 
 from .banking_initial_team import BookingInitialTeam
@@ -174,7 +175,9 @@ def start_conversation(
     temperature: float = 0.2,
     human_input_mode: str = "ALWAYS",
     class_name: str = "initial_team",
+    websocket: Any = None, # todo: websocket: CustomWebSocket
 ) -> Tuple[str, str]:
+    # use the websocket to send messages to the frontend
     initial_team, team_name, create_new_conv = _get_initial_team(
         user_id=user_id,
         conv_id=conv_id,

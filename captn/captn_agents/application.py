@@ -1,7 +1,9 @@
+from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .backend.end_to_end import start_conversation
+# from openai_agent.websocket import CustomWebSocket
 
 router = APIRouter()
 
@@ -14,7 +16,7 @@ class CaptnAgentRequest(BaseModel):
 
 
 @router.post("/chat")
-def chat(request: CaptnAgentRequest) -> str:
+def chat(request: CaptnAgentRequest, websocket: Any) -> str: # todo: websocket: CustomWebSocket
     try:
         team_name, last_message = start_conversation(
             user_id=request.user_id,
@@ -23,6 +25,7 @@ def chat(request: CaptnAgentRequest) -> str:
             max_round=80,
             human_input_mode="NEVER",
             class_name="google_ads_team",
+            websocket=websocket,
         )
     except Exception as e:
         # TODO: error logging

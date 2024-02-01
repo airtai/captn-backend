@@ -19,10 +19,12 @@ from captn.captn_agents.backend.teams_manager import (
     create_team,
     get_team_status,
     send_message_in_socket,
+    websocket_clients
 )
 from captn.captn_agents.model import SmartSuggestions
 from captn.google_ads.client import get_google_ads_team_capability
 from openai_agent.connection_manager import ConnectionManager
+from openai_agent.websocket import CustomWebSocket
 
 router = APIRouter()
 
@@ -485,6 +487,8 @@ async def get_status(
 manager = ConnectionManager()  # type: ignore
 
 
+
+
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: int) -> None:
     await manager.connect(websocket)
@@ -492,7 +496,11 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int) -> None:
         while True:
             # data = await websocket.receive_text()
             await websocket.receive_text()
-            await send_message_in_socket(manager, websocket)
+            # await send_message_in_socket(manager, websocket)
+
+            o = CustomWebSocket(manager, websocket)
+            websocket_clients[client_id] = o
+                
             # await manager.send_personal_message(f"You are beautiful {client_id}", websocket)
             # await manager.broadcast(f"Client #{client_id} says: {data}")
     except WebSocketDisconnect:
