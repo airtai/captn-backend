@@ -1,6 +1,7 @@
 import random
 import unittest.mock
 from datetime import datetime
+from typing import Optional
 
 from autogen.cache import Cache
 
@@ -187,14 +188,7 @@ Execute daily analysis and immediately send the report to the client. (you can e
     Team.pop_team(team_name=team_name)
 
 
-def test_execute_daily_analysis() -> None:
-    current_date = "2024-01-30"
-
-    task = f"""
-Current date is: {current_date}.
-Execute daily analysis (get_daily_report )and without any further analysis send the report to the client. (you can exchange maximum 5 messages between the team!!)
-You need to propose at least 3 next steps to the client. (What ever pops up in your mind)
-"""
+def _test_execute_daily_analysis(task: Optional[str] = None) -> None:
     with unittest.mock.patch(
         "captn.captn_agents.backend.daily_analysis_team.get_daily_report"
     ) as mock_daily_report:
@@ -213,6 +207,20 @@ You need to propose at least 3 next steps to the client. (What ever pops up in y
                     mock_datetime.today.return_value = datetime(2021, 1, 1)
 
                     execute_daily_analysis(task=task)
+
+
+def test_execute_daily_analysis() -> None:
+    current_date = "2024-01-30"
+    task = f"""
+Current date is: {current_date}.
+Execute daily analysis (get_daily_report )and without any further analysis send the report to the client. (you can exchange maximum 5 messages between the team!!)
+You need to propose at least 3 next steps to the client. (What ever pops up in your mind)
+"""
+    _test_execute_daily_analysis(task=task)
+
+
+def test_execute_daily_analysis_original() -> None:
+    _test_execute_daily_analysis()
 
 
 def test_send_email() -> None:
