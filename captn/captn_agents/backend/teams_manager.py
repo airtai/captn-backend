@@ -24,17 +24,14 @@ def generate_random_string(length: int = 1) -> str:
 async def send_message_in_socket(
     manager: ConnectionManager, websocket: WebSocket
 ) -> None:
-    print("Inside send_message_in_socket")
     # await manager.send_personal_message(generate_random_string(), websocket)
     for _ in range(100):
         try:
             await manager.send_personal_message(generate_random_string(), websocket)
             await asyncio.sleep(0.1)
         except Exception as e:
-            # todo: capture connection closed error only
-            print("Something went wrong")
-            print(e)
-            # break
+            print(f"Exception in send_message_in_socket: {e}")
+            break
 
 
 def add_to_teams_status(user_id: int, chat_id: int, team_name: str) -> None:
