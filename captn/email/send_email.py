@@ -24,7 +24,10 @@ def send_email(
     }
 
     response = requests.post(
-        f"https://{INFOBIP_BASE_URL}/email/3/send", headers=headers, files=files
+        f"https://{INFOBIP_BASE_URL}/email/3/send",
+        headers=headers,
+        files=files,
+        timeout=5,
     )
 
     resp_json: Dict[str, Any] = response.json()
