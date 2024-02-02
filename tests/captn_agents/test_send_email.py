@@ -1,23 +1,17 @@
-import http.client
-import json
 from typing import Any, Dict
-from unittest.mock import MagicMock
 
 import pytest
+import requests
 
 
 class DummyResponse:
-    def __init__(self, status: int, d: Dict[str, Any], **kwargs) -> None:  # type: ignore [no-untyped-def]
-        self.status = status
+    def __init__(self, status_code: int, d: Dict[str, Any], **kwargs) -> None:  # type: ignore [no-untyped-def]
+        self.status_code = status_code
         self.d = d
+        self.ok = True if status_code == 200 else False
 
-    def read(self, *args, **kwargs):  # type: ignore [no-untyped-def]
-        return str.encode(json.dumps(self.d))
-
-
-@pytest.fixture
-def mock_https_connection(monkeypatch):  # type: ignore [no-untyped-def]
-    monkeypatch.setattr(http.client.HTTPSConnection, "request", MagicMock())
+    def json(self, *args, **kwargs):  # type: ignore [no-untyped-def]
+        return self.d
 
 
 @pytest.fixture
@@ -29,9 +23,9 @@ def set_env_variables(monkeypatch):  # type: ignore [no-untyped-def]
 @pytest.fixture
 def mock_response(monkeypatch, status_code, response_data):  # type: ignore [no-untyped-def]
     def _mock_response(*args, **kwargs):  # type: ignore [no-untyped-def]
-        return DummyResponse(status=status_code, d=response_data)
+        return DummyResponse(status_code=status_code, d=response_data)
 
-    monkeypatch.setattr(http.client.HTTPSConnection, "getresponse", _mock_response)
+    monkeypatch.setattr(requests, "post", _mock_response)
 
 
 @pytest.mark.parametrize(
@@ -80,7 +74,6 @@ def mock_response(monkeypatch, status_code, response_data):  # type: ignore [no-
     ],
 )
 def test_send_email(  # type: ignore [no-untyped-def]
-    mock_https_connection,
     set_env_variables,
     mock_response,
     status_code,
