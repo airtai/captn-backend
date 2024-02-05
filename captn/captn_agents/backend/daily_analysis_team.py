@@ -3,7 +3,7 @@ __all__ = ["DailyAnalysisTeam"]
 import ast
 import json
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import environ
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -43,6 +43,11 @@ class Metrics(BaseModel):
     interactions: int
     conversions: int
     cost_micros: int
+    impressions_increase: Optional[float] = None
+    clicks_increase: Optional[float] = None
+    interactions_increase: Optional[float] = None
+    conversions_increase: Optional[float] = None
+    cost_micros_increase: Optional[float] = None
 
 
 class AdGroupAd(BaseModel):
@@ -72,16 +77,36 @@ class DailyReport(BaseModel):
     daily_customer_reports: List[DailyCustomerReport]
 
 
+def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
+    print("Upadting metrics")
+    return_metrics = {}
+    for key, value in metrics1.__dict__.items():
+        if key.endswith("_increase"):
+            continue
+
+        return_metrics[key] = value
+
+        if value == 0 or getattr(metrics2, key) == 0:
+            return_metrics[key + "_increase"] = None
+            continue
+
+        return_metrics[key + "_increase"] = round(
+            (float(getattr(metrics2, key) - value) / value) * 100, 2
+        )
+
+    return Metrics(**return_metrics)
+
+
 def get_daily_ad_group_ads_report(
     user_id: int, conv_id: int, customer_id: str, date: str
-) -> List[AdGroupAd]:
+) -> Dict[str, AdGroupAd]:
     query = f"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros FROM ad_group_ad WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
     )
     customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
-    ad_group_ads = []
+    ad_group_ads = {}
     for customer_result in customer_results:
         campaign = customer_result["campaign"]
         ad_group = customer_result["adGroup"]
@@ -107,7 +132,7 @@ def get_daily_ad_group_ads_report(
             ),
         )
 
-        ad_group_ads.append(ad_group_ad)
+        ad_group_ads[ad_group_ad.ad_id] = ad_group_ad
     return ad_group_ads
 
 
@@ -118,9 +143,22 @@ def get_daily_report_for_customer(
         user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
     )
 
+    datetime_date = datetime.strptime(date, "%Y-%m-%d").date()
+    previous_day = (datetime_date - timedelta(1)).isoformat()
+    yesterday_ad_group_ads_report = get_daily_ad_group_ads_report(
+        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=previous_day
+    )
+
+    for ad_id, ad_group_ad in daily_ad_group_ads_report.items():
+        if ad_id not in yesterday_ad_group_ads_report:
+            continue
+        ad_group_ad.metrics = calculate_metrics_change(
+            ad_group_ad.metrics, yesterday_ad_group_ads_report[ad_id].metrics
+        )
+
     return DailyCustomerReport(
         customer_id=customer_id,
-        daily_ad_group_ads_report=daily_ad_group_ads_report,
+        daily_ad_group_ads_report=daily_ad_group_ads_report.values(),
     )
 
 
