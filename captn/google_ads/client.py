@@ -45,15 +45,8 @@ def list_accessible_customers(
     # return ["8942812744", "2324127278", "7119828439", "6505006790", "8913146119"]
 
     respone_json = response.json()
-    if isinstance(respone_json, list):
-        allowed_customer = "2324127278"
-        if allowed_customer in respone_json:
-            print(f"Returning only {allowed_customer}")
-            return [allowed_customer]
+    return respone_json  # type: ignore[no-any-return]
 
-    error_message = """The client dosn't have access to the Demo account,
-please inform him by using the reply_to_client by sending a message 'You do not have access to the captn.ai Google Ads Demo'. Do NOT use smart suggestions for that"""
-    raise ValueError(error_message)
 
 
 def clean_error_response(content: bytes) -> str:

@@ -3,6 +3,7 @@ __all__ = ["DailyAnalysisTeam"]
 import ast
 import json
 import unittest
+from collections import defaultdict
 from datetime import datetime, timedelta
 from os import environ
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -32,11 +33,6 @@ class Campaign(BaseModel):
     name: str
 
 
-class AdGroup(BaseModel):
-    id: str
-    name: str
-
-
 class Metrics(BaseModel):
     impressions: int
     clicks: int
@@ -50,11 +46,36 @@ class Metrics(BaseModel):
     cost_micros_increase: Optional[float] = None
 
 
+class Keyword(BaseModel):
+    id: str
+    text: str
+    match_type: str
+    metrics: Metrics
+
+
+class AdGroup(BaseModel):
+    id: str
+    name: str
+    metrics: Metrics
+    keywords: Dict[str, Keyword]
+
+
 class AdGroupAd(BaseModel):
     ad_id: str
     campaign: Campaign
     ad_group: AdGroup
-    metrics: Metrics
+    # metrics: Metrics
+
+
+class Campaign(BaseModel):
+    id: str
+    name: str
+    ad_groups: Dict[str, AdGroup]
+
+
+class DailyCustomerReports2(BaseModel):
+    customer_id: str
+    campaigns: Dict[str, Campaign]
 
 
 class DailyCampaignReport(BaseModel):
@@ -95,6 +116,121 @@ def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
         )
 
     return Metrics(**return_metrics)
+
+
+def get_daily_keywords_report(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> Dict[str, Dict[str, Keyword]]:
+    query = (
+        "SELECT ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM keyword_view "
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "
+    )
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
+    # print(customer_result)
+
+    ad_group_keywords_dict: Dict[str, Dict[str, Keyword]] = defaultdict(dict)
+    for customer_result in customer_results:
+        keyword = Keyword(
+            id=customer_result["adGroupCriterion"]["criterionId"],
+            text=customer_result["adGroupCriterion"]["keyword"]["text"],
+            match_type=customer_result["adGroupCriterion"]["keyword"]["matchType"],
+            metrics=Metrics(
+                impressions=customer_result["metrics"]["impressions"],
+                clicks=customer_result["metrics"]["clicks"],
+                interactions=customer_result["metrics"]["interactions"],
+                conversions=customer_result["metrics"]["conversions"],
+                cost_micros=customer_result["metrics"]["costMicros"],
+            ),
+        )
+
+        ad_group_keywords_dict[customer_result["adGroup"]["id"]][keyword.id] = keyword
+
+    # for key, value in ad_group_keywords_dict.items():
+    #     print(key, value)
+
+    return ad_group_keywords_dict
+
+
+def get_ad_groups_report(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> Dict[str, Dict[str, AdGroup]]:
+    query = (
+        "SELECT campaign.id, ad_group.id, ad_group.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM ad_group "
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED'"
+    )
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+
+    keywords_report = get_daily_keywords_report(user_id, conv_id, customer_id, date)
+    campaign_ad_groups_dict: Dict[str, Dict[str, AdGroup]] = defaultdict(dict)
+
+    for ad_group_result in customer_result:
+        keywords = keywords_report.get(ad_group_result["adGroup"]["id"], {})
+        ad_group = AdGroup(
+            id=ad_group_result["adGroup"]["id"],
+            name=ad_group_result["adGroup"]["name"],
+            metrics=Metrics(
+                impressions=ad_group_result["metrics"]["impressions"],
+                clicks=ad_group_result["metrics"]["clicks"],
+                interactions=ad_group_result["metrics"]["interactions"],
+                conversions=ad_group_result["metrics"]["conversions"],
+                cost_micros=ad_group_result["metrics"]["costMicros"],
+            ),
+            keywords=keywords,
+        )
+        campaign_ad_groups_dict[ad_group_result["campaign"]["id"]][
+            ad_group.id
+        ] = ad_group
+
+    # print(campaign_ad_groups_dict)
+    return campaign_ad_groups_dict
+
+
+def get_campaigns_report(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> Dict[str, Dict[str, Campaign]]:
+    query = (
+        "SELECT campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM campaign "
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED'"
+    )
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+
+    ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date)
+    campaigns: Dict[str, Dict[str, Campaign]] = defaultdict(dict)
+    for campaign_result in customer_result:
+        ad_groups = ad_groups_report.get(campaign_result["campaign"]["id"], {})
+        campaign = Campaign(
+            id=campaign_result["campaign"]["id"],
+            name=campaign_result["campaign"]["name"],
+            metrics=Metrics(
+                impressions=campaign_result["metrics"]["impressions"],
+                clicks=campaign_result["metrics"]["clicks"],
+                interactions=campaign_result["metrics"]["interactions"],
+                conversions=campaign_result["metrics"]["conversions"],
+                cost_micros=campaign_result["metrics"]["costMicros"],
+            ),
+            ad_groups=ad_groups,
+        )
+
+        campaigns[campaign.id] = campaign
+    # print(campaigns)
+    print(
+        DailyCustomerReports2(
+            customer_id=customer_id, campaigns=campaigns
+        ).model_dump_json(indent=2)
+    )
+    return campaigns
 
 
 def get_daily_ad_group_ads_report(

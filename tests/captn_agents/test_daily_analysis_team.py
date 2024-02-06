@@ -12,7 +12,10 @@ from captn.captn_agents.backend.daily_analysis_team import (
     _get_conv_id_and_send_email,
     calculate_metrics_change,
     execute_daily_analysis,
+    get_ad_groups_report,
+    get_campaigns_report,
     get_daily_ad_group_ads_report,
+    get_daily_keywords_report,
     get_daily_report,
     get_daily_report_for_customer,
 )
@@ -193,6 +196,24 @@ def test_get_daily_report() -> None:
             daily_report = get_daily_report(user_id=1, conv_id=1)
             excepted = '{\n  "daily_customer_reports": [\n    {\n      "customer_id": "1122",\n      "daily_ad_group_ads_report": [\n        {\n          "ad_id": "688768033895",\n          "campaign": {\n            "id": "20761810762",\n            "name": "Website traffic-Search-3-updated-up"\n          },\n          "ad_group": {\n            "id": "156261983518",\n            "name": "fastapi get super-dooper-cool"\n          },\n          "metrics": {\n            "impressions": 0,\n            "clicks": 1,\n            "interactions": 5,\n            "conversions": 3,\n            "cost_micros": 0,\n            "impressions_increase": null,\n            "clicks_increase": 100.0,\n            "interactions_increase": 0.0,\n            "conversions_increase": -33.33,\n            "cost_micros_increase": null\n          }\n        },\n        {\n          "ad_id": "689256163801",\n          "campaign": {\n            "id": "20978334367",\n            "name": "Book-Shop1"\n          },\n          "ad_group": {\n            "id": "161283342474",\n            "name": "Books Bestsellers"\n          },\n          "metrics": {\n            "impressions": 0,\n            "clicks": 0,\n            "interactions": 0,\n            "conversions": 0,\n            "cost_micros": 0,\n            "impressions_increase": null,\n            "clicks_increase": null,\n            "interactions_increase": null,\n            "conversions_increase": null,\n            "cost_micros_increase": null\n          }\n        }\n      ]\n    }\n  ]\n}'
             assert excepted == daily_report
+
+
+def test_get_daily_keyword_report() -> None:
+    get_daily_keywords_report(
+        user_id=1, conv_id=1, customer_id="2324127278", date="2024-01-29"
+    )
+
+
+def test_get_campaigns_report() -> None:
+    get_campaigns_report(
+        user_id=1, conv_id=1, customer_id="2324127278", date="2024-01-29"
+    )
+
+
+def test_get_ad_groups_report() -> None:
+    get_ad_groups_report(
+        user_id=1, conv_id=1, customer_id="2324127278", date="2024-01-29"
+    )
 
 
 def test_daily_analysis_team() -> None:
