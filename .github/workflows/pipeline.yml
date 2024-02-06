@@ -4,10 +4,6 @@ on: [push, workflow_dispatch]
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}
-    PORT: ${{ vars.PORT }}
-    DOMAIN: ${{ vars.DOMAIN }}
-    DATABASE_URL: ${{ secrets.DATABASE_URL }}
-    CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
 jobs:
     static_analysis:
@@ -40,6 +36,8 @@ jobs:
         permissions:
             contents: read
             packages: write
+        env:
+            PORT: ${{ vars.PORT }}
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -57,13 +55,13 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - run: docker pull ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME || docker pull ghcr.io/$GITHUB_REPOSITORY || true
+            - run: docker pull ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME || docker pull ghcr.io/$GITHUB_REPOSITORY:dev || true
             - run: docker build --build-arg PORT=$PORT -t ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME .
             - name: Add tag latest if branch is main
               if: github.ref_name == 'main'
               run: docker tag ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME ghcr.io/$GITHUB_REPOSITORY:latest
-            - name: Push only if branch name is main
-              if: github.ref_name == 'main'
+            - name: Push only if branch name is main or dev
+              if: github.ref_name == 'main' || github.ref_name == 'dev'
               run: docker push ghcr.io/$GITHUB_REPOSITORY --all-tags
 
     deploy:
@@ -78,7 +76,6 @@ jobs:
         env:
             GITHUB_USERNAME: ${{ github.actor }}
             GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-            SSH_KEY: ${{ secrets.SSH_KEY }}
             AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
             AZURE_API_VERSION: ${{ secrets.AZURE_API_VERSION }}
             AZURE_API_ENDPOINT: ${{ secrets.AZURE_API_ENDPOINT }}
@@ -92,13 +89,30 @@ jobs:
             LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
             INFOBIP_API_KEY: ${{ secrets.INFOBIP_API_KEY }}
             INFOBIP_BASE_URL: ${{ secrets.INFOBIP_BASE_URL }}
-            REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+            PORT: ${{ vars.PORT }}
+
+            PROD_DOMAIN: ${{ vars.PROD_DOMAIN }}
+            STAGING_DOMAIN: ${{ vars.STAGING_DOMAIN }}
+            PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+            STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+            PROD_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
+            STAGING_CLIENT_SECRET: ${{ secrets.STAGING_CLIENT_SECRET }}
+            PROD_REACT_APP_API_URL: ${{ secrets.PROD_REACT_APP_API_URL }}
+            STAGING_REACT_APP_API_URL: ${{ secrets.STAGING_REACT_APP_API_URL }}
+            PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+            STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
         steps:
             - uses: actions/checkout@v3 # Don't change it to cheackout@v4. V4 is not working with container image.
             # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989
             - run: chown -R $(id -u):$(id -g) $PWD
-            - run: echo "TAG=latest" >> $GITHUB_ENV
-            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then printenv PROD_CONFIG > "$(pwd)/.env" ; else printenv STAGING_CONFIG > "$(pwd)/.env" ; fi;
+
+            - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "TAG=latest" >> $GITHUB_ENV ; else echo "TAG=dev" >> $GITHUB_ENV ; fi;
+            - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "DOMAIN=$PROD_DOMAIN" >> $GITHUB_ENV ; else echo "DOMAIN=$STAGING_DOMAIN" >> $GITHUB_ENV ; fi;
+            - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "CLIENT_SECRET=$PROD_CLIENT_SECRET" >> $GITHUB_ENV ; else echo "CLIENT_SECRET=$STAGING_CLIENT_SECRET" >> $GITHUB_ENV ; fi;
+            - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "DATABASE_URL=$PROD_DATABASE_URL" >> $GITHUB_ENV ; else echo "DATABASE_URL=$STAGING_DATABASE_URL" >> $GITHUB_ENV ; fi;
+            - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "REACT_APP_API_URL=$PROD_REACT_APP_API_URL" >> $GITHUB_ENV ; else echo "REACT_APP_API_URL=$STAGING_REACT_APP_API_URL" >> $GITHUB_ENV ; fi;
+            - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "SSH_KEY=$PROD_SSH_KEY" >> $GITHUB_ENV ; else echo "SSH_KEY=$STAGING_SSH_KEY" >> $GITHUB_ENV ; fi;
+
             - run: echo "PATH=$PATH:/github/home/.local/bin" >> $GITHUB_ENV
             - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
             - run: eval $(ssh-agent -s)
