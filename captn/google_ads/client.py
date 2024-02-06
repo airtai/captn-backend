@@ -48,7 +48,6 @@ def list_accessible_customers(
     return respone_json  # type: ignore[no-any-return]
 
 
-
 def clean_error_response(content: bytes) -> str:
     content_str = str(content, "utf-8")
 

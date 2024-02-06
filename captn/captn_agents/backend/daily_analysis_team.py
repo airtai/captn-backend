@@ -2,7 +2,6 @@ __all__ = ["DailyAnalysisTeam"]
 
 import ast
 import json
-import unittest
 from collections import defaultdict
 from datetime import datetime, timedelta
 from os import environ
@@ -28,11 +27,6 @@ from .functions import get_info_from_the_web_page, send_email
 from .team import Team
 
 
-class Campaign(BaseModel):
-    id: str
-    name: str
-
-
 class Metrics(BaseModel):
     impressions: int
     clicks: int
@@ -53,24 +47,25 @@ class Keyword(BaseModel):
     metrics: Metrics
 
 
+class AdGroupAd(BaseModel):
+    id: str
+    final_urls: List[str]
+    metrics: Metrics
+
+
 class AdGroup(BaseModel):
     id: str
     name: str
     metrics: Metrics
     keywords: Dict[str, Keyword]
-
-
-class AdGroupAd(BaseModel):
-    ad_id: str
-    campaign: Campaign
-    ad_group: AdGroup
-    # metrics: Metrics
+    ad_group_ads: Dict[str, AdGroupAd]
 
 
 class Campaign(BaseModel):
     id: str
     name: str
     ad_groups: Dict[str, AdGroup]
+    metrics: Metrics
 
 
 class DailyCustomerReports2(BaseModel):
@@ -78,28 +73,11 @@ class DailyCustomerReports2(BaseModel):
     campaigns: Dict[str, Campaign]
 
 
-class DailyCampaignReport(BaseModel):
-    campaign_id: str
-    campaign_name: str
-    impressions: int
-    clicks: int
-    interactions: int
-    conversions: int
-    cost_micros: int
-    date: str
-
-
-class DailyCustomerReport(BaseModel):
-    customer_id: str
-    daily_ad_group_ads_report: List[AdGroupAd]
-
-
 class DailyReport(BaseModel):
-    daily_customer_reports: List[DailyCustomerReport]
+    daily_customer_reports: List[DailyCustomerReports2]
 
 
 def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
-    print("Upadting metrics")
     return_metrics = {}
     for key, value in metrics1.__dict__.items():
         if key.endswith("_increase"):
@@ -107,13 +85,15 @@ def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
 
         return_metrics[key] = value
 
-        if value == 0 or getattr(metrics2, key) == 0:
+        value2 = getattr(metrics2, key)
+        if value == value2:
+            return_metrics[key + "_increase"] = 0
+        elif value == 0 or value2 == 0:
             return_metrics[key + "_increase"] = None
-            continue
-
-        return_metrics[key + "_increase"] = round(
-            (float(getattr(metrics2, key) - value) / value) * 100, 2
-        )
+        else:
+            return_metrics[key + "_increase"] = round(
+                (float(value - value2) / value2) * 100, 2
+            )
 
     return Metrics(**return_metrics)
 
@@ -130,7 +110,6 @@ def get_daily_keywords_report(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
     )
     customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
-    # print(customer_result)
 
     ad_group_keywords_dict: Dict[str, Dict[str, Keyword]] = defaultdict(dict)
     for customer_result in customer_results:
@@ -149,9 +128,6 @@ def get_daily_keywords_report(
 
         ad_group_keywords_dict[customer_result["adGroup"]["id"]][keyword.id] = keyword
 
-    # for key, value in ad_group_keywords_dict.items():
-    #     print(key, value)
-
     return ad_group_keywords_dict
 
 
@@ -169,10 +145,15 @@ def get_ad_groups_report(
     customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
     keywords_report = get_daily_keywords_report(user_id, conv_id, customer_id, date)
+    ad_group_ads_report = get_daily_ad_group_ads_report(
+        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
+    )
     campaign_ad_groups_dict: Dict[str, Dict[str, AdGroup]] = defaultdict(dict)
 
     for ad_group_result in customer_result:
-        keywords = keywords_report.get(ad_group_result["adGroup"]["id"], {})
+        ad_group_id = ad_group_result["adGroup"]["id"]
+        keywords = keywords_report.get(ad_group_id, {})
+        ad_group_ads = ad_group_ads_report.get(ad_group_id, {})
         ad_group = AdGroup(
             id=ad_group_result["adGroup"]["id"],
             name=ad_group_result["adGroup"]["name"],
@@ -184,12 +165,12 @@ def get_ad_groups_report(
                 cost_micros=ad_group_result["metrics"]["costMicros"],
             ),
             keywords=keywords,
+            ad_group_ads=ad_group_ads,
         )
         campaign_ad_groups_dict[ad_group_result["campaign"]["id"]][
             ad_group.id
         ] = ad_group
 
-    # print(campaign_ad_groups_dict)
     return campaign_ad_groups_dict
 
 
@@ -224,77 +205,110 @@ def get_campaigns_report(
         )
 
         campaigns[campaign.id] = campaign
-    # print(campaigns)
-    print(
-        DailyCustomerReports2(
-            customer_id=customer_id, campaigns=campaigns
-        ).model_dump_json(indent=2)
-    )
+
     return campaigns
 
 
 def get_daily_ad_group_ads_report(
     user_id: int, conv_id: int, customer_id: str, date: str
-) -> Dict[str, AdGroupAd]:
-    query = f"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros FROM ad_group_ad WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
+) -> Dict[str, Dict[str, AdGroupAd]]:
+    query = (
+        "SELECT ad_group.id, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM ad_group_ad "
+        f"WHERE segments.date = '{date}' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"
+    )
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
     )
-    customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
+    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
-    ad_group_ads = {}
-    for customer_result in customer_results:
-        campaign = customer_result["campaign"]
-        ad_group = customer_result["adGroup"]
-        ad_group_ad = customer_result["adGroupAd"]["ad"]
-        metrics = customer_result["metrics"]
-
+    ad_group_ads_dict: Dict[str, Dict[str, AdGroupAd]] = defaultdict(dict)
+    for ad_group_ad_result in customer_result:
         ad_group_ad = AdGroupAd(
-            ad_id=customer_result["adGroupAd"]["ad"]["id"],
-            campaign=Campaign(
-                id=campaign["id"],
-                name=campaign["name"],
-            ),
-            ad_group=AdGroup(
-                id=ad_group["id"],
-                name=ad_group["name"],
-            ),
+            id=ad_group_ad_result["adGroupAd"]["ad"]["id"],
+            final_urls=ad_group_ad_result["adGroupAd"]["ad"]["finalUrls"],
             metrics=Metrics(
-                impressions=metrics["impressions"],
-                clicks=metrics["clicks"],
-                interactions=metrics["interactions"],
-                conversions=metrics["conversions"],
-                cost_micros=metrics["costMicros"],
+                impressions=ad_group_ad_result["metrics"]["impressions"],
+                clicks=ad_group_ad_result["metrics"]["clicks"],
+                interactions=ad_group_ad_result["metrics"]["interactions"],
+                conversions=ad_group_ad_result["metrics"]["conversions"],
+                cost_micros=ad_group_ad_result["metrics"]["costMicros"],
             ),
         )
+        ad_group_ads_dict[ad_group_ad_result["adGroup"]["id"]][
+            ad_group_ad.id
+        ] = ad_group_ad
 
-        ad_group_ads[ad_group_ad.ad_id] = ad_group_ad
-    return ad_group_ads
+    return ad_group_ads_dict
+
+
+def _calculate_update_metrics(
+    resource_id: str, report: BaseModel, report_yesterday: BaseModel
+) -> None:
+    if resource_id not in report_yesterday:
+        return
+    report.metrics = calculate_metrics_change(
+        report.metrics, report_yesterday[resource_id].metrics
+    )
+
+
+def compare_reports(
+    report: Dict[str, Dict[str, Campaign]],
+    report_yesterday: Dict[str, Dict[str, Campaign]],
+) -> Dict[str, Dict[str, Campaign]]:
+    for campaign_id, campaign in report.items():
+        _calculate_update_metrics(campaign_id, campaign, report_yesterday)
+        # if campaign_id not in report_yesterday:
+        #     continue
+        # campaign.metrics = calculate_metrics_change(campaign.metrics, report_yesterday[campaign_id].metrics)
+
+        for ad_group_id, ad_group in campaign.ad_groups.items():
+            _calculate_update_metrics(
+                ad_group_id, ad_group, report_yesterday[campaign_id].ad_groups
+            )
+            # if ad_group_id not in report_yesterday[campaign_id].ad_groups:
+            #     continue
+            # ad_group.metrics = calculate_metrics_change(ad_group.metrics, report_yesterday[campaign_id].ad_groups[ad_group_id].metrics)
+
+            for keyword_id, keyword in ad_group.keywords.items():
+                _calculate_update_metrics(
+                    keyword_id,
+                    keyword,
+                    report_yesterday[campaign_id].ad_groups[ad_group_id].keywords,
+                )
+                # if keyword_id not in report_yesterday[campaign_id].ad_groups[ad_group_id].keywords:
+                #     continue
+                # keyword.metrics = calculate_metrics_change(keyword.metrics, report_yesterday[campaign_id].ad_groups[ad_group_id].keywords[keyword_id].metrics)
+
+            for ad_group_ad_id, ad_group_ad in ad_group.ad_group_ads.items():
+                _calculate_update_metrics(
+                    ad_group_ad_id,
+                    ad_group_ad,
+                    report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads,
+                )
+                # if ad_group_ad_id not in report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads:
+                #     continue
+                # ad_group_ad.metrics = calculate_metrics_change(ad_group_ad.metrics, report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads[ad_group_ad_id].metrics)
+    return report
 
 
 def get_daily_report_for_customer(
     user_id: int, conv_id: int, customer_id: str, date: str
-) -> DailyCustomerReport:
-    daily_ad_group_ads_report = get_daily_ad_group_ads_report(
-        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
-    )
+) -> DailyCustomerReports2:
+    campaigns_report = get_campaigns_report(user_id, conv_id, customer_id, date)
 
     datetime_date = datetime.strptime(date, "%Y-%m-%d").date()
     previous_day = (datetime_date - timedelta(1)).isoformat()
-    yesterday_ad_group_ads_report = get_daily_ad_group_ads_report(
-        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=previous_day
+    yesterday_campaigns_report = get_campaigns_report(
+        user_id, conv_id, customer_id, previous_day
     )
 
-    for ad_id, ad_group_ad in daily_ad_group_ads_report.items():
-        if ad_id not in yesterday_ad_group_ads_report:
-            continue
-        ad_group_ad.metrics = calculate_metrics_change(
-            ad_group_ad.metrics, yesterday_ad_group_ads_report[ad_id].metrics
-        )
+    compared_campaigns_report = compare_reports(
+        campaigns_report, yesterday_campaigns_report
+    )
 
-    return DailyCustomerReport(
-        customer_id=customer_id,
-        daily_ad_group_ads_report=daily_ad_group_ads_report.values(),
+    return DailyCustomerReports2(
+        customer_id=customer_id, campaigns=compared_campaigns_report
     )
 
 
@@ -311,9 +325,11 @@ def get_daily_report(date: Optional[str] = None, *, user_id: int, conv_id: int) 
         )
         for customer_id in customer_ids
     ]
-    return DailyReport(daily_customer_reports=daily_customer_reports).model_dump_json(
-        indent=2
-    )
+    daily_report = DailyReport(
+        daily_customer_reports=daily_customer_reports
+    ).model_dump_json(indent=2)
+
+    return daily_report
 
 
 class DailyAnalysisTeam(Team):
@@ -675,11 +691,14 @@ def _get_conv_id_and_send_email(
     return conv_id  # type: ignore
 
 
-def execute_daily_analysis(task: Optional[str] = None) -> None:
+def execute_daily_analysis(
+    task: Optional[str] = None, send_only_to_emails: Optional[List[str]] = None
+) -> None:
     print("Starting daily analysis.")
     id_email_dict = json.loads(get_user_ids_and_emails())
 
-    send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
+    if send_only_to_emails is None:
+        send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
     for user_id, email in id_email_dict.items():
         if email not in send_only_to_emails:
             print(
@@ -710,16 +729,7 @@ def execute_daily_analysis(task: Optional[str] = None) -> None:
             conv_id=conv_id,
         )
         try:
-            # REMOVE THE MOCK AFTER DEMO
-            with unittest.mock.patch(
-                "captn.captn_agents.backend.daily_analysis_team.get_daily_report"
-            ) as mock_daily_report:
-                return_value1 = '{\n  "daily_customer_reports": [\n    {\n      "customer_id": "2324127278",\n      "daily_ad_group_ads_report": [\n        {\n          "ad_id": "688768033895",\n          "campaign": {\n            "id": "20761810762",\n            "name": "Website traffic-Search-3-updated-up"\n          },\n          "ad_group": {\n            "id": "156261983518",\n            "name": "fastapi get super-dooper-cool"\n          },\n          "metrics": {\n            "impressions": 402,\n            "clicks": 121,\n            "interactions": 129,\n            "conversions": 15,\n            "cost_micros": 129000\n          }\n        },\n        {\n          "ad_id": "689256163801",\n          "campaign": {\n            "id": "20978334367",\n            "name": "Book-Shop1"\n          },\n          "ad_group": {\n            "id": "161283342474",\n            "name": "Books Bestsellers"\n          },\n          "metrics": {\n            "impressions": 53,\n            "clicks": 9,\n            "interactions": 9,\n            "conversions": 2,\n            "cost_micros": 1000\n          }\n        }\n      ]\n    }\n  ]\n}'
-                return_value2 = '{\n  "daily_customer_reports": [\n    {\n      "customer_id": "2324127278",\n      "daily_ad_group_ads_report": [\n        {\n          "ad_id": "688768033895",\n          "campaign": {\n            "id": "20761810762",\n            "name": "Website traffic-Search-3-updated-up"\n          },\n          "ad_group": {\n            "id": "156261983518",\n            "name": "fastapi get super-dooper-cool"\n          },\n          "metrics": {\n            "impressions": 433,\n            "clicks": 129,\n            "interactions": 135,\n            "conversions": 21,\n            "cost_micros": 153000\n          }\n        },\n        {\n          "ad_id": "689256163801",\n          "campaign": {\n            "id": "20978334367",\n            "name": "Book-Shop1"\n          },\n          "ad_group": {\n            "id": "161283342474",\n            "name": "Books Bestsellers"\n          },\n          "metrics": {\n            "impressions": 22,\n            "clicks": 3,\n            "interactions": 4,\n            "conversions": 1,\n            "cost_micros": 800\n          }\n        }\n      ]\n    }\n  ]\n}'
-
-                mock_daily_report.side_effect = [return_value1, return_value2]
-                # ===============
-                daily_analysis_team.initiate_chat()
+            daily_analysis_team.initiate_chat()
             last_message = daily_analysis_team.get_last_message(add_prefix=False)
 
             messages_list = daily_analysis_team.groupchat.messages
