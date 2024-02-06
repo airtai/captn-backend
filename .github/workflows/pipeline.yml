@@ -91,17 +91,6 @@ jobs:
             INFOBIP_BASE_URL: ${{ secrets.INFOBIP_BASE_URL }}
             PORT: ${{ vars.PORT }}
 
-            # PROD_DOMAIN: ${{ vars.PROD_DOMAIN }}
-            # STAGING_DOMAIN: ${{ vars.STAGING_DOMAIN }}
-            # PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
-            # STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-            # PROD_CLIENT_SECRET: ${{ secrets.PROD_CLIENT_SECRET }}
-            # STAGING_CLIENT_SECRET: ${{ secrets.STAGING_CLIENT_SECRET }}
-            # PROD_REACT_APP_API_URL: ${{ secrets.PROD_REACT_APP_API_URL }}
-            # STAGING_REACT_APP_API_URL: ${{ secrets.STAGING_REACT_APP_API_URL }}
-            # PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
-            # STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
-
             DOMAIN: ${{ github.ref_name == 'main' && vars.PROD_DOMAIN || vars.STAGING_DOMAIN }}
             CLIENT_SECRET: ${{ github.ref_name == 'main' && secrets.PROD_CLIENT_SECRET || secrets.STAGING_CLIENT_SECRET }}
             DATABASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_DATABASE_URL || secrets.STAGING_DATABASE_URL }}
@@ -113,11 +102,6 @@ jobs:
             - run: chown -R $(id -u):$(id -g) $PWD
 
             - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "TAG=latest" >> $GITHUB_ENV ; else echo "TAG=dev" >> $GITHUB_ENV ; fi;
-            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "DOMAIN=$PROD_DOMAIN" >> $GITHUB_ENV ; else echo "DOMAIN=$STAGING_DOMAIN" >> $GITHUB_ENV ; fi;
-            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "CLIENT_SECRET=$PROD_CLIENT_SECRET" >> $GITHUB_ENV ; else echo "CLIENT_SECRET=$STAGING_CLIENT_SECRET" >> $GITHUB_ENV ; fi;
-            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "DATABASE_URL=$PROD_DATABASE_URL" >> $GITHUB_ENV ; else echo "DATABASE_URL=$STAGING_DATABASE_URL" >> $GITHUB_ENV ; fi;
-            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "REACT_APP_API_URL=$PROD_REACT_APP_API_URL" >> $GITHUB_ENV ; else echo "REACT_APP_API_URL=$STAGING_REACT_APP_API_URL" >> $GITHUB_ENV ; fi;
-            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "SSH_KEY=$PROD_SSH_KEY" >> $GITHUB_ENV ; else echo "SSH_KEY=$STAGING_SSH_KEY" >> $GITHUB_ENV ; fi;
 
             - run: echo "PATH=$PATH:/github/home/.local/bin" >> $GITHUB_ENV
             - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
@@ -129,7 +113,6 @@ jobs:
             - run: echo "$SSH_KEY" | base64 --decode > key.pem
             - run: chmod 600 key.pem
 
-            # - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "DOMAIN=api.airt.ai" >> $GITHUB_ENV ; else echo "DOMAIN=api.staging.airt.ai" >> $GITHUB_ENV ; fi;
             - run: ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker images"
             - run: sh scripts/deploy.sh
 
