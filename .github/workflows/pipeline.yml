@@ -70,7 +70,7 @@ jobs:
             run:
                 shell: bash
         needs: [static_analysis, docker_build_push]
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'dev'
         container:
             image: python:3.7-stretch
         env:
