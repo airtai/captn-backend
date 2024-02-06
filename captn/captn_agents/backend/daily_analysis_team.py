@@ -40,32 +40,29 @@ class Metrics(BaseModel):
     cost_micros_increase: Optional[float] = None
 
 
-class Keyword(BaseModel):
+class ResourceWithMetrics(BaseModel):
     id: str
+    metrics: Metrics
+
+
+class Keyword(ResourceWithMetrics):
     text: str
     match_type: str
-    metrics: Metrics
 
 
-class AdGroupAd(BaseModel):
-    id: str
+class AdGroupAd(ResourceWithMetrics):
     final_urls: List[str]
-    metrics: Metrics
 
 
-class AdGroup(BaseModel):
-    id: str
+class AdGroup(ResourceWithMetrics):
     name: str
-    metrics: Metrics
     keywords: Dict[str, Keyword]
     ad_group_ads: Dict[str, AdGroupAd]
 
 
-class Campaign(BaseModel):
-    id: str
+class Campaign(ResourceWithMetrics):
     name: str
     ad_groups: Dict[str, AdGroup]
-    metrics: Metrics
 
 
 class DailyCustomerReports2(BaseModel):
@@ -104,7 +101,7 @@ def get_daily_keywords_report(
     query = (
         "SELECT ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
         "FROM keyword_view "
-        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "  # nosec: [B608]
     )
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
@@ -137,7 +134,7 @@ def get_ad_groups_report(
     query = (
         "SELECT campaign.id, ad_group.id, ad_group.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
         "FROM ad_group "
-        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED'"
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED'"  # nosec: [B608]
     )
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
@@ -176,11 +173,11 @@ def get_ad_groups_report(
 
 def get_campaigns_report(
     user_id: int, conv_id: int, customer_id: str, date: str
-) -> Dict[str, Dict[str, Campaign]]:
+) -> Dict[str, Campaign]:
     query = (
         "SELECT campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
         "FROM campaign "
-        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED'"
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED'"  # nosec: [B608]
     )
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
@@ -188,7 +185,7 @@ def get_campaigns_report(
     customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
     ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date)
-    campaigns: Dict[str, Dict[str, Campaign]] = defaultdict(dict)
+    campaigns: Dict[str, Campaign] = {}
     for campaign_result in customer_result:
         ad_groups = ad_groups_report.get(campaign_result["campaign"]["id"], {})
         campaign = Campaign(
@@ -215,7 +212,7 @@ def get_daily_ad_group_ads_report(
     query = (
         "SELECT ad_group.id, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
         "FROM ad_group_ad "
-        f"WHERE segments.date = '{date}' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"
+        f"WHERE segments.date = '{date}' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
     )
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
@@ -243,7 +240,9 @@ def get_daily_ad_group_ads_report(
 
 
 def _calculate_update_metrics(
-    resource_id: str, report: BaseModel, report_yesterday: BaseModel
+    resource_id: str,
+    report: ResourceWithMetrics,
+    report_yesterday: Dict[str, ResourceWithMetrics],
 ) -> None:
     if resource_id not in report_yesterday:
         return
@@ -253,42 +252,28 @@ def _calculate_update_metrics(
 
 
 def compare_reports(
-    report: Dict[str, Dict[str, Campaign]],
-    report_yesterday: Dict[str, Dict[str, Campaign]],
-) -> Dict[str, Dict[str, Campaign]]:
+    report: Dict[str, Campaign],
+    report_yesterday: Dict[str, Campaign],
+) -> Dict[str, Campaign]:
     for campaign_id, campaign in report.items():
-        _calculate_update_metrics(campaign_id, campaign, report_yesterday)
-        # if campaign_id not in report_yesterday:
-        #     continue
-        # campaign.metrics = calculate_metrics_change(campaign.metrics, report_yesterday[campaign_id].metrics)
-
+        _calculate_update_metrics(campaign_id, campaign, report_yesterday)  # type: ignore
         for ad_group_id, ad_group in campaign.ad_groups.items():
             _calculate_update_metrics(
-                ad_group_id, ad_group, report_yesterday[campaign_id].ad_groups
+                ad_group_id, ad_group, report_yesterday[campaign_id].ad_groups  # type: ignore
             )
-            # if ad_group_id not in report_yesterday[campaign_id].ad_groups:
-            #     continue
-            # ad_group.metrics = calculate_metrics_change(ad_group.metrics, report_yesterday[campaign_id].ad_groups[ad_group_id].metrics)
-
             for keyword_id, keyword in ad_group.keywords.items():
                 _calculate_update_metrics(
                     keyword_id,
                     keyword,
-                    report_yesterday[campaign_id].ad_groups[ad_group_id].keywords,
+                    report_yesterday[campaign_id].ad_groups[ad_group_id].keywords,  # type: ignore
                 )
-                # if keyword_id not in report_yesterday[campaign_id].ad_groups[ad_group_id].keywords:
-                #     continue
-                # keyword.metrics = calculate_metrics_change(keyword.metrics, report_yesterday[campaign_id].ad_groups[ad_group_id].keywords[keyword_id].metrics)
-
             for ad_group_ad_id, ad_group_ad in ad_group.ad_group_ads.items():
                 _calculate_update_metrics(
                     ad_group_ad_id,
                     ad_group_ad,
-                    report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads,
+                    report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads,  # type: ignore
                 )
-                # if ad_group_ad_id not in report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads:
-                #     continue
-                # ad_group_ad.metrics = calculate_metrics_change(ad_group_ad.metrics, report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads[ad_group_ad_id].metrics)
+
     return report
 
 
