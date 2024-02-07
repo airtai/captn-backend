@@ -158,12 +158,10 @@ You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY inform
 
 
 def send_email(
-    daily_analysis: str,
     proposed_user_actions: List[str],
 ) -> Dict[str, Any]:
     return_msg = {
         "subject": "Captn.ai Daily Analysis",
-        "initial_message_in_chat": daily_analysis,
         "email_content": "<html></html>",
         "proposed_user_action": proposed_user_actions,
         "terminate_groupchat": True,
