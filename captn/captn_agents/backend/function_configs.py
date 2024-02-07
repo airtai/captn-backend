@@ -966,19 +966,3 @@ send_email_config = {
         "required": ["daily_analysis", "proposed_user_actions"],
     },
 }
-
-
-get_daily_report_config = {
-    "name": "get_daily_report",
-    "description": "Get Google Ads daily report",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "date": {
-                "type": "string",
-                "description": "Date for which the report needs to be generated",
-            },
-        },
-        "required": ["date"],
-    },
-}

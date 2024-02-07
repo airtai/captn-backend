@@ -18,7 +18,6 @@ from ...google_ads.client import (
 )
 from .function_configs import (
     execute_query_config,
-    get_daily_report_config,
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
     send_email_config,
@@ -297,54 +296,128 @@ def get_daily_report_for_customer(
     )
 
 
-def get_status_code_report(daily_reports: Dict[str, Any]) -> Optional[str]:
-    send_warning_message = False
-    warning_message = "<h3><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:</h3>\n<ul>\n"
+def get_web_status_code_report_for_campaign(
+    campaign: Dict[str, Any], customer_id: str
+) -> Optional[str]:
+    warning_message = "<li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:\n<ul>\n"
+    send_warning_message_for_campaign = False
 
-    for daily_report in daily_reports["daily_customer_reports"]:
-        customer_id = daily_report["customer_id"]
-        campaigns = daily_report["campaigns"]
-        customer_warning_message = f"<li>Customer <strong>{customer_id}</strong>\n<ul>"
-        send_warning_message_for_customer = False
-        for _, campaign in campaigns.items():
-            campaign_name = campaign["name"]
-            campaign_warning_message = (
-                f"<li>Campaign <strong>{campaign_name}</strong>\n<ul>"
+    for ad_group_id, ad_group in campaign["ad_groups"].items():
+        for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
+            final_urls = ad_group_ad["final_urls"]
+            for final_url in final_urls:
+                if "http" not in final_url:
+                    final_url = f"http://{final_url}"
+                try:
+                    requests.head(  # noqa: B018
+                        final_url, allow_redirects=True
+                    ).status_code
+                except requests.ConnectionError:
+                    send_warning_message_for_campaign = True
+                    final_url_link = (
+                        f"<a href='{final_url}' target='_blank'>{final_url}</a>"
+                    )
+                    google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&&__e={customer_id}' target='_blank'>{ad_group_ad_id}</a>"
+                    warning_message += f"<li>Final url {final_url_link} used in Ad {google_ads_link} is <strong>not reachable</strong></li>\n"
+
+    warning_message += "</ul>\n</li>\n"
+    return warning_message if send_warning_message_for_campaign else None
+
+
+def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> str:
+    def add_metrics_message(
+        title: str, metrics: Dict[str, Optional[Union[int, float]]], field: str
+    ) -> str:
+        if field == "cost_micros":
+            value = metrics[field] / 1000000  # type: ignore
+        else:
+            value = metrics[field]  # type: ignore
+
+        increase = metrics[field + "_increase"]
+        if increase is None:
+            return f"<li>{title}: {value}</li>"
+        is_increase = "+" if increase >= 0 else ""
+
+        return f"<li>{title}: {value} ({is_increase}{increase}% compared to the day before)</li>"
+
+    message = "<h2>Daily Analysis:</h2>"
+    message += f"<p>Below is your daily analysis of your Google Ads campaigns for the date {date}</p>"
+    campaigns_report = daily_reports["daily_customer_reports"]
+    for customer_report in campaigns_report:
+        customer_id = customer_report["customer_id"]
+        message += f"<p>Customer <strong>{customer_id}</strong></p>"
+        message += "<ul>"
+        for _, campaign in customer_report["campaigns"].items():
+            # create link to campaign inside <a href
+            link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
+            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong></li>"
+            # message += f"<li>Campaign <strong>{campaign['name']}</strong></li>"
+            message += "<ul>"
+            message += add_metrics_message("Clicks", campaign["metrics"], "clicks")
+            message += add_metrics_message(
+                "Conversions", campaign["metrics"], "conversions"
             )
-            send_warning_message_for_campaign = False
-            for ad_group_id, ad_group in campaign["ad_groups"].items():
-                for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
-                    final_urls = ad_group_ad["final_urls"]
-                    for final_url in final_urls:
-                        if "http" not in final_url:
-                            final_url = f"http://{final_url}"
-                        try:
-                            requests.head(  # noqa: B018
-                                final_url, allow_redirects=True
-                            ).status_code
-                        except requests.ConnectionError:
-                            send_warning_message = True
-                            send_warning_message_for_customer = True
-                            send_warning_message_for_campaign = True
-                            final_url_link = f"<a href='{final_url}'>{final_url}</a>"
-                            google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&&__e={customer_id}'>{ad_group_ad_id}</a>"
-                            campaign_warning_message += f"<li>Final url {final_url_link} for Ad {google_ads_link} is not reachable</li>\n"
+            message += add_metrics_message(
+                "Cost per click", campaign["metrics"], "cost_micros"
+            )
 
-            campaign_warning_message += "</ul>\n</li>\n"
-            if send_warning_message_for_campaign:
-                customer_warning_message += campaign_warning_message
-        customer_warning_message += "</ul>\n</li>\n"
-        if send_warning_message_for_customer:
-            warning_message += customer_warning_message
+            warning_message = get_web_status_code_report_for_campaign(
+                campaign, customer_id
+            )
+            if warning_message:
+                message += warning_message
 
-    warning_message += "</ul>"
-    return warning_message if send_warning_message else None
+            message += "</ul>"
+        message += "</ul>"
+
+    return message
 
 
-def get_daily_report(date: Optional[str] = None, *, user_id: int, conv_id: int) -> str:
-    if date is None:
-        date = datetime.today().date().isoformat()
+# def get_status_code_report(daily_reports: Dict[str, Any]) -> Optional[str]:
+#     send_warning_message = False
+#     warning_message = "<h3><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:</h3>\n"
 
+#     for daily_report in daily_reports["daily_customer_reports"]:
+#         customer_id = daily_report["customer_id"]
+#         campaigns = daily_report["campaigns"]
+#         customer_warning_message = f"<p>Customer <strong>{customer_id}</strong>\n</p>"
+#         send_warning_message_for_customer = False
+#         for _, campaign in campaigns.items():
+#             campaign_name = campaign["name"]
+#             campaign_warning_message = (
+#                 f"<li>Campaign <strong>{campaign_name}</strong>\n<ul>"
+#             )
+#             send_warning_message_for_campaign = False
+#             for ad_group_id, ad_group in campaign["ad_groups"].items():
+#                 for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
+#                     final_urls = ad_group_ad["final_urls"]
+#                     for final_url in final_urls:
+#                         if "http" not in final_url:
+#                             final_url = f"http://{final_url}"
+#                         try:
+#                             requests.head(  # noqa: B018
+#                                 final_url, allow_redirects=True
+#                             ).status_code
+#                         except requests.ConnectionError:
+#                             send_warning_message = True
+#                             send_warning_message_for_customer = True
+#                             send_warning_message_for_campaign = True
+#                             final_url_link = f"<a href='{final_url}'>{final_url}</a>"
+#                             google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&&__e={customer_id}'>{ad_group_ad_id}</a>"
+#                             campaign_warning_message += f"<li>Final url {final_url_link} for Ad {google_ads_link} is not reachable</li>\n"
+
+#             campaign_warning_message += "</ul>\n</li>\n"
+#             if send_warning_message_for_campaign:
+#                 customer_warning_message += campaign_warning_message
+#         # customer_warning_message += "</ul>\n</li>\n"
+#         if send_warning_message_for_customer:
+#             warning_message += customer_warning_message
+
+#     warning_message += "</ul>"
+#     return warning_message if send_warning_message else None
+
+
+def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
     customer_ids: List[str] = list_accessible_customers(
         user_id=user_id, conv_id=conv_id
     )  # type: ignore
@@ -367,7 +440,6 @@ class DailyAnalysisTeam(Team):
         execute_query_config,
         send_email_config,
         get_info_from_the_web_page_config,
-        get_daily_report_config,
     ]
 
     _shared_system_message = (
@@ -477,9 +549,7 @@ If the user isn't logged in, we will NOT be able to access the Google Ads API.
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
-6. Before doing anything else, get the daily report for the campaigns from the previous day by using the 'get_daily_report' command.
-Use ONLY the 'get_daily_report' command for retrieving Google Ads metrics (impressions, clicks, conversions, cost_micros etc.).
-DO NOT USE execute_query command for retrieving Google Ads metrics! Otherwise you will be penalized!
+6. DO NOT USE execute_query command for retrieving Google Ads metrics! Otherwise you will be penalized!
 7. Use the 'execute_query' command for finding the necessary informations about the campaigns, ad groups, ads, keywords etc.
 Do NOT use 'execute_query' command for retrieving Google Ads metrics (impressions, clicks, conversions, cost_micros etc.)!
 
@@ -607,8 +677,6 @@ SELECT ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_grou
 SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criterion.keyword.text, campaign_criterion.negative FROM campaign_criterion WHERE campaign_criterion.campaign = 'customers/2324127278/campaigns/20978334367' AND campaign_criterion.negative=TRUE"
 
 NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
-
-3. 'get_daily_report': Retrieve daily report for the campaigns, params: (date: str)
 """
 
 
@@ -643,9 +711,6 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             proposed_user_actions=proposed_user_actions,
         ),
         "get_info_from_the_web_page": get_info_from_the_web_page,
-        "get_daily_report": lambda date: get_daily_report(
-            date=date, user_id=user_id, conv_id=conv_id
-        ),
     }
 
     return function_map
@@ -667,7 +732,6 @@ def _create_final_html_message(
 </head>
 <body>
 
-<h2>Daily Analysis:</h2>
 {initial_message_in_chat}
 """
 
@@ -691,6 +755,9 @@ def _get_conv_id_and_send_email(
     initial_message_in_chat: str,
     proposed_user_action: List[str],
 ) -> int:
+    print(
+        f"Received parameters: user_id: {user_id}\nclient_email: {client_email}\nmessages: {messages}\n\n\ninitial_message_in_chat: {initial_message_in_chat}\nproposed_user_action: {proposed_user_action}"
+    )
     data = {
         "userId": user_id,
         "messages": messages,
@@ -710,6 +777,8 @@ def _get_conv_id_and_send_email(
         initial_message_in_chat, proposed_user_action, conv_id
     )
 
+    print(f"Sending email to {client_email}\n{final_html_message}")
+
     send_email_infobip(
         to_email=client_email,
         from_email="info@airt.ai",
@@ -721,8 +790,11 @@ def _get_conv_id_and_send_email(
 
 
 def execute_daily_analysis(
-    task: Optional[str] = None, send_only_to_emails: Optional[List[str]] = None
+    send_only_to_emails: Optional[List[str]] = None,
+    date: Optional[str] = None,
 ) -> None:
+    if date is None:
+        date = (datetime.today().date() - timedelta(1)).isoformat()
     print("Starting daily analysis.")
     id_email_dict = json.loads(get_user_ids_and_emails())
 
@@ -734,30 +806,42 @@ def execute_daily_analysis(
                 f"Skipping user_id: {user_id} - email {email} (current implementation)"
             )
             continue
-        current_date = datetime.today().strftime("%Y-%m-%d")
-        if task is None:
-            task = f"""
-        Current date is: {current_date}.
-        You need compare the ads performance between yesterday and the same day of the previous week (-7 days).
-        - Clicks
-        - Conversions
-        - Cost per click (display in customer local currency)
-
-        Check which ads have the highest cost and which have the highest number of conversions.
-        If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
-        At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
-        - pause the ads with the highest cost and the lowest number of conversions.
-        - keywords analysis (add negative keywords, add positive keywords, change match type etc).
-        - ad copy analysis (change the ad copy, add more ads etc).
-            """
-
-        conv_id = 100
-        daily_analysis_team = DailyAnalysisTeam(
-            task=task,
-            user_id=user_id,
-            conv_id=conv_id,
-        )
         try:
+            # Always get the daily report for the previous day
+            conv_id = 100
+            daily_reports = get_daily_report(
+                date=date, user_id=user_id, conv_id=conv_id
+            )
+
+            daily_report_message = construct_daily_report_message(
+                daily_reports=json.loads(daily_reports), date=date
+            )
+
+            task = f"""
+You need to perform Google Ads Analysis for date: {date}.
+
+Check which ads have the highest cost and which have the highest number of conversions.
+If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
+At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
+- pause the ads with the highest cost and the lowest number of conversions.
+- keywords analysis (add negative keywords, add positive keywords, change match type etc).
+- ad copy analysis (change the ad copy, add more ads etc).
+
+I have prepared you a JSON file with the daily report for the wanted date. Use it to suggest the next steps to the client.
+{daily_reports}
+
+
+Here is also a HTML summary of the daily report which will be sent to the client:
+{daily_report_message}
+
+Please propose the next steps and send the email to the client.
+"""
+
+            daily_analysis_team = DailyAnalysisTeam(
+                task=task,
+                user_id=user_id,
+                conv_id=conv_id,
+            )
             daily_analysis_team.initiate_chat()
             last_message = daily_analysis_team.get_last_message(add_prefix=False)
 
@@ -777,9 +861,7 @@ def execute_daily_analysis(
                     user_id=user_id,
                     client_email=email,
                     messages=messages,
-                    initial_message_in_chat=last_message_json[
-                        "initial_message_in_chat"
-                    ],
+                    initial_message_in_chat=daily_report_message,
                     proposed_user_action=last_message_json["proposed_user_action"],
                 )
             else:
