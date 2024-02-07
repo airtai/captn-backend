@@ -307,7 +307,7 @@ def get_web_status_code_report_for_campaign(
             final_urls = ad_group_ad["final_urls"]
             for final_url in final_urls:
                 if "http" not in final_url:
-                    final_url = f"http://{final_url}"
+                    final_url = f"https://{final_url}"
                 try:
                     status_code = requests.head(
                         final_url, allow_redirects=True, timeout=10
