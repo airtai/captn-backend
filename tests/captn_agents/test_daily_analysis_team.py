@@ -16,6 +16,7 @@ from captn.captn_agents.backend.daily_analysis_team import (
     execute_daily_analysis,
     get_campaigns_report,
     get_daily_ad_group_ads_report,
+    get_status_code_report,
 )
 
 
@@ -779,6 +780,104 @@ def test_get_campaigns_report() -> None:
                 ),
             }
             assert expected == campaigns_report
+
+
+def test_check_final_urls_status_codes() -> None:
+    daily_report = {
+        "daily_customer_reports": [
+            {
+                "customer_id": "2324127278",
+                "campaigns": {
+                    "20761810762": {
+                        "id": "20761810762",
+                        "metrics": {},
+                        "name": "Website traffic-Search-3-updated-up",
+                        "ad_groups": {
+                            "156261983518": {
+                                "id": "156261983518",
+                                "metrics": {},
+                                "name": "fastapi get super-dooper-cool",
+                                "keywords": {},
+                                "ad_group_ads": {
+                                    "688768033895": {
+                                        "id": "688768033895",
+                                        "metrics": {},
+                                        "final_urls": [
+                                            "https://not-reachable.airt.ai/"
+                                        ],
+                                    }
+                                },
+                            },
+                            "158468020535": {
+                                "id": "158468020535",
+                                "metrics": {},
+                                "name": "TVs",
+                                "keywords": {},
+                                "ad_group_ads": {
+                                    "688768033895": {
+                                        "id": "688768033895",
+                                        "metrics": {},
+                                        "final_urls": [
+                                            "https://also-not-reachable.airt.ai/"
+                                        ],
+                                    }
+                                },
+                            },
+                        },
+                    },
+                    "20979579987": {
+                        "id": "20979579987",
+                        "metrics": {},
+                        "name": "Empty",
+                        "ad_groups": {},
+                    },
+                },
+            },
+            {
+                "customer_id": "7119828439",
+                "campaigns": {
+                    "20750580900": {
+                        "id": "20750580900",
+                        "metrics": {},
+                        "name": "faststream-web-search",
+                        "ad_groups": {
+                            "155431182157": {
+                                "id": "155431182157",
+                                "metrics": {},
+                                "name": "Ad group 1",
+                                "keywords": {},
+                                "ad_group_ads": {
+                                    "680002685922": {
+                                        "id": "680002685922",
+                                        "metrics": {},
+                                        "final_urls": [
+                                            "https://github.com/airtai/faststream"
+                                        ],
+                                    }
+                                },
+                            }
+                        },
+                    }
+                },
+            },
+        ]
+    }
+
+    status_code_report = get_status_code_report(daily_report)
+
+    expected = """<h3><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:</h3>
+<ul>
+<li>Customer <strong>2324127278</strong>
+<ul><li>Campaign <strong>Website traffic-Search-3-updated-up</strong>
+<ul><li>Final url <a href='https://not-reachable.airt.ai/'>https://not-reachable.airt.ai/</a> for Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&&__e=2324127278'>688768033895</a> is not reachable</li>
+<li>Final url <a href='https://also-not-reachable.airt.ai/'>https://also-not-reachable.airt.ai/</a> for Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&&__e=2324127278'>688768033895</a> is not reachable</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>"""
+    print(status_code_report)
+    assert expected == status_code_report
 
 
 def _test_execute_daily_analysis(task: Optional[str] = None) -> None:

@@ -297,6 +297,50 @@ def get_daily_report_for_customer(
     )
 
 
+def get_status_code_report(daily_reports: Dict[str, Any]) -> Optional[str]:
+    send_warning_message = False
+    warning_message = "<h3><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:</h3>\n<ul>\n"
+
+    for daily_report in daily_reports["daily_customer_reports"]:
+        customer_id = daily_report["customer_id"]
+        campaigns = daily_report["campaigns"]
+        customer_warning_message = f"<li>Customer <strong>{customer_id}</strong>\n<ul>"
+        send_warning_message_for_customer = False
+        for _, campaign in campaigns.items():
+            campaign_name = campaign["name"]
+            campaign_warning_message = (
+                f"<li>Campaign <strong>{campaign_name}</strong>\n<ul>"
+            )
+            send_warning_message_for_campaign = False
+            for ad_group_id, ad_group in campaign["ad_groups"].items():
+                for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
+                    final_urls = ad_group_ad["final_urls"]
+                    for final_url in final_urls:
+                        if "http" not in final_url:
+                            final_url = f"http://{final_url}"
+                        try:
+                            requests.head(  # noqa: B018
+                                final_url, allow_redirects=True
+                            ).status_code
+                        except requests.ConnectionError:
+                            send_warning_message = True
+                            send_warning_message_for_customer = True
+                            send_warning_message_for_campaign = True
+                            final_url_link = f"<a href='{final_url}'>{final_url}</a>"
+                            google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&&__e={customer_id}'>{ad_group_ad_id}</a>"
+                            campaign_warning_message += f"<li>Final url {final_url_link} for Ad {google_ads_link} is not reachable</li>\n"
+
+            campaign_warning_message += "</ul>\n</li>\n"
+            if send_warning_message_for_campaign:
+                customer_warning_message += campaign_warning_message
+        customer_warning_message += "</ul>\n</li>\n"
+        if send_warning_message_for_customer:
+            warning_message += customer_warning_message
+
+    warning_message += "</ul>"
+    return warning_message if send_warning_message else None
+
+
 def get_daily_report(date: Optional[str] = None, *, user_id: int, conv_id: int) -> str:
     if date is None:
         date = datetime.today().date().isoformat()
