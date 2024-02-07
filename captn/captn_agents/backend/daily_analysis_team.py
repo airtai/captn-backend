@@ -310,7 +310,7 @@ def get_web_status_code_report_for_campaign(
                     final_url = f"http://{final_url}"
                 try:
                     status_code = requests.head(
-                        final_url, allow_redirects=True
+                        final_url, allow_redirects=True, timeout=10
                     ).status_code
                 except requests.ConnectionError:
                     status_code = 0
