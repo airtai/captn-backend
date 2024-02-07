@@ -953,16 +953,12 @@ send_email_config = {
     "parameters": {
         "type": "object",
         "properties": {
-            "daily_analysis": {
-                "type": "string",
-                "description": "Daily analysis of the campaign performance paragraph",
-            },
             "proposed_user_actions": {
                 "type": "array",
                 "items": {"type": "string"},
                 "description": "List of proposed user actions",
             },
         },
-        "required": ["daily_analysis", "proposed_user_actions"],
+        "required": ["proposed_user_actions"],
     },
 }

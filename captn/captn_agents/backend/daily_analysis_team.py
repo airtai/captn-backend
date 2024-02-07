@@ -309,10 +309,12 @@ def get_web_status_code_report_for_campaign(
                 if "http" not in final_url:
                     final_url = f"http://{final_url}"
                 try:
-                    requests.head(  # noqa: B018
+                    status_code = requests.head(
                         final_url, allow_redirects=True
                     ).status_code
                 except requests.ConnectionError:
+                    status_code = 0
+                if status_code < 200 or status_code >= 400:
                     send_warning_message_for_campaign = True
                     final_url_link = (
                         f"<a href='{final_url}' target='_blank'>{final_url}</a>"
@@ -348,10 +350,8 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
         message += f"<p>Customer <strong>{customer_id}</strong></p>"
         message += "<ul>"
         for _, campaign in customer_report["campaigns"].items():
-            # create link to campaign inside <a href
             link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
             message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong></li>"
-            # message += f"<li>Campaign <strong>{campaign['name']}</strong></li>"
             message += "<ul>"
             message += add_metrics_message("Clicks", campaign["metrics"], "clicks")
             message += add_metrics_message(
@@ -371,50 +371,6 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
         message += "</ul>"
 
     return message
-
-
-# def get_status_code_report(daily_reports: Dict[str, Any]) -> Optional[str]:
-#     send_warning_message = False
-#     warning_message = "<h3><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:</h3>\n"
-
-#     for daily_report in daily_reports["daily_customer_reports"]:
-#         customer_id = daily_report["customer_id"]
-#         campaigns = daily_report["campaigns"]
-#         customer_warning_message = f"<p>Customer <strong>{customer_id}</strong>\n</p>"
-#         send_warning_message_for_customer = False
-#         for _, campaign in campaigns.items():
-#             campaign_name = campaign["name"]
-#             campaign_warning_message = (
-#                 f"<li>Campaign <strong>{campaign_name}</strong>\n<ul>"
-#             )
-#             send_warning_message_for_campaign = False
-#             for ad_group_id, ad_group in campaign["ad_groups"].items():
-#                 for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
-#                     final_urls = ad_group_ad["final_urls"]
-#                     for final_url in final_urls:
-#                         if "http" not in final_url:
-#                             final_url = f"http://{final_url}"
-#                         try:
-#                             requests.head(  # noqa: B018
-#                                 final_url, allow_redirects=True
-#                             ).status_code
-#                         except requests.ConnectionError:
-#                             send_warning_message = True
-#                             send_warning_message_for_customer = True
-#                             send_warning_message_for_campaign = True
-#                             final_url_link = f"<a href='{final_url}'>{final_url}</a>"
-#                             google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&&__e={customer_id}'>{ad_group_ad_id}</a>"
-#                             campaign_warning_message += f"<li>Final url {final_url_link} for Ad {google_ads_link} is not reachable</li>\n"
-
-#             campaign_warning_message += "</ul>\n</li>\n"
-#             if send_warning_message_for_campaign:
-#                 customer_warning_message += campaign_warning_message
-#         # customer_warning_message += "</ul>\n</li>\n"
-#         if send_warning_message_for_customer:
-#             warning_message += customer_warning_message
-
-#     warning_message += "</ul>"
-#     return warning_message if send_warning_message else None
 
 
 def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
@@ -561,18 +517,9 @@ Do NOT use 'execute_query' command for retrieving Google Ads metrics (impression
 'send_email' command
 Here an example on how to use the 'send_email' command:
 {
-    "daily_analysis": "<p>Below is your daily analysis of your Google Ads campaigns for the date 2024-01-31 compared to 2024-01-24 for customer ID 2324127278.</p>
-
-<p><strong>Campaign - xy</strong>, <strong>Ad Group - xy</strong>, Ad (<a href="https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518">Link to Ad</a>)</p>
-<ul>
-    <li>Clicks: xy clicks (xy% since last week)</li>
-    <li>Conversions: INR xy (-xy% since last week)</li>
-    <li>Cost per click: Decreased since last week</li>
-</ul>",
     "proposed_user_actions": ["Remove 'Free' keyword because it is not performing well", "Increase budget from $10/day to $20/day",
     "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'", "Select some or all of them"]
 }
-daily_analysis parameter will be used insid the HTML body of the email so make sure it has valid HTML tags!!!!
 
 propose_user_actions should NOT be general, but specific.
 'proposed_user_actions' BAD EXAMPLES:
@@ -585,7 +532,6 @@ These suggestions should be specific and actionable.
 'proposed_user_actions' GOOD EXAMPLES:
 "Remove 'Free' keyword because it is not performing well" is specific enough.
 "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'" is specific enough.
-
 
 
 12. There is a list of commands which you are able to execute in the 'Commands' section.
@@ -653,8 +599,8 @@ Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
 All team members have access to the following command:
-1. send_email: Send email to the client, params: (daily_analysis: string, proposed_user_actions: List[str]])
-The 'message' parameter must contain all information useful to the client, because the client does not see your team's conversation (only the information sent in the 'message' parameter)
+1. send_email: Send email to the client, params: (proposed_user_actions: List[str]])
+Each message in the 'proposed_user_actions' parameter must contain all information useful to the client, because the client does not see your team's conversation
 As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
 2. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
 It should be used only for the clients web page(s), final_url(s) etc.
@@ -677,6 +623,7 @@ SELECT ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_grou
 SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criterion.keyword.text, campaign_criterion.negative FROM campaign_criterion WHERE campaign_criterion.campaign = 'customers/2324127278/campaigns/20978334367' AND campaign_criterion.negative=TRUE"
 
 NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
+You can execute the provided queries ONLY by using the 'execute_query' command!
 """
 
 
@@ -706,8 +653,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             query=query,
             work_dir=work_dir,
         ),
-        "send_email": lambda daily_analysis, proposed_user_actions: send_email(
-            daily_analysis=daily_analysis,
+        "send_email": lambda proposed_user_actions: send_email(
             proposed_user_actions=proposed_user_actions,
         ),
         "get_info_from_the_web_page": get_info_from_the_web_page,
@@ -755,9 +701,6 @@ def _get_conv_id_and_send_email(
     initial_message_in_chat: str,
     proposed_user_action: List[str],
 ) -> int:
-    print(
-        f"Received parameters: user_id: {user_id}\nclient_email: {client_email}\nmessages: {messages}\n\n\ninitial_message_in_chat: {initial_message_in_chat}\nproposed_user_action: {proposed_user_action}"
-    )
     data = {
         "userId": user_id,
         "messages": messages,
@@ -776,8 +719,6 @@ def _get_conv_id_and_send_email(
     final_html_message = _create_final_html_message(
         initial_message_in_chat, proposed_user_action, conv_id
     )
-
-    print(f"Sending email to {client_email}\n{final_html_message}")
 
     send_email_infobip(
         to_email=client_email,

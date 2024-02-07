@@ -13,10 +13,11 @@ from captn.captn_agents.backend.daily_analysis_team import (
     _get_conv_id_and_send_email,
     calculate_metrics_change,
     compare_reports,
+    construct_daily_report_message,
     execute_daily_analysis,
     get_campaigns_report,
     get_daily_ad_group_ads_report,
-    get_status_code_report,
+    get_web_status_code_report_for_campaign,
 )
 
 
@@ -448,8 +449,6 @@ def test_compare_reports() -> None:
     }
 
     compared_campaigns_report = compare_reports(first_report, second_report)
-    print("First report:")
-    print(compared_campaigns_report)
     expected = {
         "20750580900": Campaign(
             id="20750580900",
@@ -782,105 +781,187 @@ def test_get_campaigns_report() -> None:
             assert expected == campaigns_report
 
 
-def test_check_final_urls_status_codes() -> None:
-    daily_report = {
-        "daily_customer_reports": [
-            {
-                "customer_id": "2324127278",
-                "campaigns": {
-                    "20761810762": {
-                        "id": "20761810762",
-                        "metrics": {},
-                        "name": "Website traffic-Search-3-updated-up",
-                        "ad_groups": {
-                            "156261983518": {
-                                "id": "156261983518",
-                                "metrics": {},
-                                "name": "fastapi get super-dooper-cool",
-                                "keywords": {},
-                                "ad_group_ads": {
-                                    "688768033895": {
-                                        "id": "688768033895",
-                                        "metrics": {},
-                                        "final_urls": [
-                                            "https://not-reachable.airt.ai/"
-                                        ],
-                                    }
-                                },
-                            },
-                            "158468020535": {
-                                "id": "158468020535",
-                                "metrics": {},
-                                "name": "TVs",
-                                "keywords": {},
-                                "ad_group_ads": {
-                                    "688768033895": {
-                                        "id": "688768033895",
-                                        "metrics": {},
-                                        "final_urls": [
-                                            "https://also-not-reachable.airt.ai/"
-                                        ],
-                                    }
-                                },
+daily_report = {
+    "daily_customer_reports": [
+        {
+            "customer_id": "2324127278",
+            "campaigns": {
+                "20761810762": {
+                    "id": "20761810762",
+                    "metrics": {
+                        "clicks": 5,
+                        "conversions": 0.0,
+                        "cost_micros": 22222,
+                        "impressions": 148,
+                        "interactions": 10,
+                        "clicks_increase": -42.86,
+                        "conversions_increase": 0.0,
+                        "cost_micros_increase": -32.94,
+                        "impressions_increase": None,
+                        "interactions_increase": 42.86,
+                    },
+                    "name": "Website traffic-Search-3-updated-up",
+                    "ad_groups": {
+                        "156261983518": {
+                            "id": "156261983518",
+                            "metrics": {},
+                            "name": "fastapi get super-dooper-cool",
+                            "keywords": {},
+                            "ad_group_ads": {
+                                "688768033895": {
+                                    "id": "688768033895",
+                                    "metrics": {},
+                                    "final_urls": ["https://not-reachable.airt.ai/"],
+                                }
                             },
                         },
-                    },
-                    "20979579987": {
-                        "id": "20979579987",
-                        "metrics": {},
-                        "name": "Empty",
-                        "ad_groups": {},
+                        "158468020535": {
+                            "id": "158468020535",
+                            "metrics": {},
+                            "name": "TVs",
+                            "keywords": {},
+                            "ad_group_ads": {
+                                "688768033895": {
+                                    "id": "688768033895",
+                                    "metrics": {},
+                                    "final_urls": [
+                                        "https://also-not-reachable.airt.ai/"
+                                    ],
+                                }
+                            },
+                        },
                     },
                 },
+                "20979579987": {
+                    "id": "20979579987",
+                    "metrics": {
+                        "clicks": 0,
+                        "conversions": 0.0,
+                        "cost_micros": 0,
+                        "impressions": 0,
+                        "interactions": 0,
+                        "clicks_increase": 0,
+                        "conversions_increase": 0,
+                        "cost_micros_increase": 0,
+                        "impressions_increase": 0,
+                        "interactions_increase": 0,
+                    },
+                    "name": "Empty",
+                    "ad_groups": {},
+                },
             },
-            {
-                "customer_id": "7119828439",
-                "campaigns": {
-                    "20750580900": {
-                        "id": "20750580900",
+        },
+        {
+            "customer_id": "7119828439",
+            "campaigns": {
+                "20750580900": {
+                    "id": "20750580900",
+                    "metrics": {
+                        "clicks": 10,
+                        "conversions": 0.0,
+                        "cost_micros": 2830000,
+                        "impressions": 148,
+                        "interactions": 10,
+                        "clicks_increase": None,
+                        "conversions_increase": 0.0,
+                        "cost_micros_increase": -32.94,
+                        "impressions_increase": None,
+                        "interactions_increase": 42.86,
+                    },
+                    "name": "faststream-web-search",
+                    "ad_groups": {
+                        "155431182157": {
+                            "id": "155431182157",
+                            "metrics": {},
+                            "name": "Ad group 1",
+                            "keywords": {},
+                            "ad_group_ads": {
+                                "680002685922": {
+                                    "id": "680002685922",
+                                    "metrics": {},
+                                    "final_urls": [
+                                        "https://github.com/airtai/faststream"
+                                    ],
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+        },
+    ]
+}
+
+
+def test_get_web_status_code_report_for_campaign() -> None:
+    campaign = {
+        "id": "20761810762",
+        "metrics": {
+            "clicks": 5,
+            "conversions": 0.0,
+            "cost_micros": 22222,
+            "impressions": 148,
+            "interactions": 10,
+            "clicks_increase": -42.86,
+            "conversions_increase": 0.0,
+            "cost_micros_increase": -32.94,
+            "impressions_increase": None,
+            "interactions_increase": 42.86,
+        },
+        "name": "Website traffic-Search-3-updated-up",
+        "ad_groups": {
+            "156261983518": {
+                "id": "156261983518",
+                "metrics": {},
+                "name": "fastapi get super-dooper-cool",
+                "keywords": {},
+                "ad_group_ads": {
+                    "688768033895": {
+                        "id": "688768033895",
                         "metrics": {},
-                        "name": "faststream-web-search",
-                        "ad_groups": {
-                            "155431182157": {
-                                "id": "155431182157",
-                                "metrics": {},
-                                "name": "Ad group 1",
-                                "keywords": {},
-                                "ad_group_ads": {
-                                    "680002685922": {
-                                        "id": "680002685922",
-                                        "metrics": {},
-                                        "final_urls": [
-                                            "https://github.com/airtai/faststream"
-                                        ],
-                                    }
-                                },
-                            }
-                        },
+                        "final_urls": ["https://not-reachable.airt.ai/"],
                     }
                 },
             },
-        ]
+            "158468020535": {
+                "id": "158468020535",
+                "metrics": {},
+                "name": "TVs",
+                "keywords": {},
+                "ad_group_ads": {
+                    "688768033895": {
+                        "id": "688768033895",
+                        "metrics": {},
+                        "final_urls": ["https://airt.ai/bad"],
+                    }
+                },
+            },
+        },
     }
-
-    status_code_report = get_status_code_report(daily_report)
-
-    expected = """<h3><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:</h3>
+    customer_id = "2324127278"
+    warning_message = get_web_status_code_report_for_campaign(campaign, customer_id)
+    expected = """<li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:
 <ul>
-<li>Customer <strong>2324127278</strong>
-<ul><li>Campaign <strong>Website traffic-Search-3-updated-up</strong>
-<ul><li>Final url <a href='https://not-reachable.airt.ai/'>https://not-reachable.airt.ai/</a> for Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&&__e=2324127278'>688768033895</a> is not reachable</li>
-<li>Final url <a href='https://also-not-reachable.airt.ai/'>https://also-not-reachable.airt.ai/</a> for Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&&__e=2324127278'>688768033895</a> is not reachable</li>
+<li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+<li>Final url <a href='https://airt.ai/bad' target='_blank'>https://airt.ai/bad</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
 </ul>
-</li>
-</ul>
-</li>
-</ul>"""
-    print(status_code_report)
-    assert expected == status_code_report
+</li>\n"""
+    assert expected == warning_message
 
 
-def _test_execute_daily_analysis(task: Optional[str] = None) -> None:
+def test_construct_campaign_report_message() -> None:
+    message = construct_daily_report_message(daily_report, date="2024-02-05")
+    expected = """<h2>Daily Analysis:</h2><p>Below is your daily analysis of your Google Ads campaigns for the date 2024-02-05</p><p>Customer <strong>2324127278</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20761810762&__e=2324127278' target='_blank'>Website traffic-Search-3-updated-up</a></strong></li><ul><li>Clicks: 5 (-42.86% compared to the day before)</li><li>Conversions: 0.0 (+0.0% compared to the day before)</li><li>Cost per click: 0.022222 (-32.94% compared to the day before)</li><li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:
+<ul>
+<li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+<li>Final url <a href='https://also-not-reachable.airt.ai/' target='_blank'>https://also-not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+</ul>
+</li>
+</ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20979579987&__e=2324127278' target='_blank'>Empty</a></strong></li><ul><li>Clicks: 0 (+0% compared to the day before)</li><li>Conversions: 0.0 (+0% compared to the day before)</li><li>Cost per click: 0.0 (+0% compared to the day before)</li></ul></ul><p>Customer <strong>7119828439</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20750580900&__e=7119828439' target='_blank'>faststream-web-search</a></strong></li><ul><li>Clicks: 10</li><li>Conversions: 0.0 (+0.0% compared to the day before)</li><li>Cost per click: 2.83 (-32.94% compared to the day before)</li></ul></ul>"""
+    assert expected == message
+
+
+def _test_execute_daily_analysis(date: Optional[str] = None) -> None:
     # with unittest.mock.patch(
     #     "captn.captn_agents.backend.daily_analysis_team.get_daily_report"
     # ) as mock_daily_report:
@@ -899,25 +980,16 @@ def _test_execute_daily_analysis(task: Optional[str] = None) -> None:
                     mock_post.return_value.status_code = 200
                     mock_post.return_value.json = lambda: {"chatID": 239}
                     mock_send_email_infobip.return_value = None
-                    # return_value1 = '{\n  "daily_customer_reports": [\n    {\n      "customer_id": "2324127278",\n      "daily_ad_group_ads_report": [\n        {\n          "ad_id": "688768033895",\n          "campaign": {\n            "id": "20761810762",\n            "name": "Website traffic-Search-3-updated-up"\n          },\n          "ad_group": {\n            "id": "156261983518",\n            "name": "fastapi get super-dooper-cool"\n          },\n          "metrics": {\n            "impressions": 402,\n            "clicks": 121,\n            "interactions": 129,\n            "conversions": 15,\n            "cost_micros": 129000\n          }\n        },\n        {\n          "ad_id": "689256163801",\n          "campaign": {\n            "id": "20978334367",\n            "name": "Book-Shop1"\n          },\n          "ad_group": {\n            "id": "161283342474",\n            "name": "Books Bestsellers"\n          },\n          "metrics": {\n            "impressions": 53,\n            "clicks": 9,\n            "interactions": 9,\n            "conversions": 2,\n            "cost_micros": 1000\n          }\n        }\n      ]\n    }\n  ]\n}'
-                    # return_value2 = '{\n  "daily_customer_reports": [\n    {\n      "customer_id": "2324127278",\n      "daily_ad_group_ads_report": [\n        {\n          "ad_id": "688768033895",\n          "campaign": {\n            "id": "20761810762",\n            "name": "Website traffic-Search-3-updated-up"\n          },\n          "ad_group": {\n            "id": "156261983518",\n            "name": "fastapi get super-dooper-cool"\n          },\n          "metrics": {\n            "impressions": 433,\n            "clicks": 129,\n            "interactions": 135,\n            "conversions": 21,\n            "cost_micros": 153000\n          }\n        },\n        {\n          "ad_id": "689256163801",\n          "campaign": {\n            "id": "20978334367",\n            "name": "Book-Shop1"\n          },\n          "ad_group": {\n            "id": "161283342474",\n            "name": "Books Bestsellers"\n          },\n          "metrics": {\n            "impressions": 22,\n            "clicks": 3,\n            "interactions": 4,\n            "conversions": 1,\n            "cost_micros": 800\n          }\n        }\n      ]\n    }\n  ]\n}'
-
-                    # mock_daily_report.side_effect = [return_value1, return_value2]
 
                     execute_daily_analysis(
-                        task=task, send_only_to_emails=["robert@airt.ai"]
+                        send_only_to_emails=["robert@airt.ai"], date=date
                     )
                     mock_send_email_infobip.assert_called_once()
 
 
 def test_execute_daily_analysis() -> None:
     current_date = "2024-01-30"
-    task = f"""
-Current date is: {current_date}.
-Execute daily analysis (get_daily_report )and without any further analysis send the report to the client. (you can exchange maximum 5 messages between the team!!)
-You need to propose at least 3 next steps to the client. (What ever pops up in your mind)
-"""
-    _test_execute_daily_analysis(task=task)
+    _test_execute_daily_analysis(date=current_date)
 
 
 def test_send_email() -> None:
@@ -952,3 +1024,7 @@ def test_send_email() -> None:
             )
 
             mock_send_email_infobip.assert_called_once()
+
+
+# def test_daily_analysis_real() -> None:
+#     execute_daily_analysis(send_only_to_emails=["robert@airt.ai"])
