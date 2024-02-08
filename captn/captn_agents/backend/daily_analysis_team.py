@@ -2,8 +2,8 @@ __all__ = ["DailyAnalysisTeam"]
 
 import ast
 import json
-import unittest
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, timedelta
 from os import environ
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -18,7 +18,6 @@ from ...google_ads.client import (
 )
 from .function_configs import (
     execute_query_config,
-    get_daily_report_config,
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
     send_email_config,
@@ -27,107 +26,354 @@ from .functions import get_info_from_the_web_page, send_email
 from .team import Team
 
 
-class Campaign(BaseModel):
-    id: str
-    name: str
-
-
-class AdGroup(BaseModel):
-    id: str
-    name: str
-
-
 class Metrics(BaseModel):
     impressions: int
     clicks: int
     interactions: int
     conversions: int
     cost_micros: int
+    impressions_increase: Optional[float] = None
+    clicks_increase: Optional[float] = None
+    interactions_increase: Optional[float] = None
+    conversions_increase: Optional[float] = None
+    cost_micros_increase: Optional[float] = None
 
 
-class AdGroupAd(BaseModel):
-    ad_id: str
-    campaign: Campaign
-    ad_group: AdGroup
+class ResourceWithMetrics(BaseModel):
+    id: str
     metrics: Metrics
 
 
-class DailyCampaignReport(BaseModel):
-    campaign_id: str
-    campaign_name: str
-    impressions: int
-    clicks: int
-    interactions: int
-    conversions: int
-    cost_micros: int
-    date: str
+class Keyword(ResourceWithMetrics):
+    text: str
+    match_type: str
 
 
-class DailyCustomerReport(BaseModel):
+class AdGroupAd(ResourceWithMetrics):
+    final_urls: List[str]
+
+
+class AdGroup(ResourceWithMetrics):
+    name: str
+    keywords: Dict[str, Keyword]
+    ad_group_ads: Dict[str, AdGroupAd]
+
+
+class Campaign(ResourceWithMetrics):
+    name: str
+    ad_groups: Dict[str, AdGroup]
+
+
+class DailyCustomerReports2(BaseModel):
     customer_id: str
-    daily_ad_group_ads_report: List[AdGroupAd]
+    campaigns: Dict[str, Campaign]
 
 
 class DailyReport(BaseModel):
-    daily_customer_reports: List[DailyCustomerReport]
+    daily_customer_reports: List[DailyCustomerReports2]
 
 
-def get_daily_ad_group_ads_report(
+def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
+    return_metrics = {}
+    for key, value in metrics1.__dict__.items():
+        if key.endswith("_increase"):
+            continue
+
+        return_metrics[key] = value
+
+        value2 = getattr(metrics2, key)
+        if value == value2:
+            return_metrics[key + "_increase"] = 0
+        elif value == 0 or value2 == 0:
+            return_metrics[key + "_increase"] = None
+        else:
+            return_metrics[key + "_increase"] = round(
+                (float(value - value2) / value2) * 100, 2
+            )
+
+    return Metrics(**return_metrics)
+
+
+def get_daily_keywords_report(
     user_id: int, conv_id: int, customer_id: str, date: str
-) -> List[AdGroupAd]:
-    query = f"SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros FROM ad_group_ad WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
+) -> Dict[str, Dict[str, Keyword]]:
+    query = (
+        "SELECT ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM keyword_view "
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "  # nosec: [B608]
+    )
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
     )
     customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
-    ad_group_ads = []
+    ad_group_keywords_dict: Dict[str, Dict[str, Keyword]] = defaultdict(dict)
     for customer_result in customer_results:
-        campaign = customer_result["campaign"]
-        ad_group = customer_result["adGroup"]
-        ad_group_ad = customer_result["adGroupAd"]["ad"]
-        metrics = customer_result["metrics"]
-
-        ad_group_ad = AdGroupAd(
-            ad_id=customer_result["adGroupAd"]["ad"]["id"],
-            campaign=Campaign(
-                id=campaign["id"],
-                name=campaign["name"],
-            ),
-            ad_group=AdGroup(
-                id=ad_group["id"],
-                name=ad_group["name"],
-            ),
+        keyword = Keyword(
+            id=customer_result["adGroupCriterion"]["criterionId"],
+            text=customer_result["adGroupCriterion"]["keyword"]["text"],
+            match_type=customer_result["adGroupCriterion"]["keyword"]["matchType"],
             metrics=Metrics(
-                impressions=metrics["impressions"],
-                clicks=metrics["clicks"],
-                interactions=metrics["interactions"],
-                conversions=metrics["conversions"],
-                cost_micros=metrics["costMicros"],
+                impressions=customer_result["metrics"]["impressions"],
+                clicks=customer_result["metrics"]["clicks"],
+                interactions=customer_result["metrics"]["interactions"],
+                conversions=customer_result["metrics"]["conversions"],
+                cost_micros=customer_result["metrics"]["costMicros"],
             ),
         )
 
-        ad_group_ads.append(ad_group_ad)
-    return ad_group_ads
+        ad_group_keywords_dict[customer_result["adGroup"]["id"]][keyword.id] = keyword
+
+    return ad_group_keywords_dict
+
+
+def get_ad_groups_report(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> Dict[str, Dict[str, AdGroup]]:
+    query = (
+        "SELECT campaign.id, ad_group.id, ad_group.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM ad_group "
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED'"  # nosec: [B608]
+    )
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+
+    keywords_report = get_daily_keywords_report(user_id, conv_id, customer_id, date)
+    ad_group_ads_report = get_daily_ad_group_ads_report(
+        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
+    )
+    campaign_ad_groups_dict: Dict[str, Dict[str, AdGroup]] = defaultdict(dict)
+
+    for ad_group_result in customer_result:
+        ad_group_id = ad_group_result["adGroup"]["id"]
+        keywords = keywords_report.get(ad_group_id, {})
+        ad_group_ads = ad_group_ads_report.get(ad_group_id, {})
+        ad_group = AdGroup(
+            id=ad_group_result["adGroup"]["id"],
+            name=ad_group_result["adGroup"]["name"],
+            metrics=Metrics(
+                impressions=ad_group_result["metrics"]["impressions"],
+                clicks=ad_group_result["metrics"]["clicks"],
+                interactions=ad_group_result["metrics"]["interactions"],
+                conversions=ad_group_result["metrics"]["conversions"],
+                cost_micros=ad_group_result["metrics"]["costMicros"],
+            ),
+            keywords=keywords,
+            ad_group_ads=ad_group_ads,
+        )
+        campaign_ad_groups_dict[ad_group_result["campaign"]["id"]][
+            ad_group.id
+        ] = ad_group
+
+    return campaign_ad_groups_dict
+
+
+def get_campaigns_report(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> Dict[str, Campaign]:
+    query = (
+        "SELECT campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM campaign "
+        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED'"  # nosec: [B608]
+    )
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+
+    ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date)
+    campaigns: Dict[str, Campaign] = {}
+    for campaign_result in customer_result:
+        ad_groups = ad_groups_report.get(campaign_result["campaign"]["id"], {})
+        campaign = Campaign(
+            id=campaign_result["campaign"]["id"],
+            name=campaign_result["campaign"]["name"],
+            metrics=Metrics(
+                impressions=campaign_result["metrics"]["impressions"],
+                clicks=campaign_result["metrics"]["clicks"],
+                interactions=campaign_result["metrics"]["interactions"],
+                conversions=campaign_result["metrics"]["conversions"],
+                cost_micros=campaign_result["metrics"]["costMicros"],
+            ),
+            ad_groups=ad_groups,
+        )
+
+        campaigns[campaign.id] = campaign
+
+    return campaigns
+
+
+def get_daily_ad_group_ads_report(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> Dict[str, Dict[str, AdGroupAd]]:
+    query = (
+        "SELECT ad_group.id, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "FROM ad_group_ad "
+        f"WHERE segments.date = '{date}' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
+    )
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+
+    ad_group_ads_dict: Dict[str, Dict[str, AdGroupAd]] = defaultdict(dict)
+    for ad_group_ad_result in customer_result:
+        ad_group_ad = AdGroupAd(
+            id=ad_group_ad_result["adGroupAd"]["ad"]["id"],
+            final_urls=ad_group_ad_result["adGroupAd"]["ad"]["finalUrls"],
+            metrics=Metrics(
+                impressions=ad_group_ad_result["metrics"]["impressions"],
+                clicks=ad_group_ad_result["metrics"]["clicks"],
+                interactions=ad_group_ad_result["metrics"]["interactions"],
+                conversions=ad_group_ad_result["metrics"]["conversions"],
+                cost_micros=ad_group_ad_result["metrics"]["costMicros"],
+            ),
+        )
+        ad_group_ads_dict[ad_group_ad_result["adGroup"]["id"]][
+            ad_group_ad.id
+        ] = ad_group_ad
+
+    return ad_group_ads_dict
+
+
+def _calculate_update_metrics(
+    resource_id: str,
+    report: ResourceWithMetrics,
+    report_yesterday: Dict[str, ResourceWithMetrics],
+) -> None:
+    if resource_id not in report_yesterday:
+        return
+    report.metrics = calculate_metrics_change(
+        report.metrics, report_yesterday[resource_id].metrics
+    )
+
+
+def compare_reports(
+    report: Dict[str, Campaign],
+    report_yesterday: Dict[str, Campaign],
+) -> Dict[str, Campaign]:
+    for campaign_id, campaign in report.items():
+        _calculate_update_metrics(campaign_id, campaign, report_yesterday)  # type: ignore
+        for ad_group_id, ad_group in campaign.ad_groups.items():
+            _calculate_update_metrics(
+                ad_group_id, ad_group, report_yesterday[campaign_id].ad_groups  # type: ignore
+            )
+            for keyword_id, keyword in ad_group.keywords.items():
+                _calculate_update_metrics(
+                    keyword_id,
+                    keyword,
+                    report_yesterday[campaign_id].ad_groups[ad_group_id].keywords,  # type: ignore
+                )
+            for ad_group_ad_id, ad_group_ad in ad_group.ad_group_ads.items():
+                _calculate_update_metrics(
+                    ad_group_ad_id,
+                    ad_group_ad,
+                    report_yesterday[campaign_id].ad_groups[ad_group_id].ad_group_ads,  # type: ignore
+                )
+
+    return report
 
 
 def get_daily_report_for_customer(
     user_id: int, conv_id: int, customer_id: str, date: str
-) -> DailyCustomerReport:
-    daily_ad_group_ads_report = get_daily_ad_group_ads_report(
-        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
+) -> DailyCustomerReports2:
+    campaigns_report = get_campaigns_report(user_id, conv_id, customer_id, date)
+
+    datetime_date = datetime.strptime(date, "%Y-%m-%d").date()
+    previous_day = (datetime_date - timedelta(1)).isoformat()
+    yesterday_campaigns_report = get_campaigns_report(
+        user_id, conv_id, customer_id, previous_day
     )
 
-    return DailyCustomerReport(
-        customer_id=customer_id,
-        daily_ad_group_ads_report=daily_ad_group_ads_report,
+    compared_campaigns_report = compare_reports(
+        campaigns_report, yesterday_campaigns_report
+    )
+
+    return DailyCustomerReports2(
+        customer_id=customer_id, campaigns=compared_campaigns_report
     )
 
 
-def get_daily_report(date: Optional[str] = None, *, user_id: int, conv_id: int) -> str:
-    if date is None:
-        date = datetime.today().date().isoformat()
+def get_web_status_code_report_for_campaign(
+    campaign: Dict[str, Any], customer_id: str
+) -> Optional[str]:
+    warning_message = "<li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:\n<ul>\n"
+    send_warning_message_for_campaign = False
 
+    for ad_group_id, ad_group in campaign["ad_groups"].items():
+        for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
+            final_urls = ad_group_ad["final_urls"]
+            for final_url in final_urls:
+                if "http" not in final_url:
+                    final_url = f"https://{final_url}"
+                try:
+                    status_code = requests.head(
+                        final_url, allow_redirects=True, timeout=10
+                    ).status_code
+                except requests.ConnectionError:
+                    status_code = 0
+                if status_code < 200 or status_code >= 400:
+                    send_warning_message_for_campaign = True
+                    final_url_link = (
+                        f"<a href='{final_url}' target='_blank'>{final_url}</a>"
+                    )
+                    google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&&__e={customer_id}' target='_blank'>{ad_group_ad_id}</a>"
+                    warning_message += f"<li>Final url {final_url_link} used in Ad {google_ads_link} is <strong>not reachable</strong></li>\n"
+
+    warning_message += "</ul>\n</li>\n"
+    return warning_message if send_warning_message_for_campaign else None
+
+
+def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> str:
+    def add_metrics_message(
+        title: str, metrics: Dict[str, Optional[Union[int, float]]], field: str
+    ) -> str:
+        if field == "cost_micros":
+            value = metrics[field] / 1000000  # type: ignore
+        else:
+            value = metrics[field]  # type: ignore
+
+        increase = metrics[field + "_increase"]
+        if increase is None:
+            return f"<li>{title}: {value}</li>"
+        is_increase = "+" if increase >= 0 else ""
+
+        return f"<li>{title}: {value} ({is_increase}{increase}% compared to the day before)</li>"
+
+    message = "<h2>Daily Analysis:</h2>"
+    message += f"<p>Below is your daily analysis of your Google Ads campaigns for the date {date}</p>"
+    campaigns_report = daily_reports["daily_customer_reports"]
+    for customer_report in campaigns_report:
+        customer_id = customer_report["customer_id"]
+        message += f"<p>Customer <strong>{customer_id}</strong></p>"
+        message += "<ul>"
+        for _, campaign in customer_report["campaigns"].items():
+            link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
+            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong></li>"
+            message += "<ul>"
+            message += add_metrics_message("Clicks", campaign["metrics"], "clicks")
+            message += add_metrics_message(
+                "Conversions", campaign["metrics"], "conversions"
+            )
+            message += add_metrics_message(
+                "Cost per click", campaign["metrics"], "cost_micros"
+            )
+
+            warning_message = get_web_status_code_report_for_campaign(
+                campaign, customer_id
+            )
+            if warning_message:
+                message += warning_message
+
+            message += "</ul>"
+        message += "</ul>"
+
+    return message
+
+
+def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
     customer_ids: List[str] = list_accessible_customers(
         user_id=user_id, conv_id=conv_id
     )  # type: ignore
@@ -137,9 +383,11 @@ def get_daily_report(date: Optional[str] = None, *, user_id: int, conv_id: int) 
         )
         for customer_id in customer_ids
     ]
-    return DailyReport(daily_customer_reports=daily_customer_reports).model_dump_json(
-        indent=2
-    )
+    daily_report = DailyReport(
+        daily_customer_reports=daily_customer_reports
+    ).model_dump_json(indent=2)
+
+    return daily_report
 
 
 class DailyAnalysisTeam(Team):
@@ -148,7 +396,6 @@ class DailyAnalysisTeam(Team):
         execute_query_config,
         send_email_config,
         get_info_from_the_web_page_config,
-        get_daily_report_config,
     ]
 
     _shared_system_message = (
@@ -258,9 +505,7 @@ If the user isn't logged in, we will NOT be able to access the Google Ads API.
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
-6. Before doing anything else, get the daily report for the campaigns from the previous day by using the 'get_daily_report' command.
-Use ONLY the 'get_daily_report' command for retrieving Google Ads metrics (impressions, clicks, conversions, cost_micros etc.).
-DO NOT USE execute_query command for retrieving Google Ads metrics! Otherwise you will be penalized!
+6. DO NOT USE execute_query command for retrieving Google Ads metrics! Otherwise you will be penalized!
 7. Use the 'execute_query' command for finding the necessary informations about the campaigns, ad groups, ads, keywords etc.
 Do NOT use 'execute_query' command for retrieving Google Ads metrics (impressions, clicks, conversions, cost_micros etc.)!
 
@@ -272,18 +517,9 @@ Do NOT use 'execute_query' command for retrieving Google Ads metrics (impression
 'send_email' command
 Here an example on how to use the 'send_email' command:
 {
-    "daily_analysis": "<p>Below is your daily analysis of your Google Ads campaigns for the date 2024-01-31 compared to 2024-01-24 for customer ID 2324127278.</p>
-
-<p><strong>Campaign - xy</strong>, <strong>Ad Group - xy</strong>, Ad (<a href="https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518">Link to Ad</a>)</p>
-<ul>
-    <li>Clicks: xy clicks (xy% since last week)</li>
-    <li>Conversions: INR xy (-xy% since last week)</li>
-    <li>Cost per click: Decreased since last week</li>
-</ul>",
     "proposed_user_actions": ["Remove 'Free' keyword because it is not performing well", "Increase budget from $10/day to $20/day",
     "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'", "Select some or all of them"]
 }
-daily_analysis parameter will be used insid the HTML body of the email so make sure it has valid HTML tags!!!!
 
 propose_user_actions should NOT be general, but specific.
 'proposed_user_actions' BAD EXAMPLES:
@@ -296,7 +532,6 @@ These suggestions should be specific and actionable.
 'proposed_user_actions' GOOD EXAMPLES:
 "Remove 'Free' keyword because it is not performing well" is specific enough.
 "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'" is specific enough.
-
 
 
 12. There is a list of commands which you are able to execute in the 'Commands' section.
@@ -364,8 +599,8 @@ Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
 All team members have access to the following command:
-1. send_email: Send email to the client, params: (daily_analysis: string, proposed_user_actions: List[str]])
-The 'message' parameter must contain all information useful to the client, because the client does not see your team's conversation (only the information sent in the 'message' parameter)
+1. send_email: Send email to the client, params: (proposed_user_actions: List[str]])
+Each message in the 'proposed_user_actions' parameter must contain all information useful to the client, because the client does not see your team's conversation
 As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
 2. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
 It should be used only for the clients web page(s), final_url(s) etc.
@@ -388,8 +623,7 @@ SELECT ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_grou
 SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criterion.keyword.text, campaign_criterion.negative FROM campaign_criterion WHERE campaign_criterion.campaign = 'customers/2324127278/campaigns/20978334367' AND campaign_criterion.negative=TRUE"
 
 NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
-
-3. 'get_daily_report': Retrieve daily report for the campaigns, params: (date: str)
+You can execute the provided queries ONLY by using the 'execute_query' command!
 """
 
 
@@ -419,14 +653,10 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             query=query,
             work_dir=work_dir,
         ),
-        "send_email": lambda daily_analysis, proposed_user_actions: send_email(
-            daily_analysis=daily_analysis,
+        "send_email": lambda proposed_user_actions: send_email(
             proposed_user_actions=proposed_user_actions,
         ),
         "get_info_from_the_web_page": get_info_from_the_web_page,
-        "get_daily_report": lambda date: get_daily_report(
-            date=date, user_id=user_id, conv_id=conv_id
-        ),
     }
 
     return function_map
@@ -448,7 +678,6 @@ def _create_final_html_message(
 </head>
 <body>
 
-<h2>Daily Analysis:</h2>
 {initial_message_in_chat}
 """
 
@@ -501,51 +730,60 @@ def _get_conv_id_and_send_email(
     return conv_id  # type: ignore
 
 
-def execute_daily_analysis(task: Optional[str] = None) -> None:
+def execute_daily_analysis(
+    send_only_to_emails: Optional[List[str]] = None,
+    date: Optional[str] = None,
+) -> None:
+    if date is None:
+        date = (datetime.today().date() - timedelta(1)).isoformat()
     print("Starting daily analysis.")
     id_email_dict = json.loads(get_user_ids_and_emails())
 
-    send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
+    if send_only_to_emails is None:
+        send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
     for user_id, email in id_email_dict.items():
         if email not in send_only_to_emails:
             print(
                 f"Skipping user_id: {user_id} - email {email} (current implementation)"
             )
             continue
-        current_date = datetime.today().strftime("%Y-%m-%d")
-        if task is None:
-            task = f"""
-        Current date is: {current_date}.
-        You need compare the ads performance between yesterday and the same day of the previous week (-7 days).
-        - Clicks
-        - Conversions
-        - Cost per click (display in customer local currency)
-
-        Check which ads have the highest cost and which have the highest number of conversions.
-        If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
-        At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
-        - pause the ads with the highest cost and the lowest number of conversions.
-        - keywords analysis (add negative keywords, add positive keywords, change match type etc).
-        - ad copy analysis (change the ad copy, add more ads etc).
-            """
-
-        conv_id = 100
-        daily_analysis_team = DailyAnalysisTeam(
-            task=task,
-            user_id=user_id,
-            conv_id=conv_id,
-        )
         try:
-            # REMOVE THE MOCK AFTER DEMO
-            with unittest.mock.patch(
-                "captn.captn_agents.backend.daily_analysis_team.get_daily_report"
-            ) as mock_daily_report:
-                return_value1 = '{\n  "daily_customer_reports": [\n    {\n      "customer_id": "2324127278",\n      "daily_ad_group_ads_report": [\n        {\n          "ad_id": "688768033895",\n          "campaign": {\n            "id": "20761810762",\n            "name": "Website traffic-Search-3-updated-up"\n          },\n          "ad_group": {\n            "id": "156261983518",\n            "name": "fastapi get super-dooper-cool"\n          },\n          "metrics": {\n            "impressions": 402,\n            "clicks": 121,\n            "interactions": 129,\n            "conversions": 15,\n            "cost_micros": 129000\n          }\n        },\n        {\n          "ad_id": "689256163801",\n          "campaign": {\n            "id": "20978334367",\n            "name": "Book-Shop1"\n          },\n          "ad_group": {\n            "id": "161283342474",\n            "name": "Books Bestsellers"\n          },\n          "metrics": {\n            "impressions": 53,\n            "clicks": 9,\n            "interactions": 9,\n            "conversions": 2,\n            "cost_micros": 1000\n          }\n        }\n      ]\n    }\n  ]\n}'
-                return_value2 = '{\n  "daily_customer_reports": [\n    {\n      "customer_id": "2324127278",\n      "daily_ad_group_ads_report": [\n        {\n          "ad_id": "688768033895",\n          "campaign": {\n            "id": "20761810762",\n            "name": "Website traffic-Search-3-updated-up"\n          },\n          "ad_group": {\n            "id": "156261983518",\n            "name": "fastapi get super-dooper-cool"\n          },\n          "metrics": {\n            "impressions": 433,\n            "clicks": 129,\n            "interactions": 135,\n            "conversions": 21,\n            "cost_micros": 153000\n          }\n        },\n        {\n          "ad_id": "689256163801",\n          "campaign": {\n            "id": "20978334367",\n            "name": "Book-Shop1"\n          },\n          "ad_group": {\n            "id": "161283342474",\n            "name": "Books Bestsellers"\n          },\n          "metrics": {\n            "impressions": 22,\n            "clicks": 3,\n            "interactions": 4,\n            "conversions": 1,\n            "cost_micros": 800\n          }\n        }\n      ]\n    }\n  ]\n}'
+            # Always get the daily report for the previous day
+            conv_id = 100
+            daily_reports = get_daily_report(
+                date=date, user_id=user_id, conv_id=conv_id
+            )
 
-                mock_daily_report.side_effect = [return_value1, return_value2]
-                # ===============
-                daily_analysis_team.initiate_chat()
+            daily_report_message = construct_daily_report_message(
+                daily_reports=json.loads(daily_reports), date=date
+            )
+
+            task = f"""
+You need to perform Google Ads Analysis for date: {date}.
+
+Check which ads have the highest cost and which have the highest number of conversions.
+If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
+At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
+- pause the ads with the highest cost and the lowest number of conversions.
+- keywords analysis (add negative keywords, add positive keywords, change match type etc).
+- ad copy analysis (change the ad copy, add more ads etc).
+
+I have prepared you a JSON file with the daily report for the wanted date. Use it to suggest the next steps to the client.
+{daily_reports}
+
+
+Here is also a HTML summary of the daily report which will be sent to the client:
+{daily_report_message}
+
+Please propose the next steps and send the email to the client.
+"""
+
+            daily_analysis_team = DailyAnalysisTeam(
+                task=task,
+                user_id=user_id,
+                conv_id=conv_id,
+            )
+            daily_analysis_team.initiate_chat()
             last_message = daily_analysis_team.get_last_message(add_prefix=False)
 
             messages_list = daily_analysis_team.groupchat.messages
@@ -564,9 +802,7 @@ def execute_daily_analysis(task: Optional[str] = None) -> None:
                     user_id=user_id,
                     client_email=email,
                     messages=messages,
-                    initial_message_in_chat=last_message_json[
-                        "initial_message_in_chat"
-                    ],
+                    initial_message_in_chat=daily_report_message,
                     proposed_user_action=last_message_json["proposed_user_action"],
                 )
             else:
