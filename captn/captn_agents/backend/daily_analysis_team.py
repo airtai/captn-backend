@@ -78,6 +78,7 @@ class Campaign(ResourceWithMetrics):
 
 class DailyCustomerReports2(BaseModel):
     customer_id: str
+    currency: str
     campaigns: Dict[str, Campaign]
 
 
@@ -328,8 +329,13 @@ def get_daily_report_for_customer(
         campaigns_report, yesterday_campaigns_report
     )
 
+    query = "SELECT customer.currency_code FROM customer"
+    result = execute_query(
+        user_id=1, conv_id=1, customer_ids=[customer_id], query=query
+    )
+    currency = ast.literal_eval(result)[customer_id][0]["customer"]["currencyCode"]  # type: ignore
     return DailyCustomerReports2(
-        customer_id=customer_id, campaigns=compared_campaigns_report
+        customer_id=customer_id, currency=currency, campaigns=compared_campaigns_report
     )
 
 
@@ -365,7 +371,10 @@ def get_web_status_code_report_for_campaign(
 
 def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> str:
     def add_metrics_message(
-        title: str, metrics: Dict[str, Optional[Union[int, float]]], field: str
+        title: str,
+        metrics: Dict[str, Optional[Union[int, float]]],
+        field: str,
+        currency: str = "",
     ) -> str:
         if field == "cost_micros":
             value = metrics[field] / 1000000  # type: ignore
@@ -375,15 +384,24 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
         increase = metrics[field + "_increase"]
         if increase is None:
             return f"<li>{title}: {value}</li>"
-        is_increase = "+" if increase >= 0 else ""
 
-        return f"<li>{title}: {value} ({is_increase}{increase}% compared to the day before)</li>"
+        if increase > 0:
+            is_increase = f"Increase of {increase}% compared to the previous day"
+        elif increase < 0:
+            is_increase = f"Decrease of {abs(increase)}% compared to the previous day"
+        else:
+            is_increase = "No change from previous day"
 
-    message = "<h2>Daily Analysis:</h2>"
-    message += f"<p>Below is your daily analysis of your Google Ads campaigns for the date {date}</p>"
+        if currency:
+            currency = f" {currency}"
+        return f"<li>{title}: {value}{currency} ({is_increase})</li>"
+
+    message = f"<h2>Daily Google Ads Performance Report - {date}</h2>"
+    message += f"<p>We're here with your daily analysis of your Google Ads campaigns for {date}. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p>"
     campaigns_report = daily_reports["daily_customer_reports"]
     for customer_report in campaigns_report:
         customer_id = customer_report["customer_id"]
+        currency = customer_report["currency"]
         message += f"<p>Customer <strong>{customer_id}</strong></p>"
         message += "<ul>"
         for _, campaign in customer_report["campaigns"].items():
@@ -395,7 +413,7 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
                 "Conversions", campaign["metrics"], "conversions"
             )
             message += add_metrics_message(
-                "Cost per click", campaign["metrics"], "cost_micros"
+                "Cost per click", campaign["metrics"], "cost_micros", currency=currency
             )
 
             warning_message = get_web_status_code_report_for_campaign(
