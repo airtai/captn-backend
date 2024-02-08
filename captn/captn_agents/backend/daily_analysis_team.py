@@ -39,12 +39,24 @@ class Metrics(BaseModel):
     cost_micros_increase: Optional[float] = None
 
 
+class KeywordMetrics(Metrics):
+    historical_quality_score: Optional[int] = None
+    historical_landing_page_quality_score: Optional[str] = None
+    historical_creative_quality_score: Optional[str] = None
+    historical_quality_score_increase: Optional[float] = None
+
+
 class ResourceWithMetrics(BaseModel):
     id: str
     metrics: Metrics
 
 
-class Keyword(ResourceWithMetrics):
+class ResourceWithKeywordMetrics(BaseModel):
+    id: str
+    metrics: KeywordMetrics
+
+
+class Keyword(ResourceWithKeywordMetrics):
     text: str
     match_type: str
 
@@ -76,10 +88,12 @@ class DailyReport(BaseModel):
 def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
     return_metrics = {}
     for key, value in metrics1.__dict__.items():
-        if key.endswith("_increase"):
+        if key.endswith("_increase") or value is None:
             continue
 
         return_metrics[key] = value
+        if isinstance(value, str):
+            continue
 
         value2 = getattr(metrics2, key)
         if value == value2:
@@ -91,6 +105,9 @@ def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
                 (float(value - value2) / value2) * 100, 2
             )
 
+    if isinstance(metrics1, KeywordMetrics):
+        return KeywordMetrics(**return_metrics)
+
     return Metrics(**return_metrics)
 
 
@@ -98,7 +115,8 @@ def get_daily_keywords_report(
     user_id: int, conv_id: int, customer_id: str, date: str
 ) -> Dict[str, Dict[str, Keyword]]:
     query = (
-        "SELECT ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
+        "SELECT ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros, "
+        "metrics.historical_quality_score, metrics.historical_landing_page_quality_score, metrics.historical_creative_quality_score "
         "FROM keyword_view "
         f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "  # nosec: [B608]
     )
@@ -109,16 +127,35 @@ def get_daily_keywords_report(
 
     ad_group_keywords_dict: Dict[str, Dict[str, Keyword]] = defaultdict(dict)
     for customer_result in customer_results:
+        historical_quality_score = (
+            customer_result["metrics"]["historicalQualityScore"]
+            if "historicalQualityScore" in customer_result["metrics"]
+            else None
+        )
+        historical_landing_page_quality_score = (
+            customer_result["metrics"]["historicalLandingPageQualityScore"]
+            if "historicalLandingPageQualityScore" in customer_result["metrics"]
+            else None
+        )
+        historical_creative_quality_score = (
+            customer_result["metrics"]["historicalCreativeQualityScore"]
+            if "historicalCreativeQualityScore" in customer_result["metrics"]
+            else None
+        )
+
         keyword = Keyword(
             id=customer_result["adGroupCriterion"]["criterionId"],
             text=customer_result["adGroupCriterion"]["keyword"]["text"],
             match_type=customer_result["adGroupCriterion"]["keyword"]["matchType"],
-            metrics=Metrics(
+            metrics=KeywordMetrics(
                 impressions=customer_result["metrics"]["impressions"],
                 clicks=customer_result["metrics"]["clicks"],
                 interactions=customer_result["metrics"]["interactions"],
                 conversions=customer_result["metrics"]["conversions"],
                 cost_micros=customer_result["metrics"]["costMicros"],
+                historical_quality_score=historical_quality_score,
+                historical_landing_page_quality_score=historical_landing_page_quality_score,
+                historical_creative_quality_score=historical_creative_quality_score,
             ),
         )
 
@@ -240,8 +277,8 @@ def get_daily_ad_group_ads_report(
 
 def _calculate_update_metrics(
     resource_id: str,
-    report: ResourceWithMetrics,
-    report_yesterday: Dict[str, ResourceWithMetrics],
+    report: Union[ResourceWithMetrics, ResourceWithKeywordMetrics],
+    report_yesterday: Dict[str, Union[ResourceWithMetrics, ResourceWithKeywordMetrics]],
 ) -> None:
     if resource_id not in report_yesterday:
         return
@@ -319,7 +356,7 @@ def get_web_status_code_report_for_campaign(
                     final_url_link = (
                         f"<a href='{final_url}' target='_blank'>{final_url}</a>"
                     )
-                    google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&&__e={customer_id}' target='_blank'>{ad_group_ad_id}</a>"
+                    google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&__e={customer_id}' target='_blank'>{ad_group_ad_id}</a>"
                     warning_message += f"<li>Final url {final_url_link} used in Ad {google_ads_link} is <strong>not reachable</strong></li>\n"
 
     warning_message += "</ul>\n</li>\n"
