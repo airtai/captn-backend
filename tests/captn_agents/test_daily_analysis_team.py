@@ -9,6 +9,7 @@ from captn.captn_agents.backend.daily_analysis_team import (
     AdGroupAd,
     Campaign,
     Keyword,
+    KeywordMetrics,
     Metrics,
     _get_conv_id_and_send_email,
     calculate_metrics_change,
@@ -17,6 +18,7 @@ from captn.captn_agents.backend.daily_analysis_team import (
     execute_daily_analysis,
     get_campaigns_report,
     get_daily_ad_group_ads_report,
+    get_daily_keywords_report,
     get_web_status_code_report_for_campaign,
 )
 
@@ -48,6 +50,47 @@ def test_metrics() -> None:
         interactions_increase=-4.44,
         conversions_increase=0.0,
         cost_micros_increase=-15.69,
+    )
+    assert excepted == metrics_new
+
+
+def test_keywords_metrics() -> None:
+    metrics1 = KeywordMetrics(
+        impressions=402,
+        clicks=121,
+        interactions=129,
+        conversions=0,
+        cost_micros=129000,
+        historical_quality_score=3,
+        historical_landing_page_quality_score="BELOW_AVERAGE",
+        historical_creative_quality_score="ABOVE_AVERAGE",
+    )
+    metrics2 = KeywordMetrics(
+        impressions=433,
+        clicks=100,
+        interactions=135,
+        conversions=0,
+        cost_micros=153000,
+        historical_quality_score=4,
+        historical_landing_page_quality_score="BELOW_AVERAGE",
+        historical_creative_quality_score="ABOVE_AVERAGE",
+    )
+    metrics_new = calculate_metrics_change(metrics1, metrics2)
+    excepted = KeywordMetrics(
+        impressions=402,
+        clicks=121,
+        interactions=129,
+        conversions=0,
+        cost_micros=129000,
+        historical_quality_score=3,
+        historical_landing_page_quality_score="BELOW_AVERAGE",
+        historical_creative_quality_score="ABOVE_AVERAGE",
+        impressions_increase=-7.16,
+        clicks_increase=21.0,
+        interactions_increase=-4.44,
+        conversions_increase=0.0,
+        cost_micros_increase=-15.69,
+        historical_quality_score_increase=-25.0,
     )
     assert excepted == metrics_new
 
@@ -232,6 +275,159 @@ def test_get_daily_ad_group_ads_report() -> None:
         assert expected == daily_ad_group_ads_report
 
 
+def test_get_daily_keywords_report() -> None:
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.daily_analysis_team.execute_query"
+    ) as mock_execute_query:
+        mock_execute_query.return_value = str(
+            {
+                "7119828439": [
+                    {
+                        "adGroup": {
+                            "resourceName": "customers/7119828439/adGroups/155431182157",
+                            "id": "155431182157",
+                        },
+                        "metrics": {
+                            "historicalCreativeQualityScore": "ABOVE_AVERAGE",
+                            "historicalLandingPageQualityScore": "BELOW_AVERAGE",
+                            "clicks": "1",
+                            "conversions": 0.0,
+                            "costMicros": "890000",
+                            "historicalQualityScore": "3",
+                            "impressions": "8",
+                            "interactions": "1",
+                        },
+                        "adGroupCriterion": {
+                            "resourceName": "customers/7119828439/adGroupCriteria/155431182157~51919090",
+                            "keyword": {"matchType": "BROAD", "text": "NATS"},
+                            "criterionId": "51919090",
+                        },
+                        "keywordView": {
+                            "resourceName": "customers/7119828439/keywordViews/155431182157~51919090"
+                        },
+                    },
+                    {
+                        "adGroup": {
+                            "resourceName": "customers/7119828439/adGroups/155431182157",
+                            "id": "155431182157",
+                        },
+                        "metrics": {
+                            "historicalCreativeQualityScore": "ABOVE_AVERAGE",
+                            "historicalLandingPageQualityScore": "BELOW_AVERAGE",
+                            "clicks": "0",
+                            "conversions": 0.0,
+                            "costMicros": "0",
+                            "historicalQualityScore": "3",
+                            "impressions": "34",
+                            "interactions": "0",
+                        },
+                        "adGroupCriterion": {
+                            "resourceName": "customers/7119828439/adGroupCriteria/155431182157~302418213753",
+                            "keyword": {"matchType": "BROAD", "text": "RabbitMQ"},
+                            "criterionId": "302418213753",
+                        },
+                        "keywordView": {
+                            "resourceName": "customers/7119828439/keywordViews/155431182157~302418213753"
+                        },
+                    },
+                    {
+                        "adGroup": {
+                            "resourceName": "customers/7119828439/adGroups/155431182157",
+                            "id": "155431182157",
+                        },
+                        "metrics": {
+                            "historicalCreativeQualityScore": "ABOVE_AVERAGE",
+                            "historicalLandingPageQualityScore": "BELOW_AVERAGE",
+                            "clicks": "9",
+                            "conversions": 0.0,
+                            "costMicros": "1940000",
+                            "historicalQualityScore": "3",
+                            "impressions": "106",
+                            "interactions": "9",
+                        },
+                        "adGroupCriterion": {
+                            "resourceName": "customers/7119828439/adGroupCriteria/155431182157~340537812163",
+                            "keyword": {"matchType": "BROAD", "text": "Apache Kafka"},
+                            "criterionId": "340537812163",
+                        },
+                        "keywordView": {
+                            "resourceName": "customers/7119828439/keywordViews/155431182157~340537812163"
+                        },
+                    },
+                ]
+            }
+        )
+        daily_keywords_report = get_daily_keywords_report(
+            user_id=1, conv_id=1, customer_id="7119828439", date="2024-01-29"
+        )
+
+        expected = {
+            "155431182157": {
+                "51919090": Keyword(
+                    id="51919090",
+                    metrics=KeywordMetrics(
+                        impressions=8,
+                        clicks=1,
+                        interactions=1,
+                        conversions=0,
+                        cost_micros=890000,
+                        impressions_increase=None,
+                        clicks_increase=None,
+                        interactions_increase=None,
+                        conversions_increase=None,
+                        cost_micros_increase=None,
+                        historical_quality_score=3,
+                        historical_landing_page_quality_score="BELOW_AVERAGE",
+                        historical_creative_quality_score="ABOVE_AVERAGE",
+                    ),
+                    text="NATS",
+                    match_type="BROAD",
+                ),
+                "302418213753": Keyword(
+                    id="302418213753",
+                    metrics=KeywordMetrics(
+                        impressions=34,
+                        clicks=0,
+                        interactions=0,
+                        conversions=0,
+                        cost_micros=0,
+                        impressions_increase=None,
+                        clicks_increase=None,
+                        interactions_increase=None,
+                        conversions_increase=None,
+                        cost_micros_increase=None,
+                        historical_quality_score=3,
+                        historical_landing_page_quality_score="BELOW_AVERAGE",
+                        historical_creative_quality_score="ABOVE_AVERAGE",
+                    ),
+                    text="RabbitMQ",
+                    match_type="BROAD",
+                ),
+                "340537812163": Keyword(
+                    id="340537812163",
+                    metrics=KeywordMetrics(
+                        impressions=106,
+                        clicks=9,
+                        interactions=9,
+                        conversions=0,
+                        cost_micros=1940000,
+                        impressions_increase=None,
+                        clicks_increase=None,
+                        interactions_increase=None,
+                        conversions_increase=None,
+                        cost_micros_increase=None,
+                        historical_quality_score=3,
+                        historical_landing_page_quality_score="BELOW_AVERAGE",
+                        historical_creative_quality_score="ABOVE_AVERAGE",
+                    ),
+                    text="Apache Kafka",
+                    match_type="BROAD",
+                ),
+            }
+        }
+        assert expected == daily_keywords_report
+
+
 def test_compare_reports() -> None:
     first_report = {
         "20750580900": Campaign(
@@ -258,7 +454,7 @@ def test_compare_reports() -> None:
                             id="51919090",
                             text="NATS",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=8,
                                 clicks=1,
                                 interactions=1,
@@ -275,7 +471,7 @@ def test_compare_reports() -> None:
                             id="302418213753",
                             text="RabbitMQ",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=34,
                                 clicks=0,
                                 interactions=0,
@@ -292,7 +488,7 @@ def test_compare_reports() -> None:
                             id="340537812163",
                             text="Apache Kafka",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=106,
                                 clicks=9,
                                 interactions=9,
@@ -365,7 +561,7 @@ def test_compare_reports() -> None:
                             id="51919090",
                             text="NATS",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=3,
                                 clicks=0,
                                 interactions=0,
@@ -382,7 +578,7 @@ def test_compare_reports() -> None:
                             id="302418213753",
                             text="RabbitMQ",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=13,
                                 clicks=2,
                                 interactions=2,
@@ -399,7 +595,7 @@ def test_compare_reports() -> None:
                             id="340537812163",
                             text="Apache Kafka",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=98,
                                 clicks=5,
                                 interactions=5,
@@ -474,7 +670,7 @@ def test_compare_reports() -> None:
                             id="51919090",
                             text="NATS",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=8,
                                 clicks=1,
                                 interactions=1,
@@ -491,7 +687,7 @@ def test_compare_reports() -> None:
                             id="302418213753",
                             text="RabbitMQ",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=34,
                                 clicks=0,
                                 interactions=0,
@@ -508,7 +704,7 @@ def test_compare_reports() -> None:
                             id="340537812163",
                             text="Apache Kafka",
                             match_type="BROAD",
-                            metrics=Metrics(
+                            metrics=KeywordMetrics(
                                 impressions=106,
                                 clicks=9,
                                 interactions=9,
@@ -942,8 +1138,8 @@ def test_get_web_status_code_report_for_campaign() -> None:
     warning_message = get_web_status_code_report_for_campaign(campaign, customer_id)
     expected = """<li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:
 <ul>
-<li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
-<li>Final url <a href='https://airt.ai/bad' target='_blank'>https://airt.ai/bad</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+<li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+<li>Final url <a href='https://airt.ai/bad' target='_blank'>https://airt.ai/bad</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
 </ul>
 </li>\n"""
     assert expected == warning_message
@@ -953,8 +1149,8 @@ def test_construct_campaign_report_message() -> None:
     message = construct_daily_report_message(daily_report, date="2024-02-05")
     expected = """<h2>Daily Analysis:</h2><p>Below is your daily analysis of your Google Ads campaigns for the date 2024-02-05</p><p>Customer <strong>2324127278</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20761810762&__e=2324127278' target='_blank'>Website traffic-Search-3-updated-up</a></strong></li><ul><li>Clicks: 5 (-42.86% compared to the day before)</li><li>Conversions: 0.0 (+0.0% compared to the day before)</li><li>Cost per click: 0.022222 (-32.94% compared to the day before)</li><li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:
 <ul>
-<li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
-<li>Final url <a href='https://also-not-reachable.airt.ai/' target='_blank'>https://also-not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+<li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+<li>Final url <a href='https://also-not-reachable.airt.ai/' target='_blank'>https://also-not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
 </ul>
 </li>
 </ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20979579987&__e=2324127278' target='_blank'>Empty</a></strong></li><ul><li>Clicks: 0 (+0% compared to the day before)</li><li>Conversions: 0.0 (+0% compared to the day before)</li><li>Cost per click: 0.0 (+0% compared to the day before)</li></ul></ul><p>Customer <strong>7119828439</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20750580900&__e=7119828439' target='_blank'>faststream-web-search</a></strong></li><ul><li>Clicks: 10</li><li>Conversions: 0.0 (+0.0% compared to the day before)</li><li>Cost per click: 2.83 (-32.94% compared to the day before)</li></ul></ul>"""
