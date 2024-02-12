@@ -30,13 +30,16 @@ def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
 
 
 def list_accessible_customers(
-    user_id: int, conv_id: int
+    user_id: int, conv_id: int, get_only_non_manager_accounts: bool = False
 ) -> Union[List[str], Dict[str, str]]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response
 
-    params = {"user_id": user_id}
+    params = {
+        "user_id": user_id,
+        "get_only_non_manager_accounts": get_only_non_manager_accounts,
+    }
     response = requests.get(
         f"{BASE_URL}/list-accessible-customers", params=params, timeout=60
     )

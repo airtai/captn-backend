@@ -209,7 +209,10 @@ def create_google_ads_client(
 
 # Route 3: List accessible customer ids
 @router.get("/list-accessible-customers")
-async def list_accessible_customers(user_id: int = Query(title="User ID")) -> List[str]:
+async def list_accessible_customers(
+    user_id: int = Query(title="User ID"),
+    get_only_non_manager_accounts: bool = Query(title="Only non manager accounts"),
+) -> List[str]:
     try:
         user_credentials = await load_user_credentials(user_id)
         client = create_google_ads_client(user_credentials)
@@ -219,7 +222,29 @@ async def list_accessible_customers(user_id: int = Query(title="User ID")) -> Li
         )()
 
         customer_ids = [x.split("/")[-1] for x in accessible_customers.resource_names]
-        return customer_ids
+        if len(customer_ids) == 0 or not get_only_non_manager_accounts:
+            return customer_ids
+
+        # Return only non Manager accounts!
+        try:
+            query = (
+                "SELECT customer.id, customer.descriptive_name, customer.manager, customer.test_account "
+                "FROM customer_client"
+            )
+            customers = await search(
+                user_id=user_id, customer_ids=customer_ids, query=query
+            )
+
+            non_manager_customer_ids = []
+            for customer_id, result in customers.items():
+                is_manager = result[0]["customer"]["manager"]
+                if not is_manager:
+                    non_manager_customer_ids.append(customer_id)
+
+            return non_manager_customer_ids
+        except Exception as e:
+            print(e)
+            return []
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)

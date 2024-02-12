@@ -331,7 +331,7 @@ def get_daily_report_for_customer(
 
     query = "SELECT customer.currency_code FROM customer"
     result = execute_query(
-        user_id=1, conv_id=1, customer_ids=[customer_id], query=query
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
     )
     currency = ast.literal_eval(result)[customer_id][0]["customer"]["currencyCode"]  # type: ignore
     return DailyCustomerReports2(
@@ -430,7 +430,7 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
 
 def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
     customer_ids: List[str] = list_accessible_customers(
-        user_id=user_id, conv_id=conv_id
+        user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
     )  # type: ignore
     daily_customer_reports = [
         get_daily_report_for_customer(
@@ -699,7 +699,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
 
     function_map = {
         "list_accessible_customers": lambda: list_accessible_customers(
-            user_id=user_id, conv_id=conv_id
+            user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
         ),
         "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
             user_id=user_id,
@@ -864,6 +864,8 @@ Please propose the next steps and send the email to the client.
                 raise ValueError(
                     f"Send email function is not called for user_id: {user_id} - email {email}!"
                 )
+        except Exception as e:
+            print(e)
         finally:
             Team.pop_team(team_name=daily_analysis_team.name)
     print("Daily analysis completed.")
