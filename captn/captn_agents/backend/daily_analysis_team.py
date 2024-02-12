@@ -802,6 +802,8 @@ def execute_daily_analysis(
                 f"Skipping user_id: {user_id} - email {email} (current implementation)"
             )
             continue
+
+        daily_analysis_team = None
         try:
             # Always get the daily report for the previous day
             conv_id = 100
@@ -867,5 +869,6 @@ Please propose the next steps and send the email to the client.
         except Exception as e:
             print(e)
         finally:
-            Team.pop_team(team_name=daily_analysis_team.name)
+            if daily_analysis_team:
+                Team.pop_team(team_name=daily_analysis_team.name)
     print("Daily analysis completed.")

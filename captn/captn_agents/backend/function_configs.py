@@ -357,6 +357,14 @@ Client must be informed about everything!""",
         "type": "string",
         "description": "The page on the website that people reach when they click the ad. final_url must use HTTP or HTTPS protocol. The url should only contain the website domain WITHOUT the path. e.g. https://www.example.com",
     },
+    "path1": {
+        "type": "string",
+        "description": "First part of text that can be appended to the URL in the ad. To delete the current value, set this field to an empty string. This field can ONLY be set to empty when path2 is also empty!",
+    },
+    "path2": {
+        "type": "string",
+        "description": "Second part of text that can be appended to the URL in the ad. This field can ONLY be set when path1 is also set! To delete the current value, set this field to an empty string.",
+    },
 }
 
 
@@ -457,6 +465,7 @@ update_ad_group_ad_config = {
 create_ad_group_ad_config = {
     "name": "create_ad_group_ad",
     "description": f"""Create Google Ad.
+It is not mandatory but it is recommended to use (Display) path1 and path2 parameters.
 Use this method only when the client approves the creation of the new Ad, ALL the headlines, descriptions and final_url.
 {MODIFICATION_WARNING}""",
     "parameters": {
@@ -483,6 +492,8 @@ Use this method only when the client approves the creation of the new Ad, ALL th
                 "description": "List of descriptions, MINIMUM 2, MAXIMUM 4 descriptions. Each description MUST be LESS than 90 characters!",
             },
             "final_url": properties_config["final_url"],
+            "path1": properties_config["path1"],
+            "path2": properties_config["path2"],
         },
         "required": [
             "customer_id",
@@ -677,6 +688,8 @@ Use this parameter ONLY when you want to modify existing description!""",
                 "type": "string",
                 "description": "Ad Copy final_mobile_urls",
             },
+            "path1": properties_config["path1"],
+            "path2": properties_config["path2"],
         },
         "required": [
             "customer_id",
