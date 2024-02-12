@@ -55,11 +55,12 @@ class Team:
             raise ValueError(f"Unknown team name: '{team_name}'") from e
 
     @staticmethod
-    def pop_team(team_name: str) -> "Team":
+    def pop_team(team_name: str) -> Optional["Team"]:
         try:
             return Team._teams.pop(team_name)
-        except KeyError as e:
-            raise ValueError(f"Unknown team name: '{team_name}'") from e
+        except KeyError:
+            return None
+            # raise ValueError(f"Unknown team name: '{team_name}'") from e
 
     @staticmethod
     def get_user_conv_team_name(name_prefix: str, user_id: int, conv_id: int) -> str:
