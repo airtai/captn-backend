@@ -29,6 +29,8 @@ class AdGroupAd(AdGroup):
     final_url: Optional[str] = None
     headlines: Optional[List[str]] = Field(Query(default=None), max_length=15)
     descriptions: Optional[List[str]] = Field(Query(default=None), max_length=4)
+    path1: Optional[str] = None
+    path2: Optional[str] = None
 
     @classmethod
     def validate_field(
@@ -80,6 +82,8 @@ class AdCopy(AdBase):
     update_existing_description_index: Optional[int] = None
     final_url: Optional[str] = None
     final_mobile_urls: Optional[str] = None
+    path1: Optional[str] = None
+    path2: Optional[str] = None
 
 
 class Criterion(AdBase):

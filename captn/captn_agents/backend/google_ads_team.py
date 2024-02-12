@@ -298,7 +298,7 @@ If you are asked to optimize campaigns, start with updating ad copy or creating/
 This command can be very useful for figuring out the clients business and what he wants to achieve.
 Before asking the client for additional information, ask him for his company/product url and try to figure out as much as possible yourself (WITHOUT doing any permanent modifications).
 - analyse keywords and find out which are (i)relevant for clients business and suggest some create/update/remove actions
-- Take a look at ad copy (headlines, descriptions, urls...) and make suggestions on what should be changed (create/update/remove headlines etc.)
+- Take a look at ad copy (headlines, descriptions, urls, (display) path1/path2...) and make suggestions on what should be changed (create/update/remove headlines etc.)
 - Headlines can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length!
 
 Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
@@ -412,7 +412,7 @@ with the 'execute_query' command and the following 'query':
 4. 'update_ad_copy': Update the Google Ads Copy, params: (customer_id: string, ad_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 headline: Optional[str], description: Optional[str], update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str],
-final_url: Optional[str], final_mobile_urls: Optional[str])
+final_url: Optional[str], final_mobile_urls: Optional[str], path1: Optional[str], path2: Optional[str])
 
 5. 'update_ad_group': Update the Google Ads Group, params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
@@ -456,11 +456,12 @@ headline: Optional[str], description: Optional[str])
 
 13. 'create_ad_group_ad': Create new ad group ad, params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean, status: Optional[Literal["ENABLED", "PAUSED"]],
-headlines: List[str], descriptions: List[str], final_url: List[str])
+headlines: List[str], descriptions: List[str], final_url: List[str], path1: Optional[str], path2: Optional[str])
 You can suggest final_url within the smart suggestions if the client has provided it in the customer brief.
 If not, do not suggest the final_url, it must be provided by the client.
 When suggesting headlines and descriptions, use 15 headlines and 4 descriptions (if not explicitly told differently).
 And make sure to follow the restrictions for the headlines and descriptions (MAXIMUM 30 characters for headlines and MAXIMUM 90 characters for descriptions)
+Use display path (path1 and path2) to increase the relevance of the ad to the user's search query.
 
 14. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
@@ -612,6 +613,8 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 update_existing_description_index=None,
                 final_url=None,
                 final_mobile_urls=None,
+                path1=None,
+                path2=None,
             ),
             endpoint="/create-update-ad-copy",
         ),
@@ -720,7 +723,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/add-keywords-to-ad-group",
         ),
-        "create_ad_group_ad": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, headlines, descriptions, final_url, status=None: google_ads_create_update(
+        "create_ad_group_ad": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, headlines, descriptions, final_url, path1=None, path2=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_approval_message=clients_approval_message,
@@ -732,6 +735,8 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 headlines=headlines,
                 descriptions=descriptions,
                 final_url=final_url,
+                path1=path1,
+                path2=path2,
             ),
             endpoint="/create-ad-group-ad",
         ),
@@ -815,6 +820,8 @@ def _get_update_ad_copy(
         update_existing_description_index: Optional[int] = None,
         final_url: Optional[str] = None,
         final_mobile_urls: Optional[str] = None,
+        path1: Optional[str] = None,
+        path2: Optional[str] = None,
     ) -> Union[Dict[str, Any], str]:
         if headline and not update_existing_headline_index:
             raise ValueError(
@@ -839,6 +846,8 @@ def _get_update_ad_copy(
                 update_existing_description_index=update_existing_description_index,
                 final_url=final_url,
                 final_mobile_urls=final_mobile_urls,
+                path1=path1,
+                path2=path2,
             ),
             endpoint="/create-update-ad-copy",
         )

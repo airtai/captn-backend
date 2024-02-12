@@ -375,6 +375,26 @@ def _set_headline_or_description(
     getattr(operation_update.responsive_search_ad, update_field).extend(updated_fields)
 
 
+def _update_ad_copy_display_path(
+    operation_create_update_responsive_search_ad: Any,
+    path1: Optional[str],
+    path2: Optional[str],
+) -> None:
+    print(f"{path1=}, {path2=}")
+    if path1 is not None:
+        operation_create_update_responsive_search_ad.path1 = (
+            path1 if path1 != "" else " "
+        )
+    if path2 is not None:
+        if path2 == "":
+            operation_create_update_responsive_search_ad.path2 = " "
+            return
+
+        if (path1 is None or path1 == "") and path2:
+            raise ValueError("Field path2 can only be set when path1 is also set!")
+        operation_create_update_responsive_search_ad.path2 = path2
+
+
 async def _set_fields_ad_copy(
     client: GoogleAdsClient,
     model_or_dict: AdCopy,
@@ -438,6 +458,12 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
         operation_update.final_urls.append(final_url)
     if model_or_dict.final_mobile_urls:
         operation_update.final_mobile_urls.append(model_or_dict.final_mobile_urls)
+
+    _update_ad_copy_display_path(
+        operation_create_update_responsive_search_ad=operation_update.responsive_search_ad,
+        path1=model_or_dict.path1,
+        path2=model_or_dict.path2,
+    )
 
     _retrieve_field_mask(
         client=client, operation=operation, operation_update=operation_update
@@ -673,13 +699,11 @@ def _create_ad_group_ad_set_attr(
 
     operation_create.ad.responsive_search_ad.descriptions.extend(descriptions)
 
-    # TODO:
-    # Paths
-    # First and second part of text that can be appended to the URL in the ad.
-    # If you use the examples below, the ad will show
-    # https://www.example.com/all-inclusive/deals
-    # operation_create.ad.responsive_search_ad.path1 = "all-inclusive"
-    # operation_create.ad.responsive_search_ad.path2 = "deals"
+    _update_ad_copy_display_path(
+        operation_create_update_responsive_search_ad=operation_create.ad.responsive_search_ad,
+        path1=model_dict["path1"],
+        path2=model_dict["path2"],
+    )
 
 
 GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
