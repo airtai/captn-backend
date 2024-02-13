@@ -379,9 +379,6 @@ This is the JSON encoded history of your conversation that made the Daily Analys
 ### Daily Analysis ###
 {messages[0]["content"]}
 
-### Proposed User Action ###
-{_format_proposed_user_action(proposed_user_action)}
-
 ### User Action ###
 {messages[-1]["content"]}
 
