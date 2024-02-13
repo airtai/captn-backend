@@ -78,7 +78,13 @@ def test_get_message_as_string() -> None:
 Your campaigns have performed yetserday:
  - Clicks:         124 clicks ( +3.12%)
  - Spend:           $6.54 USD ( -1.12%)
- - Cost per click:  $0.05 USD (+12.00%)""",
+ - Cost per click:  $0.05 USD (+12.00%)
+
+### Proposed User Action ###
+1. Remove "Free" keyword because it is not performing well
+2. Increase budget from $10/day to $20/day
+3. Remove the headline "New product" and replace it with "Very New product" in the "Adgroup 1"
+4. Select some or all of them""",
         },
         {
             "role": "user",
