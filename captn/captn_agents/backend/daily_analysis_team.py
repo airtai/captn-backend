@@ -887,12 +887,17 @@ def execute_daily_analysis(
                 "login_url"
             )
             if not login_url_response == ALREADY_AUTHENTICATED:
-                _send_login_url_via_email(
-                    user_id=user_id,
-                    conv_id=conv_id,
-                    login_url_response=login_url_response,  # type: ignore
-                    client_email=email,
+                # _send_login_url_via_email(
+                #     user_id=user_id,
+                #     conv_id=conv_id,
+                #     login_url_response=login_url_response,  # type: ignore
+                #     client_email=email,
+                # )
+                # Do not proceed with Google Ads analysis for non authenticated users
+                print(
+                    f"Skiiping user_id: {user_id} - email {email} beacuse he hasn't logged in yet."
                 )
+                _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
                 continue
 
             # Always get the daily report for the previous day
