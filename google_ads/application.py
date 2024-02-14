@@ -1143,6 +1143,55 @@ async def add_keywords_to_ad_group(
     )
 
 
+@router.get("/get-geo-target-constants")
+async def get_geo_target_constants(user_id: int, model: Campaign = Depends()) -> str:
+    global GOOGLE_ADS_RESOURCE_DICT
+    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["campaign"]
+
+    (
+        client,
+        service,
+        operation,
+        model_dict,
+        customer_id,
+        operation_create,
+        mandatory_fields_values,
+    ) = await _get_necessary_parameters(
+        user_id=user_id,
+        model=model,
+        service_operation_and_function_names=service_operation_and_function_names,
+        crud_operation_name="create",
+        mandatory_fields=["customer_id"],
+    )
+
+    gtc_service = client.get_service("GeoTargetConstantService")
+
+    gtc_request = client.get_type("SuggestGeoTargetConstantsRequest")
+
+    # gtc_request.locale = LOCALE
+    # gtc_request.country_code = "FR"
+
+    # The location names to get suggested geo target constants.
+    gtc_request.location_names.names.extend(["Paris", "Spain"])
+
+    results = gtc_service.suggest_geo_target_constants(gtc_request)
+
+    for suggestion in results.geo_target_constant_suggestions:
+        geo_target_constant = suggestion.geo_target_constant
+        print(
+            f"{geo_target_constant.resource_name} "
+            f"({geo_target_constant.name}, "
+            f"{geo_target_constant.country_code}, "
+            f"{geo_target_constant.target_type}, "
+            f"{geo_target_constant.status.name}) "
+            f"is found in locale ({suggestion.locale}) "
+            f"with reach ({suggestion.reach}) "
+            f"from search term ({suggestion.search_term})."
+        )
+
+    return "Geo target constants fetched."
+
+
 @router.get("/remove-google-ads-resource")
 async def remove_google_ads_resource(
     user_id: int, model: RemoveResource = Depends()
