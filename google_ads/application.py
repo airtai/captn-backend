@@ -1236,7 +1236,7 @@ async def create_geo_targeting_for_campaign(
     client = await _get_client(user_id=user_id)
 
     if model.location_ids is None:
-        return _get_geo_target_constant_by_names(client, model.location_names)  # type: ignore
+        return _get_geo_target_constant_by_names(client=client, location_names=model.location_names)  # type: ignore
 
     return _create_locations_by_ids_to_campaign(
         client=client,
