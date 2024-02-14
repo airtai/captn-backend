@@ -31,20 +31,22 @@ if [ ! -f key.pem ]; then
 fi
 
 
+ssh_command="ssh -o StrictHostKeyChecking=no -i key.pem azureuser@$DOMAIN"
+
 echo "INFO: stopping already running docker container"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker stop captn-backend || echo 'No containers available to stop'"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker container prune -f || echo 'No stopped containers to delete'"
+$ssh_command "docker stop captn-backend || echo 'No containers available to stop'"
+$ssh_command "docker container prune -f || echo 'No stopped containers to delete'"
 
 echo "INFO: pulling docker image"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "echo $GITHUB_PASSWORD | docker login -u '$GITHUB_USERNAME' --password-stdin '$REGISTRY'"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker pull ghcr.io/$GITHUB_REPOSITORY:'$TAG'"
+$ssh_command "echo $GITHUB_PASSWORD | docker login -u '$GITHUB_USERNAME' --password-stdin '$REGISTRY'"
+$ssh_command "docker pull ghcr.io/$GITHUB_REPOSITORY:'$TAG'"
 sleep 10
 
 echo "Deleting old image"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker system prune -f || echo 'No images to delete'"
+$ssh_command "docker system prune -f || echo 'No images to delete'"
 
 echo "INFO: starting docker container"
-ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --name captn-backend \
+$ssh_command "docker run --name captn-backend \
 	-p $PORT:$PORT -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' \
 	-e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' -e AZURE_OPENAI_API_KEY='$AZURE_OPENAI_API_KEY' \
 	-e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' \
