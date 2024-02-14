@@ -9,7 +9,7 @@ TEAMS_STATUS: Dict[
     str, Dict[str, Union[str, bool, int, Dict[str, Union[str, List[str]]]]]
 ] = {}
 
-TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It appears we've hit a temporary squall in the digital sea. Give it some time, and we'll be back to smooth sailing. Please try again later."
+TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It seems our voyage hit an unexpected squall. Let's trim the sails and set a new course. Cast off once more by clicking the button below."
 
 
 def add_to_teams_status(user_id: int, chat_id: int, team_name: str) -> None:
@@ -21,6 +21,7 @@ def add_to_teams_status(user_id: int, chat_id: int, team_name: str) -> None:
         "msg": "",
         "is_question": False,
         "smart_suggestions": {"suggestions": [""], "type": ""},
+        "is_exception_occured": False,
     }
 
 
@@ -30,6 +31,7 @@ def change_teams_status(
     message: str,
     is_question: bool,
     smart_suggestions: Dict[str, Union[str, List[str]]],
+    is_exception_occured: bool = False,
 ) -> None:
     TEAMS_STATUS[f"{chat_id}"].update(
         {
@@ -37,6 +39,7 @@ def change_teams_status(
             "msg": message,
             "is_question": is_question,
             "smart_suggestions": smart_suggestions,
+            "is_exception_occured": is_exception_occured,
         }
     )
 
@@ -81,7 +84,8 @@ def teams_handler(user_id: int, chat_id: int, team_name: str, message: str) -> N
             team_status="completed",
             message=TEAM_EXCEPTION_MESSAGE,
             is_question=False,
-            smart_suggestions={"suggestions": [""], "type": ""},
+            smart_suggestions={"suggestions": ["Let's try again"], "type": "oneOf"},
+            is_exception_occured=True,
         )
 
 
