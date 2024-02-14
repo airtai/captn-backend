@@ -885,6 +885,42 @@ create_keyword_for_ad_group_config = {
     },
 }
 
+create_geo_targeting_for_campaign_config = {
+    "name": "create_geo_targeting_for_campaign",
+    "description": f"""Creates geographical targeting on the campaign level.
+When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of avaliable locations and their IDs.
+Once the client approves the locations, you can use the 'location_ids' parameter to create the geo targeting for the campaign.
+location_ids and location_names parameters are mutually exclusive and they can NOT be set to None at the same time.
+{MODIFICATION_WARNING}""",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "customer_id": properties_config["customer_id"],
+            "campaign_id": properties_config["campaign_id"],
+            "clients_approval_message": properties_config["clients_approval_message"],
+            "client_approved_modicifation_for_this_resource": properties_config[
+                "client_approved_modicifation_for_this_resource"
+            ],
+            "location_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "A list of location IDs",
+            },
+            "location_names": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "A list of location names e.g. ['Croaita', 'Zagreb']. These values MUST be provided by the client, do NOT improvise!",
+            },
+        },
+        "required": [
+            "customer_id",
+            "campaign_id",
+            "clients_approval_message",
+            "client_approved_modicifation_for_this_resource",
+        ],
+    },
+}
+
 remove_google_ads_resource_config = {
     "name": "remove_google_ads_resource",
     "description": f"Removes the google ads resource. {MODIFICATION_WARNING}",
