@@ -118,7 +118,7 @@ class RemoveResource(BaseModel):
     ]
 
 
-class GeoTarget(BaseModel):
+class GeoTargetCriterion(BaseModel):
     customer_id: Optional[str] = None
     campaign_id: Optional[str] = None
     location_ids: Optional[List[str]] = Field(Query(default=None))

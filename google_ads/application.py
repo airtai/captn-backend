@@ -23,7 +23,7 @@ from .model import (
     Campaign,
     CampaignCriterion,
     Criterion,
-    GeoTarget,
+    GeoTargetCriterion,
     RemoveResource,
 )
 
@@ -1161,15 +1161,17 @@ def _get_geo_target_constant_by_names(
 
     results = gtc_service.suggest_geo_target_constants(gtc_request)
 
-    return_text = ""
+    return_text = (
+        "Below is a list of possible locations in the following format '(name, country_code, target_type)'."
+        "Please send them to the client as smart suggestions with type 'manyOf' (do not display the location_id to him):\n\n"
+    )
     for suggestion in results.geo_target_constant_suggestions:
         geo_target_constant = suggestion.geo_target_constant
         text = (
             f"location_id: {geo_target_constant.id}, "
             f"({geo_target_constant.name}, "
             f"{geo_target_constant.country_code}, "
-            f"{geo_target_constant.target_type}, "
-            f"{geo_target_constant.status.name}) "
+            f"{geo_target_constant.target_type}), "
             f"is found from search term ({suggestion.search_term}).\n"
         )
         return_text += text
@@ -1197,7 +1199,7 @@ def _create_location_op(
     return campaign_criterion_operation
 
 
-def _add_locations_by_ids_to_campaign(
+def _create_locations_by_ids_to_campaign(
     client: GoogleAdsClient,
     customer_id: str,
     campaign_id: str,
@@ -1221,9 +1223,9 @@ def _add_locations_by_ids_to_campaign(
     return result_msg
 
 
-@router.get("/add-geo-targeting-to-campaign")
-async def add_geo_targeting_to_campaign(
-    user_id: int, model: GeoTarget = Depends()
+@router.get("/create-geo-targeting-for-campaign")
+async def create_geo_targeting_for_campaign(
+    user_id: int, model: GeoTargetCriterion = Depends()
 ) -> str:
     if model.location_names is None and model.location_ids is None:
         raise HTTPException(
@@ -1236,7 +1238,7 @@ async def add_geo_targeting_to_campaign(
     if model.location_ids is None:
         return _get_geo_target_constant_by_names(client, model.location_names)  # type: ignore
 
-    return _add_locations_by_ids_to_campaign(
+    return _create_locations_by_ids_to_campaign(
         client=client,
         customer_id=model.customer_id,  # type: ignore
         campaign_id=model.campaign_id,  # type: ignore
