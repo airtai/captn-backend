@@ -759,12 +759,6 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "setattr_create_func": _keywords_setattr,
         "setattr_update_func": _set_fields,
     },
-    "geo_target": {
-        "service": "CampaignCriterionService",
-        "operation": "CampaignCriterionOperation",
-        "mutate": "mutate_campaign_criteria",
-        "service_path_update_delete": "campaign_criterion_path",
-    },
 }
 
 
