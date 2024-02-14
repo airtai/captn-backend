@@ -71,8 +71,6 @@ jobs:
                 shell: bash
         needs: [static_analysis, docker_build_push]
         if: github.ref_name == 'main' || github.ref_name == 'dev'
-        container:
-            image: python:3.7-stretch
         env:
             GITHUB_USERNAME: ${{ github.actor }}
             GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -84,9 +82,6 @@ jobs:
             AZURE_OPENAI_API_KEY_SWEEDEN: ${{ secrets.AZURE_OPENAI_API_KEY_SWEEDEN }}
             AZURE_OPENAI_API_KEY_CANADA: ${{ secrets.AZURE_OPENAI_API_KEY_CANADA }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-            LITELLM_MODEL: ${{ secrets.LITELLM_MODEL }}
-            LITELLM_API_BASE: ${{ secrets.LITELLM_API_BASE }}
-            LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
             INFOBIP_API_KEY: ${{ secrets.INFOBIP_API_KEY }}
             INFOBIP_BASE_URL: ${{ secrets.INFOBIP_BASE_URL }}
             PORT: ${{ vars.PORT }}
@@ -115,6 +110,6 @@ jobs:
             - run: chmod 600 key.pem
 
             - run: ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker images"
-            - run: sh scripts/deploy.sh
+            - run: bash scripts/deploy.sh
 
             - run: rm key.pem
