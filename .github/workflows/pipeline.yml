@@ -84,9 +84,6 @@ jobs:
             AZURE_OPENAI_API_KEY_SWEEDEN: ${{ secrets.AZURE_OPENAI_API_KEY_SWEEDEN }}
             AZURE_OPENAI_API_KEY_CANADA: ${{ secrets.AZURE_OPENAI_API_KEY_CANADA }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-            LITELLM_MODEL: ${{ secrets.LITELLM_MODEL }}
-            LITELLM_API_BASE: ${{ secrets.LITELLM_API_BASE }}
-            LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
             INFOBIP_API_KEY: ${{ secrets.INFOBIP_API_KEY }}
             INFOBIP_BASE_URL: ${{ secrets.INFOBIP_BASE_URL }}
             PORT: ${{ vars.PORT }}

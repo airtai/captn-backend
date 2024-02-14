@@ -98,23 +98,6 @@ then
 	exit -1
 fi
 
-if test -z "$LITELLM_MODEL"
-then
-	echo "ERROR: LITELLM_MODEL variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$LITELLM_API_BASE"
-then
-	echo "ERROR: LITELLM_API_BASE variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$LITELLM_API_KEY"
-then
-	echo "ERROR: LITELLM_API_KEY variable must be defined, exiting"
-	exit -1
-fi
 
 echo "INFO: stopping already running docker container"
 ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker stop captn-backend || echo 'No containers available to stop'"
@@ -135,7 +118,6 @@ ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker run --nam
 	-e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' \
 	-e AZURE_MODEL='$AZURE_MODEL' -e AZURE_OPENAI_API_KEY_SWEEDEN='$AZURE_OPENAI_API_KEY_SWEEDEN' \
 	-e AZURE_OPENAI_API_KEY_CANADA='$AZURE_OPENAI_API_KEY_CANADA' -e OPENAI_API_KEY='$OPENAI_API_KEY' \
-	-e LITELLM_MODEL='$LITELLM_MODEL' -e LITELLM_API_BASE='$LITELLM_API_BASE' -e LITELLM_API_KEY='$LITELLM_API_KEY' \
 	-e INFOBIP_BASE_URL='$INFOBIP_BASE_URL' -e INFOBIP_API_KEY='$INFOBIP_API_KEY' -e REACT_APP_API_URL='$REACT_APP_API_URL' \
 	-e REDIRECT_DOMAIN='$REDIRECT_DOMAIN' \
 	-d ghcr.io/$GITHUB_REPOSITORY:$TAG"
