@@ -23,6 +23,7 @@ from .model import (
     Campaign,
     CampaignCriterion,
     Criterion,
+    GeoTarget,
     RemoveResource,
 )
 
@@ -758,6 +759,12 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "setattr_create_func": _keywords_setattr,
         "setattr_update_func": _set_fields,
     },
+    "geo_target": {
+        "service": "CampaignCriterionService",
+        "operation": "CampaignCriterionOperation",
+        "mutate": "mutate_campaign_criteria",
+        "service_path_update_delete": "campaign_criterion_path",
+    },
 }
 
 
@@ -1143,53 +1150,98 @@ async def add_keywords_to_ad_group(
     )
 
 
-@router.get("/get-geo-target-constants")
-async def get_geo_target_constants(user_id: int, model: Campaign = Depends()) -> str:
-    global GOOGLE_ADS_RESOURCE_DICT
-    service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["campaign"]
-
-    (
-        client,
-        service,
-        operation,
-        model_dict,
-        customer_id,
-        operation_create,
-        mandatory_fields_values,
-    ) = await _get_necessary_parameters(
-        user_id=user_id,
-        model=model,
-        service_operation_and_function_names=service_operation_and_function_names,
-        crud_operation_name="create",
-        mandatory_fields=["customer_id"],
-    )
-
+def _get_geo_target_constant_by_names(
+    client: GoogleAdsClient, location_names: List[str]
+) -> str:
     gtc_service = client.get_service("GeoTargetConstantService")
-
     gtc_request = client.get_type("SuggestGeoTargetConstantsRequest")
 
-    # gtc_request.locale = LOCALE
-    # gtc_request.country_code = "FR"
-
     # The location names to get suggested geo target constants.
-    gtc_request.location_names.names.extend(["Paris", "Spain"])
+    gtc_request.location_names.names.extend(location_names)
 
     results = gtc_service.suggest_geo_target_constants(gtc_request)
 
+    return_text = ""
     for suggestion in results.geo_target_constant_suggestions:
         geo_target_constant = suggestion.geo_target_constant
-        print(
-            f"{geo_target_constant.resource_name} "
+        text = (
+            f"location_id: {geo_target_constant.id}, "
             f"({geo_target_constant.name}, "
             f"{geo_target_constant.country_code}, "
             f"{geo_target_constant.target_type}, "
             f"{geo_target_constant.status.name}) "
-            f"is found in locale ({suggestion.locale}) "
-            f"with reach ({suggestion.reach}) "
-            f"from search term ({suggestion.search_term})."
+            f"is found from search term ({suggestion.search_term}).\n"
+        )
+        return_text += text
+
+    return return_text
+
+
+def _create_location_op(
+    client: GoogleAdsClient, customer_id: str, campaign_id: str, location_id: str
+) -> Any:
+    campaign_service = client.get_service("CampaignService")
+    geo_target_constant_service = client.get_service("GeoTargetConstantService")
+
+    # Create the campaign criterion.
+    campaign_criterion_operation = client.get_type("CampaignCriterionOperation")
+    campaign_criterion = campaign_criterion_operation.create
+    campaign_criterion.campaign = campaign_service.campaign_path(
+        customer_id, campaign_id
+    )
+
+    campaign_criterion.location.geo_target_constant = (
+        geo_target_constant_service.geo_target_constant_path(location_id)
+    )
+
+    return campaign_criterion_operation
+
+
+def _add_locations_by_ids_to_campaign(
+    client: GoogleAdsClient,
+    customer_id: str,
+    campaign_id: str,
+    location_ids: List[str],
+) -> str:
+    campaign_criterion_service = client.get_service("CampaignCriterionService")
+
+    operations = [
+        _create_location_op(client, customer_id, campaign_id, location_id)
+        for location_id in location_ids
+    ]
+
+    campaign_criterion_response = campaign_criterion_service.mutate_campaign_criteria(
+        customer_id=customer_id, operations=operations
+    )
+
+    result_msg = ""
+    for result in campaign_criterion_response.results:
+        result_msg += f"Added campaign geo target criterion {result.resource_name}.\n"
+
+    return result_msg
+
+
+@router.get("/add-geo-targeting-to-campaign")
+async def add_geo_targeting_to_campaign(
+    user_id: int, model: GeoTarget = Depends()
+) -> str:
+    if model.location_names is None and model.location_ids is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either location_names or location_ids must be provided.",
         )
 
-    return "Geo target constants fetched."
+    client = await _get_client(user_id=user_id)
+
+    if model.location_ids is None:
+        return _get_geo_target_constant_by_names(client, model.location_names)  # type: ignore
+
+    return _add_locations_by_ids_to_campaign(
+        client=client,
+        customer_id=model.customer_id,  # type: ignore
+        campaign_id=model.campaign_id,  # type: ignore
+        location_ids=model.location_ids,  # type: ignore
+    )
 
 
 @router.get("/remove-google-ads-resource")

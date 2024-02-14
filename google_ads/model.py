@@ -109,5 +109,17 @@ class RemoveResource(BaseModel):
     parent_id: Optional[str] = None
     resource_id: str
     resource_type: Literal[
-        "campaign", "ad_group", "ad", "ad_group_criterion", "campaign_criterion"
+        "campaign",
+        "ad_group",
+        "ad",
+        "ad_group_criterion",
+        "campaign_criterion",
+        "geo_target",
     ]
+
+
+class GeoTarget(BaseModel):
+    customer_id: Optional[str] = None
+    campaign_id: Optional[str] = None
+    location_ids: Optional[List[str]] = Field(Query(default=None))
+    location_names: Optional[List[str]] = Field(Query(default=None))
