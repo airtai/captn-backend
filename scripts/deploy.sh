@@ -1,101 +1,33 @@
 #!/bin/bash
 
 
-if test -z "$TAG"
-then
-	echo "ERROR: TAG variable must be defined, exiting"
-	exit -1
-fi
+check_variable() {
+    if [[ -z "${!1}" ]]; then
+        echo "ERROR: $1 variable must be defined, exiting"
+        exit -1
+    fi
+}
 
-if test -z "$GITHUB_USERNAME"
-then
-	echo "ERROR: GITHUB_USERNAME variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$GITHUB_PASSWORD"
-then
-	echo "ERROR: GITHUB_PASSWORD variable must be defined, exiting"
-	exit -1
-fi
+check_variable "TAG"
+check_variable "GITHUB_USERNAME"
+check_variable "GITHUB_PASSWORD"
+check_variable "DOMAIN"
+check_variable "PORT"
+check_variable "DATABASE_URL"
+check_variable "CLIENT_SECRET"
+check_variable "AZURE_OPENAI_API_KEY"
+check_variable "AZURE_API_VERSION"
+check_variable "AZURE_API_ENDPOINT"
+check_variable "AZURE_MODEL"
+check_variable "DEVELOPER_TOKEN"
+check_variable "AZURE_OPENAI_API_KEY_SWEEDEN"
+check_variable "AZURE_OPENAI_API_KEY_CANADA"
+check_variable "OPENAI_API_KEY"
 
 
 if [ ! -f key.pem ]; then
     echo "ERROR: key.pem file not found"
     exit -1
-fi
-
-
-if test -z "$DOMAIN"
-then
-	echo "ERROR: DOMAIN variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$PORT"
-then
-	echo "ERROR: PORT variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$DATABASE_URL"
-then
-	echo "ERROR: DATABASE_URL variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$CLIENT_SECRET"
-then
-	echo "ERROR: CLIENT_SECRET variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$AZURE_OPENAI_API_KEY"
-then
-	echo "ERROR: AZURE_OPENAI_API_KEY variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$AZURE_API_VERSION"
-then
-	echo "ERROR: AZURE_API_VERSION variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$AZURE_API_ENDPOINT"
-then
-	echo "ERROR: AZURE_API_ENDPOINT variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$AZURE_MODEL"
-then
-	echo "ERROR: AZURE_MODEL variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$DEVELOPER_TOKEN"
-then
-	echo "ERROR: DEVELOPER_TOKEN variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$AZURE_OPENAI_API_KEY_SWEEDEN"
-then
-	echo "ERROR: AZURE_OPENAI_API_KEY_SWEEDEN variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$AZURE_OPENAI_API_KEY_CANADA"
-then
-	echo "ERROR: AZURE_OPENAI_API_KEY_CANADA variable must be defined, exiting"
-	exit -1
-fi
-
-if test -z "$OPENAI_API_KEY"
-then
-	echo "ERROR: OPENAI_API_KEY variable must be defined, exiting"
-	exit -1
 fi
 
 
