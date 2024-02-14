@@ -409,7 +409,7 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
         message += "<ul>"
         for _, campaign in customer_report["campaigns"].items():
             link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
-            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong></li>"
+            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong>"
             message += "<ul>"
             message += add_metrics_message("Clicks", campaign["metrics"], "clicks")
             message += add_metrics_message(
@@ -425,7 +425,7 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
             if warning_message:
                 message += warning_message
 
-            message += "</ul>"
+            message += "</ul></li>"
         message += "</ul>"
 
     return message
