@@ -10,8 +10,8 @@ __all__ = ["CONFIG_LIST"]
 load_dotenv()
 
 
-api_key_sweeden = os.getenv("AZURE_OPENAI_API_KEY_SWEEDEN")
-api_base_sweeden = "https://airt-openai-sweden.openai.azure.com/"
+api_key_sweden = os.getenv("AZURE_OPENAI_API_KEY_SWEDEN")
+api_base_sweden = "https://airt-openai-sweden.openai.azure.com/"
 
 api_key_canada = os.getenv("AZURE_OPENAI_API_KEY_CANADA")
 api_base_canada = "https://airt-openai-canada.openai.azure.com/"
@@ -32,17 +32,17 @@ CONFIG_LIST = [
     # },
     {
         "model": "airt-gpt4",
-        "api_key": api_key_sweeden,
-        "api_base": api_base_sweeden,
-        "base_url": api_base_sweeden,
+        "api_key": api_key_sweden,
+        "api_base": api_base_sweden,
+        "base_url": api_base_sweden,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
     },
     {
         "model": "gpt-35-turbo-16k",
-        "api_key": api_key_sweeden,
-        "api_base": api_base_sweeden,
-        "base_url": api_base_sweeden,
+        "api_key": api_key_sweden,
+        "api_base": api_base_sweden,
+        "base_url": api_base_sweden,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
     },
