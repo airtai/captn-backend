@@ -79,7 +79,7 @@ jobs:
             AZURE_API_ENDPOINT: ${{ secrets.AZURE_API_ENDPOINT }}
             AZURE_MODEL: ${{ secrets.AZURE_MODEL }}
             DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
-            AZURE_OPENAI_API_KEY_SWEEDEN: ${{ secrets.AZURE_OPENAI_API_KEY_SWEEDEN }}
+            AZURE_OPENAI_API_KEY_SWEDEN: ${{ secrets.AZURE_OPENAI_API_KEY_SWEDEN }}
             AZURE_OPENAI_API_KEY_CANADA: ${{ secrets.AZURE_OPENAI_API_KEY_CANADA }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
             INFOBIP_API_KEY: ${{ secrets.INFOBIP_API_KEY }}
