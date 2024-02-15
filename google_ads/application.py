@@ -190,8 +190,8 @@ async def load_user_credentials(user_id: Union[int, str]) -> Any:
 
 
 # Initialize Google Ads API client
-def create_google_ads_client(
-    user_credentials: Dict[str, Any], use_proto_plus: bool = False
+async def create_google_ads_client(
+    user_id: int, user_credentials: Dict[str, Any], use_proto_plus: bool = False
 ) -> GoogleAdsClient:
     # Create a dictionary with the required structure for GoogleAdsClient
     google_ads_credentials = {
@@ -204,7 +204,18 @@ def create_google_ads_client(
     }
 
     # Initialize the Google Ads API client with the properly structured dictionary
-    client = GoogleAdsClient.load_from_dict(google_ads_credentials)
+    try:
+        client = GoogleAdsClient.load_from_dict(google_ads_credentials)
+    except Exception:
+        # Something is wrong with the credentials, delete them from the database so they can be re-generated
+        async with get_db_connection() as db:  # type: ignore[var-annotated]
+            await db.gauth.delete(where={"user_id": user_id})
+
+        raise HTTPException(  # noqa
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Please try to execute the command again.",
+        )
+
     return client
 
 
@@ -216,7 +227,9 @@ async def list_accessible_customers(
 ) -> List[str]:
     try:
         user_credentials = await load_user_credentials(user_id)
-        client = create_google_ads_client(user_credentials)
+        client = await create_google_ads_client(
+            user_id=user_id, user_credentials=user_credentials
+        )
         customer_service = client.get_service("CustomerService")
         accessible_customers = await asyncify(
             customer_service.list_accessible_customers
@@ -260,7 +273,9 @@ async def search(
     query: str = Query(None, title="Google ads query"),
 ) -> Dict[str, List[Any]]:
     user_credentials = await load_user_credentials(user_id)
-    client = create_google_ads_client(user_credentials)
+    client = await create_google_ads_client(
+        user_id=user_id, user_credentials=user_credentials
+    )
     service = client.get_service("GoogleAdsService")
 
     # Replace this with your actual Google Ads API query to fetch campaign data
@@ -311,8 +326,8 @@ AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad", "ad_group_criterion"]
 
 async def _get_client(user_id: int) -> GoogleAdsClient:
     user_credentials = await load_user_credentials(user_id)
-    client = create_google_ads_client(
-        user_credentials=user_credentials, use_proto_plus=True
+    client = await create_google_ads_client(
+        user_id=user_id, user_credentials=user_credentials, use_proto_plus=True
     )
     return client
 
