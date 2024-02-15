@@ -8,11 +8,14 @@ from os import environ
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import requests
+from markdownify import markdownify as md
 from pydantic import BaseModel
 
 from ...email.send_email import send_email as send_email_infobip
 from ...google_ads.client import (
+    ALREADY_AUTHENTICATED,
     execute_query,
+    get_login_url,
     get_user_ids_and_emails,
     list_accessible_customers,
 )
@@ -406,7 +409,7 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
         message += "<ul>"
         for _, campaign in customer_report["campaigns"].items():
             link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
-            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong></li>"
+            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong>"
             message += "<ul>"
             message += add_metrics_message("Clicks", campaign["metrics"], "clicks")
             message += add_metrics_message(
@@ -422,7 +425,7 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
             if warning_message:
                 message += warning_message
 
-            message += "</ul>"
+            message += "</ul></li>"
         message += "</ul>"
 
     return message
@@ -749,20 +752,28 @@ def _create_final_html_message(
     return final_message
 
 
-def _get_conv_id_and_send_email(
+def _update_chat_message_and_send_email(
     user_id: int,
+    conv_id: int,
     client_email: str,
     messages: str,
     initial_message_in_chat: str,
     proposed_user_action: List[str],
-) -> int:
+) -> None:
+    markdown = f"""<div class = "captn-daily-analysis">
+{md(initial_message_in_chat)}
+</div>
+"""
+
     data = {
         "userId": user_id,
+        "chatId": conv_id,
         "messages": messages,
-        "initial_message_in_chat": initial_message_in_chat,
+        "initial_message_in_chat": markdown,
         "email_content": "<html></html>",
         "proposed_user_action": proposed_user_action,
     }
+
     response = requests.post(
         f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", json=data, timeout=60
     )
@@ -770,7 +781,6 @@ def _get_conv_id_and_send_email(
     if response.status_code != 200:
         raise ValueError(response.content)
 
-    conv_id = response.json()["chatID"]
     final_html_message = _create_final_html_message(
         initial_message_in_chat, proposed_user_action, conv_id
     )
@@ -782,7 +792,74 @@ def _get_conv_id_and_send_email(
         body_text=final_html_message,
     )
 
+
+def _send_login_url_via_email(
+    user_id: int, conv_id: int, login_url_response: str, client_email: str
+) -> None:
+    messages = """[YOUR TASK IS TO REPLY TO THE CLIENT WITH THE FOLLOWING MESSAGE: 'Thanks for logging in! You will receive an email with the daily analysis report tomorrow.'.
+DO NOT PRCEED WITH GOOGLE ADS ANALYSIS EXCEPT IF THE CLIENT ASKS YOU TO DO SO.]"""
+    proposed_user_action: List[str] = []
+
+    data = {
+        "userId": user_id,
+        "chatId": conv_id,
+        "messages": messages,
+        "initial_message_in_chat": login_url_response,
+        "email_content": "<html></html>",
+        "proposed_user_action": proposed_user_action,
+    }
+    response = requests.post(
+        f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", json=data, timeout=60
+    )
+
+    if response.status_code != 200:
+        raise ValueError(
+            f"_send_login_url_via_email function failed. data: {data}\n{str(response.content)}"
+        )
+
+    final_html_message = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captn.ai Daily Analysis</title>
+</head>
+<body>
+</p>To perform the daily analysis, you need to log in to your Google Ads account. The following link will take you to the Captn.ai chat where you can log in. Once you log in, daily analysis will be scheduled for the next day.<br></p>
+<p>Click here to continue (<a href='{REDIRECT_DOMAIN}/chat/{conv_id}'>Captn.ai</a>)</p>
+</body>
+</html>"""
+
+    send_email_infobip(
+        to_email=client_email,
+        from_email="info@airt.ai",
+        subject="Captn.ai Daily Analysis",
+        body_text=final_html_message,
+    )
+
+
+def _get_conv_id(user_id: int, email: str) -> int:
+    data = {"userId": user_id}
+
+    response = requests.post(
+        f"{REACT_APP_API_URL}/create-chat-webhook", json=data, timeout=60
+    )
+    if response.status_code != 200:
+        ValueError(f"Wasn't able to create chat for user_id: {user_id} - email {email}")
+
+    conv_id = response.json()["chatId"]
     return conv_id  # type: ignore
+
+
+def _delete_chat_webhook(user_id: int, conv_id: int) -> None:
+    try:
+        data = {
+            "userId": user_id,
+            "chatId": conv_id,
+        }
+        requests.post(f"{REACT_APP_API_URL}/delete-chat-webhook", json=data, timeout=60)
+    except Exception as e:
+        print(e)
 
 
 def execute_daily_analysis(
@@ -802,9 +879,28 @@ def execute_daily_analysis(
                 f"Skipping user_id: {user_id} - email {email} (current implementation)"
             )
             continue
+
         try:
+            daily_analysis_team = None
+            conv_id = _get_conv_id(user_id=user_id, email=email)
+            login_url_response = get_login_url(user_id=user_id, conv_id=conv_id).get(
+                "login_url"
+            )
+            if not login_url_response == ALREADY_AUTHENTICATED:
+                # _send_login_url_via_email(
+                #     user_id=user_id,
+                #     conv_id=conv_id,
+                #     login_url_response=login_url_response,  # type: ignore
+                #     client_email=email,
+                # )
+                # Do not proceed with Google Ads analysis for non authenticated users
+                print(
+                    f"Skiiping user_id: {user_id} - email {email} beacuse he hasn't logged in yet."
+                )
+                _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+                continue
+
             # Always get the daily report for the previous day
-            conv_id = 100
             daily_reports = get_daily_report(
                 date=date, user_id=user_id, conv_id=conv_id
             )
@@ -853,8 +949,9 @@ Please propose the next steps and send the email to the client.
                     # Don't include the first message (task) and the last message (send_email)
                     messages = json.dumps(messages_list[1:-1])
                 last_message_json = ast.literal_eval(last_message)
-                _get_conv_id_and_send_email(
+                _update_chat_message_and_send_email(
                     user_id=user_id,
+                    conv_id=conv_id,
                     client_email=email,
                     messages=messages,
                     initial_message_in_chat=daily_report_message,
@@ -866,6 +963,8 @@ Please propose the next steps and send the email to the client.
                 )
         except Exception as e:
             print(e)
+            _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
         finally:
-            Team.pop_team(team_name=daily_analysis_team.name)
+            if daily_analysis_team:
+                Team.pop_team(team_name=daily_analysis_team.name)
     print("Daily analysis completed.")

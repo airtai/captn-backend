@@ -2,14 +2,18 @@ import json
 from os import environ
 from typing import Dict, List, Optional, Union
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
 from captn.captn_agents.backend.function_configs import (  # type: ignore
     smart_suggestions_description,
 )
-from captn.captn_agents.backend.teams_manager import create_team, get_team_status
+from captn.captn_agents.backend.teams_manager import (
+    TEAM_EXCEPTION_MESSAGE,
+    create_team,
+    get_team_status,
+)
 from captn.captn_agents.model import SmartSuggestions
 from captn.google_ads.client import get_google_ads_team_capability
 
@@ -310,10 +314,16 @@ async def _get_openai_response(  # type: ignore
             }
         )
         completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS)  # type: ignore
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Internal server error: {e}"
-        ) from e
+    except Exception:
+        smart_suggestions = {"suggestions": ["Let's try again"], "type": "oneOf"}
+        return {
+            "content": TEAM_EXCEPTION_MESSAGE,
+            "smart_suggestions": SmartSuggestions(**smart_suggestions),
+            "is_exception_occured": True,
+        }
+        # raise HTTPException(
+        #     status_code=500, detail=f"Internal server error: {e}"
+        # ) from e
 
     response_message = completion.choices[0].message
     # Check if the model wants to call a function
@@ -378,9 +388,6 @@ This is the JSON encoded history of your conversation that made the Daily Analys
 
 ### Daily Analysis ###
 {messages[0]["content"]}
-
-### Proposed User Action ###
-{_format_proposed_user_action(proposed_user_action)}
 
 ### User Action ###
 {messages[-1]["content"]}
