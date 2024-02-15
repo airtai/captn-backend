@@ -14,6 +14,7 @@ from captn.captn_agents.backend.daily_analysis_team import (
     _update_chat_message_and_send_email,
     calculate_metrics_change,
     compare_reports,
+    construct_daily_report_email_from_template,
     construct_daily_report_message,
     execute_daily_analysis,
     get_campaigns_report,
@@ -1137,7 +1138,9 @@ def test_get_web_status_code_report_for_campaign() -> None:
         },
     }
     customer_id = "2324127278"
-    warning_message = get_web_status_code_report_for_campaign(campaign, customer_id)
+    warning_message, warning_messages_list = get_web_status_code_report_for_campaign(
+        campaign, customer_id
+    )
     expected = """<li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:
 <ul>
 <li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
@@ -1157,6 +1160,13 @@ def test_construct_campaign_report_message() -> None:
 </li>
 </ul></li><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20979579987&__e=2324127278' target='_blank'>Empty</a></strong><ul><li>Clicks: 0 (No change from previous day)</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 0.0 USD (No change from previous day)</li></ul></li></ul><p>Customer <strong>7119828439</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20750580900&__e=7119828439' target='_blank'>faststream-web-search</a></strong><ul><li>Clicks: 10</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 2.83 EUR (Decrease of 32.94% compared to the previous day)</li></ul></li></ul>"""
     assert expected == message
+
+
+def test_construct_daily_report_email_from_template() -> None:
+    message = construct_daily_report_email_from_template(
+        daily_report, date="2024-02-05"
+    )
+    print(message)
 
 
 def _test_execute_daily_analysis(date: Optional[str] = None) -> None:

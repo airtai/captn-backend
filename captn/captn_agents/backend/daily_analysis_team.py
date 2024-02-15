@@ -5,7 +5,7 @@ import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 from os import environ
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import requests
 from markdownify import markdownify as md
@@ -342,10 +342,14 @@ def get_daily_report_for_customer(
     )
 
 
+WARNING_DESCRIPTION = "Some final URLs for your Ads are not reachable:"
+
+
 def get_web_status_code_report_for_campaign(
     campaign: Dict[str, Any], customer_id: str
-) -> Optional[str]:
-    warning_message = "<li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:\n<ul>\n"
+) -> Tuple[Optional[str], List[str]]:
+    warning_message = f"<li><strong>WARNING:</strong>{WARNING_DESCRIPTION}\n<ul>\n"
+    warning_messages_list: List[str] = []
     send_warning_message_for_campaign = False
 
     for ad_group_id, ad_group in campaign["ad_groups"].items():
@@ -366,10 +370,124 @@ def get_web_status_code_report_for_campaign(
                         f"<a href='{final_url}' target='_blank'>{final_url}</a>"
                     )
                     google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&__e={customer_id}' target='_blank'>{ad_group_ad_id}</a>"
-                    warning_message += f"<li>Final url {final_url_link} used in Ad {google_ads_link} is <strong>not reachable</strong></li>\n"
+                    current_warning_message = f"<li>Final url {final_url_link} used in Ad {google_ads_link} is <strong>not reachable</strong></li>\n"
+                    warning_messages_list.append(current_warning_message)
+                    warning_message += current_warning_message
 
     warning_message += "</ul>\n</li>\n"
-    return warning_message if send_warning_message_for_campaign else None
+    return (
+        (warning_message, warning_messages_list)
+        if send_warning_message_for_campaign
+        else (None, [])
+    )
+
+
+def construct_daily_report_email_from_template(
+    daily_reports: Dict[str, Any], date: str
+) -> str:
+    def add_metrics_message(
+        title: str,
+        metrics: Dict[str, Optional[Union[int, float]]],
+        field: str,
+        currency: str = "",
+    ) -> str:
+        if field == "cost_micros":
+            value = metrics[field] / 1000000  # type: ignore
+        else:
+            value = metrics[field]  # type: ignore
+
+        increase = metrics[field + "_increase"]
+        if increase is None:
+            return f"<li>{title}: {value}</li>"
+
+        if increase > 0:
+            is_increase = f"Increase of {increase}% compared to the previous day"
+        elif increase < 0:
+            is_increase = f"Decrease of {abs(increase)}% compared to the previous day"
+        else:
+            is_increase = "No change from previous day"
+
+        if currency:
+            currency = f" {currency}"
+        return f"<li>{title}: {value}{currency} ({is_increase})</li>"
+
+    from pathlib import Path
+
+    email_templates_path = (
+        Path(__file__).parent.parent.parent.parent.absolute() / "templates" / "email"
+    )
+
+    with open(str(email_templates_path / "main_email_template.html")) as file:
+        main_email_template = file.read()
+
+    main_email_template = main_email_template.replace("{todays_date}", date)
+    customers_report = ""
+
+    message = f"<h2>Daily Google Ads Performance Report - {date}</h2>"
+    message += f"<p>We're here with your daily analysis of your Google Ads campaigns for {date}. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p>"
+    campaigns_report = daily_reports["daily_customer_reports"]
+    for customer_report in campaigns_report:
+        with open(str(email_templates_path / "customer_report_template.html")) as file:
+            customer_report_template = file.read()
+
+        customer_id = customer_report["customer_id"]
+        customer_report_template = customer_report_template.replace(
+            "{customer_id}", customer_report["customer_id"]
+        )
+        currency = customer_report["currency"]
+        message += f"<p>Customer <strong>{customer_id}</strong></p>"
+        message += "<ul>"
+        for _, campaign in customer_report["campaigns"].items():
+            link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
+            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong>"
+            message += "<ul>"
+            message += add_metrics_message("Clicks", campaign["metrics"], "clicks")
+            message += add_metrics_message(
+                "Conversions", campaign["metrics"], "conversions"
+            )
+            message += add_metrics_message(
+                "Cost per click", campaign["metrics"], "cost_micros", currency=currency
+            )
+
+            (
+                warning_message,
+                warning_messages_list,
+            ) = get_web_status_code_report_for_campaign(campaign, customer_id)
+            if warning_message:
+                with open(
+                    str(email_templates_path / "campaign_warning_template.html")
+                ) as file:
+                    campaign_warning_template = file.read()
+                campaign_warning_template = campaign_warning_template.replace(
+                    "{warning_description}", WARNING_DESCRIPTION
+                )
+                campaign_warning_template = campaign_warning_template.replace(
+                    "{warning_list}", "".join(warning_messages_list)
+                )
+                message += warning_message
+
+            # TODO: warning should be added to the campaign report template not to the customer report template!!!
+            if warning_message:
+                customer_report_template = customer_report_template.replace(
+                    "{campaign_warning}", campaign_warning_template
+                )
+            else:
+                customer_report_template = customer_report_template.replace(
+                    "{campaign_warning}", ""
+                )
+
+            message += "</ul></li>"
+        message += "</ul>"
+
+        customers_report += customer_report_template
+
+    main_email_template = main_email_template.replace(
+        "{customers_report}", customers_report
+    )
+    with open(str(email_templates_path / "email_DELETE.html"), "w") as file:
+        file.write(main_email_template)
+
+    return message
 
 
 def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> str:
@@ -419,9 +537,10 @@ def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> 
                 "Cost per click", campaign["metrics"], "cost_micros", currency=currency
             )
 
-            warning_message = get_web_status_code_report_for_campaign(
-                campaign, customer_id
-            )
+            (
+                warning_message,
+                warning_messages_list,
+            ) = get_web_status_code_report_for_campaign(campaign, customer_id)
             if warning_message:
                 message += warning_message
 
