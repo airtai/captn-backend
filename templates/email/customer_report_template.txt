@@ -1,0 +1,102 @@
+<table class="m_107802914629328448st-Spacer m_107802914629328448st-Width m_107802914629328448st-Width--mobile" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 500px;margin: 10px 0px 0px 40px">
+   <tbody>
+      <tr>
+         <td style="padding-right:30px;text-align:left;direction:ltr;padding-bottom:10px;font-family:Google Sans,Roboto,Open Sans,arial,sans-serif;font-weight:700;font-size:28px;line-height:34px;color:#3c4043;">Customer id: {customer_id}</td>
+         <td style="padding-left:10px;padding-right:10px;text-align:center;direction:ltr;color:#3c4043;padding-top:8px;padding-bottom:8px;font-family:Google Sans text,Google sans,Roboto,Open Sans,arial,sans-serif;font-weight:400;font-size:12px;line-height:20px;background-color:#ffffff;border-radius:10px;">&nbsp;</td>
+      </tr>
+      <tr>
+         <td>
+            <table class="m_107802914629328448st-Width m_107802914629328448st-Width--mobile" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:520px;border-spacing: 0;border: 1px solid #d8d8d8;border-radius: 16px;margin: 20px auto;">
+               <tbody>
+                  <tr>
+                     <td style="padding:24px 10px 22px 30px">
+                        <table role="presentation" width="100%" align="center" cellspacing="0" cellpadding="0" border="0" style="border-spacing:0;border-collapse:collapse;width:100%">
+                           <tbody>
+                              <tr>
+                                 <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:20px;font-weight:700;line-height:30px;color:#3c4043;font-family:Google Sans,Roboto,Open Sans,arial,sans-serif;text-align:left;padding-bottom:24px">{campaign_name}</td>
+                              </tr>
+                              <tr>
+                                 <td>
+                                    <table role="presentation" width="100%" align="center" cellspacing="0" cellpadding="0" border="0" style="border-spacing:0;border-collapse:collapse;width:100%">
+                                       <tbody>
+                                          <tr align="left">
+                                             <td valign="top" width="147" style="width:147px;border-right:1px solid #d8d8d8">
+                                                <table role="presentation" width="100%" align="center" cellspacing="0" cellpadding="0" border="0" style="border-spacing:0;border-collapse:collapse;width:100%">
+                                                   <tbody>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:28px;font-weight:700;line-height:34px;color:#3c4043;font-family:Google Sans,Roboto,Open Sans,arial,sans-serif;text-align:left;padding-bottom:0px;padding-right:5px">{conversion_value}</td>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:16px;font-weight:700;line-height:24px;color:#cc7400;font-family:Inter,Google sans,Roboto,Open Sans,arial,sans-serif;text-align:left;padding-bottom:15px">
+                                                            {conversion_change_rate}
+                                                         </td>
+                                                      </tr>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:14px;font-weight:400;line-height:24px;color:#3c4043;font-family:Google Sans Text,Google sans,Roboto,Open Sans,arial,sans-serif;text-align:left">
+                                                            Conversions
+                                                         </td>
+                                                      </tr>
+                                                   </tbody>
+                                                </table>
+                                             </td>
+                                             <td width="22" style="width:22px">
+                                             </td>
+                                             <td valign="top" width="144" style="width:144px;border-right:1px solid #d8d8d8">
+                                                <table role="presentation" width="100%" align="center" cellspacing="0" cellpadding="0" border="0" style="border-spacing:0;border-collapse:collapse;width:100%">
+                                                   <tbody>
+                                                      <tr>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:28px;font-weight:700;line-height:34px;color:#3c4043;font-family:Google Sans,Roboto,Open Sans,arial,sans-serif;text-align:left;padding-bottom:0px;padding-right:5px">{cost_per_converstion}</td>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:16px;font-weight:700;line-height:24px;color:#cc7400;font-family:Inter,Google sans,Roboto,Open Sans,arial,sans-serif;text-align:left;padding-bottom:15px">
+                                                            {cost_per_converstion_change_rate}
+                                                         </td>
+                                                      </tr>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:14px;font-weight:400;line-height:24px;color:#3c4043;font-family:Google Sans Text,Google sans,Roboto,Open Sans,arial,sans-serif;text-align:left">
+                                                            Cost per click
+                                                         </td>
+                                                      </tr>
+                                                   </tbody>
+                                                </table>
+                                             </td>
+                                             <td width="22" style="width:22px">
+                                             </td>
+                                             <td valign="top" width="144" style="width:144px;">
+                                                <table role="presentation" width="100%" align="center" cellspacing="0" cellpadding="0" border="0" style="border-spacing:0;border-collapse:collapse;width:100%">
+                                                   <tbody>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:28px;font-weight:700;line-height:34px;color:#3c4043;font-family:Google Sans,Roboto,Open Sans,arial,sans-serif;text-align:left;padding-bottom:0px;padding-right:5px">{clicks}</td>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:16px;font-weight:700;line-height:24px;color:#cc7400;font-family:Inter,Google sans,Roboto,Open Sans,arial,sans-serif;text-align:left;padding-bottom:15px">
+                                                            {clicks_change_rate}
+                                                         </td>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="border-width:0;border-collapse:collapse;border-spacing:0;font-size:14px;font-weight:400;line-height:24px;color:#3c4043;font-family:Google Sans Text,Google sans,Roboto,Open Sans,arial,sans-serif;text-align:left">
+                                                            Clicks
+                                                         </td>
+                                                      </tr>
+                                                   </tbody>
+                                                </table>
+                                             </td>
+                                          </tr>
+                                       </tbody>
+                                    </table>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </td>
+                  </tr>
+                 {campaign_warnings}
+               </tbody>
+            </table>
+         </td>
+      </tr>
+   </tbody>
+</table>
