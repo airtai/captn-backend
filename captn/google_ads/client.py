@@ -62,6 +62,9 @@ def clean_error_response(content: bytes) -> str:
     )
 
 
+AUTHENTICATION_ERROR = "Please try to execute the command again."
+
+
 def execute_query(
     user_id: int,
     conv_id: int,
@@ -83,7 +86,10 @@ def execute_query(
 
     response = requests.get(f"{BASE_URL}/search", params=params, timeout=60)
     if not response.ok:
-        content = clean_error_response(response.content)
+        if AUTHENTICATION_ERROR in response.text:
+            content = AUTHENTICATION_ERROR
+        else:
+            content = clean_error_response(response.content)
         raise ValueError(content)
 
     response_json = response.json()
