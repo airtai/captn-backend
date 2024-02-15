@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.api_core import protobuf_helpers
+from google.auth.exceptions import RefreshError
 from google.protobuf import json_format
 
 from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
@@ -205,7 +206,7 @@ async def create_google_ads_client(
     # Initialize the Google Ads API client with the properly structured dictionary
     try:
         client = GoogleAdsClient.load_from_dict(google_ads_credentials)
-    except Exception:
+    except RefreshError:
         # Something is wrong with the credentials, delete them from the database so they can be re-generated
         async with get_db_connection() as db:  # type: ignore[var-annotated]
             await db.gauth.delete(where={"user_id": user_id})
