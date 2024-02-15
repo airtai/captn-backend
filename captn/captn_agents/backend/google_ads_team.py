@@ -12,6 +12,7 @@ from google_ads.model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    GeoTargetCriterion,
     RemoveResource,
 )
 
@@ -26,6 +27,7 @@ from .function_configs import (
     create_ad_group_ad_config,
     create_ad_group_config,
     create_campaign_config,
+    create_geo_targeting_for_campaign_config,
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
     execute_query_config,
@@ -71,6 +73,7 @@ class GoogleAdsTeam(Team):
         get_info_from_the_web_page_config,
         create_ad_group_config,
         create_campaign_config,
+        create_geo_targeting_for_campaign_config,
     ]
 
     _shared_system_message = (
@@ -221,7 +224,6 @@ You can NOT execute anything else, so do not suggest changes which you can NOT p
 20. Always double check with the client for which customer/campaign/ad-group/ad the updates needs to be done
 21. NEVER suggest making changes which you can NOT perform!
 Do NOT suggest making changes of the following things, otherwise you will be penalized:
-- Targeting settings
 - Ad Extensions
 - Budgeting
 - Ad Scheduling
@@ -279,9 +281,9 @@ Here is a list of things which you CAN do:
 - create/update/remove headlines and descriptions in the Ad Copy. Make sure to follow the restrictions for the headlines and descriptions (MAXIMUM 30 characters for headlines and MAXIMUM 90 characters for descriptions)
 - create/update/remove new keywords
 - create/update/remove campaign/ ad group / ad / positive and negative keywords
+- create/remove Geo Targeting for the campaign
 
 Do NOT suggest making changes of the following things:
-- Targeting settings
 - Ad Extensions
 - Budgeting
 - Ad Scheduling
@@ -293,7 +295,7 @@ This rule applies to ALL the commands which make permanent changes (create/updat
 
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
 So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes which we can do right away.
-If you are asked to optimize campaigns, start with updating ad copy or creating/removing positive and negative keywords.
+If you are asked to optimize campaigns, start with updating ad copy or creating/removing positive/negative keywords and geo targeting.
 - Use 'get_info_from_the_web_page' command when the client provides you some url or for already existing ad copies (based on the final_url).
 This command can be very useful for figuring out the clients business and what he wants to achieve.
 Before asking the client for additional information, ask him for his company/product url and try to figure out as much as possible yourself (WITHOUT doing any permanent modifications).
@@ -472,17 +474,26 @@ For creating a new campaign, the client must provide/approve the 'budget_amount_
 If the client specifies the 'budget_amount_micros' in another currency, you must convert it to the local currency!
 Otherwise, incorrect budget will be set for the campaign!
 
+15. 'create_geo_targeting_for_campaign': Creates geographical targeting on the campaign level, params: (customer_id: string,
+campaign_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean,
+location_names: Optional[List[str]], location_ids: Optional[List[str]])
+When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of avaliable locations and their IDs.
+Once the client approves the locations, you can use the 'location_ids' parameter to create the geo targeting for the campaign.
 
-15. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
+Later, if you want to remove the geo targeting, you can use the following query to retrieve the criterion_id and geo_target_constant (location_id and name):
+SELECT campaign_criterion.criterion_id, campaign_criterion.location.geo_target_constant, campaign_criterion.negative, campaign_criterion.type FROM campaign_criterion WHERE campaign_criterion.type = 'LOCATION' AND campaign.id = '121212'"
+SELECT geo_target_constant.name, geo_target_constant.id FROM geo_target_constant WHERE geo_target_constant.id IN ('123', '345')
+
+16. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
 clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
-16. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
+17. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
 params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
-17. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
+18. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
 It should be used only for the clients web page(s), final_url(s) etc.
 This command should be used for retrieving the information from clients web page.
 
@@ -755,6 +766,19 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
                 network_settings_target_content_network=network_settings_target_content_network,
             ),
             endpoint="/create-campaign",
+        ),
+        "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, location_names=None, location_ids=None: google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_approval_message=clients_approval_message,
+            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            ad=GeoTargetCriterion(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                location_names=location_names,
+                location_ids=location_ids,
+            ),
+            endpoint="/create-geo-targeting-for-campaign",
         ),
         "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, client_approved_modicifation_for_this_resource, parent_id=None: google_ads_create_update(
             user_id=user_id,

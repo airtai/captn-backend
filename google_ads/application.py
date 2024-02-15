@@ -24,6 +24,7 @@ from .model import (
     Campaign,
     CampaignCriterion,
     Criterion,
+    GeoTargetCriterion,
     RemoveResource,
 )
 
@@ -1156,6 +1157,102 @@ async def add_keywords_to_ad_group(
         model=model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id"],
+    )
+
+
+def _get_geo_target_constant_by_names(
+    client: GoogleAdsClient, location_names: List[str]
+) -> str:
+    gtc_service = client.get_service("GeoTargetConstantService")
+    gtc_request = client.get_type("SuggestGeoTargetConstantsRequest")
+
+    # The location names to get suggested geo target constants.
+    gtc_request.location_names.names.extend(location_names)
+
+    results = gtc_service.suggest_geo_target_constants(gtc_request)
+
+    return_text = (
+        "Below is a list of possible locations in the following format '(name, country_code, target_type)'."
+        "Please send them to the client as smart suggestions with type 'manyOf' (do not display the location_id to him):\n\n"
+    )
+    for suggestion in results.geo_target_constant_suggestions:
+        geo_target_constant = suggestion.geo_target_constant
+        text = (
+            f"location_id: {geo_target_constant.id}, "
+            f"({geo_target_constant.name}, "
+            f"{geo_target_constant.country_code}, "
+            f"{geo_target_constant.target_type}), "
+            f"is found from search term ({suggestion.search_term}).\n"
+        )
+        return_text += text
+
+    return return_text
+
+
+def _create_location_op(
+    client: GoogleAdsClient, customer_id: str, campaign_id: str, location_id: str
+) -> Any:
+    campaign_service = client.get_service("CampaignService")
+    geo_target_constant_service = client.get_service("GeoTargetConstantService")
+
+    # Create the campaign criterion.
+    campaign_criterion_operation = client.get_type("CampaignCriterionOperation")
+    campaign_criterion = campaign_criterion_operation.create
+    campaign_criterion.campaign = campaign_service.campaign_path(
+        customer_id, campaign_id
+    )
+
+    campaign_criterion.location.geo_target_constant = (
+        geo_target_constant_service.geo_target_constant_path(location_id)
+    )
+
+    return campaign_criterion_operation
+
+
+def _create_locations_by_ids_to_campaign(
+    client: GoogleAdsClient,
+    customer_id: str,
+    campaign_id: str,
+    location_ids: List[str],
+) -> str:
+    campaign_criterion_service = client.get_service("CampaignCriterionService")
+
+    operations = [
+        _create_location_op(client, customer_id, campaign_id, location_id)
+        for location_id in location_ids
+    ]
+
+    campaign_criterion_response = campaign_criterion_service.mutate_campaign_criteria(
+        customer_id=customer_id, operations=operations
+    )
+
+    result_msg = ""
+    for result in campaign_criterion_response.results:
+        result_msg += f"Added campaign geo target criterion {result.resource_name}.\n"
+
+    return result_msg
+
+
+@router.get("/create-geo-targeting-for-campaign")
+async def create_geo_targeting_for_campaign(
+    user_id: int, model: GeoTargetCriterion = Depends()
+) -> str:
+    if model.location_names is None and model.location_ids is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either location_names or location_ids must be provided.",
+        )
+
+    client = await _get_client(user_id=user_id)
+
+    if model.location_ids is None:
+        return _get_geo_target_constant_by_names(client=client, location_names=model.location_names)  # type: ignore
+
+    return _create_locations_by_ids_to_campaign(
+        client=client,
+        customer_id=model.customer_id,  # type: ignore
+        campaign_id=model.campaign_id,  # type: ignore
+        location_ids=model.location_ids,  # type: ignore
     )
 
 
