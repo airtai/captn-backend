@@ -114,7 +114,6 @@ class RemoveResource(BaseModel):
         "ad",
         "ad_group_criterion",
         "campaign_criterion",
-        "geo_target",
     ]
 
 
