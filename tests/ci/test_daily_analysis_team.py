@@ -1,3 +1,4 @@
+import json
 import unittest.mock
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from captn.captn_agents.backend.daily_analysis_team import (
     calculate_metrics_change,
     compare_reports,
     construct_daily_report_email_from_template,
+    execute_daily_analysis,
     get_campaigns_report,
     get_daily_ad_group_ads_report,
     get_daily_keywords_report,
@@ -1249,3 +1251,23 @@ def test_send_email() -> None:
             )
 
             mock_send_email_infobip.assert_called_once()
+
+
+def test_execute_daily_analysis_with_incorrect_emails() -> None:
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.daily_analysis_team.get_user_ids_and_emails"
+    ) as mock_get_user_ids_and_emails:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.daily_analysis_team._get_conv_id"
+        ) as mock_get_conv_id:
+            mock_get_user_ids_and_emails.return_value = json.dumps(
+                {
+                    1: "name@mail.com",
+                    2: "name2@mail.com",
+                }
+            )
+
+            execute_daily_analysis(
+                send_only_to_emails=["bla1@mail.com", "bla2@mail.com"]
+            )
+            mock_get_conv_id.assert_not_called()
