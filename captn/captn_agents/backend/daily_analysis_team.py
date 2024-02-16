@@ -5,7 +5,8 @@ import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 from os import environ
-from typing import Any, Callable, Dict, List, Optional, Union
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import requests
 from markdownify import markdownify as md
@@ -342,10 +343,14 @@ def get_daily_report_for_customer(
     )
 
 
+WARNING_DESCRIPTION = "Some final URLs for your Ads are not reachable:"
+
+
 def get_web_status_code_report_for_campaign(
     campaign: Dict[str, Any], customer_id: str
-) -> Optional[str]:
-    warning_message = "<li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:\n<ul>\n"
+) -> Tuple[Optional[str], List[str]]:
+    warning_message = f"<li><strong>WARNING:</strong>{WARNING_DESCRIPTION}\n<ul>\n"
+    warning_messages_list: List[str] = []
     send_warning_message_for_campaign = False
 
     for ad_group_id, ad_group in campaign["ad_groups"].items():
@@ -366,69 +371,169 @@ def get_web_status_code_report_for_campaign(
                         f"<a href='{final_url}' target='_blank'>{final_url}</a>"
                     )
                     google_ads_link = f"<a href='https://ads.google.com/aw/ads/edit/search?adId={ad_group_ad_id}&adGroupIdForAd={ad_group_id}&__e={customer_id}' target='_blank'>{ad_group_ad_id}</a>"
-                    warning_message += f"<li>Final url {final_url_link} used in Ad {google_ads_link} is <strong>not reachable</strong></li>\n"
+                    current_warning_message = f"<li>Final url {final_url_link} used in Ad {google_ads_link} is <strong>not reachable</strong></li>\n"
+                    warning_messages_list.append(current_warning_message)
+                    warning_message += current_warning_message
 
     warning_message += "</ul>\n</li>\n"
-    return warning_message if send_warning_message_for_campaign else None
+    return (
+        (warning_message, warning_messages_list)
+        if send_warning_message_for_campaign
+        else (None, [])
+    )
 
 
-def construct_daily_report_message(daily_reports: Dict[str, Any], date: str) -> str:
-    def add_metrics_message(
-        title: str,
-        metrics: Dict[str, Optional[Union[int, float]]],
-        field: str,
-        currency: str = "",
-    ) -> str:
-        if field == "cost_micros":
-            value = metrics[field] / 1000000  # type: ignore
-        else:
-            value = metrics[field]  # type: ignore
+EMAIL_TEMPLATES_PATH = (
+    Path(__file__).parent.parent.parent.parent.absolute() / "templates" / "email"
+)
+with open(str(EMAIL_TEMPLATES_PATH / "main_email_template.html")) as file:
+    MAIN_EMAIL_TEMPLATE = file.read()
+with open(str(EMAIL_TEMPLATES_PATH / "customer_report_template.html")) as file:
+    CUSTOMER_REPORT_TEMPLATE = file.read()
+with open(str(EMAIL_TEMPLATES_PATH / "campaigns_template.html")) as file:
+    CAMPAIGNS_TEMPLATE = file.read()
+with open(str(EMAIL_TEMPLATES_PATH / "campaign_warning_template.html")) as file:
+    CAMPAIGN_WARNING_TEMPLATE = file.read()
+with open(str(EMAIL_TEMPLATES_PATH / "proposed_action.html")) as file:
+    PROPOSED_ACTION_TEMPLATE = file.read()
 
-        increase = metrics[field + "_increase"]
-        if increase is None:
-            return f"<li>{title}: {value}</li>"
 
-        if increase > 0:
-            is_increase = f"Increase of {increase}% compared to the previous day"
-        elif increase < 0:
-            is_increase = f"Decrease of {abs(increase)}% compared to the previous day"
-        else:
-            is_increase = "No change from previous day"
+def _add_metrics_message(
+    title: str,
+    metrics: Dict[str, Optional[Union[int, float]]],
+    field: str,
+    currency: str = "",
+) -> Tuple[str, str, str]:
+    if field == "cost_micros":
+        value = round(metrics[field] / 1000000, 2)  # type: ignore
+    else:
+        value = metrics[field]  # type: ignore
 
-        if currency:
-            currency = f" {currency}"
-        return f"<li>{title}: {value}{currency} ({is_increase})</li>"
+    increase = metrics[field + "_increase"]
+    if increase is None:
+        return (f"<li>{title}: {value}</li>", str(value), "-")
+
+    if increase >= 0:
+        is_increase = f"+{increase}%"
+    else:
+        is_increase = f"{increase}%"
+
+    if currency:
+        currency = f" {currency}"
+    value_with_currency = f"{value}{currency}"
+    return (
+        f"<li>{title}: {value_with_currency} ({is_increase})</li>",
+        value_with_currency,
+        is_increase,
+    )
+
+
+def _update_message_and_campaigns_template(
+    title: str,
+    metrics: Dict[str, Optional[Union[int, float]]],
+    field: str,
+    message: str,
+    campaigns_template: str,
+    currency: str = "",
+) -> Tuple[str, str]:
+    message_for_metric, value_with_currency, is_increase = _add_metrics_message(
+        title=title, metrics=metrics, field=field, currency=currency
+    )
+    message += message_for_metric
+    campaigns_template = campaigns_template.replace(f"{{{field}}}", value_with_currency)
+    campaigns_template = campaigns_template.replace(
+        f"{{{field}_change_rate}}", is_increase
+    )
+
+    return message, campaigns_template
+
+
+def construct_daily_report_email_from_template(
+    daily_reports: Dict[str, Any], date: str
+) -> Tuple[str, str]:
+    main_email_template = MAIN_EMAIL_TEMPLATE
+    main_email_template = main_email_template.replace("{todays_date}", date)
+    customers_section = ""
 
     message = f"<h2>Daily Google Ads Performance Report - {date}</h2>"
     message += f"<p>We're here with your daily analysis of your Google Ads campaigns for {date}. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p>"
     campaigns_report = daily_reports["daily_customer_reports"]
     for customer_report in campaigns_report:
+        customer_report_template = CUSTOMER_REPORT_TEMPLATE
+
         customer_id = customer_report["customer_id"]
+        customer_report_template = customer_report_template.replace(
+            "{customer_id}", customer_report["customer_id"]
+        )
         currency = customer_report["currency"]
         message += f"<p>Customer <strong>{customer_id}</strong></p>"
         message += "<ul>"
+
+        campaigns_section = ""
         for _, campaign in customer_report["campaigns"].items():
-            link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
-            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign['name']}</a></strong>"
-            message += "<ul>"
-            message += add_metrics_message("Clicks", campaign["metrics"], "clicks")
-            message += add_metrics_message(
-                "Conversions", campaign["metrics"], "conversions"
-            )
-            message += add_metrics_message(
-                "Cost per click", campaign["metrics"], "cost_micros", currency=currency
+            campaigns_template = CAMPAIGNS_TEMPLATE
+
+            campaign_name = campaign["name"]
+            campaigns_template = campaigns_template.replace(
+                "{campaign_name}", campaign_name
             )
 
-            warning_message = get_web_status_code_report_for_campaign(
-                campaign, customer_id
-            )
+            link_to_campaign = f"https://ads.google.com/aw/campaigns?campaignId={campaign['id']}&__e={customer_id}"
+            message += f"<li>Campaign <strong><a href='{link_to_campaign}' target='_blank'>{campaign_name}</a></strong>"
+            message += "<ul>"
+
+            update_list = [
+                ("Clicks", "clicks", ""),
+                ("Conversions", "conversions", ""),
+                ("Cost", "cost_micros", currency),
+            ]
+            for title, field, currency in update_list:
+                message, campaigns_template = _update_message_and_campaigns_template(
+                    title=title,
+                    metrics=campaign["metrics"],
+                    field=field,
+                    message=message,
+                    campaigns_template=campaigns_template,
+                    currency=currency,
+                )
+
+            (
+                warning_message,
+                warning_messages_list,
+            ) = get_web_status_code_report_for_campaign(campaign, customer_id)
             if warning_message:
+                campaign_warning_template = CAMPAIGN_WARNING_TEMPLATE
+                campaign_warning_template = campaign_warning_template.replace(
+                    "{warning_description}", WARNING_DESCRIPTION
+                )
+                campaign_warning_template = campaign_warning_template.replace(
+                    "{warning_list}", "".join(warning_messages_list)
+                )
                 message += warning_message
 
+            if warning_message:
+                campaigns_template = campaigns_template.replace(
+                    "{campaign_warnings}", campaign_warning_template
+                )
+            else:
+                campaigns_template = campaigns_template.replace(
+                    "{campaign_warnings}", ""
+                )
+
+            campaigns_section += campaigns_template
             message += "</ul></li>"
         message += "</ul>"
 
-    return message
+        customer_report_template = customer_report_template.replace(
+            "{campaigns}", campaigns_section
+        )
+        customers_section += customer_report_template
+
+    main_email_template = main_email_template.replace(
+        "{customers_report}", customers_section
+    )
+
+    return message, main_email_template
 
 
 def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
@@ -725,31 +830,22 @@ REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
 
 
 def _create_final_html_message(
-    initial_message_in_chat: str, proposed_user_action: List[str], conv_id: int
+    main_email_template: str, proposed_user_action: List[str], conv_id: int
 ) -> str:
-    final_message = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captn.ai Daily Analysis</title>
-</head>
-<body>
-
-{initial_message_in_chat}
-"""
-
-    proposed_user_actions_paragraph = "<h3>Proposed User Actions:</h3>\n<ol>\n"
+    proposed_user_actions_section = ""
+    proposed_action_template = PROPOSED_ACTION_TEMPLATE
 
     for i, action in enumerate(proposed_user_action):
-        proposed_user_actions_paragraph += f"<li>{action} (<a href='{REDIRECT_DOMAIN}/chat/{conv_id}?selected_user_action={i+1}'>Link</a>)</li>"
+        proposed_user_actions_section += f"<li>{action} (<a href='{REDIRECT_DOMAIN}/chat/{conv_id}?selected_user_action={i+1}'>Link</a>)</li>"
 
-    final_message += proposed_user_actions_paragraph
-    final_message += """</ol>
+    proposed_action_template = proposed_action_template.replace(
+        "{proposed_actions_li_tags}", proposed_user_actions_section
+    )
+    main_email_template = main_email_template.replace(
+        "{proposed_action}", proposed_action_template
+    )
 
-</body>
-</html>"""
-    return final_message
+    return main_email_template
 
 
 def _update_chat_message_and_send_email(
@@ -758,6 +854,7 @@ def _update_chat_message_and_send_email(
     client_email: str,
     messages: str,
     initial_message_in_chat: str,
+    main_email_template: str,
     proposed_user_action: List[str],
 ) -> None:
     markdown = f"""<div class = "captn-daily-analysis">
@@ -781,15 +878,15 @@ def _update_chat_message_and_send_email(
     if response.status_code != 200:
         raise ValueError(response.content)
 
-    final_html_message = _create_final_html_message(
-        initial_message_in_chat, proposed_user_action, conv_id
+    main_email_template = _create_final_html_message(
+        main_email_template, proposed_user_action, conv_id
     )
 
     send_email_infobip(
         to_email=client_email,
         from_email="info@airt.ai",
         subject="Captn.ai Daily Analysis",
-        body_text=final_html_message,
+        body_text=main_email_template,
     )
 
 
@@ -871,13 +968,13 @@ def execute_daily_analysis(
     print("Starting daily analysis.")
     id_email_dict = json.loads(get_user_ids_and_emails())
 
+    # DELETE THIS BEFORE LAUNCH
     if send_only_to_emails is None:
         send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
+
     for user_id, email in id_email_dict.items():
-        if email not in send_only_to_emails:
-            print(
-                f"Skipping user_id: {user_id} - email {email} (current implementation)"
-            )
+        if send_only_to_emails is not None and email not in send_only_to_emails:
+            print(f"Skipping user_id: {user_id} - email {email}")
             continue
 
         try:
@@ -905,7 +1002,10 @@ def execute_daily_analysis(
                 date=date, user_id=user_id, conv_id=conv_id
             )
 
-            daily_report_message = construct_daily_report_message(
+            (
+                daily_report_message,
+                main_email_template,
+            ) = construct_daily_report_email_from_template(
                 daily_reports=json.loads(daily_reports), date=date
             )
 
@@ -955,6 +1055,7 @@ Please propose the next steps and send the email to the client.
                     client_email=email,
                     messages=messages,
                     initial_message_in_chat=daily_report_message,
+                    main_email_template=main_email_template,
                     proposed_user_action=last_message_json["proposed_user_action"],
                 )
             else:
