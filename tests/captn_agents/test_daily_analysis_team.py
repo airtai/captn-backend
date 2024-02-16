@@ -15,7 +15,6 @@ from captn.captn_agents.backend.daily_analysis_team import (
     calculate_metrics_change,
     compare_reports,
     construct_daily_report_email_from_template,
-    construct_daily_report_message,
     execute_daily_analysis,
     get_campaigns_report,
     get_daily_ad_group_ads_report,
@@ -1150,20 +1149,20 @@ def test_get_web_status_code_report_for_campaign() -> None:
     assert expected == warning_message
 
 
-def test_construct_campaign_report_message() -> None:
-    message = construct_daily_report_message(daily_report, date="2024-02-05")
-    expected = """<h2>Daily Google Ads Performance Report - 2024-02-05</h2><p>We're here with your daily analysis of your Google Ads campaigns for 2024-02-05. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p><p>Customer <strong>2324127278</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20761810762&__e=2324127278' target='_blank'>Website traffic-Search-3-updated-up</a></strong><ul><li>Clicks: 5 (Decrease of 42.86% compared to the previous day)</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 0.022222 USD (Decrease of 32.94% compared to the previous day)</li><li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:
-<ul>
-<li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
-<li>Final url <a href='https://also-not-reachable.airt.ai/' target='_blank'>https://also-not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
-</ul>
-</li>
-</ul></li><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20979579987&__e=2324127278' target='_blank'>Empty</a></strong><ul><li>Clicks: 0 (No change from previous day)</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 0.0 USD (No change from previous day)</li></ul></li></ul><p>Customer <strong>7119828439</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20750580900&__e=7119828439' target='_blank'>faststream-web-search</a></strong><ul><li>Clicks: 10</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 2.83 EUR (Decrease of 32.94% compared to the previous day)</li></ul></li></ul>"""
-    assert expected == message
+# def test_construct_campaign_report_message() -> None:
+#     message = construct_daily_report_email_from_template(daily_report, date="2024-02-05")
+#     expected = """<h2>Daily Google Ads Performance Report - 2024-02-05</h2><p>We're here with your daily analysis of your Google Ads campaigns for 2024-02-05. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p><p>Customer <strong>2324127278</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20761810762&__e=2324127278' target='_blank'>Website traffic-Search-3-updated-up</a></strong><ul><li>Clicks: 5 (Decrease of 42.86% compared to the previous day)</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 0.022222 USD (Decrease of 32.94% compared to the previous day)</li><li><strong>WARNING:</strong> Some final URLs for your Ads are not reachable:
+# <ul>
+# <li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+# <li>Final url <a href='https://also-not-reachable.airt.ai/' target='_blank'>https://also-not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
+# </ul>
+# </li>
+# </ul></li><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20979579987&__e=2324127278' target='_blank'>Empty</a></strong><ul><li>Clicks: 0 (No change from previous day)</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 0.0 USD (No change from previous day)</li></ul></li></ul><p>Customer <strong>7119828439</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20750580900&__e=7119828439' target='_blank'>faststream-web-search</a></strong><ul><li>Clicks: 10</li><li>Conversions: 0.0 (No change from previous day)</li><li>Cost per click: 2.83 EUR (Decrease of 32.94% compared to the previous day)</li></ul></li></ul>"""
+#     assert expected == message
 
 
 def test_construct_daily_report_email_from_template() -> None:
-    message = construct_daily_report_email_from_template(
+    message, main_email_template = construct_daily_report_email_from_template(
         daily_report, date="2024-02-05"
     )
     print(message)
@@ -1216,6 +1215,7 @@ def test_send_email() -> None:
                 messages="[{'content': 'test'}{content: 'test2'}]",
                 initial_message_in_chat="test",
                 proposed_user_action=["test1", "test2"],
+                main_email_template="test",
             )
 
             post_data = {
