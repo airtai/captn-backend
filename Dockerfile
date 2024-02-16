@@ -29,6 +29,7 @@ COPY migrations ./migrations
 COPY google_ads ./google_ads
 COPY openai_agent ./openai_agent
 COPY captn ./captn
+COPY templates ./templates
 COPY application.py scripts/* schema.prisma pyproject.toml ./
 RUN pip install -e ".[dev]"
 
