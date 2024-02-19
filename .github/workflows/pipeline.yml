@@ -31,6 +31,21 @@ jobs:
               shell: bash
               run: semgrep scan --config auto --error
 
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.10"
+            cache: "pip"
+            cache-dependency-path: pyproject.toml
+        - name: Install Dependencies
+          run: pip install .[dev]
+        - name: Test
+          run: pytest tests/ci/
+
     docker_build_push:
         runs-on: ubuntu-22.04
         permissions:
@@ -69,7 +84,7 @@ jobs:
         defaults:
             run:
                 shell: bash
-        needs: [static_analysis, docker_build_push]
+        needs: [static_analysis, test, docker_build_push]
         if: github.ref_name == 'main' || github.ref_name == 'dev'
         env:
             GITHUB_USERNAME: ${{ github.actor }}
