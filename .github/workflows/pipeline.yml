@@ -33,6 +33,9 @@ jobs:
 
     test:
       runs-on: ubuntu-latest
+      env:
+        INFOBIP_API_KEY: "dummy_key"
+        INFOBIP_BASE_URL: "dummy_url"
       steps:
         - uses: actions/checkout@v4
         - name: Set up Python
