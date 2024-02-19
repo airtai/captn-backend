@@ -33,9 +33,20 @@ jobs:
 
     test:
       runs-on: ubuntu-latest
+      services:
+        postgres:
+          image: postgres:13
+          env:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: gads
+          ports:
+            - 5432:5432
+          options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       env:
         INFOBIP_API_KEY: "dummy_key"
         INFOBIP_BASE_URL: "dummy_url"
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads"
       steps:
         - uses: actions/checkout@v4
         - name: Set up Python
@@ -50,8 +61,6 @@ jobs:
           run: prisma generate
         - name: Create client secrets file
           run: echo '{"web":{"client_id":"dummy.apps.googleusercontent.com","project_id":"dummy-id","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"dummy-secret","redirect_uris":["http://localhost:9000/login/callback"]}}' > client_secret.json
-        - name: list
-          run: ls -la
         - name: Test
           run: pytest tests/ci/
 
