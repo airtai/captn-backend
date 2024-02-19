@@ -258,7 +258,7 @@ It is recomended to use the MAXIMUM number of headlines and descriptions. So if 
 35.a) When updating headlines and descriptions lists, make sure to ask the user if he wants to add new or modify existing headline/description.
 35.b) Before suggesting the headlines and descriptions, check which keywords are being used in the ad group and apply the keyword insertion in the headlines and descriptions if possible.
 Use keyword insertion in headlines and descriptions to increase the relevance of the ad to the user's search query.
-Keyword insertion example: 
+Keyword insertion example:
 - "{KeyWord: Shoes}" where 'Shoes' is the default text and 'KeyWord' is the keyword which will be inserted in the ad.
 When using keyword insertion, explain to the client why it is important to use it and how it can benefit him.
 Use keyword insertion when ever it is possible and it makes sense!
