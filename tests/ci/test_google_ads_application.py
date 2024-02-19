@@ -1,7 +1,7 @@
 import unittest
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from google_ads.application import create_geo_targeting_for_campaign
 from google_ads.model import GeoTargetCriterion
@@ -13,8 +13,15 @@ async def test_add_geo_targeting_to_campaign_raises_exception_if_location_names_
 ):
     geo_target = GeoTargetCriterion(customer_id="123", campaign_id="456")
 
-    with pytest.raises(HTTPException):
+    with pytest.raises(HTTPException) as exc:
         await create_geo_targeting_for_campaign(user_id=-1, model=geo_target)
+
+    expected_exception = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Either location_names or location_ids must be provided.",
+    )
+    assert exc.value.status_code == expected_exception.status_code
+    assert exc.value.detail == expected_exception.detail
 
 
 @pytest.mark.asyncio
