@@ -816,9 +816,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
     return function_map
 
 
-def _get_update_ad_copy(
-    user_id: int, conv_id: int
-) -> Callable[
+def _get_update_ad_copy(user_id: int, conv_id: int) -> Callable[
     [
         str,
         str,
