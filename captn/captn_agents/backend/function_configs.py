@@ -279,21 +279,6 @@ reply_to_client_config = {
     },
 }
 
-analyze_query_response_config = {
-    "name": "analyze_query_response",
-    "description": "Analyze the execute_query response",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "file_name": {
-                "type": "string",
-                "description": "The name of the file where the response is saved",
-            },
-        },
-        "required": ["file_name"],
-    },
-}
-
 
 MODIFICATION_WARNING = """VERY IMPORTANT:
 DO NOT call this function without the clients explicit approval to modify the resource!!!.
@@ -776,6 +761,24 @@ Make sure you add all the information which the client needs to know, beacuse th
             "smart_suggestions": smart_suggestions_schema,
         },
         "required": ["message", "completed"],
+    },
+}
+
+ask_client_for_permission_config = {
+    "description": """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!""",
+    "name": "ask_client_for_permission",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string",
+                "description": """Message for the client.
+Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
+Your message should start 'Do you approve the following changes:' and then list all the changes which will be made!""",
+            },
+            "smart_suggestions": smart_suggestions_schema,
+        },
+        "required": ["message"],
     },
 }
 

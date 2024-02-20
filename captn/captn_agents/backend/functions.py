@@ -55,6 +55,17 @@ def reply_to_client_2(
     return return_msg
 
 
+def ask_client_for_permission(
+    message: Annotated[str, "Message for the client"],
+    smart_suggestions: Annotated[
+        Optional[Dict[str, Union[str, List[str]]]], smart_suggestions_description
+    ] = None,
+) -> Dict[str, Any]:
+    return reply_to_client_2(
+        message=message, completed=False, smart_suggestions=smart_suggestions
+    )
+
+
 llm_config_gpt_4 = {
     "timeout": 600,
     "config_list": config_list_gpt_4,

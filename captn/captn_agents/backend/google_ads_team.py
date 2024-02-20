@@ -1,7 +1,6 @@
 __all__ = ["GoogleAdsTeam"]
 
 import ast
-import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -23,6 +22,7 @@ from ...google_ads.client import (
 )
 from .execution_team import get_read_file
 from .function_configs import (
+    ask_client_for_permission_config,
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
     create_ad_group_config,
@@ -44,7 +44,11 @@ from .function_configs import (
     update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
-from .functions import get_info_from_the_web_page, reply_to_client_2
+from .functions import (
+    ask_client_for_permission,
+    get_info_from_the_web_page,
+    reply_to_client_2,
+)
 
 # from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
@@ -56,7 +60,6 @@ class GoogleAdsTeam(Team):
         list_accessible_customers_config,
         execute_query_config,
         reply_to_client_2_config,
-        # analyze_query_response_config,
         read_file_config,
         update_ad_group_ad_config,
         update_ad_group_config,
@@ -74,6 +77,7 @@ class GoogleAdsTeam(Team):
         create_ad_group_config,
         create_campaign_config,
         create_geo_targeting_for_campaign_config,
+        ask_client_for_permission_config,
     ]
 
     _shared_system_message = (
@@ -111,7 +115,7 @@ and make sure the task is completed on time. You are also SOLELY responsible for
 
 Based on the initial task, a number of proposed solutions will be suggested by the team. You must ask the team to write a detailed plan
 including steps and expected outcomes. Once the plan is ready, you must ask the client for permission to execute it using
-'reply_to_client'. Once the permission is granted, please instruct the team to execute the plan. Once the proposed solution
+'ask_client_for_permission'. Once the permission is granted, please instruct the team to execute the plan. Once the proposed solution
 is executed, you must write down the accomplished work and forward it to the client using 'reply_to_client'.
 
 Once the initial task given to the team is completed by implementing proposed solutions, you must write down the
@@ -200,7 +204,7 @@ Also, if a Website is provided in the client brief, use the 'get_info_from_the_w
 Don't repeat your self and others and do not use any filler words.
 6. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the necessary informations.
 7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
-8. Do NOT use 'reply_to_client' command for asking the questions on how to Google Ads API.
+8. Do NOT use 'reply_to_client' command for asking the questions on how to Google Ads API nor for asking the client for the permission to make the changes (use 'ask_client_for_permission' command instead).
 Your team is in charge of using the Google Ads API and no one else does NOT know how to use it.
 9. Do NOT ask the client questions about the information which you can get by using Google Ads API (keywords, clicks etc.)
 10. Before making any changes, ask the client for approval.
@@ -210,8 +214,8 @@ each message should contain only one change suggestion.
 12. Never repeat the content from (received) previous messages
 13. When referencing the customer ID, return customer.descriptive_name also or use a hyperlink to the Google Ads UI
 14. The client can NOT see your conversation, he only receives the message which you send him by using the
-'reply_to_client' command
-15. Whenever you use a 'reply_to_client' command, your team is on the break until you get the response from the client.
+'reply_to_client' or 'ask_client_for_permission' command
+15. Whenever you use a 'reply_to_client' or 'ask_client_for_permission' command, your team is on the break until you get the response from the client.
 Use this command only when you have a question or some result for the client and do NOT send messages like:
 "Please give us a moment to do xy" or "We are working on it".
 16. If it seems like the conversation with the client is over (He sends you "Thank you", "ok" etc.),
@@ -379,6 +383,9 @@ Here is an example of the smart_suggestions parameter:
 }
 
 2. read_file: Read an existing file, params: (filename: string)
+3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
+params: (message: string, smart_suggestions: smart_suggestions: Optional[Dict[str, Union[str, List[str]]]])
+You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
 ONLY Google ads specialist can suggest following commands:
 1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
@@ -400,6 +407,13 @@ The following commands make permanent changes. In all of them you must use the f
 - client_approved_modicifation_for_this_resource: You should set this to True only when the client approves the modification
 of ALL attributes for resource which will be modified/created
 
+You can get these parameters from the client ONLY by using the 'ask_client_for_permission' command!!!
+So before you execyte create/update/remove functions, you MUST ask the client for the permission by using the 'ask_client_for_permission' command! Otherwise you will be penalized!
+The workflow should be as follows:
+- use reply_to_client to interact with the client and give him the report of the information you retrieved and ask him what he wants to do
+- use ask_client_for_permission to suggest the changes you want to make and ask the client for the permission
+- create/update/remove the resource
+- use reply_to_client to give the client the report of the changes you made
 
 Don't make hasty changes. When you receive a task, first comment on it within the team and be sure to ask the client if there are any uncertainties in order to minimize improvisation.
 If you want to make any kind of permanent changes, you MUST ask the client for approval before you make any changes!
@@ -516,61 +530,6 @@ but if it is important to the client, you can give advice on how to do it manual
 """
 
 
-def analyze_query_response(work_dir: str, file_name: str) -> str:
-    #     return """For customer_id = 2324127278, we have the following aggregated statistics:
-    # - metrics.clicks: 3731.0
-    # - metrics.conversions': 0.0
-    # - metrics.impressions': 3660371.0
-    # """
-    # retval = {'metrics.clicks': 3731.0,
-    #     'metrics.conversions': 0.0,
-    #     'metrics.impressions': 3660371.0}
-
-    # return retval
-
-    retval = {
-        "2324127278": {
-            "metrics.clicks": 3731.0,
-            "metrics.conversions": 0.0,
-            "metrics.impressions": 3660371.0,
-        }
-    }
-
-    return json.dumps(retval)
-
-    # fixture_path = Path("fixtures/test_query.parquet")
-    # assert fixture_path.exists()
-
-    # df = pd.read_parquet()
-
-    # def agregate_by_customer_id(df: pd.DataFrame) -> Dict[str, Dict[str, float]]:
-    #     agg = df.groupby("customer_id")[["metrics.clicks", "metrics.conversions", "metrics.impressions"]].sum()
-    #     return agg.to_dict(orient="index")
-
-    # return agregate_by_customer_id(df)
-
-
-#     path = Path(work_dir) / file_name
-
-#     with open(path) as json_file:
-#         data = json.load(json_file)
-
-#     # if len(str(data)) > 5000:
-#     summary = "Here is the summary of the executed query:\n"
-#     clicks = 23
-#     impressions = 9
-#     for customer_id in data.keys():
-#         summary += f"""customer_id: {customer_id}
-# - 'name': 'Website traffic-Search-{customer_id}'
-# - 'metrics': 'clicks': {clicks}, 'impressions': {impressions} 'conversions': 0.15
-# - 'text': 'fast api tutorial'\n"""
-#         clicks += 12
-#         impressions += 3
-#     return summary
-
-# return data  # type: ignore[no-any-return]
-
-
 def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
     def _string_to_list(
         customer_ids: Optional[Union[List[str], str]]
@@ -601,9 +560,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             work_dir=work_dir,
         ),
         "reply_to_client": reply_to_client_2,
-        # "analyze_query_response": lambda file_name: analyze_query_response(
-        #     work_dir=work_dir, file_name=file_name
-        # ),
+        "ask_client_for_permission": ask_client_for_permission,
         "read_file": read_file,
         "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
