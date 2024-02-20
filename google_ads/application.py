@@ -1237,7 +1237,11 @@ def _create_locations_by_ids_to_campaign(
 async def create_geo_targeting_for_campaign(
     user_id: int, model: GeoTargetCriterion = Depends()
 ) -> str:
-    if model.location_names is None and model.location_ids is None:
+    location_names = (
+        model.location_names if isinstance(model.location_names, list) else None
+    )
+    location_ids = model.location_ids if isinstance(model.location_ids, list) else None
+    if location_names is None and location_ids is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Either location_names or location_ids must be provided.",
@@ -1245,14 +1249,14 @@ async def create_geo_targeting_for_campaign(
 
     client = await _get_client(user_id=user_id)
 
-    if model.location_ids is None:
-        return _get_geo_target_constant_by_names(client=client, location_names=model.location_names)  # type: ignore
+    if location_ids is None:
+        return _get_geo_target_constant_by_names(client=client, location_names=location_names)  # type: ignore
 
     return _create_locations_by_ids_to_campaign(
         client=client,
         customer_id=model.customer_id,  # type: ignore
         campaign_id=model.campaign_id,  # type: ignore
-        location_ids=model.location_ids,  # type: ignore
+        location_ids=location_ids,  # type: ignore
     )
 
 
