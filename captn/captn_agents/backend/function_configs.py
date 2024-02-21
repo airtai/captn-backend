@@ -305,13 +305,13 @@ properties_config = {
     "clients_approval_message": {
         "type": "string",
         "description": """Clients approval message.
-Clients meassage in which he approves the changes.
+The client can approve by answering 'Yes' to the question. If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else.
 NEVER create this message on your own, or modify clients message in ANY way!
 Faking the clients approval may resault with the LAWSUIT and you will get fired!!""",
     },
     "modification_question": {
         "type": "string",
-        "description": """This parameter MUST be the same string as the 'message' parameter you have used in the 'ask_client_for_permission' function!""",
+        "description": """Make sure that the 'message' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same).""",
     },
     "cpc_bid_micros": {
         "type": "integer",
@@ -753,13 +753,8 @@ Make sure you add all the information which the client needs to know, beacuse th
 Your message should start 'Do you approve the following changes:' and then list all the changes which will be made!""",
             },
             # "smart_suggestions": smart_suggestions_schema,
-            "yes_or_no": {
-                "enum": ["Yes", "No"],
-                "type": "string",
-                "description": "The client can answer with 'Yes' or 'No'",
-            },
         },
-        "required": ["message", "yes_or_no"],
+        "required": ["message"],
     },
 }
 

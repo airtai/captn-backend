@@ -239,6 +239,7 @@ async def a_start_conversation(
 
 
 def continue_conversation(team_name: str, message: str) -> str:
+    message = message.strip()
     initial_team = Team.get_team(team_name)
     initial_team.update_clients_question_answere_list(message)
 

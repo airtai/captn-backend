@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from unittest.mock import patch
 
 import autogen
@@ -55,17 +55,18 @@ def reply_to_client_2(
     return return_msg
 
 
+YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
+    suggestions=["Yes", "No"], type="oneOf"
+).model_dump()
+
+
 def ask_client_for_permission(
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
     message: Annotated[str, "Message for the client"],
-    yes_or_no: Literal["Yes", "No"],
 ) -> Dict[str, Any]:
     clients_question_answere_list.append((message, None))
-    smart_suggestions = SmartSuggestions(
-        suggestions=[yes_or_no], type="oneOf"
-    ).model_dump()
     return reply_to_client_2(
-        message=message, completed=False, smart_suggestions=smart_suggestions
+        message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
     )
 
 

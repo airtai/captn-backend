@@ -387,7 +387,7 @@ Here is an example of the smart_suggestions parameter:
 
 2. read_file: Read an existing file, params: (filename: string)
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (message: string, yes_or_no: Literal["Yes", "No"])
+params: (message: string)
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
 ONLY Google ads specialist can suggest following commands:
@@ -567,10 +567,9 @@ def _get_function_map(
             work_dir=work_dir,
         ),
         "reply_to_client": reply_to_client_2,
-        "ask_client_for_permission": lambda message, yes_or_no: ask_client_for_permission(
+        "ask_client_for_permission": lambda message: ask_client_for_permission(
             clients_question_answere_list=clients_question_answere_list,
             message=message,
-            yes_or_no=yes_or_no,
         ),
         "read_file": read_file,
         "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, modification_question, cpc_bid_micros=None, status=None: google_ads_create_update(
@@ -904,7 +903,9 @@ def get_create_google_ads_team(
 
 
 def answer_the_question(answer: str, team_name: str) -> str:
+    answer = answer.strip()
     google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
+    google_ads_team.update_clients_question_answere_list(answer)
 
     google_ads_team.continue_chat(message=answer)
 

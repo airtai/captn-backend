@@ -120,7 +120,7 @@ NOT_IN_QUESTION_ANSWER_LIST = (
 NOT_APPROVED = (
     "The client did not approve the modification. The client must approve the modification by answering 'Yes' to the question."
     "If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else."
-    "Please send a new message to the client and ask for the permission again and tell him that only for answer 'Yes' the modification will be done."
+    "Please send a new message to the client (by using 'ask_client_for_permission') and ask for the permission again and tell him that only for answer 'Yes' the modification will be done."
 )
 
 
@@ -149,10 +149,6 @@ def google_ads_create_update(
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
     endpoint: str = "/update-ad-group-ad",
 ) -> Union[Dict[str, Any], str]:
-    print(
-        f"modification_question: {modification_question}\nclients_approval_message: {clients_approval_message}\n"
-    )
-    print(f"clients_question_answere_list: {clients_question_answere_list}\n\n")
     _check_for_client_approval(
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
