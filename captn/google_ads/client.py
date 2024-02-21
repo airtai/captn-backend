@@ -1,6 +1,6 @@
 import json
 from os import environ
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 from pydantic import BaseModel
@@ -113,14 +113,34 @@ def get_user_ids_and_emails() -> str:
     return response.json()  # type: ignore[no-any-return]
 
 
+def _check_for_client_approval(
+    modicication_question: str,
+    clients_approval_message: str,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> None:
+    if (
+        modicication_question,
+        clients_approval_message,
+    ) not in clients_question_answere_list:
+        raise ValueError(
+            "You must ask the client for the permission first by using the 'ask_client_for_permission' function."
+        )
+    if clients_approval_message.lower() != "yes":
+        raise ValueError(
+            "The client did not approve the modification. The client must approve the modification by answering 'yes' to the question. No other answer is accepted."
+        )
+
+
 def google_ads_create_update(
     user_id: int,
     conv_id: int,
     clients_approval_message: str,
     client_approved_modicifation_for_this_resource: bool,
     ad: BaseModel,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
     endpoint: str = "/update-ad-group-ad",
 ) -> Union[Dict[str, Any], str]:
+    print(f"clients_question_answere_list: {clients_question_answere_list}\n\n")
     if (
         not clients_approval_message
         or not client_approved_modicifation_for_this_resource

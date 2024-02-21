@@ -240,6 +240,7 @@ async def a_start_conversation(
 
 def continue_conversation(team_name: str, message: str) -> str:
     initial_team = Team.get_team(team_name)
+    initial_team.update_clients_question_answere_list(message)
 
     initial_team.continue_chat(message=message)
 

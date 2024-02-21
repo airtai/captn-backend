@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from unittest.mock import patch
 
 import autogen
@@ -56,11 +56,13 @@ def reply_to_client_2(
 
 
 def ask_client_for_permission(
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
     message: Annotated[str, "Message for the client"],
     smart_suggestions: Annotated[
         Optional[Dict[str, Union[str, List[str]]]], smart_suggestions_description
     ] = None,
 ) -> Dict[str, Any]:
+    clients_question_answere_list.append((message, None))
     return reply_to_client_2(
         message=message, completed=False, smart_suggestions=smart_suggestions
     )

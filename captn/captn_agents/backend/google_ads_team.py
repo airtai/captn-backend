@@ -2,7 +2,7 @@ __all__ = ["GoogleAdsTeam"]
 
 import ast
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from google_ads.model import (
     AdCopy,
@@ -136,10 +136,12 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
+        clients_question_answere_list: List[Tuple[str, Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
             user_id=user_id,
             conv_id=conv_id,
             work_dir=work_dir,
+            clients_question_answere_list=clients_question_answere_list,
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -158,6 +160,7 @@ sure it is understandable by non-experts.
             seed=seed,
             temperature=temperature,
             name=name,
+            clients_question_answere_list=clients_question_answere_list,
         )
         self.conv_id = conv_id
         self.task = task
@@ -530,7 +533,12 @@ but if it is important to the client, you can give advice on how to do it manual
 """
 
 
-def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
+def _get_function_map(
+    user_id: int,
+    conv_id: int,
+    work_dir: str,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Dict[str, Any]:
     def _string_to_list(
         customer_ids: Optional[Union[List[str], str]]
     ) -> Optional[List[str]]:
@@ -560,11 +568,16 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             work_dir=work_dir,
         ),
         "reply_to_client": reply_to_client_2,
-        "ask_client_for_permission": ask_client_for_permission,
+        "ask_client_for_permission": lambda message, smart_suggestions=None: ask_client_for_permission(
+            clients_question_answere_list=clients_question_answere_list,
+            message=message,
+            smart_suggestions=smart_suggestions,
+        ),
         "read_file": read_file,
         "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroupAd(
@@ -581,6 +594,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "create_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdCopy(
@@ -597,10 +611,15 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
             ),
             endpoint="/create-update-ad-copy",
         ),
-        "update_ad_copy": _get_update_ad_copy(user_id, conv_id),
+        "update_ad_copy": _get_update_ad_copy(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+        ),
         "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroup(
@@ -615,6 +634,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "create_ad_group": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, name, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroup(
@@ -629,6 +649,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "update_campaign": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, name=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=Campaign(
@@ -642,6 +663,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, client_approved_modicifation_for_this_resource, clients_approval_message, status=None, cpc_bid_micros=None, keyword_match_type=None, keyword_text=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroupCriterion(
@@ -658,6 +680,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "update_campaigns_negative_keywords": lambda customer_id, campaign_id, criterion_id, clients_approval_message, client_approved_modicifation_for_this_resource, keyword_match_type=None, keyword_text=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=CampaignCriterion(
@@ -672,6 +695,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=CampaignCriterion(
@@ -688,6 +712,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, negative=None, bid_modifier=None, cpc_bid_micros=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroupCriterion(
@@ -705,6 +730,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "create_ad_group_ad": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, headlines, descriptions, final_url, path1=None, path2=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdGroupAd(
@@ -722,6 +748,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "create_campaign": lambda customer_id, name, budget_amount_micros, local_currency, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, network_settings_target_google_search=None, network_settings_target_search_network=None, network_settings_target_content_network=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=Campaign(
@@ -738,6 +765,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, location_names=None, location_ids=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=GeoTargetCriterion(
@@ -751,6 +779,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, client_approved_modicifation_for_this_resource, parent_id=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=RemoveResource(
@@ -764,6 +793,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "remove_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, update_existing_headline_index=None, update_existing_description_index=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdCopy(
@@ -784,7 +814,11 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
     return function_map
 
 
-def _get_update_ad_copy(user_id: int, conv_id: int) -> Callable[
+def _get_update_ad_copy(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Callable[
     [
         str,
         str,
@@ -825,6 +859,7 @@ def _get_update_ad_copy(user_id: int, conv_id: int) -> Callable[
         return google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
             client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
             ad=AdCopy(
