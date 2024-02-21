@@ -17,9 +17,9 @@ def test_clean_error_response() -> None:
 
 def test_check_for_client_approval() -> None:
     response = _check_for_client_approval(
-        clients_approval_message="yes",
-        modicication_question="modicication_question",
-        clients_question_answere_list=[("modicication_question", "yes")],
+        clients_approval_message="yes ",
+        modification_question="modification_question",
+        clients_question_answere_list=[("modification_question", "yes ")],
     )
     assert response
 
@@ -28,7 +28,7 @@ def test_check_for_client_approval_not_in_qa_list() -> None:
     with pytest.raises(ValueError) as exc_info:
         _check_for_client_approval(
             clients_approval_message="yes",
-            modicication_question="modicication_question",
+            modification_question="modification_question",
             clients_question_answere_list=[("aa", "bb")],
         )
     assert exc_info.value.args[0] == NOT_IN_QUESTION_ANSWER_LIST
@@ -38,7 +38,7 @@ def test_check_for_client_approval_client_did_not_approve() -> None:
     with pytest.raises(ValueError) as exc_info:
         _check_for_client_approval(
             clients_approval_message="yes 123",
-            modicication_question="modicication_question",
-            clients_question_answere_list=[("modicication_question", "yes 123")],
+            modification_question="modification_question",
+            clients_question_answere_list=[("modification_question", "yes 123")],
         )
     assert exc_info.value.args[0] == NOT_APPROVED

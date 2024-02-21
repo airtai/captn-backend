@@ -387,7 +387,7 @@ Here is an example of the smart_suggestions parameter:
 
 2. read_file: Read an existing file, params: (filename: string)
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (message: string, smart_suggestions: smart_suggestions: Optional[Dict[str, Union[str, List[str]]]])
+params: (message: string, yes_or_no: Literal["Yes", "No"])
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
 ONLY Google ads specialist can suggest following commands:
@@ -407,8 +407,7 @@ Unless told differently, do NOT retrieve information about the REMOVED resources
 The following commands make permanent changes. In all of them you must use the following two parameters:
 - clients_approval_message: With this message, the client confirms that he is aware of the changes you will make
 (if the message is not detailed enough, we are threatened with a lawsuit)
-- client_approved_modicifation_for_this_resource: You should set this to True only when the client approves the modification
-of ALL attributes for resource which will be modified/created
+- modification_question: This parameter MUST be the same string as the 'message' parameter you have used in the 'ask_client_for_permission' function!
 
 You can get these parameters from the client ONLY by using the 'ask_client_for_permission' command!!!
 So before you execyte create/update/remove functions, you MUST ask the client for the permission by using the 'ask_client_for_permission' command! Otherwise you will be penalized!
@@ -431,7 +430,7 @@ Do NOT do multiple changes at once and inform the client about all the changes a
 
 3. 'update_ad_group_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
 clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
-client_approved_modicifation_for_this_resource: boolean)
+modification_question: str)
 This command can only update ads cpc_bid_micros and status
 
 Before executing the 'update_ad_group_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
@@ -439,52 +438,52 @@ with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
 4. 'update_ad_copy': Update the Google Ads Copy, params: (customer_id: string, ad_id: string,
-clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
+clients_approval_message: string, modification_question: str
 headline: Optional[str], description: Optional[str], update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str],
 final_url: Optional[str], final_mobile_urls: Optional[str], path1: Optional[str], path2: Optional[str])
 
 5. 'update_ad_group': Update the Google Ads Group, params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
-client_approved_modicifation_for_this_resource: boolean)
+modification_question: str)
 This command can only update ad groups name, cpc_bid_micros and status
 
 6. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
 clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
-client_approved_modicifation_for_this_resource: boolean)
+modification_question: str)
 This command can only update campaigns name and status
 
 
 7. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
 criterion_id: string, clients_approval_message: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 keyword_match_type: string, keyword_text: string,
-cpc_bid_micros: Optional[int], client_approved_modicifation_for_this_resource: boolean)
+cpc_bid_micros: Optional[int], modification_question: str)
 
 8. 'update_campaigns_negative_keywords': Update the Google Ads keywords (on campaign level), params: (customer_id: string, campaign_id: string,
 criterion_id: string, clients_approval_message: string, keyword_match_type: string, keyword_text: string,
-client_approved_modicifation_for_this_resource: boolean)
+modification_question: str)
 This command can only update campaigns negative keywords keyword_match_type and keyword_text
 
 9. 'create_ad_group': Create the Google Ads Group, params: (customer_id: string, campaign_id: string, clients_approval_message: string,
 name: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
-client_approved_modicifation_for_this_resource: boolean)
+modification_question: str)
 
 10. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean)
+status: Optional[Literal["ENABLED", "PAUSED"]], modification_question: str)
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
 11. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]], client_approved_modicifation_for_this_resource: boolean, cpc_bid_micros: Optional[int])
+status: Optional[Literal["ENABLED", "PAUSED"]], modification_question: str, cpc_bid_micros: Optional[int])
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
 12. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the EXISTING Google Ads Copy, params: (customer_id: string, ad_id: string,
-clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
+clients_approval_message: string, modification_question: str
 headline: Optional[str], description: Optional[str])
 
 13. 'create_ad_group_ad': Create new ad group ad, params: (customer_id: string, ad_group_id: string,
-clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean, status: Optional[Literal["ENABLED", "PAUSED"]],
+clients_approval_message: string, modification_question: str, status: Optional[Literal["ENABLED", "PAUSED"]],
 headlines: List[str], descriptions: List[str], final_url: List[str], path1: Optional[str], path2: Optional[str])
 You can suggest final_url within the smart suggestions if the client has provided it in the customer brief.
 If not, do not suggest the final_url, it must be provided by the client.
@@ -494,7 +493,7 @@ Use display path (path1 and path2) to increase the relevance of the ad to the us
 
 14. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
-clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean)
+clients_approval_message: string, modification_question: str)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
@@ -502,7 +501,7 @@ If the client specifies the 'budget_amount_micros' in another currency, you must
 Otherwise, incorrect budget will be set for the campaign!
 
 15. 'create_geo_targeting_for_campaign': Creates geographical targeting on the campaign level, params: (customer_id: string,
-campaign_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean,
+campaign_id: string, clients_approval_message: string, modification_question: str,
 location_names: Optional[List[str]], location_ids: Optional[List[str]])
 When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of avaliable locations and their IDs.
 Do NOT improvise with the location names, use the names which the client provided! If you know the clients business location, you can ask him if he wants to target that location, but do NOT execute 'create_geo_targeting_for_campaign' without checking with the client first!
@@ -514,11 +513,11 @@ SELECT geo_target_constant.name, geo_target_constant.id FROM geo_target_constant
 
 16. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
-clients_approval_message: string, parent_id: Optional[string], client_approved_modicifation_for_this_resource: boolean)
+clients_approval_message: string, parent_id: Optional[string], modification_question: str)
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
 17. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
-params: (customer_id: string, ad_id: string, clients_approval_message: string, client_approved_modicifation_for_this_resource: boolean
+params: (customer_id: string, ad_id: string, clients_approval_message: string, modification_question: str
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
 18. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
@@ -568,18 +567,18 @@ def _get_function_map(
             work_dir=work_dir,
         ),
         "reply_to_client": reply_to_client_2,
-        "ask_client_for_permission": lambda message, smart_suggestions=None: ask_client_for_permission(
+        "ask_client_for_permission": lambda message, yes_or_no: ask_client_for_permission(
             clients_question_answere_list=clients_question_answere_list,
             message=message,
-            smart_suggestions=smart_suggestions,
+            yes_or_no=yes_or_no,
         ),
         "read_file": read_file,
-        "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, modification_question, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdGroupAd(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -591,12 +590,12 @@ def _get_function_map(
             ),
             endpoint="/update-ad-group-ad",
         ),
-        "create_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, headline=None, description=None: google_ads_create_update(
+        "create_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, modification_question, headline=None, description=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdCopy(
                 customer_id=customer_id,
                 ad_id=ad_id,
@@ -616,12 +615,12 @@ def _get_function_map(
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
         ),
-        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, modification_question, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdGroup(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -631,12 +630,12 @@ def _get_function_map(
             ),
             endpoint="/update-ad-group",
         ),
-        "create_ad_group": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, name, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "create_ad_group": lambda customer_id, campaign_id, clients_approval_message, modification_question, name, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdGroup(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -646,12 +645,12 @@ def _get_function_map(
             ),
             endpoint="/create-ad-group",
         ),
-        "update_campaign": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, name=None, status=None: google_ads_create_update(
+        "update_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, name=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=Campaign(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -660,12 +659,12 @@ def _get_function_map(
             ),
             endpoint="/update-campaign",
         ),
-        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, client_approved_modicifation_for_this_resource, clients_approval_message, status=None, cpc_bid_micros=None, keyword_match_type=None, keyword_text=None: google_ads_create_update(
+        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, modification_question, clients_approval_message, status=None, cpc_bid_micros=None, keyword_match_type=None, keyword_text=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdGroupCriterion(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -677,12 +676,12 @@ def _get_function_map(
             ),
             endpoint="/update-ad-group-criterion",
         ),
-        "update_campaigns_negative_keywords": lambda customer_id, campaign_id, criterion_id, clients_approval_message, client_approved_modicifation_for_this_resource, keyword_match_type=None, keyword_text=None: google_ads_create_update(
+        "update_campaigns_negative_keywords": lambda customer_id, campaign_id, criterion_id, clients_approval_message, modification_question, keyword_match_type=None, keyword_text=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=CampaignCriterion(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -692,12 +691,12 @@ def _get_function_map(
             ),
             endpoint="/update-campaigns-negative-keywords",
         ),
-        "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, negative=None, bid_modifier=None: google_ads_create_update(
+        "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, modification_question, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=CampaignCriterion(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -709,12 +708,12 @@ def _get_function_map(
             ),
             endpoint="/add-negative-keywords-to-campaign",
         ),
-        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, negative=None, bid_modifier=None, cpc_bid_micros=None: google_ads_create_update(
+        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, clients_approval_message, modification_question, status=None, negative=None, bid_modifier=None, cpc_bid_micros=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdGroupCriterion(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -727,12 +726,12 @@ def _get_function_map(
             ),
             endpoint="/add-keywords-to-ad-group",
         ),
-        "create_ad_group_ad": lambda customer_id, ad_group_id, clients_approval_message, client_approved_modicifation_for_this_resource, headlines, descriptions, final_url, path1=None, path2=None, status=None: google_ads_create_update(
+        "create_ad_group_ad": lambda customer_id, ad_group_id, clients_approval_message, modification_question, headlines, descriptions, final_url, path1=None, path2=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdGroupAd(
                 customer_id=customer_id,
                 ad_group_id=ad_group_id,
@@ -745,12 +744,12 @@ def _get_function_map(
             ),
             endpoint="/create-ad-group-ad",
         ),
-        "create_campaign": lambda customer_id, name, budget_amount_micros, local_currency, clients_approval_message, client_approved_modicifation_for_this_resource, status=None, network_settings_target_google_search=None, network_settings_target_search_network=None, network_settings_target_content_network=None: google_ads_create_update(
+        "create_campaign": lambda customer_id, name, budget_amount_micros, local_currency, clients_approval_message, modification_question, status=None, network_settings_target_google_search=None, network_settings_target_search_network=None, network_settings_target_content_network=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=Campaign(
                 customer_id=customer_id,
                 name=name,
@@ -762,12 +761,12 @@ def _get_function_map(
             ),
             endpoint="/create-campaign",
         ),
-        "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, client_approved_modicifation_for_this_resource, location_names=None, location_ids=None: google_ads_create_update(
+        "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, location_names=None, location_ids=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=GeoTargetCriterion(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
@@ -776,12 +775,12 @@ def _get_function_map(
             ),
             endpoint="/create-geo-targeting-for-campaign",
         ),
-        "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, client_approved_modicifation_for_this_resource, parent_id=None: google_ads_create_update(
+        "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, modification_question, parent_id=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=RemoveResource(
                 customer_id=customer_id,
                 resource_id=resource_id,
@@ -790,12 +789,12 @@ def _get_function_map(
             ),
             endpoint="/remove-google-ads-resource",
         ),
-        "remove_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, client_approved_modicifation_for_this_resource, update_existing_headline_index=None, update_existing_description_index=None: google_ads_create_update(
+        "remove_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, modification_question, update_existing_headline_index=None, update_existing_description_index=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdCopy(
                 customer_id=customer_id,
                 ad_id=ad_id,
@@ -823,7 +822,7 @@ def _get_update_ad_copy(
         str,
         str,
         str,
-        bool,
+        str,
         Optional[str],
         Optional[str],
         Optional[int],
@@ -837,7 +836,7 @@ def _get_update_ad_copy(
         customer_id: str,
         ad_id: str,
         clients_approval_message: str,
-        client_approved_modicifation_for_this_resource: bool,
+        modification_question: str,
         headline: Optional[str] = None,
         description: Optional[str] = None,
         update_existing_headline_index: Optional[int] = None,
@@ -861,7 +860,7 @@ def _get_update_ad_copy(
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
             clients_approval_message=clients_approval_message,
-            client_approved_modicifation_for_this_resource=client_approved_modicifation_for_this_resource,
+            modification_question=modification_question,
             ad=AdCopy(
                 customer_id=customer_id,
                 ad_id=ad_id,
