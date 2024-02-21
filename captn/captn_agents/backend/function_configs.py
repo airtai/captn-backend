@@ -279,27 +279,10 @@ reply_to_client_config = {
     },
 }
 
-analyze_query_response_config = {
-    "name": "analyze_query_response",
-    "description": "Analyze the execute_query response",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "file_name": {
-                "type": "string",
-                "description": "The name of the file where the response is saved",
-            },
-        },
-        "required": ["file_name"],
-    },
-}
-
 
 MODIFICATION_WARNING = """VERY IMPORTANT:
 DO NOT call this function without the clients explicit approval to modify the resource!!!.
-The client must also approve ALL the parameters which will be used for the modification. Otherwise you will be penalized!
-If a client only asks for some suggestions, then clients_approval_message parameter MUST be set to None and
-client_approved_modicifation_for_this_resource parameter MUST be set to False! Otherwise you will be penalized!
+i.e. the client must answer 'yes' to the question which asks for the permission to make the changes!
 """
 
 properties_config = {
@@ -322,16 +305,13 @@ properties_config = {
     "clients_approval_message": {
         "type": "string",
         "description": """Clients approval message.
-Clients meassage in which he approves the changes.
+The client can approve by answering 'Yes' to the question. If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else.
 NEVER create this message on your own, or modify clients message in ANY way!
 Faking the clients approval may resault with the LAWSUIT and you will get fired!!""",
     },
-    "client_approved_modicifation_for_this_resource": {
-        "type": "boolean",
-        "description": """The team must inform the client about all changes which will be made
-and which values will be modified (e.g. name, status...). ONLY if the client APPROVES the changes, the team can use this function.
-Until the client approves the changes, the team must NOT call the function! and this parameter MUST be set to False.
-Client must be informed about everything!""",
+    "modification_question": {
+        "type": "string",
+        "description": """Make sure that the 'message' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same).""",
     },
     "cpc_bid_micros": {
         "type": "integer",
@@ -377,9 +357,7 @@ update_ad_group_config = {
             "customer_id": properties_config["customer_id"],
             "ad_group_id": properties_config["ad_group_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "name": {
                 "type": "string",
                 "description": "The name of the Ad Group",
@@ -394,7 +372,7 @@ update_ad_group_config = {
             "customer_id",
             "ad_group_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -408,9 +386,7 @@ create_ad_group_config = {
             "customer_id": properties_config["customer_id"],
             "campaign_id": properties_config["campaign_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "name": {
                 "type": "string",
                 "description": "The name of the Ad Group",
@@ -426,7 +402,7 @@ create_ad_group_config = {
             "campaign_id",
             "name",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -442,9 +418,7 @@ update_ad_group_ad_config = {
             "ad_group_id": properties_config["ad_group_id"],
             "ad_id": properties_config["ad_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
             "status": {
                 "type": "string",
@@ -456,7 +430,7 @@ update_ad_group_ad_config = {
             "ad_group_id",
             "ad_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -474,9 +448,7 @@ Use this method only when the client approves the creation of the new Ad, ALL th
             "customer_id": properties_config["customer_id"],
             "ad_group_id": properties_config["ad_group_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -499,7 +471,7 @@ Use this method only when the client approves the creation of the new Ad, ALL th
             "customer_id",
             "ad_group_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
             "headlines",
             "descriptions",
             "final_url",
@@ -516,9 +488,7 @@ update_campaign_config = {
             "customer_id": properties_config["customer_id"],
             "campaign_id": properties_config["campaign_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -532,7 +502,7 @@ update_campaign_config = {
             "customer_id",
             "campaign_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -545,9 +515,7 @@ create_campaign_config = {
         "properties": {
             "customer_id": properties_config["customer_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "name": {
                 "type": "string",
                 "description": "The name of the Ad",
@@ -591,7 +559,7 @@ This value MUST be found in the 'customer' table! query example: SELECT customer
             "budget_amount_micros",
             "local_currency",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -609,9 +577,7 @@ update_ad_group_criterion_config = {
                 "description": "Id of the Ad group criterion",
             },
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -625,7 +591,7 @@ update_ad_group_criterion_config = {
             "ad_group_id",
             "criterion_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -642,9 +608,7 @@ This method should NOT be used for updating existing headlines or descriptions.
             "customer_id": properties_config["customer_id"],
             "ad_id": properties_config["ad_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "headline": properties_config["headline"],
             "description": properties_config["description"],
         },
@@ -652,7 +616,7 @@ This method should NOT be used for updating existing headlines or descriptions.
             "customer_id",
             "ad_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -668,9 +632,7 @@ Use 'update_existing_headline_index' if you want to modify existing headline and
             "customer_id": properties_config["customer_id"],
             "ad_id": properties_config["ad_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "headline": properties_config["headline"],
             "description": properties_config["description"],
             "update_existing_headline_index": {
@@ -695,7 +657,7 @@ Use this parameter ONLY when you want to modify existing description!""",
             "customer_id",
             "ad_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -711,9 +673,7 @@ Use 'update_existing_headline_index' if you want to remove existing headline and
             "customer_id": properties_config["customer_id"],
             "ad_id": properties_config["ad_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "update_existing_headline_index": {
                 "type": "string",
                 "description": """Index in the headlines list which needs to be removed. Index starts from 0.""",
@@ -727,7 +687,7 @@ Use 'update_existing_headline_index' if you want to remove existing headline and
             "customer_id",
             "ad_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -779,6 +739,25 @@ Make sure you add all the information which the client needs to know, beacuse th
     },
 }
 
+ask_client_for_permission_config = {
+    "description": """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
+At the end of the message, inform the client that the modifications will be made ONLY if he answers explicitly 'Yes'.""",
+    "name": "ask_client_for_permission",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string",
+                "description": """Message for the client.
+Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
+Your message should start 'Do you approve the following changes:' and then list all the changes which will be made!""",
+            },
+            # "smart_suggestions": smart_suggestions_schema,
+        },
+        "required": ["message"],
+    },
+}
+
 create_negative_keyword_for_campaign_config = {
     "name": "create_negative_keyword_for_campaign",
     "description": f"Creates Negative campaign keywords (CampaignCriterion). {MODIFICATION_WARNING}",
@@ -788,9 +767,7 @@ create_negative_keyword_for_campaign_config = {
             "customer_id": properties_config["customer_id"],
             "campaign_id": properties_config["campaign_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -812,7 +789,7 @@ create_negative_keyword_for_campaign_config = {
             "keyword_match_type",
             "keyword_text",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -830,9 +807,7 @@ update_campaigns_negative_keywords_config = {
                 "description": "Id of the Campaign criterion",
             },
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "keyword_match_type": properties_config["keyword_match_type"],
             "keyword_text": properties_config["keyword_text"],
         },
@@ -841,7 +816,7 @@ update_campaigns_negative_keywords_config = {
             "campaign_id",
             "criterion_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -855,9 +830,7 @@ create_keyword_for_ad_group_config = {
             "customer_id": properties_config["customer_id"],
             "ad_group_id": properties_config["ad_group_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -880,7 +853,7 @@ create_keyword_for_ad_group_config = {
             "keyword_match_type",
             "keyword_text",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -898,9 +871,7 @@ location_ids and location_names parameters are mutually exclusive and they can N
             "customer_id": properties_config["customer_id"],
             "campaign_id": properties_config["campaign_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "location_ids": {
                 "type": "array",
                 "items": {"type": "string"},
@@ -916,7 +887,7 @@ location_ids and location_names parameters are mutually exclusive and they can N
             "customer_id",
             "campaign_id",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }
@@ -938,9 +909,7 @@ remove_google_ads_resource_config = {
 Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion']""",
             },
             "clients_approval_message": properties_config["clients_approval_message"],
-            "client_approved_modicifation_for_this_resource": properties_config[
-                "client_approved_modicifation_for_this_resource"
-            ],
+            "modification_question": properties_config["modification_question"],
             "parent_id": {
                 "type": "string",
                 "description": """Id of the parent resorce, campaign and ad group do not have parent,
@@ -952,7 +921,7 @@ ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaig
             "resource_id",
             "resource_type",
             "clients_approval_message",
-            "client_approved_modicifation_for_this_resource",
+            "modification_question",
         ],
     },
 }

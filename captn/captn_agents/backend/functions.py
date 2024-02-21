@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from unittest.mock import patch
 
 import autogen
@@ -53,6 +53,21 @@ def reply_to_client_2(
         "terminate_groupchat": True,
     }
     return return_msg
+
+
+YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
+    suggestions=["Yes", "No"], type="oneOf"
+).model_dump()
+
+
+def ask_client_for_permission(
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    message: Annotated[str, "Message for the client"],
+) -> Dict[str, Any]:
+    clients_question_answere_list.append((message, None))
+    return reply_to_client_2(
+        message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
+    )
 
 
 llm_config_gpt_4 = {

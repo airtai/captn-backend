@@ -1,14 +1,28 @@
+import os
 import unittest
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from openai_agent.application import (
-    _format_proposed_user_action,
-    _get_message_as_string,
-    _get_openai_response,
-)
+DUMMY = "dummy"
+with unittest.mock.patch.dict(
+    os.environ,
+    {
+        "AZURE_OPENAI_API_KEY_CANADA": DUMMY,
+        "AZURE_API_ENDPOINT": DUMMY,
+        "AZURE_API_VERSION": DUMMY,
+        "INFOBIP_API_KEY": DUMMY,
+        "INFOBIP_BASE_URL": DUMMY,
+    },
+    clear=True,
+):
+    from openai_agent.application import (
+        _format_proposed_user_action,
+        _get_message_as_string,
+        _get_openai_response,
+    )
+
 
 TEST_CONTENT = "This is a test content"
 

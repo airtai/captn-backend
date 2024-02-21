@@ -1,6 +1,6 @@
 import json
 from os import environ
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 from pydantic import BaseModel
@@ -113,20 +113,47 @@ def get_user_ids_and_emails() -> str:
     return response.json()  # type: ignore[no-any-return]
 
 
+NOT_IN_QUESTION_ANSWER_LIST = (
+    "You must ask the client for the permission first by using the 'ask_client_for_permission' function."
+    "If you have already asked the client for the permission, make sure that the 'message' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same)."
+)
+NOT_APPROVED = (
+    "The client did not approve the modification. The client must approve the modification by answering 'Yes' to the question."
+    "If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else."
+    "Please send a new message to the client (by using 'ask_client_for_permission') and ask for the permission again and tell him that only for answer 'Yes' the modification will be done."
+)
+
+
+def _check_for_client_approval(
+    modification_question: str,
+    clients_approval_message: str,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> bool:
+    if (
+        modification_question,
+        clients_approval_message,
+    ) not in clients_question_answere_list:
+        raise ValueError(NOT_IN_QUESTION_ANSWER_LIST)
+    if clients_approval_message.lower().strip() != "yes":
+        raise ValueError(NOT_APPROVED)
+
+    return True
+
+
 def google_ads_create_update(
     user_id: int,
     conv_id: int,
     clients_approval_message: str,
-    client_approved_modicifation_for_this_resource: bool,
+    modification_question: str,
     ad: BaseModel,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
     endpoint: str = "/update-ad-group-ad",
 ) -> Union[Dict[str, Any], str]:
-    if (
-        not clients_approval_message
-        or not client_approved_modicifation_for_this_resource
-    ):
-        return "You must inform the client about all the parameters which will be used and ask for the permission first!!!"
-
+    _check_for_client_approval(
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        clients_question_answere_list=clients_question_answere_list,
+    )
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response

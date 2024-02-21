@@ -1,9 +1,11 @@
+import os
 from unittest import mock
 
 import autogen
 
 from captn.captn_agents.backend.team import Team
 
+os.environ["OPENAI_API_KEY"] = "dummy"
 roles = [
     {"Name": "Role1", "Description": "Description1"},
     {"Name": "Role2", "Description": "Description2"},
@@ -33,6 +35,7 @@ Do NOT try to finish the task until other team members give their opinion.
 
 def test_create_members() -> None:
     team = Team(roles=roles, name="Team_2")
+    team.llm_config = {}
     team._create_members()
 
     assert len(team.members) == len(roles)
@@ -51,3 +54,20 @@ def test_is_termination_msg() -> None:
     # content_xs = content.split()
     # "TERMINATE" in content_xs[-1]
     assert Team._is_termination_msg({"content": "Woohoo TERMINATE ..."}) is False
+
+
+def test_update_clients_question_answere_list() -> None:
+    team = Team(roles=roles, name="Team_3")
+    team.clients_question_answere_list.append(("Question1", None))
+    team.update_clients_question_answere_list("Answer1")
+    assert team.clients_question_answere_list == [("Question1", "Answer1")]
+
+    team.update_clients_question_answere_list("Answer2")
+    assert team.clients_question_answere_list == [("Question1", "Answer1")]
+
+    team.clients_question_answere_list.append(("Question2", None))
+    team.update_clients_question_answere_list("Answer3")
+    assert team.clients_question_answere_list == [
+        ("Question1", "Answer1"),
+        ("Question2", "Answer3"),
+    ]

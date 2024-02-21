@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import autogen
 import openai
@@ -78,6 +78,7 @@ class Team:
         seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
+        clients_question_answere_list: List[Tuple[str, Optional[str]]] = [],  # noqa
     ):
         self.roles = roles
         self.initial_message: str
@@ -91,6 +92,7 @@ class Team:
         self.llm_config: Optional[Dict[str, Any]] = None
         self.name = name
         self.human_input_mode = human_input_mode
+        self.clients_question_answere_list = clients_question_answere_list
         Team._store_team(self.name, self)
 
     @classmethod
@@ -115,6 +117,16 @@ class Team:
             # "request_timeout": 800,
         }
         return llm_config
+
+    def update_clients_question_answere_list(self, message: str) -> None:
+        if (
+            len(self.clients_question_answere_list) > 0
+            and self.clients_question_answere_list[-1][1] is None
+        ):
+            self.clients_question_answere_list[-1] = (
+                self.clients_question_answere_list[-1][0],
+                message,
+            )
 
     def _create_groupchat_and_manager(self) -> None:
         manager_llm_config = self.llm_config.copy()  # type: ignore
