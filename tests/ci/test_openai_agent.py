@@ -1,3 +1,4 @@
+import os
 import unittest
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -9,6 +10,8 @@ from openai_agent.application import (
     _get_message_as_string,
     _get_openai_response,
 )
+
+os.environ["AZURE_OPENAI_API_KEY"] = "dummy"
 
 TEST_CONTENT = "This is a test content"
 
