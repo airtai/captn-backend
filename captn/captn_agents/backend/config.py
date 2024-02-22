@@ -11,27 +11,16 @@ load_dotenv()
 
 
 api_key_sweden = os.getenv("AZURE_OPENAI_API_KEY_SWEDEN")
-api_base_sweden = "https://airt-openai-sweden.openai.azure.com/"
-
-api_key_canada = os.getenv("AZURE_OPENAI_API_KEY_CANADA")
-api_base_canada = "https://airt-openai-canada.openai.azure.com/"
-
-api_key_openai = os.getenv("OPENAI_API_KEY")
+api_base_sweden = os.getenv("AZURE_API_ENDPOINT")
+gpt_4_model_name = os.getenv("AZURE_GPT4_MODEL")
+gpt_3_5_model_name = os.getenv("AZURE_GPT35_MODEL")
 
 openai.api_type = "azure"
-
 openai.api_version = "2023-12-01-preview"
 
 CONFIG_LIST = [
-    # {
-    #     "model": "airt-canada-gpt4",
-    #     "api_base": "http://localhost:9055",
-    #     "base_url": "http://localhost:9055",  #litellm compatible endpoint
-    #     "api_type": "open_ai",
-    #     "api_key": "NULL", # just a placeholder  # pragma: allowlist secret
-    # },
     {
-        "model": "airt-gpt4",
+        "model": gpt_4_model_name,
         "api_key": api_key_sweden,
         "api_base": api_base_sweden,
         "base_url": api_base_sweden,
@@ -39,27 +28,13 @@ CONFIG_LIST = [
         "api_version": openai.api_version,
     },
     {
-        "model": "gpt-35-turbo-16k",
+        "model": gpt_3_5_model_name,
         "api_key": api_key_sweden,
         "api_base": api_base_sweden,
         "base_url": api_base_sweden,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
     },
-    # {
-    #     "model": "gpt-4",
-    #     "api_key": api_key_canada,
-    #     "api_base": api_base_canada,
-    #     "api_type": openai.api_type,
-    #     "api_version": openai.api_version,
-    #     "engine": "airt-canada-gpt4",
-    # },
-    # DO NOT USE OPENAI FOR NOW
-    # {
-    #     # "model": "gpt-4-1106-preview",
-    #     "model": "gpt-4",
-    #     "api_key": api_key_openai,
-    # },
 ]
 
 for config in CONFIG_LIST:
