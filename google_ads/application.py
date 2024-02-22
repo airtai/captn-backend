@@ -241,25 +241,31 @@ async def list_accessible_customers(
             return customer_ids
 
         # Return only non Manager accounts!
-        try:
-            query = (
-                "SELECT customer.id, customer.descriptive_name, customer.manager, customer.test_account "
-                "FROM customer_client"
-            )
-            customers = await search(
-                user_id=user_id, customer_ids=customer_ids, query=query
-            )
+        non_manager_customer_ids = []
 
-            non_manager_customer_ids = []
-            for customer_id, result in customers.items():
-                is_manager = result[0]["customer"]["manager"]
-                if not is_manager:
-                    non_manager_customer_ids.append(customer_id)
+        query = (
+            "SELECT customer.id, customer.descriptive_name, customer.manager, customer.test_account "
+            "FROM customer_client"
+        )
 
-            return non_manager_customer_ids
-        except Exception as e:
-            print(e)
-            return []
+        customer_ids.append("71387839")
+        for customer_id in customer_ids:
+            try:
+                customers = await search(
+                    user_id=user_id, customer_ids=[customer_id], query=query
+                )
+
+                for customer_id, result in customers.items():
+                    is_manager = result[0]["customer"]["manager"]
+                    if not is_manager:
+                        non_manager_customer_ids.append(customer_id)
+            except Exception as e:
+                print(
+                    f"Skiping the following customer_id: {customer_id}, user_id: {user_id} because of the exception:\n{e}"
+                )
+
+        return non_manager_customer_ids
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
