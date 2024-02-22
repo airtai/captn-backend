@@ -2,6 +2,9 @@ import json
 import unittest.mock
 from pathlib import Path
 
+import pytest
+from tenacity import RetryError
+
 from captn.captn_agents.backend.daily_analysis_team import (
     REACT_APP_API_URL,
     AdGroup,
@@ -21,6 +24,7 @@ from captn.captn_agents.backend.daily_analysis_team import (
     get_daily_ad_group_ads_report,
     get_daily_keywords_report,
     get_web_status_code_report_for_campaign,
+    google_ads_api_call,
 )
 
 
@@ -1271,3 +1275,37 @@ def test_execute_daily_analysis_with_incorrect_emails() -> None:
                 send_only_to_emails=["bla1@mail.com", "bla2@mail.com"]
             )
             mock_get_conv_id.assert_not_called()
+
+
+def test_google_ads_api_call_reties_three_times() -> None:
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.daily_analysis_team.list_accessible_customers"
+    ) as mock_list_accessible_customers:
+        mock_list_accessible_customers.side_effect = [
+            ValueError("Error1"),
+            ValueError("Error2"),
+            ValueError("Error2"),
+        ]
+        with pytest.raises(RetryError):
+            google_ads_api_call(
+                function=mock_list_accessible_customers,
+                user_id=-1,
+                conv_id=-1,
+                get_only_non_manager_accounts=True,
+            )
+        assert mock_list_accessible_customers.call_count == 3
+
+
+def test_google_ads_api_call_reties_returns_result_in_second_attempt() -> None:
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.daily_analysis_team.list_accessible_customers"
+    ) as mock_list_accessible_customers:
+        mock_list_accessible_customers.side_effect = [ValueError("Error1"), ["1", "2"]]
+        result = google_ads_api_call(
+            function=mock_list_accessible_customers,
+            user_id=-1,
+            conv_id=-1,
+            get_only_non_manager_accounts=True,
+        )
+        assert result == ["1", "2"]
+        assert mock_list_accessible_customers.call_count == 2

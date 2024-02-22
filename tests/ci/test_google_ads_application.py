@@ -3,7 +3,10 @@ import unittest
 import pytest
 from fastapi import HTTPException, status
 
-from google_ads.application import create_geo_targeting_for_campaign
+from google_ads.application import (
+    _check_if_customer_id_is_manager_or_exception_is_raised,
+    create_geo_targeting_for_campaign,
+)
 from google_ads.model import GeoTargetCriterion
 
 
@@ -77,3 +80,57 @@ async def test_add_geo_targeting_to_campaign_raises_exception_if_location_ids_ar
                 campaign_id="456",
                 customer_id="123",
             )
+
+
+@pytest.mark.asyncio
+async def test_check_if_customer_id_is_manager_or_exception_is_raised_when_customer_is_not_manager() -> (
+    None
+):
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.return_value = {
+            "2324127278": [
+                {
+                    "customer": {"manager": True, "testAccount": True},
+                }
+            ]
+        }
+        skip_customer = await _check_if_customer_id_is_manager_or_exception_is_raised(
+            user_id=-1, customer_id="1212112"
+        )
+        assert skip_customer
+
+
+@pytest.mark.asyncio
+async def test_check_if_customer_id_is_manager_or_exception_is_raised_when_customer_is_manager() -> (
+    None
+):
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.return_value = {
+            "2324127278": [
+                {
+                    "customer": {"manager": False, "testAccount": True},
+                }
+            ]
+        }
+        skip_customer = await _check_if_customer_id_is_manager_or_exception_is_raised(
+            user_id=-1, customer_id="1212112"
+        )
+        assert not skip_customer
+
+
+@pytest.mark.asyncio
+async def test_check_if_customer_id_is_manager_or_exception_is_raised_when_error_is_raised() -> (
+    None
+):
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.side_effect = Exception("Goodle Ads API exception")
+        skip_customer = await _check_if_customer_id_is_manager_or_exception_is_raised(
+            user_id=-1, customer_id="1212112"
+        )
+        assert skip_customer
