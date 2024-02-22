@@ -11,6 +11,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import requests
 from markdownify import markdownify as md
 from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt
 
 from ...email.send_email import send_email as send_email_infobip
 from ...google_ads.client import (
@@ -116,6 +117,20 @@ def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
     return Metrics(**return_metrics)
 
 
+@retry(stop=stop_after_attempt(3))
+def google_ads_api_call(
+    function: Union[
+        Callable[[int, int, bool], Union[List[str], Dict[str, str]]],
+        Callable[
+            [int, int, Optional[str], Optional[List[str]], Optional[str]],
+            Union[str, Dict[str, str]],
+        ],
+    ],
+    **kwargs: Any,
+) -> Any:
+    return function(**kwargs)  # type: ignore
+
+
 def get_daily_keywords_report(
     user_id: int, conv_id: int, customer_id: str, date: str
 ) -> Dict[str, Dict[str, Keyword]]:
@@ -125,9 +140,14 @@ def get_daily_keywords_report(
         "FROM keyword_view "
         f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "  # nosec: [B608]
     )
-    query_result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    query_result = google_ads_api_call(
+        function=execute_query,
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        query=query,
     )
+
     customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
     ad_group_keywords_dict: Dict[str, Dict[str, Keyword]] = defaultdict(dict)
@@ -177,8 +197,12 @@ def get_ad_groups_report(
         "FROM ad_group "
         f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED'"  # nosec: [B608]
     )
-    query_result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    query_result = google_ads_api_call(
+        function=execute_query,
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        query=query,
     )
     customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
@@ -220,8 +244,12 @@ def get_campaigns_report(
         "FROM campaign "
         f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED'"  # nosec: [B608]
     )
-    query_result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    query_result = google_ads_api_call(
+        function=execute_query,
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        query=query,
     )
     customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
@@ -255,8 +283,12 @@ def get_daily_ad_group_ads_report(
         "FROM ad_group_ad "
         f"WHERE segments.date = '{date}' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
     )
-    query_result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    query_result = google_ads_api_call(
+        function=execute_query,
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        query=query,
     )
     customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
 
@@ -334,10 +366,14 @@ def get_daily_report_for_customer(
     )
 
     query = "SELECT customer.currency_code FROM customer"
-    result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    query_result = google_ads_api_call(
+        function=execute_query,
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        query=query,
     )
-    currency = ast.literal_eval(result)[customer_id][0]["customer"]["currencyCode"]  # type: ignore
+    currency = ast.literal_eval(query_result)[customer_id][0]["customer"]["currencyCode"]  # type: ignore
     return DailyCustomerReports2(
         customer_id=customer_id, currency=currency, campaigns=compared_campaigns_report
     )
@@ -537,9 +573,12 @@ def construct_daily_report_email_from_template(
 
 
 def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
-    customer_ids: List[str] = list_accessible_customers(
-        user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
-    )  # type: ignore
+    customer_ids: List[str] = google_ads_api_call(
+        function=list_accessible_customers,
+        user_id=user_id,
+        conv_id=conv_id,
+        get_only_non_manager_accounts=True,
+    )
     daily_customer_reports = [
         get_daily_report_for_customer(
             user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date

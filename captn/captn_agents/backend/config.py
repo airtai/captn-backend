@@ -16,7 +16,7 @@ gpt_4_model_name = os.getenv("AZURE_GPT4_MODEL")
 gpt_3_5_model_name = os.getenv("AZURE_GPT35_MODEL")
 
 openai.api_type = "azure"
-openai.api_version = "2023-12-01-preview"
+openai.api_version = os.getenv("AZURE_API_VERSION")
 
 CONFIG_LIST = [
     {
