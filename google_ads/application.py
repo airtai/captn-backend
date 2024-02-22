@@ -220,6 +220,30 @@ async def create_google_ads_client(
     return client
 
 
+async def _check_if_customer_id_is_manager_or_exception_is_raised(
+    user_id: int, customer_id: str
+) -> bool:
+    query = (
+        "SELECT customer.id, customer.descriptive_name, customer.manager, customer.test_account "
+        "FROM customer_client"
+    )
+
+    try:
+        customer = await search(
+            user_id=user_id, customer_ids=[customer_id], query=query
+        )
+
+        for result in customer.values():
+            is_manager = result[0]["customer"]["manager"]
+            if not is_manager:
+                return False
+    except Exception as e:
+        print(
+            f"Skiping the following customer_id: {customer_id}, user_id: {user_id} because of the exception:\n{e}"
+        )
+    return True
+
+
 # Route 3: List accessible customer ids
 @router.get("/list-accessible-customers")
 async def list_accessible_customers(
@@ -243,27 +267,14 @@ async def list_accessible_customers(
         # Return only non Manager accounts!
         non_manager_customer_ids = []
 
-        query = (
-            "SELECT customer.id, customer.descriptive_name, customer.manager, customer.test_account "
-            "FROM customer_client"
-        )
-
-        customer_ids.append("71387839")
         for customer_id in customer_ids:
-            try:
-                customers = await search(
-                    user_id=user_id, customer_ids=[customer_id], query=query
+            skip_customer = (
+                await _check_if_customer_id_is_manager_or_exception_is_raised(
+                    user_id=user_id, customer_id=customer_id
                 )
-
-                for customer_id, result in customers.items():
-                    is_manager = result[0]["customer"]["manager"]
-                    if not is_manager:
-                        non_manager_customer_ids.append(customer_id)
-            except Exception as e:
-                print(
-                    f"Skiping the following customer_id: {customer_id}, user_id: {user_id} because of the exception:\n{e}"
-                )
-
+            )
+            if not skip_customer:
+                non_manager_customer_ids.append(customer_id)
         return non_manager_customer_ids
 
     except Exception as e:
