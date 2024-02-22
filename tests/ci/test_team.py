@@ -5,7 +5,6 @@ import autogen
 
 from captn.captn_agents.backend.team import Team
 
-os.environ["OPENAI_API_KEY"] = "dummy"
 roles = [
     {"Name": "Role1", "Description": "Description1"},
     {"Name": "Role2", "Description": "Description2"},
