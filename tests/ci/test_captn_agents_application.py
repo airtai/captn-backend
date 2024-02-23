@@ -7,7 +7,11 @@ from openai import BadRequestError
 from captn.captn_agents.application import RETRY_MESSAGE, CaptnAgentRequest, chat
 
 
-def test_chat_when_openai_bad_request_is_raised() -> None:
+def test_chat_when_openai_bad_request_is_raised(monkeypatch) -> None:
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY_SWEDEN", "dummy_key")
+    monkeypatch.setenv("AZURE_API_ENDPOINT", "dummy_endpoint")
+    monkeypatch.setenv("AZURE_GPT4_MODEL", "airt-gpt4")
+    monkeypatch.setenv("AZURE_GPT35_MODEL", "gpt-35-turbo-16k")
     with unittest.mock.patch(
         "captn.captn_agents.application.start_conversation"
     ) as mock_start_conversation:
