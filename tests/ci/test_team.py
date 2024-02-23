@@ -4,8 +4,6 @@ from unittest import mock
 
 import autogen
 
-
-
 DUMMY = "dummy"
 with unittest.mock.patch.dict(
     os.environ,
@@ -38,6 +36,7 @@ def test_get_new_team_name(mock_get_team_name_prefix: mock.MagicMock) -> None:
 
 def test_create_member() -> None:
     team = Team(roles=roles, name="Team_1")
+    team.llm_config = {"api_key": DUMMY}
     member = team._create_member("QA gpt", "Description1")
 
     system_message = """You are qa_gpt, Description1
@@ -51,7 +50,7 @@ Do NOT try to finish the task until other team members give their opinion.
 
 def test_create_members() -> None:
     team = Team(roles=roles, name="Team_2")
-    team.llm_config = {}
+    team.llm_config = {"api_key": "dummy"}
     team._create_members()
 
     assert len(team.members) == len(roles)

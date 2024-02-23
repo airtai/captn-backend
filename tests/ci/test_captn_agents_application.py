@@ -5,9 +5,7 @@ from httpx import Request, Response
 from openai import BadRequestError
 
 
-
-
-def test_chat_when_openai_bad_request_is_raised(patch_envs) -> None:
+def test_chat_when_openai_bad_request_is_raised() -> None:
     from captn.captn_agents.application import RETRY_MESSAGE, CaptnAgentRequest, chat
 
     with unittest.mock.patch(
