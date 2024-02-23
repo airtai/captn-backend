@@ -1,4 +1,11 @@
-from captn.google_ads.client import clean_error_response
+import pytest
+
+from captn.google_ads.client import (
+    NOT_APPROVED,
+    NOT_IN_QUESTION_ANSWER_LIST,
+    _check_for_client_approval,
+    clean_error_response,
+)
 
 
 def test_clean_error_response() -> None:
@@ -6,3 +13,32 @@ def test_clean_error_response() -> None:
     expected = "  message: \"Cannot select fields from the following resources: \\'AD_GROUP_CRITERION\\', \\'AD_GROUP\\', since the resource is incompatible with the resource in FROM clause.\""
 
     assert clean_error_response(content) == expected
+
+
+def test_check_for_client_approval() -> None:
+    response = _check_for_client_approval(
+        clients_approval_message="yes ",
+        modification_question="modification_question",
+        clients_question_answere_list=[("modification_question", "yes ")],
+    )
+    assert response
+
+
+def test_check_for_client_approval_not_in_qa_list() -> None:
+    with pytest.raises(ValueError) as exc_info:
+        _check_for_client_approval(
+            clients_approval_message="yes",
+            modification_question="modification_question",
+            clients_question_answere_list=[("aa", "bb")],
+        )
+    assert exc_info.value.args[0] == NOT_IN_QUESTION_ANSWER_LIST
+
+
+def test_check_for_client_approval_client_did_not_approve() -> None:
+    with pytest.raises(ValueError) as exc_info:
+        _check_for_client_approval(
+            clients_approval_message="yes 123",
+            modification_question="modification_question",
+            clients_question_answere_list=[("modification_question", "yes 123")],
+        )
+    assert exc_info.value.args[0] == NOT_APPROVED

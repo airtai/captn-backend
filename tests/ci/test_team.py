@@ -1,8 +1,24 @@
+import os
+import unittest
 from unittest import mock
 
 import autogen
 
-from captn.captn_agents.backend.team import Team
+DUMMY = "dummy"
+with unittest.mock.patch.dict(
+    os.environ,
+    {
+        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
+        "AZURE_API_ENDPOINT": DUMMY,
+        "AZURE_API_VERSION": DUMMY,
+        "AZURE_GPT4_MODEL": DUMMY,
+        "AZURE_GPT35_MODEL": DUMMY,
+        "INFOBIP_API_KEY": DUMMY,
+        "INFOBIP_BASE_URL": DUMMY,
+    },
+    clear=True,
+):
+    from captn.captn_agents.backend.team import Team
 
 roles = [
     {"Name": "Role1", "Description": "Description1"},
@@ -20,6 +36,7 @@ def test_get_new_team_name(mock_get_team_name_prefix: mock.MagicMock) -> None:
 
 def test_create_member() -> None:
     team = Team(roles=roles, name="Team_1")
+    team.llm_config = {"api_key": DUMMY}
     member = team._create_member("QA gpt", "Description1")
 
     system_message = """You are qa_gpt, Description1
@@ -33,6 +50,7 @@ Do NOT try to finish the task until other team members give their opinion.
 
 def test_create_members() -> None:
     team = Team(roles=roles, name="Team_2")
+    team.llm_config = {"api_key": "dummy"}
     team._create_members()
 
     assert len(team.members) == len(roles)
@@ -51,3 +69,20 @@ def test_is_termination_msg() -> None:
     # content_xs = content.split()
     # "TERMINATE" in content_xs[-1]
     assert Team._is_termination_msg({"content": "Woohoo TERMINATE ..."}) is False
+
+
+def test_update_clients_question_answere_list() -> None:
+    team = Team(roles=roles, name="Team_3")
+    team.clients_question_answere_list.append(("Question1", None))
+    team.update_clients_question_answere_list("Answer1")
+    assert team.clients_question_answere_list == [("Question1", "Answer1")]
+
+    team.update_clients_question_answere_list("Answer2")
+    assert team.clients_question_answere_list == [("Question1", "Answer1")]
+
+    team.clients_question_answere_list.append(("Question2", None))
+    team.update_clients_question_answere_list("Answer3")
+    assert team.clients_question_answere_list == [
+        ("Question1", "Answer1"),
+        ("Question2", "Answer3"),
+    ]

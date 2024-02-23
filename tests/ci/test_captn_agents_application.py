@@ -4,10 +4,10 @@ import pytest
 from httpx import Request, Response
 from openai import BadRequestError
 
-from captn.captn_agents.application import RETRY_MESSAGE, CaptnAgentRequest, chat
-
 
 def test_chat_when_openai_bad_request_is_raised() -> None:
+    from captn.captn_agents.application import RETRY_MESSAGE, CaptnAgentRequest, chat
+
     with unittest.mock.patch(
         "captn.captn_agents.application.start_conversation"
     ) as mock_start_conversation:
