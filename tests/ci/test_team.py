@@ -1,9 +1,26 @@
 import os
+import unittest
 from unittest import mock
 
 import autogen
 
-from captn.captn_agents.backend.team import Team
+
+
+DUMMY = "dummy"
+with unittest.mock.patch.dict(
+    os.environ,
+    {
+        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
+        "AZURE_API_ENDPOINT": DUMMY,
+        "AZURE_API_VERSION": DUMMY,
+        "AZURE_GPT4_MODEL": DUMMY,
+        "AZURE_GPT35_MODEL": DUMMY,
+        "INFOBIP_API_KEY": DUMMY,
+        "INFOBIP_BASE_URL": DUMMY,
+    },
+    clear=True,
+):
+    from captn.captn_agents.backend.team import Team
 
 roles = [
     {"Name": "Role1", "Description": "Description1"},

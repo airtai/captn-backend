@@ -12,6 +12,8 @@ with unittest.mock.patch.dict(
         "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
         "AZURE_API_ENDPOINT": DUMMY,
         "AZURE_API_VERSION": DUMMY,
+        "AZURE_GPT4_MODEL": DUMMY,
+        "AZURE_GPT35_MODEL": DUMMY,
         "INFOBIP_API_KEY": DUMMY,
         "INFOBIP_BASE_URL": DUMMY,
     },

@@ -1,13 +1,28 @@
 import unittest
+import os
 
 import pytest
 from fastapi import HTTPException, status
 
-from google_ads.application import (
-    _check_if_customer_id_is_manager_or_exception_is_raised,
-    create_geo_targeting_for_campaign,
-)
-from google_ads.model import GeoTargetCriterion
+DUMMY = "dummy"
+with unittest.mock.patch.dict(
+    os.environ,
+    {
+        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
+        "AZURE_API_ENDPOINT": DUMMY,
+        "AZURE_API_VERSION": DUMMY,
+        "AZURE_GPT4_MODEL": DUMMY,
+        "AZURE_GPT35_MODEL": DUMMY,
+        "INFOBIP_API_KEY": DUMMY,
+        "INFOBIP_BASE_URL": DUMMY,
+    },
+    clear=True,
+):
+    from google_ads.application import (
+        _check_if_customer_id_is_manager_or_exception_is_raised,
+        create_geo_targeting_for_campaign,
+    )
+    from google_ads.model import GeoTargetCriterion
 
 
 @pytest.mark.asyncio

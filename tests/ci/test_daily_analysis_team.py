@@ -1,31 +1,46 @@
 import json
 import unittest.mock
+import os
 from pathlib import Path
 
 import pytest
 from tenacity import RetryError
 
-from captn.captn_agents.backend.daily_analysis_team import (
-    REACT_APP_API_URL,
-    AdGroup,
-    AdGroupAd,
-    Campaign,
-    Keyword,
-    KeywordMetrics,
-    Metrics,
-    _add_metrics_message,
-    _update_chat_message_and_send_email,
-    _update_message_and_campaigns_template,
-    calculate_metrics_change,
-    compare_reports,
-    construct_daily_report_email_from_template,
-    execute_daily_analysis,
-    get_campaigns_report,
-    get_daily_ad_group_ads_report,
-    get_daily_keywords_report,
-    get_web_status_code_report_for_campaign,
-    google_ads_api_call,
-)
+DUMMY = "dummy"
+with unittest.mock.patch.dict(
+    os.environ,
+    {
+        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
+        "AZURE_API_ENDPOINT": DUMMY,
+        "AZURE_API_VERSION": DUMMY,
+        "AZURE_GPT4_MODEL": DUMMY,
+        "AZURE_GPT35_MODEL": DUMMY,
+        "INFOBIP_API_KEY": DUMMY,
+        "INFOBIP_BASE_URL": DUMMY,
+    },
+    clear=True,
+):
+    from captn.captn_agents.backend.daily_analysis_team import (
+        REACT_APP_API_URL,
+        AdGroup,
+        AdGroupAd,
+        Campaign,
+        Keyword,
+        KeywordMetrics,
+        Metrics,
+        _add_metrics_message,
+        _update_chat_message_and_send_email,
+        _update_message_and_campaigns_template,
+        calculate_metrics_change,
+        compare_reports,
+        construct_daily_report_email_from_template,
+        execute_daily_analysis,
+        get_campaigns_report,
+        get_daily_ad_group_ads_report,
+        get_daily_keywords_report,
+        get_web_status_code_report_for_campaign,
+        google_ads_api_call,
+    )
 
 
 def test_metrics() -> None:
