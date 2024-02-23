@@ -108,7 +108,6 @@ jobs:
             GITHUB_USERNAME: ${{ github.actor }}
             GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
             DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
-            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
             INFOBIP_API_KEY: ${{ secrets.INFOBIP_API_KEY }}
             INFOBIP_BASE_URL: ${{ secrets.INFOBIP_BASE_URL }}
             PORT: ${{ vars.PORT }}
@@ -120,9 +119,9 @@ jobs:
             REACT_APP_API_URL: ${{ github.ref_name == 'main' && secrets.PROD_REACT_APP_API_URL || secrets.STAGING_REACT_APP_API_URL }}
             AZURE_API_VERSION: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_VERSION || secrets.STAGING_AZURE_API_VERSION }}
             AZURE_API_ENDPOINT: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_ENDPOINT || secrets.STAGING_AZURE_API_ENDPOINT }}
-            AZURE_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_MODEL || secrets.STAGING_AZURE_MODEL }}
+            AZURE_GPT4_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT4_MODEL || secrets.STAGING_AZURE_GPT4_MODEL }}
+            AZURE_GPT35_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT35_MODEL || secrets.STAGING_AZURE_GPT35_MODEL }}
             AZURE_OPENAI_API_KEY_SWEDEN: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY_SWEDEN || secrets.STAGING_AZURE_OPENAI_API_KEY_SWEDEN }}
-            AZURE_OPENAI_API_KEY_CANADA: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY_CANADA || secrets.STAGING_AZURE_OPENAI_API_KEY_CANADA }}
             SSH_KEY: ${{ github.ref_name == 'main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}
         steps:
             - uses: actions/checkout@v3 # Don't change it to cheackout@v4. V4 is not working with container image.

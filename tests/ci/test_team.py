@@ -1,11 +1,25 @@
 import os
+import unittest
 from unittest import mock
 
 import autogen
 
-from captn.captn_agents.backend.team import Team
+DUMMY = "dummy"
+with unittest.mock.patch.dict(
+    os.environ,
+    {
+        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
+        "AZURE_API_ENDPOINT": DUMMY,
+        "AZURE_API_VERSION": DUMMY,
+        "AZURE_GPT4_MODEL": DUMMY,
+        "AZURE_GPT35_MODEL": DUMMY,
+        "INFOBIP_API_KEY": DUMMY,
+        "INFOBIP_BASE_URL": DUMMY,
+    },
+    clear=True,
+):
+    from captn.captn_agents.backend.team import Team
 
-os.environ["OPENAI_API_KEY"] = "dummy"
 roles = [
     {"Name": "Role1", "Description": "Description1"},
     {"Name": "Role2", "Description": "Description2"},
@@ -22,6 +36,7 @@ def test_get_new_team_name(mock_get_team_name_prefix: mock.MagicMock) -> None:
 
 def test_create_member() -> None:
     team = Team(roles=roles, name="Team_1")
+    team.llm_config = {"api_key": DUMMY}
     member = team._create_member("QA gpt", "Description1")
 
     system_message = """You are qa_gpt, Description1
@@ -35,7 +50,7 @@ Do NOT try to finish the task until other team members give their opinion.
 
 def test_create_members() -> None:
     team = Team(roles=roles, name="Team_2")
-    team.llm_config = {}
+    team.llm_config = {"api_key": "dummy"}
     team._create_members()
 
     assert len(team.members) == len(roles)

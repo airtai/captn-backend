@@ -21,7 +21,7 @@ router = APIRouter()
 
 # Setting up Azure OpenAI instance
 aclient = AsyncAzureOpenAI(
-    api_key=environ.get("AZURE_OPENAI_API_KEY_CANADA"),
+    api_key=environ.get("AZURE_OPENAI_API_KEY_SWEDEN"),
     azure_endpoint=environ.get("AZURE_API_ENDPOINT"),  # type: ignore
     api_version=environ.get("AZURE_API_VERSION"),
 )
@@ -313,7 +313,7 @@ async def _get_openai_response(  # type: ignore
                 "content": ADDITIONAL_SYSTEM_MSG,
             }
         )
-        completion = await aclient.chat.completions.create(model=environ.get("AZURE_MODEL"), messages=messages, functions=FUNCTIONS)  # type: ignore
+        completion = await aclient.chat.completions.create(model=environ.get("AZURE_GPT4_MODEL"), messages=messages, functions=FUNCTIONS)  # type: ignore
     except Exception:
         smart_suggestions = {"suggestions": ["Let's try again"], "type": "oneOf"}
         return {
