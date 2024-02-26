@@ -20,11 +20,11 @@ def reply_to_client(message: str) -> str:
 
 reply_to_client_2_description = """Respond to the client (answer to his task or question for additional information).
 Use 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible, or you will be penalized!
-But do NOT use smart suggestions for questions which require clients input!
-Do NOT just copy half of the message which you are sending and use it as a smart suggestion!"""
+Do NOT just copy half of the message which you are sending and use it as a smart suggestion!
+Smart suggestions are used to suggest the next steps to the client. It will be displayed as quick replies in the chat so make them short and clear!"""
 
 smart_suggestions_description = """Quick replies which the client can use for replying to the 'message' which we are sending to him.
-This parameter must be dictionary with two keys: 'suggestions': List[str] and 'type': Literal["oneOf", "manyOf"].
+This parameter must be dictionary with two keys: 'suggestions': List[str] (a list of suggestions) and 'type': Literal["oneOf", "manyOf"] (option which indicates if the client can select only one or multiple suggestions).
 It is neccecery that the Pydantic model SmartSuggestions can be generated from this dictionary (SmartSuggestions(**smart_suggestions))!"""
 
 
