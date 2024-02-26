@@ -872,6 +872,10 @@ location_ids and location_names parameters are mutually exclusive and they can N
             "campaign_id": properties_config["campaign_id"],
             "clients_approval_message": properties_config["clients_approval_message"],
             "modification_question": properties_config["modification_question"],
+            "negative": {
+                "type": "boolean",
+                "description": "Whether to target (False) or exclude (True) the criterion. Default is False.",
+            },
             "location_ids": {
                 "type": "array",
                 "items": {"type": "string"},

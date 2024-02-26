@@ -94,6 +94,38 @@ async def test_add_geo_targeting_to_campaign_raises_exception_if_location_ids_ar
                 location_ids=["7", "8"],
                 campaign_id="456",
                 customer_id="123",
+                negative=None,
+            )
+
+
+@pytest.mark.asyncio
+async def test_add_geo_targeting_to_campaign_raises_exception_if_location_ids_are_not_none_and_criteria_is_negative() -> (
+    None
+):
+    geo_target = GeoTargetCriterion(
+        customer_id="123",
+        campaign_id="456",
+        location_names=None,
+        location_ids=["7", "8"],
+        negative=True,
+    )
+
+    with unittest.mock.patch(
+        "google_ads.application._create_locations_by_ids_to_campaign",
+    ) as mock_create_locations_by_ids_to_campaign:
+        with unittest.mock.patch(
+            "google_ads.application._get_client",
+        ) as mock_get_client:
+            mock_create_locations_by_ids_to_campaign.return_value = None
+            mock_get_client.return_value = None
+
+            await create_geo_targeting_for_campaign(user_id=-1, model=geo_target)
+            mock_create_locations_by_ids_to_campaign.assert_called_once_with(
+                client=None,
+                location_ids=["7", "8"],
+                campaign_id="456",
+                customer_id="123",
+                negative=True,
             )
 
 
