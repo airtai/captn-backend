@@ -1207,7 +1207,11 @@ def _get_geo_target_constant_by_names(
 
 
 def _create_location_op(
-    client: GoogleAdsClient, customer_id: str, campaign_id: str, location_id: str
+    client: GoogleAdsClient,
+    customer_id: str,
+    campaign_id: str,
+    location_id: str,
+    negative: Optional[bool],
 ) -> Any:
     campaign_service = client.get_service("CampaignService")
     geo_target_constant_service = client.get_service("GeoTargetConstantService")
@@ -1223,6 +1227,8 @@ def _create_location_op(
         geo_target_constant_service.geo_target_constant_path(location_id)
     )
 
+    campaign_criterion.negative = negative
+
     return campaign_criterion_operation
 
 
@@ -1231,11 +1237,14 @@ def _create_locations_by_ids_to_campaign(
     customer_id: str,
     campaign_id: str,
     location_ids: List[str],
+    negative: Optional[bool],
 ) -> str:
     campaign_criterion_service = client.get_service("CampaignCriterionService")
 
     operations = [
-        _create_location_op(client, customer_id, campaign_id, location_id)
+        _create_location_op(
+            client, customer_id, campaign_id, location_id, negative=negative
+        )
         for location_id in location_ids
     ]
 
@@ -1274,6 +1283,7 @@ async def create_geo_targeting_for_campaign(
         customer_id=model.customer_id,  # type: ignore
         campaign_id=model.campaign_id,  # type: ignore
         location_ids=location_ids,  # type: ignore
+        negative=model.negative,
     )
 
 

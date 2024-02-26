@@ -293,7 +293,7 @@ Here is a list of things which you CAN do:
 Also, use keyword insertion for headlines and descriptions
 - create/update/remove new keywords
 - create/update/remove campaign/ ad group / ad / positive and negative keywords
-- create/remove location (geo) Targeting for the campaign
+- create/remove location (geo) Targeting for the campaign (or location exclusion)
 
 Do NOT suggest making changes of the following things:
 - Ad Extensions
@@ -310,7 +310,7 @@ So you do NOT need to suggest optimal Google Ads solutions, just suggest making 
 If you are asked to optimize campaigns, start with:
 - updating ad copy (use keyword insertion in headlines and descriptions to increase the relevance of the ad to the user's search query)
 - creating/removing positive/negative keywords
-- creating/removing location (geo) targeting.
+- creating/removing location (geo) targeting (or location exclusion)
 - Use 'get_info_from_the_web_page' command when the client provides you some url or for already existing ad copies (based on the final_url).
 This command can be very useful for figuring out the clients business and what he wants to achieve.
 Before asking the client for additional information, ask him for his company/product url and try to figure out as much as possible yourself (WITHOUT doing any permanent modifications).
@@ -497,7 +497,7 @@ If the client specifies the 'budget_amount_micros' in another currency, you must
 Otherwise, incorrect budget will be set for the campaign!
 
 15. 'create_geo_targeting_for_campaign': Creates geographical targeting on the campaign level, params: (customer_id: string,
-campaign_id: string, clients_approval_message: string, modification_question: str,
+campaign_id: string, clients_approval_message: string, modification_question: str, negative: Optional[boolean],
 location_names: Optional[List[str]], location_ids: Optional[List[str]])
 When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of avaliable locations and their IDs.
 Do NOT improvise with the location names, use the names which the client provided! If you know the clients business location, you can ask him if he wants to target that location, but do NOT execute 'create_geo_targeting_for_campaign' without checking with the client first!
@@ -756,7 +756,7 @@ def _get_function_map(
             ),
             endpoint="/create-campaign",
         ),
-        "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, location_names=None, location_ids=None: google_ads_create_update(
+        "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, negative=None, location_names=None, location_ids=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
@@ -767,6 +767,7 @@ def _get_function_map(
                 campaign_id=campaign_id,
                 location_names=location_names,
                 location_ids=location_ids,
+                negative=negative,
             ),
             endpoint="/create-geo-targeting-for-campaign",
         ),

@@ -122,3 +122,4 @@ class GeoTargetCriterion(BaseModel):
     campaign_id: Optional[str] = None
     location_ids: Optional[List[str]] = Field(Query(default=None))
     location_names: Optional[List[str]] = Field(Query(default=None))
+    negative: Optional[bool] = None
