@@ -378,6 +378,13 @@ async def _set_fields(
     )
 
 
+MAX_HEADLINES_OR_DESCRIPTIONS = {
+    "headlines": 15,
+    "descriptions": 4,
+}
+MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG = "There is already maximum number of"
+
+
 def _set_headline_or_description(
     client: GoogleAdsClient,
     operation_update: Any,
@@ -402,6 +409,10 @@ def _set_headline_or_description(
             # delete headline or description
             updated_fields.pop(update_existing_index)
     else:
+        if len(updated_fields) >= MAX_HEADLINES_OR_DESCRIPTIONS[update_field]:
+            raise ValueError(
+                f"{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} {update_field}: {len(updated_fields)}"
+            )
         headline_or_description = client.get_type("AdTextAsset")
         headline_or_description.text = new_text
         updated_fields.append(headline_or_description)
@@ -460,29 +471,38 @@ WHERE ad_group_ad.ad.id = {model_or_dict.ad_id}"""  # nosec: [B608]
             "ad"
         ]["responsiveSearchAd"]
 
+        errors = []
         if modify_headlines:
             update_field = "headlines"
             new_text = model_or_dict.headline
-            _set_headline_or_description(
-                client=client,
-                operation_update=operation_update,
-                update_field=update_field,
-                new_text=new_text,
-                update_existing_index=model_or_dict.update_existing_headline_index,
-                responsive_search_ad=responsive_search_ad,
-            )
+            try:
+                _set_headline_or_description(
+                    client=client,
+                    operation_update=operation_update,
+                    update_field=update_field,
+                    new_text=new_text,
+                    update_existing_index=model_or_dict.update_existing_headline_index,
+                    responsive_search_ad=responsive_search_ad,
+                )
+            except ValueError as e:
+                errors.append(str(e))
 
         if modify_descriptions:
-            update_field = "descriptions"
-            new_text = model_or_dict.description
-            _set_headline_or_description(
-                client=client,
-                operation_update=operation_update,
-                update_field=update_field,
-                new_text=new_text,
-                update_existing_index=model_or_dict.update_existing_description_index,
-                responsive_search_ad=responsive_search_ad,
-            )
+            try:
+                update_field = "descriptions"
+                new_text = model_or_dict.description
+                _set_headline_or_description(
+                    client=client,
+                    operation_update=operation_update,
+                    update_field=update_field,
+                    new_text=new_text,
+                    update_existing_index=model_or_dict.update_existing_description_index,
+                    responsive_search_ad=responsive_search_ad,
+                )
+            except ValueError as e:
+                errors.append(str(e))
+        if errors:
+            raise ValueError("\n".join(errors))
 
     if model_or_dict.final_url:
         final_url = model_or_dict.final_url

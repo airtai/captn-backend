@@ -177,7 +177,8 @@ list_accessible_customers_config = {
 
 execute_query_config = {
     "name": "execute_query",
-    "description": "Query the Google Ads API",
+    "description": """Query the Google Ads API.
+If not told differently, do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...) i.e. use the 'WHERE' clause to filter out the REMOVED resources!""",
     "parameters": {
         "type": "object",
         "properties": {
@@ -311,7 +312,7 @@ Faking the clients approval may resault with the LAWSUIT and you will get fired!
     },
     "modification_question": {
         "type": "string",
-        "description": """Make sure that the 'message' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same).""",
+        "description": """Make sure that the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same).""",
     },
     "cpc_bid_micros": {
         "type": "integer",
@@ -741,20 +742,33 @@ Make sure you add all the information which the client needs to know, beacuse th
 
 ask_client_for_permission_config = {
     "description": """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
+Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'proposed_changes' to describe the changes which you want to make.
+Do NOT use this method before you have all the information about the resource and the changes which you want to make!
+This method should ONLY be used when you know the exact resource and exact changes which you want to make and NOT for the general questions like: 'Do you want to update keywords?'.
+Also, propose one change at a time. If you want to make multiple changes, ask the client for the permission for each change separately i.e. before each modification, use this method to ask the client for the permission.
 At the end of the message, inform the client that the modifications will be made ONLY if he answers explicitly 'Yes'.""",
     "name": "ask_client_for_permission",
     "parameters": {
         "type": "object",
         "properties": {
-            "message": {
+            "resource_details": {
                 "type": "string",
-                "description": """Message for the client.
-Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
-Your message should start 'Do you approve the following changes:' and then list all the changes which will be made!""",
+                "description": """Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
+You MUST also describe to the client the current situation for that resource.
+If you want to modify the Ad Copy, you MUST provide the current Ad Copy details, e.g:
+The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are 'h1', 'h2' and 'h3'. The descriptions are 'd1' and 'd2'.
+
+If you want to modify the keywords, you MUST provide the current keywords details, e.g:
+Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'.""",
             },
-            # "smart_suggestions": smart_suggestions_schema,
+            "proposed_changes": {
+                "type": "string",
+                "description": """Explains which changes you want to make and why you want to make them.
+I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
+Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.""",
+            },
         },
-        "required": ["message"],
+        "required": ["resource_details", "proposed_changes"],
     },
 }
 
