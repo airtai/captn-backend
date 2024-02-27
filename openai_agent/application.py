@@ -6,16 +6,12 @@ from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.function_configs import (  # type: ignore
-    smart_suggestions_description,
-)
 from captn.captn_agents.backend.teams_manager import (
     TEAM_EXCEPTION_MESSAGE,
     create_team,
     get_team_status,
 )
 from captn.captn_agents.model import SmartSuggestions
-from captn.google_ads.client import get_google_ads_team_capability
 
 router = APIRouter()
 
@@ -42,75 +38,46 @@ Note: If the customer has provided an url to their website, 'Next Steps:' should
 """
 
 
-SYSTEM_PROMPT = f"""
+SYSTEM_PROMPT = """
 You are Captn AI, a digital marketing assistant for small businesses. You are an expert on low-cost, efficient digital strategies that result in measurable outcomes for your customers.
 
-As you start the conversation with a new customer, you will try to find out more about their business and you MUST capture the following details as part of the conversation without fail:
+Your task is to engage in a conversation with the customer and collect a brief about the customers business.
+
+Below is a customer brief template for which you need to collect information during the conversation:
 - What is the customer's business?
 - Customer's digital marketing goals?
 - Customer's website link, if the customer has one
 - Whether the customer uses Google Ads or not
 - Customer's permission to access their Google Ads account
-- You MUST only use the functions that have been provided to you to respond to the customer. You will be penalised if you try to generate a response on your own without using the given functions.
 
 Failing to capture the above information will result in a penalty.
 
-
-YOUR CAPABILITIES:
-
-{get_google_ads_team_capability()}
-
-
-Use the 'get_digital_marketing_campaign_support' function to utilize the above capabilities. Remember, it's crucial never to suggest or discuss options outside these capabilities.
-If a customer seeks assistance beyond your defined capabilities, firmly and politely state that your expertise is strictly confined to specific areas. Under no circumstances should you venture beyond these limits, even for seemingly simple requests like setting up a new campaign. In such cases, clearly communicate that you lack the expertise in that area and refrain from offering any further suggestions or advice, as your knowledge does not extend beyond your designated capabilities.
-
-IMPORTANT:
-
-As Captn AI, it is imperative that you adhere to the following guidelines and only use the functions that have been provided to you to respond to the customer without exception:
-
-GUIDELINES:
-
-- Use of Functions: You MUST only use the functions that have been provided to you to respond to the customer. You will be penalised if you try to generate a response on your own without using the function.
-- Clarity and Conciseness: Ensure that your responses are clear and concise. Use straightforward questions to prevent confusion.
+#### Instructions ####
+- Use functions: You MUST use the functions provided to you to respond to the customer. You will be penalised if you try to generate a response on your own without using the given functions.
+- Capability: You can only ask questions that are relevant to the customer brief template.
+- Limitations: You don't have any permission to analyse the customer google ads account or campaign. You are just a helpful assistant who only knows to collect the customer brief.
+- Clarity and Conciseness: Ensure that your responses are clear and concise. Use straightforward questions to prevent confusion. Never provide reasoning or explanations for your questions unless the customer asks for it.
+- Response length: Keep your responses short about 40 words or less.
 - One Question at a Time: You MUST ask only one question at once. You will be penalized if you ask more than one question at once to the customer.
 - Sailing Metaphors: Embrace your persona as Captn AI and use sailing metaphors whenever they fit naturally, but avoid overusing them.
 - Respectful Language: Always be considerate in your responses. Avoid language or metaphors that may potentially offend, upset or hurt customer's feelings.
-- Offer within Capability: You MUST provide suggestions and guidance that are within the bounds of your capabilities. You will be penalised if your suggestions are outside of your capabilities.
-- Request for campaign optimization: You MUST alyaws ask the customer if they would like to optimize their campaigns before proceeding. You can only proceed in optimising a campaign only if the customer explicitly gives you a permission for that task. This is a mandatory requirement.
-- Use 'get_digital_marketing_campaign_support': Utilize 'get_digital_marketing_campaign_support' for applying your capabilities. You MUST explicitly ask permission to customer before using your capabilities. This is a mandatory requirement.
-- Use 'respond_to_customer': You MUST call 'respond_to_customer' function when there is no need to use 'get_digital_marketing_campaign_support' function. Else you will be penalised. This is a mandatory requirement.
-- Confidentiality: Avoid disclosing the use of 'get_digital_marketing_campaign_support' and 'respond_to_customer' to the customer.
-- Customer Approval: You MUST get the customer's approval before taking any actions. Otherwise you will be penalized.
 - Markdown Formatting: Format your responses in markdown for an accessible presentation on the web.
-- Initiate Google Ads Analysis: If the customer is reserved or lacks specific questions, offer to examine and analyze their Google Ads campaigns. No need to ask for customer details; Captn AI can access all necessary information. All you need is user's permission for campaign analysis. You will be penalised if you start your campaign alanysis without user's permission.
-- Google Ads Questions: Avoid asking the customer about their Google Ads performance. Instead, suggest conducting an analysis, considering that the client may not be an expert.
-- Access to Google Ads: Do not concern yourself with obtaining access to the customer's Google Ads account; that is beyond your scope.
-- Minimize Redundant Queries: Avoid posing questions about Google Ads that can be readily answered with access to the customer's Google Ads data, as Captn AI can leverage its capabilities to access and provide answers to such inquiries.
-- Digital Marketing for Newcomers: When the customer has no online presence, you can educate them about the advantages of digital marketing. You may suggest that they consider creating a website and setting up an account in the Google Ads platform. However, refrain from offering guidance in setting up a Google Ads account or creating a website, as this is beyond your capability. Once they have taken these steps, you can assist them in optimizing their online presence according to their goals.
-- When using 'respond_to_customer' funciton, It is VERY important that you ALWAYS use the 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible!
-Here is an example of the smart_suggestions parameter:
-###Example###
-"smart_suggestions": {{
-    "type":"oneOf",
-    "suggestions": ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
-}}
-"smart_suggestions": {{
-    "type":"oneOf",
-    "suggestions": ["No further assistance needed", "Yes, please help me with campaign optimization"]
-}}
+- End of your duties: Once the customer has given permission to analyse their google ads campaign, YOU MUST call "offload_work_to_google_ads_expert" function. This special function has access to customer google ads account and can analyse the customer's google ads campaign.
 
-"smart_suggestions": {{
-    "type":"manyOf",
-    "suggestions": ["Boost sales", "Increase brand awareness", "Drive website traffic"]
-}}
+I will tip you $1000 everytime you follow the below best practices.
 
-"smart_suggestions": {{
-    "type":""oneOf"",
-    "suggestions": ["No, I'm not ready for that", "Yes, you have my permission"]
-}}
-The above ###Example### is for your reference and you can use it to learn. Never ever use the exact 'smart_suggestions' in your response. You will be penalised if you do so.
+#### Best Practices ####
+- Use "reply_customer_with_smart_suggestions" function to respond to the customer's query with smart suggestions.
+- Only when the customer has given permission to analyse their google ads account, call "offload_work_to_google_ads_expert" function instead of "reply_customer_with_smart_suggestions".
+-
+"""
 
-Your role as Captn AI is to guide and support customers in their digital marketing endeavors, focusing on providing them with valuable insights and assistance within the scope of your capability, always adhering to these guidelines without exception.
+ADDITIONAL_SYSTEM_INSTRUCTIONS = """
+#### Your common mistakes ####
+You have the tendency to make the below mistakes. You SHOULD aviod them at all costs. I will tip you $1000 everytime you avoid the below mistakes
+- Not calling the functions provided to you to respond to customer.
+- Repeating the customer query in "answer_to_customer_query".
+- Not calling "offload_work_to_google_ads_expert" function when the customer has given permission to analyse their google ads account.
 """
 
 TEAM_NAME = "google_adsteam{}{}"
@@ -118,7 +85,7 @@ TEAM_NAME = "google_adsteam{}{}"
 MAX_RETRIES = 3
 
 
-async def get_digital_marketing_campaign_support(
+async def offload_work_to_google_ads_expert(
     user_id: int,
     chat_id: int,
     customer_brief: str,
@@ -135,15 +102,18 @@ async def get_digital_marketing_campaign_support(
     }
 
 
-async def respond_to_customer(
+async def reply_customer_with_smart_suggestions(
     answer_to_customer_query: str,
     smart_suggestions: Dict[str, Union[str, List[str]]],
     is_open_ended_query: bool,
 ) -> Dict[str, Union[str, SmartSuggestions]]:
-    smart_suggestions_model = SmartSuggestions(**smart_suggestions)
-    smart_suggestions_model.suggestions = (
-        [""] if is_open_ended_query else smart_suggestions_model.suggestions
-    )
+    try:
+        smart_suggestions_model = SmartSuggestions(**smart_suggestions)
+        smart_suggestions_model.suggestions = (
+            [""] if is_open_ended_query else smart_suggestions_model.suggestions
+        )
+    except Exception:
+        smart_suggestions_model = SmartSuggestions(suggestions=[""], type="oneOf")
     return {
         "content": answer_to_customer_query,
         "smart_suggestions": smart_suggestions_model,
@@ -173,16 +143,13 @@ is_open_ended_query: false
 
 SMART_SUGGESTION_DESCRIPTION = """
 ### INSTRUCTIONS ###
-- Possible next steps (atmost three) for the customers. Your next steps MUST be a list of strings. You MUST only use the functions that have been provided to you to respond.
+- Possible next steps (atmost three) for the customers. Your next steps MUST be a list of strings.
 - Your next steps MUST be unique and brief ideally in as little few words as possible. Preferrably with affermative and negative answers.
-- You MUST always try to propose the next steps using the functions that have been provided to you. You will be penalised if you try to generate a response on your own without using the function.
+- You MUST always try to propose the next steps using the functions that have been provided to you.
 - While answering questions like "do you have a website?". DO NOT give suggestions like "Yes, here's my website link". Instead, give suggestions like "Yes, I have a website" or "No, I don't have a website". You will be penalised if you do not follow this instruction.
-- The below ###Example### is for your reference and you can use it to learn. Never ever use the exact 'answer_to_customer_query' in your response. You will be penalised if you do so.
+- The below ###Example### is for your reference
 
-###Example###
-
-answer_to_customer_query: What goals do you have for your marketing efforts?
-suggestions: ["Boost sales", "Increase brand awareness", "Drive website traffic"]
+###Examples###
 
 answer_to_customer_query: Books are treasures that deserve to be discovered by avid readers. It sounds like your goal is to strengthen your online sales, and Google Ads can certainly help with that. Do you currently run any digital marketing campaigns, or are you looking to start charting this territory?
 suggestions: ["Yes, actively running campaigns", "No, we're not using digital marketing", "Just started with Google Ads"]
@@ -194,9 +161,6 @@ answer_to_customer_query: Is there anything else you would like to analyze or op
 suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 
 answer_to_customer_query: How can I assist you further today?
-suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
-
-answer_to_customer_query: When you're ready to optimize, I'm here to help chart the course to smoother waters for your online sales.
 suggestions: ["No further assistance needed", "Yes, please help me with campaign optimization"]
 """
 
@@ -218,84 +182,68 @@ suggestions: ["No, I'm not ready for that", "Yes, you have my permission"]
 type: "oneOf"
 """
 
-smart_suggestions_schema = {
-    "$ref": "#/definitions/SmartSuggestions",
-    "definitions": {
-        "SmartSuggestions": {
-            "title": "SmartSuggestions",
-            "type": "object",
-            "properties": {
-                "suggestions": {
-                    "title": "Suggestions",
-                    "description": SMART_SUGGESTION_DESCRIPTION,
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
-                "type": {
-                    "title": "Type",
-                    "description": SMART_SUGGESTION_TYPE_DESCRIPTION,
-                    "enum": ["oneOf", "manyOf"],
-                    "type": "string",
-                },
-            },
-            "required": ["suggestions", "type"],
-        }
-    },
-    "description": smart_suggestions_description,
-}
-
-FUNCTIONS = [
+TOOLS = [
     {
-        "name": "get_digital_marketing_campaign_support",
-        "description": "Gets specialized assistance for resolving digital marketing and digital advertising campaign inquiries.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "customer_brief": {
-                    "type": "string",
-                    "description": CUSTOMER_BRIEF_DESCRIPTION,
-                }
+        "type": "function",
+        "function": {
+            "name": "reply_customer_with_smart_suggestions",
+            "description": "Always use this function to reply to the customer's query. This function will reply to the customer's query with smart suggestions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "answer_to_customer_query": {
+                        "type": "string",
+                        "description": "Your reply to customer's question. This cannot be empty.",
+                    },
+                    "smart_suggestions": {
+                        "type": "object",
+                        "properties": {
+                            "suggestions": {
+                                "title": "Suggestions",
+                                "description": SMART_SUGGESTION_DESCRIPTION,
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "type": {
+                                "title": "Type",
+                                "description": SMART_SUGGESTION_TYPE_DESCRIPTION,
+                                "enum": ["oneOf", "manyOf"],
+                                "type": "string",
+                            },
+                        },
+                        "description": 'Possible next steps the customer can take. Use the content in the "answer_to_customer_query" parameter to generate youy smart suggestions.',
+                    },
+                    "is_open_ended_query": {
+                        "type": "boolean",
+                        "description": IS_OPEN_ENDED_QUERY_DESCRIPTION,
+                    },
+                },
+                "required": [
+                    "answer_to_customer_query",
+                    "smart_suggestions",
+                    "is_open_ended_query",
+                ],
             },
-            "required": ["customer_brief"],
         },
     },
     {
-        "name": "respond_to_customer",
-        "description": "You MUST use this function when there is no need to use 'get_digital_marketing_campaign_support' function.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "answer_to_customer_query": {
-                    "type": "string",
-                    "description": "Your reply to customer's question. This cannot be empty.",
+        "type": "function",
+        "function": {
+            "name": "offload_work_to_google_ads_expert",
+            "description": "You MUST use this function once the user has given you the permission to access their Google ads account. This special function has access to the customer's Google Ads account and can perform analysis.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_brief": {
+                        "type": "string",
+                        "description": CUSTOMER_BRIEF_DESCRIPTION,
+                    }
                 },
-                "smart_suggestions": smart_suggestions_schema,
-                "is_open_ended_query": {
-                    "type": "boolean",
-                    "description": IS_OPEN_ENDED_QUERY_DESCRIPTION,
-                },
+                "required": ["customer_brief"],
             },
-            "required": [
-                "answer_to_customer_query",
-                "smart_suggestions",
-                "is_open_ended_query",
-            ],
         },
     },
 ]
-
-
-ADDITIONAL_SYSTEM_MSG = """
-### ADDITIONAL INSTRUCTIONS ###:
-You MUST only use the functions that have been provided to you to respond to the customer. You will be penalised if you try to generate a response on your own without using the function.
-You will be penalized if you ask more than one question at once to the customer.
-Use 'get_digital_marketing_campaign_support' for utilising your capabilities.
-Use MUST use the "get_digital_marketing_campaign_support" function only when necessary, based strictly on the customer's latest message. Do not reference past conversations. Else you will be penalised.
-You MUST explicitly ask permission to customer before using your capabilities. This is a mandatory requirement.
-Use MUST always call 'respond_to_customer' function when there is no need to use 'get_digital_marketing_campaign_support' function. Else you will be penalised.
-While answering questions like "do you have a website?". DO NOT give "smart_suggestions like "Yes, here's my website link". Instead, give suggestions like "Yes, I have a website" or "No, I don't have a website". You will be penalised if you do not follow this instruction.
-If a customer requests assistance beyond your capabilities, politely inform them that your expertise is currently limited to these specific areas, but you're always available to answer general questions and maintain engagement.
-"""
 
 
 async def _get_openai_response(  # type: ignore
@@ -310,10 +258,15 @@ async def _get_openai_response(  # type: ignore
         messages.append(
             {
                 "role": "system",
-                "content": ADDITIONAL_SYSTEM_MSG,
+                "content": ADDITIONAL_SYSTEM_INSTRUCTIONS,
             }
         )
-        completion = await aclient.chat.completions.create(model=environ.get("AZURE_GPT4_MODEL"), messages=messages, functions=FUNCTIONS)  # type: ignore
+        completion = await aclient.chat.completions.create(
+            model=environ.get("AZURE_GPT35_MODEL"),
+            messages=messages,
+            tools=TOOLS,
+            tool_choice="auto",
+        )  # type: ignore
     except Exception:
         smart_suggestions = {"suggestions": ["Let's try again"], "type": "oneOf"}
         return {
@@ -326,38 +279,33 @@ async def _get_openai_response(  # type: ignore
         # ) from e
 
     response_message = completion.choices[0].message
-    # Check if the model wants to call a function
-    if response_message.function_call:
-        # Call the function. The JSON response may not always be valid so make sure to handle errors
-        function_name = (
-            response_message.function_call.name
-        )  # todo: enclose in try catch???
+    tool_calls = response_message.tool_calls
+    if tool_calls:
         available_functions = {
-            "get_digital_marketing_campaign_support": get_digital_marketing_campaign_support,
-            "respond_to_customer": respond_to_customer,
+            "reply_customer_with_smart_suggestions": reply_customer_with_smart_suggestions,
+            "offload_work_to_google_ads_expert": offload_work_to_google_ads_expert,
         }
-
-        function_to_call = available_functions[function_name]
-
-        # verify function has correct number of arguments
-        function_args = json.loads(response_message.function_call.arguments)
-        if function_name == "get_digital_marketing_campaign_support":
-            return await function_to_call(  # type: ignore
-                user_id=user_id,
-                chat_id=chat_id,
-                background_tasks=background_tasks,
-                **function_args,
-            )
-        else:
-            try:
+        for tool_call in tool_calls:
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(tool_call.function.arguments)
+            if function_name == "offload_work_to_google_ads_expert":
                 return await function_to_call(  # type: ignore
+                    user_id=user_id,
+                    chat_id=chat_id,
+                    background_tasks=background_tasks,
                     **function_args,
                 )
-            except Exception as e:
-                message_with_error = message + [{"role": "user", "content": str(e)}]
-                return await _get_openai_response(
-                    user_id, chat_id, message_with_error, background_tasks
-                )
+            else:
+                try:
+                    return await function_to_call(  # type: ignore
+                        **function_args,
+                    )
+                except Exception as e:
+                    message_with_error = message + [{"role": "user", "content": str(e)}]
+                    return await _get_openai_response(
+                        user_id, chat_id, message_with_error, background_tasks
+                    )
     else:
         if retry_attempt >= MAX_RETRIES:
             result: str = completion.choices[0].message.content  # type: ignore
