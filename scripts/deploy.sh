@@ -21,6 +21,8 @@ check_variable "AZURE_GPT4_MODEL"
 check_variable "AZURE_GPT35_MODEL"
 check_variable "DEVELOPER_TOKEN"
 check_variable "AZURE_OPENAI_API_KEY_SWEDEN"
+check_variable "INFOBIP_BASE_URL"
+check_variable "INFOBIP_API_KEY"
 
 
 if [ ! -f key.pem ]; then
