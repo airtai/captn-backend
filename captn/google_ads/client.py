@@ -17,6 +17,7 @@ def get_google_ads_team_capability() -> str:
         "Creating new keywords for existing campaigns.",
         "Removing campaigns/ ad groups / ads / positive and negative keywords.",
         "Updating Ad Copies.",
+        "Adding/removing location targeting",
     ]
 
     return prefix + "- " + "\n- ".join(capabilities)
