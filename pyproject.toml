@@ -65,7 +65,7 @@ lint = [
     "pyupgrade-directories",
     "bandit==1.7.7",
     "semgrep==1.52.0",
-    "pre-commit==3.6.0",
+    "pre-commit==3.6.2",
     "detect-secrets==1.4.0",
 ]
 
@@ -90,15 +90,15 @@ agents = [
     "APScheduler==3.10.4",
     "prisma==0.12.0",
     "google-ads==22.1.0",
-    "httpx==0.26.0",
+    "httpx==0.27.0",
     "uvicorn==0.27.1",
-    "python-dotenv==1.0.0",
+    "python-dotenv==1.0.1",
     #"pyautogen[websurfer] @ git+https://github.com/microsoft/autogen.git@19b5c85",
     "pyautogen[websurfer]==0.2.9",
 
     "pandas>=2.1",
     "fastcore==1.5.29",
-    "asyncer==0.0.4",
+    "asyncer==0.0.5",
     "pydantic==2.5.3",
     "markdownify==0.11.6",
     "tenacity==8.2.3",
