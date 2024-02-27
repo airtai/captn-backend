@@ -115,7 +115,7 @@ def get_user_ids_and_emails() -> str:
 
 NOT_IN_QUESTION_ANSWER_LIST = (
     "You must ask the client for the permission first by using the 'ask_client_for_permission' function."
-    "If you have already asked the client for the permission, make sure that the 'message' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same)."
+    "If you have already asked the client for the permission, make sure that the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same)."
 )
 NOT_APPROVED = (
     "The client did not approve the modification. The client must approve the modification by answering 'Yes' to the question."

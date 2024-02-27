@@ -62,9 +62,11 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 
 def ask_client_for_permission(
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
-    message: Annotated[str, "Message for the client"],
+    resource_details: str,
+    proposed_changes: str,
 ) -> Dict[str, Any]:
-    clients_question_answere_list.append((message, None))
+    clients_question_answere_list.append((proposed_changes, None))
+    message = f"{resource_details}\n\n{proposed_changes}"
     return reply_to_client_2(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
     )
