@@ -923,7 +923,6 @@ def _update_chat_message_and_send_email(
 
     send_email_infobip(
         to_email=client_email,
-        from_email="info@airt.ai",
         subject="Captn.ai Daily Analysis",
         body_text=main_email_template,
     )
@@ -968,7 +967,6 @@ DO NOT PRCEED WITH GOOGLE ADS ANALYSIS EXCEPT IF THE CLIENT ASKS YOU TO DO SO.]"
 
     send_email_infobip(
         to_email=client_email,
-        from_email="info@airt.ai",
         subject="Captn.ai Daily Analysis",
         body_text=final_html_message,
     )

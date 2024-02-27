@@ -7,9 +7,8 @@ INFOBIP_API_KEY = environ["INFOBIP_API_KEY"]
 INFOBIP_BASE_URL = environ["INFOBIP_BASE_URL"]
 
 
-# ToDo: Create support@captn.ai and add to infobip portal
 def send_email(
-    *, from_email: str = "info@airt.ai", to_email: str, subject: str, body_text: str
+    *, from_email: str = "Capt'n Support <support@captn.ai>", to_email: str, subject: str, body_text: str
 ) -> Dict[str, Any]:
     headers = {
         "Authorization": f"App {INFOBIP_API_KEY}",
@@ -40,7 +39,7 @@ def send_email(
 
 if __name__ == "__main__":
     r = send_email(
-        from_email="info@airt.ai",
+        # from_email="support@captn.ai",
         to_email="kumaran@airt.ai",
         subject="Hi there!",
         body_text="It is me, SDK! <br> <b>How are you?</b>",
