@@ -306,17 +306,13 @@ Make sure that you explicitly tell the client which changes you want, which reso
 This rule applies to ALL the commands which make permanent changes (create/update/delete)!!!
 
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
-So you do NOT need to suggest optimal Google Ads solutions, just suggest making changes which we can do right away.
-If you are asked to optimize campaigns, start with:
-- updating ad copy (use keyword insertion in headlines and descriptions to increase the relevance of the ad to the user's search query)
-- creating/removing positive/negative keywords
-- creating/removing location (geo) targeting (or location exclusion)
+This is a template which you should follow when you are asked to optimize campaigns:
+- ad copy - Take a look at ad copy (headlines, descriptions, urls, (display) path1/path2...) and make suggestions on what should be changed (create/update/remove headlines etc.)
+Headlines can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length!
+- keywords - analyse positive/negative keywords and find out which are (i)relevant for clients business and suggest some create/update/remove actions
+- location (geo) targeting (or location exclusion) - Take a look at the location targeting and make suggestions on what should be changed (create/remove locations)
 - Use 'get_info_from_the_web_page' command when the client provides you some url or for already existing ad copies (based on the final_url).
 This command can be very useful for figuring out the clients business and what he wants to achieve.
-Before asking the client for additional information, ask him for his company/product url and try to figure out as much as possible yourself (WITHOUT doing any permanent modifications).
-- analyse keywords and find out which are (i)relevant for clients business and suggest some create/update/remove actions
-- Take a look at ad copy (headlines, descriptions, urls, (display) path1/path2...) and make suggestions on what should be changed (create/update/remove headlines etc.)
-- Headlines can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length!
 
 Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
 Do NOT use smart suggestions for open ended questions or questions which require the clients input.
@@ -383,7 +379,7 @@ Here is an example of the smart_suggestions parameter:
 
 2. read_file: Read an existing file, params: (filename: string)
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (message: string)
+params: (resource_details: string, proposed_changes: str)
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
 ONLY Google ads specialist can suggest following commands:
@@ -403,7 +399,7 @@ Unless told differently, do NOT retrieve information about the REMOVED resources
 The following commands make permanent changes. In all of them you must use the following two parameters:
 - clients_approval_message: With this message, the client confirms that he is aware of the changes you will make
 (if the message is not detailed enough, we are threatened with a lawsuit)
-- modification_question: This parameter MUST be the same string as the 'message' parameter you have used in the 'ask_client_for_permission' function!
+- modification_question: This parameter MUST be the same string as the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function!
 
 You can get these parameters from the client ONLY by using the 'ask_client_for_permission' command!!!
 So before you execyte create/update/remove functions, you MUST ask the client for the permission by using the 'ask_client_for_permission' command! Otherwise you will be penalized!
@@ -563,9 +559,10 @@ def _get_function_map(
             work_dir=work_dir,
         ),
         "reply_to_client": reply_to_client_2,
-        "ask_client_for_permission": lambda message: ask_client_for_permission(
+        "ask_client_for_permission": lambda resource_details, proposed_changes: ask_client_for_permission(
             clients_question_answere_list=clients_question_answere_list,
-            message=message,
+            resource_details=resource_details,
+            proposed_changes=proposed_changes,
         ),
         "read_file": read_file,
         "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, modification_question, cpc_bid_micros=None, status=None: google_ads_create_update(
