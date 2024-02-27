@@ -4,6 +4,13 @@ import unittest
 import pytest
 from fastapi import HTTPException, status
 
+from google_ads.application import (
+    MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG,
+    _set_fields_ad_copy,
+    _set_headline_or_description,
+)
+from google_ads.model import AdCopy
+
 DUMMY = "dummy"
 with unittest.mock.patch.dict(
     os.environ,
@@ -181,3 +188,167 @@ async def test_check_if_customer_id_is_manager_or_exception_is_raised_when_error
             user_id=-1, customer_id="1212112"
         )
         assert skip_customer
+
+
+def test_set_headline_or_description_max_headlines() -> None:
+    client = unittest.mock.MagicMock()
+    headline_or_description = unittest.mock.MagicMock()
+    headline_or_description.text = "h1"
+    client.get_type.return_value = headline_or_description
+
+    headline = {"text": "h1"}
+    headlines = [headline] * 15
+    update_field = "headlines"
+    responsive_search_ad = {update_field: headlines}
+    new_text = "h16"
+
+    operation_update = unittest.mock.MagicMock()
+
+    with pytest.raises(ValueError) as exc:
+        _set_headline_or_description(
+            client=client,
+            update_field=update_field,
+            operation_update=operation_update,
+            new_text=new_text,
+            responsive_search_ad=responsive_search_ad,
+            update_existing_index=None,
+        )
+
+    assert (
+        str(exc.value)
+        == f"{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} {update_field}: 15"
+    )
+
+
+def test_set_headline_or_description_max_descriptions() -> None:
+    client = unittest.mock.MagicMock()
+    headline_or_description = unittest.mock.MagicMock()
+    headline_or_description.text = "d1"
+    client.get_type.return_value = headline_or_description
+
+    headline = {"text": "d1"}
+    headlines = [headline] * 4
+    update_field = "descriptions"
+    responsive_search_ad = {update_field: headlines}
+    new_text = "d5"
+
+    operation_update = unittest.mock.MagicMock()
+
+    with pytest.raises(ValueError) as exc:
+        _set_headline_or_description(
+            client=client,
+            update_field=update_field,
+            operation_update=operation_update,
+            new_text=new_text,
+            responsive_search_ad=responsive_search_ad,
+            update_existing_index=None,
+        )
+    assert (
+        str(exc.value) == f"{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} {update_field}: 4"
+    )
+
+
+@pytest.mark.asyncio
+async def test_set_fields_ad_copy_max_headlines_and_descriptions() -> None:
+    client = unittest.mock.MagicMock()
+    headline_or_description = unittest.mock.MagicMock()
+    headline_or_description.text = "d1"
+    client.get_type.return_value = headline_or_description
+
+    model = AdCopy(
+        customer_id="123",
+        ad_id="456",
+        headline="h16",
+        description="d5",
+    )
+
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.return_value = {
+            "123": [
+                {
+                    "adGroupAd": {
+                        "ad": {
+                            "responsiveSearchAd": {
+                                "headlines": [
+                                    {
+                                        "text": "aaaa",
+                                    },
+                                    {
+                                        "text": "b",
+                                    },
+                                    {
+                                        "text": "c",
+                                    },
+                                    {
+                                        "text": "d",
+                                    },
+                                    {
+                                        "text": "e",
+                                    },
+                                    {
+                                        "text": "f",
+                                    },
+                                    {
+                                        "text": "g",
+                                    },
+                                    {
+                                        "text": "h",
+                                    },
+                                    {
+                                        "text": "i",
+                                    },
+                                    {
+                                        "text": "j",
+                                    },
+                                    {
+                                        "text": "k",
+                                    },
+                                    {
+                                        "text": "l",
+                                    },
+                                    {
+                                        "text": "m",
+                                    },
+                                    {
+                                        "text": "n",
+                                    },
+                                    {
+                                        "text": "o",
+                                    },
+                                ],
+                                "descriptions": [
+                                    {
+                                        "text": "a",
+                                    },
+                                    {
+                                        "text": "b",
+                                    },
+                                    {
+                                        "text": "c",
+                                    },
+                                    {
+                                        "text": "d",
+                                    },
+                                ],
+                            },
+                        },
+                    }
+                }
+            ]
+        }
+
+        with pytest.raises(ValueError) as exc:
+            await _set_fields_ad_copy(
+                client=client,
+                model_or_dict=model,
+                operation=object,
+                operation_update=object,
+                user_id=-1,
+            )
+
+    assert (
+        str(exc.value)
+        == f"{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} headlines: 15\n{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} descriptions: 4"
+    )

@@ -1005,9 +1005,8 @@ def execute_daily_analysis(
     print("Starting daily analysis.")
     id_email_dict = json.loads(get_user_ids_and_emails())
 
-    # DELETE THIS BEFORE LAUNCH
-    if send_only_to_emails is None:
-        send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
+    # if send_only_to_emails is None:
+    #     send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
 
     for user_id, email in id_email_dict.items():
         if send_only_to_emails is not None and email not in send_only_to_emails:
