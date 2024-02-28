@@ -90,6 +90,4 @@ customer: I want to Boost sales
 chatbot: Awesome goal! Let's set sail and boost your sales.
 customer: Am excited to get started!"""
     actual = _format_conversation(messages)
-    print(actual)
-    print(expected)
     assert actual == expected
