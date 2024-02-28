@@ -64,9 +64,9 @@ async def test_openai_function_calling() -> None:
             user_id=1, chat_id=1, message=message, background_tasks=Mock()
         )
 
-        expected = {"content": TEST_CONTENT, "smart_suggestions": [""]}
+        expected = {"content": TEST_CONTENT}
 
-        assert mock_create.call_count == 4
+        assert mock_create.call_count == 1
         assert actual == expected
 
 
