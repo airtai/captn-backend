@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import pytest
@@ -6,11 +7,24 @@ from httpx import Request, Response
 from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
 
-from captn.captn_agents.application import (
-    RETRY_MESSAGE,
-    CaptnAgentRequest,
-    chat,
-)
+DUMMY = "dummy"
+with unittest.mock.patch.dict(
+    os.environ,
+    {
+        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
+        "AZURE_API_ENDPOINT": DUMMY,
+        "AZURE_API_VERSION": DUMMY,
+        "AZURE_GPT4_MODEL": DUMMY,
+        "AZURE_GPT35_MODEL": DUMMY,
+        "INFOBIP_API_KEY": DUMMY,
+        "INFOBIP_BASE_URL": DUMMY,
+    },
+):
+    from captn.captn_agents.application import (
+        RETRY_MESSAGE,
+        CaptnAgentRequest,
+        chat,
+    )
 
 
 def test_chat_when_openai_bad_request_is_raised() -> None:
