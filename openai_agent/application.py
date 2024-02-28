@@ -14,6 +14,8 @@ from captn.captn_agents.backend.teams_manager import (
 from captn.captn_agents.model import SmartSuggestions
 from captn.google_ads.client import get_google_ads_team_capability
 
+from .smart_suggestion_generator import generate_smart_suggestions
+
 router = APIRouter()
 
 # Setting up Azure OpenAI instance
@@ -81,6 +83,7 @@ I will tip you $1000 everytime you follow the below best practices.
 - Never mention that "you need to collect some information about your business" rather tell that you are here to help the customer with their digital marketing campaign.
 - Do not ask every question in the customer brief for name of asking. For example, if the customer has already informed that they are using Google Ads, you don't need to ask the same question again.
 - Only call "offload_work_to_google_ads_expert" function when the customer has given permission to analyse their google ads account. In doubt, you can always ask the customer for the permission again.
+- Never say the questions number in your response like "First question" or "one last question". It will be misleading to the customer.
 
 #### Example conversations ####
 Below are few example conversations which you can use as a reference. You can take inspiration from these examples and create your own conversation. But never copy the below examples as it is.
@@ -136,6 +139,7 @@ You have the tendency to make the below mistakes. You SHOULD aviod them at all c
 - Generating responses that are more than 40 words.
 - Asking every questions in the customer brief template even if the customer has already answered them.
 - Calling "offload_work_to_google_ads_expert" function without the customer explicitly giving permission to access their Google Ads account.
+- Number the questions in your response like "One last question".
 """
 
 TEAM_NAME = "google_adsteam{}{}"
@@ -230,6 +234,8 @@ async def _get_openai_response(  # type: ignore
                 )
     else:
         result: str = completion.choices[0].message.content  # type: ignore
+        updated_message = message + [{"role": "assistant", "content": result}]
+        background_tasks.add_task(generate_smart_suggestions, updated_message, chat_id)
         return {"content": result}  # type: ignore
 
 
