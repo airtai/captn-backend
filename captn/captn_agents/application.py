@@ -1,6 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
+from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, HTTPException
 from openai import BadRequestError
 from pydantic import BaseModel
@@ -28,6 +29,38 @@ class DailyAnalysisRequest(BaseModel):
 RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
 
 
+def on_connect(iostream: IOWebsockets) -> str:
+    try:
+        request_json = iostream.input()
+        request = CaptnAgentRequest.model_validate_json(request_json)
+
+        team_name, last_message = start_conversation(
+            user_id=request.user_id,
+            conv_id=request.conv_id,
+            task=request.message,
+            iostream=iostream,
+            max_round=80,
+            human_input_mode="NEVER",
+            class_name="google_ads_team",
+        )
+
+    except BadRequestError as e:
+        # retry the request once
+        if request.retry:
+            request.retry = False
+            request.message = RETRY_MESSAGE
+            print(f"Retrying the request with message: {RETRY_MESSAGE}, error: {e}")
+            return chat(request)
+        raise e
+
+    except Exception as e:
+        # TODO: error logging
+        print(f"captn_agents endpoint /chat failed with error: {e}")
+        raise e
+
+    return last_message
+
+
 @router.post("/chat")
 def chat(request: CaptnAgentRequest) -> str:
     try:
@@ -35,6 +68,7 @@ def chat(request: CaptnAgentRequest) -> str:
             user_id=request.user_id,
             conv_id=request.conv_id,
             task=request.message,
+            iostream=None,
             max_round=80,
             human_input_mode="NEVER",
             class_name="google_ads_team",

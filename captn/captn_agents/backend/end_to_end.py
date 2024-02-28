@@ -6,8 +6,9 @@ __all__ = [
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from autogen.io.websockets import IOWebsockets
+
 from .banking_initial_team import BookingInitialTeam
-from .captn_initial_team import CaptnInitialTeam
 from .google_ads_team import GoogleAdsTeam
 from .initial_team import InitialTeam
 from .team import Team
@@ -77,13 +78,6 @@ roles_dictionary = {
         "human_input_mode": {"NEVER": initial_team_roles_never, "ALWAYS": []},
         "class": InitialTeam,
     },
-    "captn_initial_team": {
-        "human_input_mode": {
-            "NEVER": captn_initial_team_roles_always,  # captn_initial_team_roles_never,
-            "ALWAYS": captn_initial_team_roles_always,
-        },
-        "class": CaptnInitialTeam,
-    },
     "banking_initial_team": {
         "human_input_mode": {
             "NEVER": banking_initial_team_roles_always,  # banking_initial_team_roles_never,
@@ -107,6 +101,7 @@ def _get_initial_team(
     root_dir: Path,
     *,
     task: str,
+    iostream: IOWebsockets,
     roles: Optional[List[Dict[str, str]]],
     max_round: int,
     seed: int,
@@ -140,6 +135,7 @@ def _get_initial_team(
                 user_id=user_id,
                 conv_id=conv_id,
                 task=task,
+                iostream=iostream,
                 roles=roles,
                 work_dir=str(working_dir),
                 max_round=max_round,
@@ -153,6 +149,7 @@ def _get_initial_team(
                 user_id=user_id,
                 conv_id=conv_id,
                 task=task,
+                iostream=iostream,
                 work_dir=str(working_dir),
                 max_round=max_round,
                 seed=seed,
@@ -168,6 +165,7 @@ def start_conversation(
     root_dir: Path = Path(".") / "logs",
     *,
     task: str = "Hi!",
+    iostream: IOWebsockets,
     roles: Optional[List[Dict[str, str]]] = None,
     max_round: int = 20,
     seed: int = 42,
@@ -180,6 +178,7 @@ def start_conversation(
         conv_id=conv_id,
         root_dir=root_dir,
         task=task,
+        iostream=iostream,
         roles=roles,
         max_round=max_round,
         seed=seed,
@@ -199,61 +198,12 @@ def start_conversation(
         return team_name, continue_conversation(team_name=team_name, message=task)
 
 
-async def a_start_conversation(
-    user_id: int,
-    conv_id: int,
-    root_dir: Path = Path(".") / "logs",
-    *,
-    task: str = "Hi!",
-    roles: Optional[List[Dict[str, str]]] = None,
-    max_round: int = 20,
-    seed: int = 42,
-    temperature: float = 0.2,
-    human_input_mode: str = "ALWAYS",
-    class_name: str = "initial_team",
-) -> Tuple[str, str]:
-    initial_team, team_name, create_new_conv = _get_initial_team(
-        user_id=user_id,
-        conv_id=conv_id,
-        root_dir=root_dir,
-        task=task,
-        roles=roles,
-        max_round=max_round,
-        seed=seed,
-        temperature=temperature,
-        human_input_mode=human_input_mode,
-        class_name=class_name,
-        use_async=True,
-    )
-    if create_new_conv and initial_team:
-        await initial_team.a_initiate_chat()
-
-        team_name = initial_team.name
-        last_message = initial_team.get_last_message(add_prefix=False)
-
-        return team_name, last_message
-
-    else:
-        last_message = await a_continue_conversation(team_name=team_name, message=task)
-        return team_name, last_message
-
-
 def continue_conversation(team_name: str, message: str) -> str:
     message = message.strip()
     initial_team = Team.get_team(team_name)
     initial_team.update_clients_question_answere_list(message)
 
     initial_team.continue_chat(message=message)
-
-    last_message: str = initial_team.get_last_message(add_prefix=False)
-
-    return last_message
-
-
-async def a_continue_conversation(team_name: str, message: str) -> str:
-    initial_team = Team.get_team(team_name)
-
-    await initial_team.a_continue_chat(message=message)
 
     last_message: str = initial_team.get_last_message(add_prefix=False)
 

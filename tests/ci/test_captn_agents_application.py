@@ -39,6 +39,7 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
                     max_round=80,
                     human_input_mode="NEVER",
                     class_name="google_ads_team",
+                    iostream=None,
                 ),
                 unittest.mock.call(
                     user_id=-1,
@@ -47,6 +48,7 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
                     max_round=80,
                     human_input_mode="NEVER",
                     class_name="google_ads_team",
+                    iostream=None,
                 ),
             ]
         )

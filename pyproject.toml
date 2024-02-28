@@ -93,8 +93,8 @@ agents = [
     "httpx==0.27.0",
     "uvicorn==0.27.1",
     "python-dotenv==1.0.1",
-    #"pyautogen[websurfer] @ git+https://github.com/microsoft/autogen.git@19b5c85",
-    "pyautogen[websurfer]==0.2.9",
+    "pyautogen[websurfer] @ git+https://github.com/microsoft/autogen.git@e69d4ce",
+    #"pyautogen[websurfer]==0.2.9",
 
     "pandas>=2.1",
     "fastcore==1.5.29",

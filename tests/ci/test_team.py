@@ -36,7 +36,7 @@ def test_get_new_team_name(mock_get_team_name_prefix: mock.MagicMock) -> None:
 
 def test_create_member() -> None:
     team = Team(roles=roles, name="Team_1")
-    team.llm_config = {"api_key": DUMMY}
+    team.llm_config = {"api_key": DUMMY, "model": "gpt-4"}
     member = team._create_member("QA gpt", "Description1")
 
     system_message = """You are qa_gpt, Description1
@@ -50,7 +50,7 @@ Do NOT try to finish the task until other team members give their opinion.
 
 def test_create_members() -> None:
     team = Team(roles=roles, name="Team_2")
-    team.llm_config = {"api_key": "dummy"}
+    team.llm_config = {"api_key": "dummy", "model": "gpt-4"}
     team._create_members()
 
     assert len(team.members) == len(roles)
