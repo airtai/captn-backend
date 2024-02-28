@@ -31,18 +31,36 @@ RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize
 
 def on_connect(iostream: IOWebsockets) -> None:
     try:
-        request_json = iostream.input()
-        request = CaptnAgentRequest.model_validate_json(request_json)
+        message = iostream.input()
+        print(f"Received request: {message}", flush=True)
+
+        # TODO: iostream
+        # Input should actualy a json encoded string
+        # request_json = iostream.input()
+        # request = CaptnAgentRequest.model_validate_json(request_json)
+
+        # TODO: remove next three lines
+        user_id = 1
+        conv_id = 1
+        request = CaptnAgentRequest(
+            user_id=user_id,
+            conv_id=conv_id,
+            message=message,
+        )
 
         team_name, last_message = start_conversation(
-            user_id=request.user_id,
-            conv_id=request.conv_id,
-            task=request.message,
+            user_id=user_id,
+            conv_id=conv_id,
+            task=message,
             iostream=iostream,
             max_round=80,
             human_input_mode="NEVER",
             class_name="google_ads_team",
         )
+
+        # TODO: last_message is the response from the team (the message which is displayed in the chat)
+        # We need to send it back to the user
+        # return last_message ???
 
     except BadRequestError as e:
         # retry the request once
@@ -50,7 +68,10 @@ def on_connect(iostream: IOWebsockets) -> None:
             request.retry = False
             request.message = RETRY_MESSAGE
             print(f"Retrying the request with message: {RETRY_MESSAGE}, error: {e}")
-            return chat(request)
+
+            # TODO: after updating request.retry, iostream should be updated as well?
+            # And call on_connect again
+            on_connect(iostream)
         raise e
 
     except Exception as e:
