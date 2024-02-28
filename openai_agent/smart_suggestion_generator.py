@@ -69,7 +69,7 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "generate_next_steps_for_customer",
+            "name": "_generate_next_steps_for_customer",
             "description": "Always use this function to reply to the customer's query. This function will generate the next steps for the customer.",
             "parameters": {
                 "type": "object",
@@ -119,7 +119,7 @@ Ensure you follow the below instructions and best practices to complete the task
 - Always inlcude one affirmative and one negative Elliptical sentence in your suggestions.
 - Your next steps MUST be a list of strings.
 - While answering questions like "do you have a website?". DO NOT give suggestions like "Yes, here's my website link". Instead, give suggestions like "Yes, I have a website" or "No, I don't have a website". You will be penalised if you do not follow this instruction.
-- Always use "generate_next_steps_for_customer" function to respond.
+- Always use "_generate_next_steps_for_customer" function to respond.
 - If the lastest chatbot question is open ended and you cannot anticipate the next steps, then set "is_open_ended_query" to true and "suggestions" to an empty list.
 
 #### Examples ####
@@ -129,7 +129,7 @@ chatbot: Welcome aboard! I'm Captn, your digital marketing companion. Think of m
 customer: I want to increase my online sales.
 chatbot: Are you using Google Ads to promote your website and boost sales?
 #### your next steps ####
-generate_next_steps_for_customer(
+_generate_next_steps_for_customer(
     smart_suggestions={
         "suggestions": ["Yes, I'm already using Google Ads.", "No, I haven't started with Google Ads."],
         "type": "oneOf"
@@ -147,7 +147,7 @@ chatbot: Great! Are you currently running any digital marketing campaigns, or ar
 customer: Yes, I'm already using Google Ads.
 chatbot: Fantastic, setting sail with Google Ads can significantly contribute to a stronger sales breeze. May I have your permission to access and analyze your Google Ads account to optimize our course?
 #### your next steps ####
-generate_next_steps_for_customer(
+_generate_next_steps_for_customer(
     smart_suggestions={
         "suggestions": ["Yes, you have my permission", "No, I'm not ready for that"],
         "type": "oneOf"
@@ -161,7 +161,7 @@ chatbot: Welcome aboard! I'm Captn, your digital marketing companion. Think of m
 customer: I want to increase my online sales.
 chatbot: To navigate towards boosting sales, could you please share your website's link? This will help me understand your business and chart out the best route.
 #### your next steps ####
-generate_next_steps_for_customer(
+_generate_next_steps_for_customer(
     smart_suggestions={
         "suggestions": [""],
         "type": "oneOf"
@@ -180,7 +180,7 @@ def _return_default_suggestions() -> Dict[str, SmartSuggestions]:
     return SmartSuggestions(**smart_suggestions).model_dump()
 
 
-async def generate_next_steps_for_customer(
+async def _generate_next_steps_for_customer(
     smart_suggestions: Dict[str, Union[str, List[str]]],
     is_open_ended_query: bool,
 ) -> Dict[str, SmartSuggestions]:
@@ -220,7 +220,7 @@ async def generate_smart_suggestions(
             tools=TOOLS,
             tool_choice={
                 "type": "function",
-                "function": {"name": "generate_next_steps_for_customer"},
+                "function": {"name": "_generate_next_steps_for_customer"},
             },
         )  # type: ignore
     except Exception as e:
@@ -231,14 +231,14 @@ async def generate_smart_suggestions(
         tool_calls = response_message.tool_calls
         if tool_calls:
             available_functions = {
-                "generate_next_steps_for_customer": generate_next_steps_for_customer,
+                "_generate_next_steps_for_customer": _generate_next_steps_for_customer,
             }
 
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
                 function_args = json.loads(tool_call.function.arguments)
-                if function_name == "generate_next_steps_for_customer":
+                if function_name == "_generate_next_steps_for_customer":
                     try:
                         ret_val = await function_to_call(  # type: ignore
                             **function_args,
@@ -251,10 +251,10 @@ async def generate_smart_suggestions(
         else:
             ret_val = _return_default_suggestions()
     finally:
-        send_to_client(ret_val, chat_id)  # type: ignore
+        _send_to_client(ret_val, chat_id)  # type: ignore
 
 
-def send_to_client(
+def _send_to_client(
     smart_suggestions: Dict[str, Union[str, List[str]]], chat_id: int
 ) -> None:
     is_smart_suggestions_available = (
