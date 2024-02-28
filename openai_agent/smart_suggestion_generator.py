@@ -169,6 +169,14 @@ _generate_next_steps_for_customer(
     is_open_ended_query=True
 )
 
+#### Best Practices ####
+I will tip you $10000 everytime you follow the below best practices.
+- When the question is asking the link to the website, always set "is_open_ended_query" to true and "suggestions" to an empty list. You will be penalised if you do not follow this instruction.
+- Never give suggestions.
+- Never offer assistance.
+
+"""
+ADDITIONAL_SYSTEM_INSTRUCTIONS = """
 #### Common Mistakes ####
 I will tip you $10000 everytime you avoid the below common mistakes.
 - Giving suggestions like "Yes, here's my website link: www.example.com" when asked about website link.
@@ -214,6 +222,12 @@ async def generate_smart_suggestions(
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + [
             {"role": "user", "content": conversation_history}
         ]
+        messages.append(
+            {
+                "role": "system",
+                "content": ADDITIONAL_SYSTEM_INSTRUCTIONS,
+            }
+        )
         completion = await aclient.chat.completions.create(
             model=environ.get("AZURE_GPT35_MODEL"),
             messages=messages,
