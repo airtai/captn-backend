@@ -3,34 +3,34 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import autogen
 from autogen.io.websockets import IOWebsockets
+from fastcore.basics import patch
 
 from .config import config_list_gpt_4
 
-# _completions_create_original = autogen.oai.client.OpenAIWrapper._completions_create
+_completions_create_original = autogen.oai.client.OpenAIClient.create
 
 
-# # WORKAROUND for consistent 500 eror code when using openai functions
-# @patch  # type: ignore
-# def _completions_create(
-#     self: autogen.oai.client.OpenAIWrapper,
-#     client: openai.OpenAI,
-#     params: Dict[str, Any],
-# ) -> Any:
-#     for message in params["messages"]:
-#         if "function_call" in message and message["function_call"] is None:
-#             message.pop("function_call", None)
-#         name = message.get("name")
-#         role = message.get("role")
-#         if name and role != "function":
-#             # print(f"Removing name parameter from the following message:\n{message}")
-#             message.pop("name")
+# WORKAROUND for consistent 500 eror code when using openai functions
+@patch  # type: ignore
+def create(
+    self: autogen.oai.client.OpenAIClient,
+    params: Dict[str, Any],
+) -> Any:
+    for message in params["messages"]:
+        if "tool_calls" in message and message["tool_calls"] is None:
+            message.pop("tool_calls", None)
+        name = message.get("name")
+        role = message.get("role")
+        if name and role != "function":
+            # print(f"Removing name parameter from the following message:\n{message}")
+            message.pop("name")
 
-#     tokens_per_request = autogen.token_count_utils.count_token(
-#         params["messages"], model="gpt-4-1106-preview"
-#     )
-#     print(f"Tokens per request: {tokens_per_request}")
+    tokens_per_request = autogen.token_count_utils.count_token(
+        params["messages"], model="gpt-4-1106-preview"
+    )
+    print(f"Tokens per request: {tokens_per_request}")
 
-#     return _completions_create_original(self, client=client, params=params)
+    return _completions_create_original(self, params=params)
 
 
 class Team:
@@ -110,7 +110,11 @@ class Team:
 
     @classmethod
     def get_llm_config(cls, seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
-        tools = [{"type": "function", "function": f} for f in cls._functions]
+        tools = (
+            [{"type": "function", "function": f} for f in cls._functions]
+            if cls._functions
+            else None
+        )
         llm_config = {
             "config_list": config_list_gpt_4,
             "seed": seed,

@@ -29,7 +29,7 @@ class DailyAnalysisRequest(BaseModel):
 RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
 
 
-def on_connect(iostream: IOWebsockets) -> str:
+def on_connect(iostream: IOWebsockets) -> None:
     try:
         request_json = iostream.input()
         request = CaptnAgentRequest.model_validate_json(request_json)
@@ -57,8 +57,6 @@ def on_connect(iostream: IOWebsockets) -> str:
         # TODO: error logging
         print(f"captn_agents endpoint /chat failed with error: {e}")
         raise e
-
-    return last_message
 
 
 @router.post("/chat")

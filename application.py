@@ -21,6 +21,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
         execute_daily_analysis, "cron", hour="5", minute="15"
     )  # second="*/59")
     scheduler.start()
+
+    # with IOWebsockets.run_server_in_thread(on_connect=on_connect, port=8080) as uri:
+    #     print(f"Websocket server started at {uri}.", flush=True)
+
+    #     yield
     yield
 
 

@@ -12,3 +12,4 @@ OAI_CONFIG_LIST
 tmp*
 
 .*env
+.venv*
