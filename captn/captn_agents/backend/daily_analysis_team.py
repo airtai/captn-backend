@@ -923,7 +923,7 @@ def _update_chat_message_and_send_email(
 
     send_email_infobip(
         to_email=client_email,
-        subject="Captn.ai Daily Analysis",
+        subject="Capt’n.ai Daily Analysis",
         body_text=main_email_template,
     )
 
@@ -957,7 +957,7 @@ DO NOT PRCEED WITH GOOGLE ADS ANALYSIS EXCEPT IF THE CLIENT ASKS YOU TO DO SO.]"
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captn.ai Daily Analysis</title>
+    <title>Capt’n.ai Daily Analysis</title>
 </head>
 <body>
 </p>To perform the daily analysis, you need to log in to your Google Ads account. The following link will take you to the Captn.ai chat where you can log in. Once you log in, daily analysis will be scheduled for the next day.<br></p>
@@ -967,7 +967,7 @@ DO NOT PRCEED WITH GOOGLE ADS ANALYSIS EXCEPT IF THE CLIENT ASKS YOU TO DO SO.]"
 
     send_email_infobip(
         to_email=client_email,
-        subject="Captn.ai Daily Analysis",
+        subject="Capt’n.ai Daily Analysis",
         body_text=final_html_message,
     )
 

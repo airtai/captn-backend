@@ -9,7 +9,7 @@ INFOBIP_BASE_URL = environ["INFOBIP_BASE_URL"]
 
 def send_email(
     *,
-    from_email: str = "Capt'n Support <support@captn.ai>",
+    from_email: str = "Capt’n.ai Support <support@captn.ai>",
     to_email: str,
     subject: str,
     body_text: str,
