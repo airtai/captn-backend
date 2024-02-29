@@ -32,35 +32,20 @@ RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize
 def on_connect(iostream: IOWebsockets) -> None:
     try:
         message = iostream.input()
-        print(f"Received request: {message}", flush=True)
+        request_json = message
+        request = CaptnAgentRequest.model_validate_json(request_json)
+        print("===============================================")
+        print(f"Received request: {request}", flush=True)
 
-        # TODO: iostream
-        # Input should actualy a json encoded string
-        # request_json = iostream.input()
-        # request = CaptnAgentRequest.model_validate_json(request_json)
-
-        # TODO: remove next three lines
-        user_id = 1
-        conv_id = 1
-        request = CaptnAgentRequest(
-            user_id=user_id,
-            conv_id=conv_id,
-            message=message,
-        )
-
-        team_name, last_message = start_conversation(
-            user_id=user_id,
-            conv_id=conv_id,
-            task=message,
+        start_conversation(
+            user_id=request.user_id,
+            conv_id=request.conv_id,
+            task=request.message,
             iostream=iostream,
             max_round=80,
             human_input_mode="NEVER",
             class_name="google_ads_team",
         )
-
-        # TODO: last_message is the response from the team (the message which is displayed in the chat)
-        # We need to send it back to the user
-        # return last_message ???
 
     except BadRequestError as e:
         # retry the request once
