@@ -272,7 +272,7 @@ def _send_to_client(
     smart_suggestions: Dict[str, Union[str, List[str]]], chat_id: int
 ) -> None:
     is_smart_suggestions_available = (
-        len(smart_suggestions["suggestions"]) > 0
+        smart_suggestions and len(smart_suggestions["suggestions"]) > 0
     ) and not (
         len(smart_suggestions["suggestions"]) == 1
         and smart_suggestions["suggestions"][0] == ""
