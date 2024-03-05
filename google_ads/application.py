@@ -989,7 +989,7 @@ async def _remove_existing_create_new_ad_group_criterion(
     ad_group_criterion_copy = await _get_existing_ad_group_criterion(
         user_id=user_id,
         customer_id=ad_group_criterion_model.customer_id,
-        criterion_id=ad_group_criterion_model.criterion_id,
+        criterion_id=ad_group_criterion_model.criterion_id,  # type: ignore [arg-type]
     )
 
     ad_group_criterion_model.status = (
@@ -1153,7 +1153,7 @@ async def update_campaigns_negative_keywords(
     campaign_criterion_copy = await _get_existing_campaign_criterion(
         user_id=user_id,
         customer_id=campaign_criterion_model.customer_id,
-        criterion_id=campaign_criterion_model.criterion_id,
+        criterion_id=campaign_criterion_model.criterion_id,  # type: ignore [arg-type]
     )
 
     _copy_keyword_text_and_match_type(
