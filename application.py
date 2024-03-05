@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from os import environ
 from typing import AsyncGenerator
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -25,7 +26,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
     )  # second="*/59")
     scheduler.start()
 
-    with IOWebsockets.run_server_in_thread(on_connect=on_connect, port=8080) as uri:
+    host = environ.get("DOMAIN", "127.0.0.1")
+    with IOWebsockets.run_server_in_thread(
+        on_connect=on_connect, host=host, port=8080
+    ) as uri:
         print(f"Websocket server started at {uri}.", flush=True)
 
         yield
