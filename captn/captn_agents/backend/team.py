@@ -148,6 +148,7 @@ class Team:
             groupchat=self.groupchat,
             llm_config=manager_llm_config,
             is_termination_msg=self._is_termination_msg,
+            iostream=self.iostream,
         )
 
     def _create_members(self) -> None:

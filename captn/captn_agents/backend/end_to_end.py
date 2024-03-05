@@ -195,6 +195,10 @@ def start_conversation(
         return team_name, last_message
 
     else:
+        if initial_team:
+            for agent in initial_team.members:
+                agent.iostream = iostream
+            initial_team.manager.iostream = iostream
         return team_name, continue_conversation(team_name=team_name, message=task)
 
 

@@ -1,3 +1,5 @@
+import ast
+import json
 from datetime import date
 from typing import List, Optional
 
@@ -37,7 +39,7 @@ def on_connect(iostream: IOWebsockets) -> None:
         print("===============================================")
         print(f"Received request: {request}", flush=True)
 
-        start_conversation(
+        _, last_message = start_conversation(
             user_id=request.user_id,
             conv_id=request.conv_id,
             task=request.message,
@@ -46,6 +48,8 @@ def on_connect(iostream: IOWebsockets) -> None:
             human_input_mode="NEVER",
             class_name="google_ads_team",
         )
+        last_message_dict = ast.literal_eval(last_message)
+        iostream.print(json.dumps(last_message_dict))
 
     except BadRequestError as e:
         # retry the request once
