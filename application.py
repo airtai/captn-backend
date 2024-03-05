@@ -28,6 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
     scheduler.start()
 
     host = environ.get("DOMAIN", "127.0.0.1")
+    print(f"{host=}")
 
     if host != "127.0.0.1":
         full_chain = f"/letsencrypt/live/{host}/fullchain.pem"
