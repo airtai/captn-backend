@@ -61,7 +61,7 @@ lint = [
     "mypy==1.8.0",
     "black==24.2.0",
     "isort>=5",
-    "ruff==0.1.14",
+    "ruff==0.3.0",
     "pyupgrade-directories",
     "bandit==1.7.7",
     "semgrep==1.52.0",
@@ -164,6 +164,8 @@ include = '\.pyi?$'
 fix = true
 line-length = 88
 target-version = "py38"
+
+[tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -178,10 +180,10 @@ ignore = [
     "C901",  # too complex
 ]
 
-[tool.ruff.flake8-bugbear]
+[tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.pytest.ini_options]
