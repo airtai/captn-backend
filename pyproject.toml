@@ -61,7 +61,7 @@ lint = [
     "mypy==1.8.0",
     "black==24.2.0",
     "isort>=5",
-    "ruff==0.1.14",
+    "ruff==0.3.0",
     "pyupgrade-directories",
     "bandit==1.7.7",
     "semgrep==1.52.0",
@@ -86,10 +86,10 @@ testing = [
 ]
 
 agents = [
-    "fastapi==0.109.0",
+    "fastapi==0.110.0",
     "APScheduler==3.10.4",
     "prisma==0.12.0",
-    "google-ads==22.1.0",
+    "google-ads==23.1.0",
     "httpx==0.27.0",
     "uvicorn==0.27.1",
     "python-dotenv==1.0.1",
@@ -99,7 +99,7 @@ agents = [
     "pandas>=2.1",
     "fastcore==1.5.29",
     "asyncer==0.0.5",
-    "pydantic==2.5.3",
+    "pydantic==2.6.3",
     "markdownify==0.11.6",
     "tenacity==8.2.3",
 ]
@@ -164,6 +164,8 @@ include = '\.pyi?$'
 fix = true
 line-length = 88
 target-version = "py38"
+
+[tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -178,10 +180,10 @@ ignore = [
     "C901",  # too complex
 ]
 
-[tool.ruff.flake8-bugbear]
+[tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.pytest.ini_options]
