@@ -55,7 +55,8 @@ jobs:
             python-version: "3.10"
             cache: "pip"
             cache-dependency-path: pyproject.toml
-        - run: git lfs
+        - run: git lfs uninstall
+        - run: apt remove -y git-lfs && apt autoremove -y && apt clean -y
         - name: Install Dependencies
           run: pip install -e ".[dev]"
         - name: Prisma generate
