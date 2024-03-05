@@ -2,24 +2,23 @@ import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import autogen
-import openai
+from autogen.io.websockets import IOWebsockets
 from fastcore.basics import patch
 
 from .config import config_list_gpt_4
 
-_completions_create_original = autogen.oai.client.OpenAIWrapper._completions_create
+_completions_create_original = autogen.oai.client.OpenAIClient.create
 
 
 # WORKAROUND for consistent 500 eror code when using openai functions
 @patch  # type: ignore
-def _completions_create(
-    self: autogen.oai.client.OpenAIWrapper,
-    client: openai.OpenAI,
+def create(
+    self: autogen.oai.client.OpenAIClient,
     params: Dict[str, Any],
 ) -> Any:
     for message in params["messages"]:
-        if "function_call" in message and message["function_call"] is None:
-            message.pop("function_call", None)
+        if "tool_calls" in message and message["tool_calls"] is None:
+            message.pop("tool_calls", None)
         name = message.get("name")
         role = message.get("role")
         if name and role != "function":
@@ -31,7 +30,7 @@ def _completions_create(
     )
     print(f"Tokens per request: {tokens_per_request}")
 
-    return _completions_create_original(self, client=client, params=params)
+    return _completions_create_original(self, params=params)
 
 
 class Team:
@@ -72,6 +71,7 @@ class Team:
         self,
         roles: List[Dict[str, str]],
         name: str,
+        iostream: Optional[IOWebsockets] = None,
         function_map: Optional[Dict[str, Callable[[Any], Any]]] = None,
         work_dir: str = "my_default_workdir",
         max_round: int = 80,
@@ -83,6 +83,7 @@ class Team:
         self.roles = roles
         self.initial_message: str
         self.name: str
+        self.iostream = iostream
         self.max_round = max_round
         self.seed = seed
         self.temperature = temperature
@@ -109,11 +110,17 @@ class Team:
 
     @classmethod
     def get_llm_config(cls, seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
+        tools = (
+            [{"type": "function", "function": f} for f in cls._functions]
+            if cls._functions
+            else None
+        )
         llm_config = {
             "config_list": config_list_gpt_4,
             "seed": seed,
             "temperature": temperature,
-            "functions": cls._functions,
+            "tools": tools,
+            "stream": True,
             # "request_timeout": 800,
         }
         return llm_config
@@ -141,6 +148,7 @@ class Team:
             groupchat=self.groupchat,
             llm_config=manager_llm_config,
             is_termination_msg=self._is_termination_msg,
+            iostream=self.iostream,
         )
 
     def _create_members(self) -> None:
@@ -181,6 +189,7 @@ Do NOT try to finish the task until other team members give their opinion.
                 llm_config=self.llm_config,
                 system_message=system_message,
                 is_termination_msg=self._is_termination_msg,
+                iostream=self.iostream,
             )
 
         return autogen.AssistantAgent(
@@ -190,6 +199,7 @@ Do NOT try to finish the task until other team members give their opinion.
             is_termination_msg=self._is_termination_msg,
             code_execution_config={"work_dir": self.work_dir},
             function_map=self.function_map,
+            iostream=self.iostream,
         )
 
     @property

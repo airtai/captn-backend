@@ -1,6 +1,9 @@
+import ast
+import json
 from datetime import date
 from typing import List, Optional
 
+from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, HTTPException
 from openai import BadRequestError
 from pydantic import BaseModel
@@ -28,6 +31,44 @@ class DailyAnalysisRequest(BaseModel):
 RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
 
 
+def on_connect(iostream: IOWebsockets) -> None:
+    try:
+        message = iostream.input()
+        request_json = message
+        request = CaptnAgentRequest.model_validate_json(request_json)
+        print("===============================================")
+        print(f"Received request: {request}", flush=True)
+
+        _, last_message = start_conversation(
+            user_id=request.user_id,
+            conv_id=request.conv_id,
+            task=request.message,
+            iostream=iostream,
+            max_round=80,
+            human_input_mode="NEVER",
+            class_name="google_ads_team",
+        )
+        last_message_dict = ast.literal_eval(last_message)
+        iostream.print(json.dumps(last_message_dict))
+
+    except BadRequestError as e:
+        # retry the request once
+        if request.retry:
+            request.retry = False
+            request.message = RETRY_MESSAGE
+            print(f"Retrying the request with message: {RETRY_MESSAGE}, error: {e}")
+
+            # TODO: after updating request.retry, iostream should be updated as well?
+            # And call on_connect again
+            on_connect(iostream)
+        raise e
+
+    except Exception as e:
+        # TODO: error logging
+        print(f"captn_agents endpoint /chat failed with error: {e}")
+        raise e
+
+
 @router.post("/chat")
 def chat(request: CaptnAgentRequest) -> str:
     try:
@@ -35,6 +76,7 @@ def chat(request: CaptnAgentRequest) -> str:
             user_id=request.user_id,
             conv_id=request.conv_id,
             task=request.message,
+            iostream=None,
             max_round=80,
             human_input_mode="NEVER",
             class_name="google_ads_team",

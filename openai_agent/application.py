@@ -154,12 +154,13 @@ async def offload_work_to_google_ads_expert(
 ) -> Dict[str, Union[Optional[str], int, List[str]]]:
     # team_name = f"GoogleAdsAgent_{conv_id}"
     team_name = TEAM_NAME.format(user_id, chat_id)
-    await create_team(user_id, chat_id, customer_brief, team_name, background_tasks)
+    # await create_team(user_id, chat_id, customer_brief, team_name, background_tasks)
     return {
         # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": chat_id,
+        "customer_brief": customer_brief,
     }
 
 

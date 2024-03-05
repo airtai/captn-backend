@@ -4,6 +4,8 @@ import ast
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from autogen.io.websockets import IOWebsockets
+
 from google_ads.model import (
     AdCopy,
     AdGroup,
@@ -131,6 +133,7 @@ sure it is understandable by non-experts.
         task: str,
         user_id: int,
         conv_id: int,
+        iostream: IOWebsockets,
         work_dir: str = "google_ads",
         max_round: int = 80,
         seed: int = 42,
@@ -161,6 +164,7 @@ sure it is understandable by non-experts.
             temperature=temperature,
             name=name,
             clients_question_answere_list=clients_question_answere_list,
+            iostream=iostream,
         )
         self.conv_id = conv_id
         self.task = task
@@ -872,30 +876,6 @@ def _get_update_ad_copy(
     return _update_ad_copy
 
 
-def get_create_google_ads_team(
-    user_id: int, conv_id: int, working_dir: Path
-) -> Callable[[Any], Any]:
-    def create_google_ads_team(
-        task: str,
-        user_id: int = user_id,
-        conv_id: int = conv_id,
-    ) -> str:
-        google_ads_team = GoogleAdsTeam(
-            task=task,
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=str(working_dir),
-        )
-
-        google_ads_team.initiate_chat()
-
-        last_message = google_ads_team.get_last_message()
-
-        return last_message
-
-    return create_google_ads_team
-
-
 def answer_the_question(answer: str, team_name: str) -> str:
     answer = answer.strip()
     google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
@@ -906,30 +886,6 @@ def answer_the_question(answer: str, team_name: str) -> str:
     last_message = google_ads_team.get_last_message()
 
     return last_message
-
-
-def get_a_create_google_ads_team(
-    user_id: int, conv_id: int, working_dir: Path
-) -> Callable[[Any], Any]:
-    async def a_create_google_ads_team(
-        task: str,
-        user_id: int = user_id,
-        conv_id: int = conv_id,
-    ) -> str:
-        google_ads_team = GoogleAdsTeam(
-            task=task,
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=str(working_dir),
-        )
-
-        await google_ads_team.a_initiate_chat()
-
-        last_message = google_ads_team.get_last_message()
-
-        return last_message
-
-    return a_create_google_ads_team
 
 
 async def a_answer_the_question(answer: str, team_name: str) -> str:
