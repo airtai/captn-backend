@@ -30,8 +30,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
     host = environ.get("DOMAIN", "127.0.0.1")
 
     if host != "127.0.0.1":
-        full_chain = f"/etc/letsencrypt/live/{host}/fullchain.pem"
-        private_key = f"/etc/letsencrypt/live/{host}/privkey.pem"
+        full_chain = f"/letsencrypt/live/{host}/fullchain.pem"
+        private_key = f"/letsencrypt/live/{host}/privkey.pem"
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ssl_context.load_cert_chain(full_chain, private_key)
     else:
