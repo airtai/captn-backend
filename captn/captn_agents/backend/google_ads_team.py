@@ -145,6 +145,7 @@ sure it is understandable by non-experts.
             conv_id=conv_id,
             work_dir=work_dir,
             clients_question_answere_list=clients_question_answere_list,
+            iostream=iostream,
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -535,6 +536,7 @@ def _get_function_map(
     conv_id: int,
     work_dir: str,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    iostream: Optional[IOWebsockets] = None,
 ) -> Dict[str, Any]:
     def _string_to_list(
         customer_ids: Optional[Union[List[str], str]]
@@ -806,7 +808,9 @@ def _get_function_map(
             ),
             endpoint="/create-update-ad-copy",
         ),
-        "get_info_from_the_web_page": get_info_from_the_web_page,
+        "get_info_from_the_web_page": lambda url, task, task_guidelines: get_info_from_the_web_page(
+            url=url, task=task, task_guidelines=task_guidelines, iostream=iostream
+        ),
     }
 
     return function_map
