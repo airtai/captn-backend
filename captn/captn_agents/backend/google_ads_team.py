@@ -206,6 +206,7 @@ questions using the 'reply_to_client' function.
 Also, if a Website is provided in the client brief, use the 'get_info_from_the_web_page' command to get the summary of the web page.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
 3. If you receive a login url, forward it to the client by using the 'reply_to_client' function.
+Do NOT use smart suggestions when forwarding the login url to the client!
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
