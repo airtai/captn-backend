@@ -31,42 +31,41 @@ class DailyAnalysisRequest(BaseModel):
 RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
 
 
-def on_connect(iostream: IOWebsockets) -> None:
+def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
     try:
         message = iostream.input()
-        request_json = message
-        request = CaptnAgentRequest.model_validate_json(request_json)
-        print("===============================================")
-        print(f"Received request: {request}", flush=True)
-
-        _, last_message = start_conversation(
-            user_id=request.user_id,
-            conv_id=request.conv_id,
-            task=request.message,
-            iostream=iostream,
-            max_round=80,
-            human_input_mode="NEVER",
-            class_name="google_ads_team",
-        )
-        last_message_dict = ast.literal_eval(last_message)
-        iostream.print(json.dumps(last_message_dict))
-
-    except BadRequestError as e:
-        # retry the request once
-        if request.retry:
-            request.retry = False
-            request.message = RETRY_MESSAGE
-            print(f"Retrying the request with message: {RETRY_MESSAGE}, error: {e}")
-
-            # TODO: after updating request.retry, iostream should be updated as well?
-            # And call on_connect again
-            on_connect(iostream)
-        raise e
-
     except Exception as e:
-        # TODO: error logging
-        print(f"captn_agents endpoint /chat failed with error: {e}")
-        raise e
+        iostream.print(f"Failed to read the message from the client: {e}")
+        return
+    for i in range(num_of_retries):
+        try:
+            request_json = message
+            request = CaptnAgentRequest.model_validate_json(request_json)
+            print("===============================================")
+            print(f"Received request: {request}", flush=True)
+            _, last_message = start_conversation(
+                user_id=request.user_id,
+                conv_id=request.conv_id,
+                task=request.message,
+                iostream=iostream,
+                max_round=80,
+                human_input_mode="NEVER",
+                class_name="google_ads_team",
+            )
+            last_message_dict = ast.literal_eval(last_message)
+            iostream.print(json.dumps(last_message_dict))
+            return
+
+        except Exception as e:
+            # TODO: error logging
+            iostream.print(f"Agent conversation failed with an error: {e}")
+            if i < num_of_retries - 1:
+                iostream.print("Retrying the whole conversation...")
+                iostream.print("*" * 100)
+
+    iostream.print(
+        "We are sorry, but we are unable to continue the conversation at the moment. Please try again later."
+    )
 
 
 @router.post("/chat")
