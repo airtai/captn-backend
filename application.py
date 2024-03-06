@@ -38,7 +38,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
         ssl_context = None
 
     with IOWebsockets.run_server_in_thread(
-        on_connect=on_connect, host=host, port=8080, ssl_context=ssl_context
+        on_connect=on_connect,
+        host="0.0.0.0",  # nosec [B104]
+        port=8080,
+        ssl_context=ssl_context,
     ) as uri:
         print(f"Websocket server started at {uri}.", flush=True)
 
