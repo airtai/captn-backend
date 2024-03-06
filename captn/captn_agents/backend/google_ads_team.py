@@ -304,6 +304,7 @@ Do NOT suggest making changes of the following things:
 - Ad Extensions
 - Budgeting
 - Ad Scheduling
+- Language/device/demographic/interest targeting (we are able to do ONLY keyword and location targeting)
 
 VERY IMPORTANT NOTES:
 The first and the MOST IMPORTANT thing is that you can NOT make any permanent changes without the clients approval!!!
