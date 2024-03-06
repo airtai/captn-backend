@@ -4,6 +4,8 @@ import ast
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from autogen.io.websockets import IOWebsockets
+
 from google_ads.model import (
     AdCopy,
     AdGroup,
@@ -131,6 +133,7 @@ sure it is understandable by non-experts.
         task: str,
         user_id: int,
         conv_id: int,
+        iostream: IOWebsockets,
         work_dir: str = "google_ads",
         max_round: int = 80,
         seed: int = 42,
@@ -142,6 +145,7 @@ sure it is understandable by non-experts.
             conv_id=conv_id,
             work_dir=work_dir,
             clients_question_answere_list=clients_question_answere_list,
+            iostream=iostream,
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -161,6 +165,7 @@ sure it is understandable by non-experts.
             temperature=temperature,
             name=name,
             clients_question_answere_list=clients_question_answere_list,
+            iostream=iostream,
         )
         self.conv_id = conv_id
         self.task = task
@@ -202,6 +207,7 @@ questions using the 'reply_to_client' function.
 Also, if a Website is provided in the client brief, use the 'get_info_from_the_web_page' command to get the summary of the web page.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
 3. If you receive a login url, forward it to the client by using the 'reply_to_client' function.
+Do NOT use smart suggestions when forwarding the login url to the client!
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
@@ -283,7 +289,7 @@ You can use the following query for retrieving the local currency: SELECT custom
 41. If the clients message contains '### Proposed User Action ###' and '### User Action ###', proceed immediately with the task in the '### User Action ###'
 You can find most od the information in the '### History ###' section and there is probably no need to execute the 'execute_query' command or 'get_info_from_the_web_page' command.
 After finishing the task in the '### User Action ###' section, you can go back to the '### Proposed User Action ###' section and make suggestions for the next steps.
-42. Finally, ensure that your responses are formatted using markdown syntax (except for the '<a href= ...</a>' links),
+42. Finally, ensure that your responses are formatted using markdown syntax (except for the HTML anchor tags),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 Here is a list of things which you CAN do:
@@ -299,6 +305,7 @@ Do NOT suggest making changes of the following things:
 - Ad Extensions
 - Budgeting
 - Ad Scheduling
+- Language/device/demographic/interest targeting (we are able to do ONLY keyword and location targeting)
 
 VERY IMPORTANT NOTES:
 The first and the MOST IMPORTANT thing is that you can NOT make any permanent changes without the clients approval!!!
@@ -529,6 +536,7 @@ def _get_function_map(
     conv_id: int,
     work_dir: str,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    iostream: Optional[IOWebsockets] = None,
 ) -> Dict[str, Any]:
     def _string_to_list(
         customer_ids: Optional[Union[List[str], str]]
@@ -800,7 +808,9 @@ def _get_function_map(
             ),
             endpoint="/create-update-ad-copy",
         ),
-        "get_info_from_the_web_page": get_info_from_the_web_page,
+        "get_info_from_the_web_page": lambda url, task, task_guidelines: get_info_from_the_web_page(
+            url=url, task=task, task_guidelines=task_guidelines, iostream=iostream
+        ),
     }
 
     return function_map
@@ -872,30 +882,6 @@ def _get_update_ad_copy(
     return _update_ad_copy
 
 
-def get_create_google_ads_team(
-    user_id: int, conv_id: int, working_dir: Path
-) -> Callable[[Any], Any]:
-    def create_google_ads_team(
-        task: str,
-        user_id: int = user_id,
-        conv_id: int = conv_id,
-    ) -> str:
-        google_ads_team = GoogleAdsTeam(
-            task=task,
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=str(working_dir),
-        )
-
-        google_ads_team.initiate_chat()
-
-        last_message = google_ads_team.get_last_message()
-
-        return last_message
-
-    return create_google_ads_team
-
-
 def answer_the_question(answer: str, team_name: str) -> str:
     answer = answer.strip()
     google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
@@ -906,30 +892,6 @@ def answer_the_question(answer: str, team_name: str) -> str:
     last_message = google_ads_team.get_last_message()
 
     return last_message
-
-
-def get_a_create_google_ads_team(
-    user_id: int, conv_id: int, working_dir: Path
-) -> Callable[[Any], Any]:
-    async def a_create_google_ads_team(
-        task: str,
-        user_id: int = user_id,
-        conv_id: int = conv_id,
-    ) -> str:
-        google_ads_team = GoogleAdsTeam(
-            task=task,
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=str(working_dir),
-        )
-
-        await google_ads_team.a_initiate_chat()
-
-        last_message = google_ads_team.get_last_message()
-
-        return last_message
-
-    return a_create_google_ads_team
 
 
 async def a_answer_the_question(answer: str, team_name: str) -> str:

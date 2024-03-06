@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
+from autogen.io.websockets import IOWebsockets
 from typing_extensions import Annotated
 
 from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
@@ -21,7 +22,8 @@ def reply_to_client(message: str) -> str:
 reply_to_client_2_description = """Respond to the client (answer to his task or question for additional information).
 Use 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible, or you will be penalized!
 Do NOT just copy half of the message which you are sending and use it as a smart suggestion!
-Smart suggestions are used to suggest the next steps to the client. It will be displayed as quick replies in the chat so make them short and clear!"""
+Smart suggestions are used to suggest the next steps to the client. It will be displayed as quick replies in the chat so make them short and clear!
+Do NOT use smart suggestions when you are sending login url to the client!"""
 
 smart_suggestions_description = """Quick replies which the client can use for replying to the 'message' which we are sending to him.
 This parameter must be dictionary with two keys: 'suggestions': List[str] (a list of suggestions) and 'type': Literal["oneOf", "manyOf"] (option which indicates if the client can select only one or multiple suggestions).
@@ -88,7 +90,9 @@ llm_config_gpt_3_5 = {
 # WebSurferAgent is implemented to always aks for the human input at the end of the chat.
 # This patch will reply with "exit" to the input() function.
 @patch("builtins.input", lambda *args: "exit")
-def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str:
+def get_info_from_the_web_page(
+    url: str, task: str, task_guidelines: str, iostream: Optional[IOWebsockets] = None
+) -> str:
     google_ads_url = "ads.google.com"
     if google_ads_url in url:
         return "FAILED: This function should NOT be used for scraping google ads!"
@@ -100,6 +104,7 @@ def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str
         browser_config={"viewport_size": 4096, "bing_api_key": None},
         is_termination_msg=lambda x: "SUMMARY" in x["content"]
         or "FAILED" in x["content"],
+        # iostream=iostream, # Add iostream once it is implemented in the WebSurferAgent
     )
 
     user_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
@@ -160,12 +165,14 @@ Otherwise, your last message needs to start with "FAILED:" and then you need to 
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
 You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
 """
-    user_proxy = autogen.UserProxyAgent(
+    # UserProxyAgent currently has some issues with the iostream, so we are using AssistantAgent instead
+    user_proxy = autogen.AssistantAgent(
         "user_proxy",
-        human_input_mode="NEVER",
-        code_execution_config=False,
+        # human_input_mode="NEVER",
+        # code_execution_config=False,
         llm_config=llm_config_gpt_3_5,
         system_message=user_system_message,
+        iostream=iostream,
     )
 
     initial_message = f"URL: {url}\nTASK: {task}"
