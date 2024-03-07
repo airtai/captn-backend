@@ -172,7 +172,7 @@ You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY inform
         # code_execution_config=False,
         llm_config=llm_config_gpt_3_5,
         system_message=user_system_message,
-        iostream=iostream,
+        # iostream=iostream, # having some issues currently
     )
 
     initial_message = f"URL: {url}\nTASK: {task}"

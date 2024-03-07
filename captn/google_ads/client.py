@@ -125,20 +125,60 @@ NOT_APPROVED = (
 )
 
 
+FIELDS_ARE_NOT_MENTIONED_ERROR_MSG = (
+    "The client must be informed abot ALL the changes that are going to be made!"
+    "The following fields were NOT mentioned in the approval question for the client. Please inform the client about the modifications of the following fields (use the EXACT names as the ones listed bellow e.g. if a field is called 'super_cool_field', you MUST reference it as 'super_cool_field'!):\n"
+)
+
+IGNORE_FIELDS = [
+    "update_existing_headline_index",
+    "update_existing_description_index",
+    "resource_type",
+    "location_ids",
+]
+FIELD_MAPPING = {
+    "keyword_text": "keyword",
+    "keyword_match_type": "match_type",
+}
+
+
+def check_fields_are_mentioned_to_the_client(
+    ad: BaseModel, modification_question: str
+) -> str:
+    ad_dict = ad.model_dump()
+    error_msg = ""
+
+    # If the LLM generates "Final URL" the following line will replace it with "final_url"
+    modification_question_lower = modification_question.lower().replace(" ", "_")
+    for key, value in ad_dict.items():
+        if key in IGNORE_FIELDS:
+            continue
+        if value and not key.endswith("_id"):
+            key = FIELD_MAPPING.get(key, key)
+            if key not in modification_question_lower:
+                error_msg += f"'{key}' will be set to {value} (you MUST reference '{key}' in the 'proposed_changes' parameter!)\n"
+
+    if error_msg:
+        error_msg = FIELDS_ARE_NOT_MENTIONED_ERROR_MSG + error_msg
+
+    return error_msg
+
+
 def _check_for_client_approval(
+    error_msg: str,
     modification_question: str,
     clients_approval_message: str,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
-) -> bool:
+) -> str:
     if (
         modification_question,
         clients_approval_message,
     ) not in clients_question_answere_list:
-        raise ValueError(NOT_IN_QUESTION_ANSWER_LIST)
+        error_msg += "\n\n" + NOT_IN_QUESTION_ANSWER_LIST
     if clients_approval_message.lower().strip() != "yes":
-        raise ValueError(NOT_APPROVED)
+        error_msg += "\n\n" + NOT_APPROVED
 
-    return True
+    return error_msg
 
 
 def google_ads_create_update(
@@ -150,11 +190,16 @@ def google_ads_create_update(
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
     endpoint: str = "/update-ad-group-ad",
 ) -> Union[Dict[str, Any], str]:
-    _check_for_client_approval(
+    error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    error_msg = _check_for_client_approval(
+        error_msg=error_msg,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
         clients_question_answere_list=clients_question_answere_list,
     )
+    if error_msg:
+        raise ValueError(error_msg)
+
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
         return login_url_response
