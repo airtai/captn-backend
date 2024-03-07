@@ -751,6 +751,10 @@ At the end of the message, inform the client that the modifications will be made
     "parameters": {
         "type": "object",
         "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer for whom the changes will be made",
+            },
             "resource_details": {
                 "type": "string",
                 "description": """Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
@@ -776,7 +780,7 @@ Hedlines will be extended wit a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
 Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.""",
             },
         },
-        "required": ["resource_details", "proposed_changes"],
+        "required": ["customer_id", "resource_details", "proposed_changes"],
     },
 }
 

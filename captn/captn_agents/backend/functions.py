@@ -1,3 +1,4 @@
+import ast
 from typing import Any, Dict, List, Optional, Tuple, Union
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ from autogen.io.websockets import IOWebsockets
 from typing_extensions import Annotated
 
 from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
+from captn.google_ads.client import execute_query
 
 from ..model import SmartSuggestions
 
@@ -63,12 +65,24 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 
 
 def ask_client_for_permission(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
     resource_details: str,
     proposed_changes: str,
 ) -> Dict[str, Any]:
+    query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    descriptiveName = ast.literal_eval(query_result)[customer_id][0]["customer"]["descriptiveName"]  # type: ignore
+
+    customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
+    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+
     clients_question_answere_list.append((proposed_changes, None))
-    message = f"{resource_details}\n\n{proposed_changes}"
+
     return reply_to_client_2(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
     )
