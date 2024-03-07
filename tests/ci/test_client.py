@@ -1,10 +1,16 @@
+from typing import List, Optional, Tuple
+
 import pytest
+from pydantic import BaseModel
 
 from captn.google_ads.client import (
+    FIELDS_ARE_NOT_MENTIONED_ERROR_MSG,
     NOT_APPROVED,
     NOT_IN_QUESTION_ANSWER_LIST,
     _check_for_client_approval,
+    check_fields_are_mentioned_to_the_client,
     clean_error_response,
+    google_ads_create_update,
 )
 
 
@@ -16,29 +22,96 @@ def test_clean_error_response() -> None:
 
 
 def test_check_for_client_approval() -> None:
-    response = _check_for_client_approval(
+    error_msg = _check_for_client_approval(
+        error_msg="",
         clients_approval_message="yes ",
         modification_question="modification_question",
         clients_question_answere_list=[("modification_question", "yes ")],
     )
-    assert response
+    assert error_msg == ""
 
 
 def test_check_for_client_approval_not_in_qa_list() -> None:
-    with pytest.raises(ValueError) as exc_info:
-        _check_for_client_approval(
-            clients_approval_message="yes",
-            modification_question="modification_question",
-            clients_question_answere_list=[("aa", "bb")],
-        )
-    assert exc_info.value.args[0] == NOT_IN_QUESTION_ANSWER_LIST
+    error_msg = _check_for_client_approval(
+        error_msg="",
+        clients_approval_message="yes",
+        modification_question="modification_question",
+        clients_question_answere_list=[("aa", "bb")],
+    )
+    assert error_msg.strip() == NOT_IN_QUESTION_ANSWER_LIST
 
 
 def test_check_for_client_approval_client_did_not_approve() -> None:
-    with pytest.raises(ValueError) as exc_info:
-        _check_for_client_approval(
-            clients_approval_message="yes 123",
-            modification_question="modification_question",
-            clients_question_answere_list=[("modification_question", "yes 123")],
+    error_msg = _check_for_client_approval(
+        error_msg="",
+        clients_approval_message="yes 123",
+        modification_question="modification_question",
+        clients_question_answere_list=[("modification_question", "yes 123")],
+    )
+    assert error_msg.strip() == NOT_APPROVED
+
+
+class AdTest(BaseModel):
+    ad_id: Optional[int] = None
+    ad_name: str
+    status: str
+
+
+def test_check_fields_are_mentioned_to_the_client_returns_error_msg() -> None:
+    modification_question = "Do you approve changing the ad_name to test?"
+    ad = AdTest(ad_name="test", status="enabled")
+    error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    assert error_msg == (
+        FIELDS_ARE_NOT_MENTIONED_ERROR_MSG
+        + "'status' will be set to enabled (you MUST reference 'status' in the 'proposed_changes' parameter!)\n"
+    )
+
+
+def test_check_fields_are_mentioned_to_the_client_returns_error_msg_for_two_fields() -> (
+    None
+):
+    modification_question = "Do you approve?"
+    ad = AdTest(ad_name="test", status="enabled")
+    error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    assert error_msg == (
+        FIELDS_ARE_NOT_MENTIONED_ERROR_MSG
+        + "'ad_name' will be set to test (you MUST reference 'ad_name' in the 'proposed_changes' parameter!)\n"
+        + "'status' will be set to enabled (you MUST reference 'status' in the 'proposed_changes' parameter!)\n"
+    )
+
+
+def test_check_fields_are_mentioned_to_the_client_returns_empty_string_when_everything_is_ok() -> (
+    None
+):
+    modification_question = (
+        "Do you approve changing the ad_name to test and status to enabled?"
+    )
+    ad = AdTest(ad_name="test", status="enabled")
+    error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    assert error_msg == ""
+
+
+def test_google_ads_create_update_raises_error() -> None:
+    clients_question_answere_list: List[Tuple[str, Optional[str]]] = [
+        ("modification_question", "yes")
+    ]
+    modification_question = "Do you approve?"
+    clients_approval_message = "yes"
+    ad = AdTest(ad_name="test", status="enabled")
+    with pytest.raises(ValueError) as e:
+        google_ads_create_update(
+            user_id=-1,
+            conv_id=-1,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=ad,
+            clients_question_answere_list=clients_question_answere_list,
         )
-    assert exc_info.value.args[0] == NOT_APPROVED
+
+    assert e.value.args[0] == (
+        FIELDS_ARE_NOT_MENTIONED_ERROR_MSG
+        + "'ad_name' will be set to test (you MUST reference 'ad_name' in the 'proposed_changes' parameter!)\n"
+        + "'status' will be set to enabled (you MUST reference 'status' in the 'proposed_changes' parameter!)\n"
+        + "\n\n"
+        + NOT_IN_QUESTION_ANSWER_LIST
+    )
