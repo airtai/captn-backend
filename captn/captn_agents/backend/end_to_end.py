@@ -1,5 +1,5 @@
 __all__ = [
-    "start_conversation",
+    "start_or_continue_conversation",
     "continue_conversation",
 ]
 
@@ -159,7 +159,7 @@ def _get_initial_team(
     return initial_team, team_name, create_new_conv
 
 
-def start_conversation(
+def start_or_continue_conversation(
     user_id: int,
     conv_id: int,
     root_dir: Path = Path(".") / "logs",

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from captn.captn_agents.backend.daily_analysis_team import execute_daily_analysis
 
-from .backend.end_to_end import start_conversation
+from .backend.end_to_end import start_or_continue_conversation
 
 router = APIRouter()
 
@@ -43,7 +43,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             request = CaptnAgentRequest.model_validate_json(request_json)
             print("===============================================")
             print(f"Received request: {request}", flush=True)
-            _, last_message = start_conversation(
+            _, last_message = start_or_continue_conversation(
                 user_id=request.user_id,
                 conv_id=request.conv_id,
                 task=request.message,
@@ -64,14 +64,14 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 iostream.print("*" * 100)
 
     iostream.print(
-        "We are sorry, but we are unable to continue the conversation at the moment. Please try again later."
+        "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
     )
 
 
 @router.post("/chat")
 def chat(request: CaptnAgentRequest) -> str:
     try:
-        team_name, last_message = start_conversation(
+        team_name, last_message = start_or_continue_conversation(
             user_id=request.user_id,
             conv_id=request.conv_id,
             task=request.message,
