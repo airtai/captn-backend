@@ -12,4 +12,4 @@ cat <<< "$CLIENT_SECRET" > client_secret.json
 prisma migrate deploy
 prisma generate
 
-uvicorn application:app --port $PORT --host 0.0.0.0 --workers=$NUM_WORKERS --proxy-headers
+uvicorn application:app --port $PORT --host 0.0.0.0 --workers=$NUM_WORKERS --proxy-headers --lifespan on
