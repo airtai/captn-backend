@@ -29,15 +29,15 @@ with unittest.mock.patch.dict(
 
 def test_chat_when_openai_bad_request_is_raised() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.application.start_conversation"
-    ) as mock_start_conversation:
+        "captn.captn_agents.application.start_or_continue_conversation"
+    ) as mock_start_or_continue_conversation:
         error_message = "Bad Request"
         request = Request(
             method="POST",
             url="",
         )
         response = Response(status_code=400, request=request)
-        mock_start_conversation.side_effect = BadRequestError(
+        mock_start_or_continue_conversation.side_effect = BadRequestError(
             message=error_message, response=response, body=None
         )
 
@@ -49,8 +49,8 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
         with pytest.raises(BadRequestError):
             chat(request=captn_request)
 
-        assert mock_start_conversation.call_count == 2
-        mock_start_conversation.assert_has_calls(
+        assert mock_start_or_continue_conversation.call_count == 2
+        mock_start_or_continue_conversation.assert_has_calls(
             [
                 unittest.mock.call(
                     user_id=-1,

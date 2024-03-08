@@ -1,7 +1,6 @@
 __all__ = ["GoogleAdsTeam"]
 
 import ast
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from autogen.io.websockets import IOWebsockets
@@ -22,7 +21,6 @@ from ...google_ads.client import (
     google_ads_create_update,
     list_accessible_customers,
 )
-from .execution_team import get_read_file
 from .function_configs import (
     ask_client_for_permission_config,
     create_ad_copy_headline_or_description_config,
@@ -35,7 +33,6 @@ from .function_configs import (
     execute_query_config,
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
-    read_file_config,
     remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
     reply_to_client_2_config,
@@ -62,7 +59,6 @@ class GoogleAdsTeam(Team):
         list_accessible_customers_config,
         execute_query_config,
         reply_to_client_2_config,
-        read_file_config,
         update_ad_group_ad_config,
         update_ad_group_config,
         update_campaign_config,
@@ -314,6 +310,9 @@ This rule applies to ALL the commands which make permanent changes (create/updat
 
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
 This is a template which you should follow when you are asked to optimize campaigns:
+- The FIRST step should ALWAYS be listing the campaigns and asking the user in which one he is interested in. Do NOT try to analyse all campaigns at once, otherwise you will be penalized!!
+- After listing the campaigns, ask the user which one he is interested in or if he wants to create a new one.
+If the user wants to update the existing campaign here is the list of things which you can do:
 - ad copy - Take a look at ad copy (headlines, descriptions, urls, (display) path1/path2...) and make suggestions on what should be changed (create/update/remove headlines etc.)
 Headlines can have MAXIMUM 30 characters and description can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length!
 - keywords - analyse positive/negative keywords and find out which are (i)relevant for clients business and suggest some create/update/remove actions
@@ -384,9 +383,12 @@ Here is an example of the smart_suggestions parameter:
     "type":"manyOf"
 }
 
-2. read_file: Read an existing file, params: (filename: string)
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (resource_details: string, proposed_changes: str)
+params: (customer_id: str, resource_details: str, proposed_changes: str)
+'proposed_changes' parameter must contain info about each field which you want to modify and it MUST refernce it by the EXACT name as the one you are going to use in the modification method. e.g.:
+if you want to update/set "budget_amount_micros" you must mention "budget_amount_micros" in this parameter.
+same thing for "final_url", you must mention "final_url" in this parameter, if you mention "final url" or "final-url" it will NOT be accepted!
+
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
 ONLY Google ads specialist can suggest following commands:
@@ -552,8 +554,6 @@ def _get_function_map(
             "Error: parameter customer_ids must be a list of strings. e.g. ['1', '5', '10']"
         )
 
-    read_file = get_read_file(working_dir=Path(work_dir))
-
     function_map = {
         # "get_login_url": lambda: get_login_url(user_id=user_id, conv_id=conv_id),
         "list_accessible_customers": lambda: list_accessible_customers(
@@ -567,12 +567,14 @@ def _get_function_map(
             work_dir=work_dir,
         ),
         "reply_to_client": reply_to_client_2,
-        "ask_client_for_permission": lambda resource_details, proposed_changes: ask_client_for_permission(
+        "ask_client_for_permission": lambda customer_id, resource_details, proposed_changes: ask_client_for_permission(
+            user_id=user_id,
+            conv_id=conv_id,
+            customer_id=customer_id,
             clients_question_answere_list=clients_question_answere_list,
             resource_details=resource_details,
             proposed_changes=proposed_changes,
         ),
-        "read_file": read_file,
         "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, modification_question, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
