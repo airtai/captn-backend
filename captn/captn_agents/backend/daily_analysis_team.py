@@ -1077,7 +1077,8 @@ Please propose the next steps and send the email to the client.
             check_if_send_email = messages_list[-2]
             if (
                 "tool_calls" in check_if_send_email
-                and check_if_send_email["tool_calls"][0]["function"]["name"] == "send_email"
+                and check_if_send_email["tool_calls"][0]["function"]["name"]
+                == "send_email"
             ):
                 if len(messages_list) < 3:
                     messages = "[]"
