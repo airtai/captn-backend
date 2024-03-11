@@ -1,27 +1,13 @@
 import json
-import os
 import unittest.mock
 from pathlib import Path
 
 import pytest
 from tenacity import RetryError
 
+from .helpers import mock_env
 
-
-DUMMY = "dummy"
-with unittest.mock.patch.dict(
-    os.environ,
-    {
-        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
-        "AZURE_API_ENDPOINT": DUMMY,
-        "AZURE_API_VERSION": DUMMY,
-        "AZURE_GPT4_MODEL": "airt-gpt4",
-        "AZURE_GPT35_MODEL": "gpt-35-turbo-16k",
-        "INFOBIP_API_KEY": DUMMY,
-        "INFOBIP_BASE_URL": DUMMY,
-    },
-    clear=True,
-):
+with mock_env():
     from captn.captn_agents.backend.daily_analysis_team import (
         REACT_APP_API_URL,
         AdGroup,

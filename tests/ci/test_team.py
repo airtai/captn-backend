@@ -1,23 +1,10 @@
-import os
-import unittest
 from unittest import mock
 
 import autogen
 
-DUMMY = "dummy"
-with unittest.mock.patch.dict(
-    os.environ,
-    {
-        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
-        "AZURE_API_ENDPOINT": DUMMY,
-        "AZURE_API_VERSION": DUMMY,
-        "AZURE_GPT4_MODEL": DUMMY,
-        "AZURE_GPT35_MODEL": DUMMY,
-        "INFOBIP_API_KEY": DUMMY,
-        "INFOBIP_BASE_URL": DUMMY,
-    },
-    clear=True,
-):
+from .helpers import mock_env
+
+with mock_env():
     from captn.captn_agents.backend.team import Team
 
 roles = [
@@ -36,7 +23,7 @@ def test_get_new_team_name(mock_get_team_name_prefix: mock.MagicMock) -> None:
 
 def test_create_member() -> None:
     team = Team(roles=roles, name="Team_1")
-    team.llm_config = {"api_key": DUMMY, "model": "gpt-4"}
+    team.llm_config = {"api_key": "DUMMY", "model": "gpt-4"}
     member = team._create_member("QA gpt", "Description1")
 
     system_message = """You are qa_gpt, Description1
