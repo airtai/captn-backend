@@ -127,6 +127,8 @@ NOT_APPROVED = (
 
 FIELDS_ARE_NOT_MENTIONED_ERROR_MSG = (
     "The client must be informed abot ALL the changes that are going to be made!"
+    "If you have already asked client for the permission regarding the changes, you MUST apologize to him and ask for the permission again by using the 'ask_client_for_permission' but this time you must include all the changes that are going to be made (mentioned below)."
+    "e.g. 'We apologize for bothering you again. I have made a mistake and I forgot to mention some of the changes that are going to be made. I have to ask you again for the permission. The changes that are going to be made are the following: ...'"
     "The following fields were NOT mentioned in the approval question for the client. Please inform the client about the modifications of the following fields (use the EXACT names as the ones listed bellow e.g. if a field is called 'super_cool_field', you MUST reference it as 'super_cool_field'!):\n"
 )
 

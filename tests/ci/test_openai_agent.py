@@ -1,24 +1,12 @@
-import os
 import unittest
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
 import pytest
 
-DUMMY = "dummy"
-with unittest.mock.patch.dict(
-    os.environ,
-    {
-        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
-        "AZURE_API_ENDPOINT": DUMMY,
-        "AZURE_API_VERSION": DUMMY,
-        "AZURE_GPT4_MODEL": DUMMY,
-        "AZURE_GPT35_MODEL": DUMMY,
-        "INFOBIP_API_KEY": DUMMY,
-        "INFOBIP_BASE_URL": DUMMY,
-    },
-    clear=True,
-):
+from .helpers import mock_env
+
+with mock_env():
     from openai_agent.application import (
         _get_openai_response,
     )
