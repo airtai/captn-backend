@@ -74,8 +74,6 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             try:
                 request_json = message
                 request = CaptnAgentRequest.model_validate_json(request_json)
-                print("===============================================")
-                print(f"Received request: {request}", flush=True)
 
                 message = _get_message(request)
                 _, last_message = start_or_continue_conversation(
