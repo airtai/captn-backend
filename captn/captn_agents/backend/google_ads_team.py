@@ -273,7 +273,7 @@ Use keyword insertion when ever it is possible and it makes sense!
 37. Use the 'get_info_from_the_web_page' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
 e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for SUGGESTING (NEVER modify without permision!) keywords, headlines, descriptions etc.
 You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
-and try get_info_from_the_web_page.
+and try get_info_from_the_web_page. Only if 'get_info_from_the_web_page' command does not provide you with enough information (or it fails), ask the client for the additional information about his business/web page etc.
 38. If you want to create a new Ad Copy, ask the client ONLY for the final_url and use the 'get_info_from_the_web_page' command to get the summary of the web page.
 Once you have the summary, you can use it for SUGGESTING (NEVER modify without permision!) headlines and descriptions.
 The final_url MUST be provided by the client, do randomly choose it yourself!
@@ -310,7 +310,8 @@ This rule applies to ALL the commands which make permanent changes (create/updat
 
 Currently we are in a demo phase and clients need to see what we are CURRENTLY able to do.
 This is a template which you should follow when you are asked to optimize campaigns:
-- The FIRST step should ALWAYS be listing the campaigns and asking the user in which one he is interested in. Do NOT try to analyse all campaigns at once, otherwise you will be penalized!!
+- The FIRST step should ALWAYS retrieving information about clients business by using 'get_info_from_the_web_page' command. If the client provides you some url, use this command to get the summary of the web page.
+- The SECOND step should ALWAYS be listing the campaigns and asking the user in which one he is interested in. Do NOT try to analyse all campaigns at once, otherwise you will be penalized!!
 - After listing the campaigns, ask the user which one he is interested in or if he wants to create a new one.
 If the user wants to update the existing campaign here is the list of things which you can do:
 - ad copy - Take a look at ad copy (headlines, descriptions, urls, (display) path1/path2...) and make suggestions on what should be changed (create/update/remove headlines etc.)
@@ -524,6 +525,7 @@ update_existing_headline_index: Optional[str], update_existing_description_index
 18. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
 It should be used only for the clients web page(s), final_url(s) etc.
 This command should be used for retrieving the information from clients web page.
+If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc.
 
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
