@@ -1,4 +1,3 @@
-import os
 import unittest
 
 import pytest
@@ -11,20 +10,9 @@ from google_ads.application import (
 )
 from google_ads.model import AdCopy
 
-DUMMY = "dummy"
-with unittest.mock.patch.dict(
-    os.environ,
-    {
-        "AZURE_OPENAI_API_KEY_SWEDEN": DUMMY,
-        "AZURE_API_ENDPOINT": DUMMY,
-        "AZURE_API_VERSION": DUMMY,
-        "AZURE_GPT4_MODEL": DUMMY,
-        "AZURE_GPT35_MODEL": DUMMY,
-        "INFOBIP_API_KEY": DUMMY,
-        "INFOBIP_BASE_URL": DUMMY,
-    },
-    clear=True,
-):
+from .helpers import mock_env
+
+with mock_env():
     from google_ads.application import (
         _check_if_customer_id_is_manager_or_exception_is_raised,
         create_geo_targeting_for_campaign,
