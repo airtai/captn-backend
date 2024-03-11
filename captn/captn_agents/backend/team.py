@@ -280,8 +280,11 @@ You can leverage access to the following resources:
     async def a_initiate_chat(self) -> None:
         await self.manager.a_initiate_chat(self.manager, message=self.initial_message)
 
+    def get_messages(self) -> Any:
+        return self.groupchat.messages
+
     def get_last_message(self, add_prefix: bool = True) -> str:
-        last_message = self.groupchat.messages[-1]["content"]
+        last_message = self.get_messages()[-1]["content"]
         if isinstance(last_message, dict):
             last_message = json.dumps(last_message)
         last_message = last_message.replace("PAUSE", "").replace("TERMINATE", "")
