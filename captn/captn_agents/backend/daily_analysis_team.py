@@ -1073,11 +1073,12 @@ Please propose the next steps and send the email to the client.
             daily_analysis_team.initiate_chat()
             last_message = daily_analysis_team.get_last_message(add_prefix=False)
 
-            messages_list = daily_analysis_team.groupchat.messages
+            messages_list = daily_analysis_team.get_messages()
             check_if_send_email = messages_list[-2]
             if (
-                "function_call" in check_if_send_email
-                and check_if_send_email["function_call"]["name"] == "send_email"
+                "tool_calls" in check_if_send_email
+                and check_if_send_email["tool_calls"][0]["function"]["name"]
+                == "send_email"
             ):
                 if len(messages_list) < 3:
                     messages = "[]"
