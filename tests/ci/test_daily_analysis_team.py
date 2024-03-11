@@ -1353,7 +1353,7 @@ def test_execute_daily_analysis_workflow() -> None:
                                 fixtures_path = (
                                     Path(__file__).resolve().parent / "fixtures"
                                 )
-                                with open(fixtures_path / "daily_reports.json") as file:
+                                with open(fixtures_path / "daily_reports.txt") as file:
                                     daily_reports = json.load(file)
                                 mock_get_daily_report.return_value = json.dumps(
                                     daily_reports
