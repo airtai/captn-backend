@@ -3,7 +3,7 @@ import json
 from datetime import date
 from typing import List, Optional
 
-from autogen.io.websockets import IOWebsockets
+from autogen.io.websockets import IOStream, IOWebsockets
 from fastapi import APIRouter, HTTPException
 from openai import BadRequestError
 from pydantic import BaseModel
@@ -32,46 +32,46 @@ RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize
 
 
 def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
-    try:
+    with IOStream.set_default(iostream):
         try:
-            message = iostream.input()
-        except Exception as e:
+            try:
+                message = iostream.input()
+            except Exception as e:
+                iostream.print(
+                    "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
+                )
+                print(f"Failed to read the message from the client: {e}")
+                return
+            for i in range(num_of_retries):
+                try:
+                    request_json = message
+                    request = CaptnAgentRequest.model_validate_json(request_json)
+                    print("===============================================")
+                    print(f"Received request: {request}", flush=True)
+                    _, last_message = start_or_continue_conversation(
+                        user_id=request.user_id,
+                        conv_id=request.conv_id,
+                        task=request.message,
+                        max_round=80,
+                        human_input_mode="NEVER",
+                        class_name="google_ads_team",
+                    )
+                    last_message_dict = ast.literal_eval(last_message)
+                    iostream.print(json.dumps(last_message_dict))
+                    return
+
+                except Exception as e:
+                    # TODO: error logging
+                    iostream.print(f"Agent conversation failed with an error: {e}")
+                    if i < num_of_retries - 1:
+                        iostream.print("Retrying the whole conversation...")
+                        iostream.print("*" * 100)
+
             iostream.print(
                 "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
             )
-            print(f"Failed to read the message from the client: {e}")
-            return
-        for i in range(num_of_retries):
-            try:
-                request_json = message
-                request = CaptnAgentRequest.model_validate_json(request_json)
-                print("===============================================")
-                print(f"Received request: {request}", flush=True)
-                _, last_message = start_or_continue_conversation(
-                    user_id=request.user_id,
-                    conv_id=request.conv_id,
-                    task=request.message,
-                    iostream=iostream,
-                    max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="google_ads_team",
-                )
-                last_message_dict = ast.literal_eval(last_message)
-                iostream.print(json.dumps(last_message_dict))
-                return
-
-            except Exception as e:
-                # TODO: error logging
-                iostream.print(f"Agent conversation failed with an error: {e}")
-                if i < num_of_retries - 1:
-                    iostream.print("Retrying the whole conversation...")
-                    iostream.print("*" * 100)
-
-        iostream.print(
-            "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
-        )
-    except Exception as e:
-        print(f"Agent conversation failed with an error: {e}")
+        except Exception as e:
+            print(f"Agent conversation failed with an error: {e}")
 
 
 @router.post("/chat")
@@ -81,7 +81,6 @@ def chat(request: CaptnAgentRequest) -> str:
             user_id=request.user_id,
             conv_id=request.conv_id,
             task=request.message,
-            iostream=None,
             max_round=80,
             human_input_mode="NEVER",
             class_name="google_ads_team",

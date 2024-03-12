@@ -6,8 +6,6 @@ __all__ = [
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from autogen.io.websockets import IOWebsockets
-
 from .banking_initial_team import BookingInitialTeam
 from .google_ads_team import GoogleAdsTeam
 from .initial_team import InitialTeam
@@ -101,7 +99,6 @@ def _get_initial_team(
     root_dir: Path,
     *,
     task: str,
-    iostream: IOWebsockets,
     roles: Optional[List[Dict[str, str]]],
     max_round: int,
     seed: int,
@@ -135,7 +132,6 @@ def _get_initial_team(
                 user_id=user_id,
                 conv_id=conv_id,
                 task=task,
-                iostream=iostream,
                 roles=roles,
                 work_dir=str(working_dir),
                 max_round=max_round,
@@ -149,7 +145,6 @@ def _get_initial_team(
                 user_id=user_id,
                 conv_id=conv_id,
                 task=task,
-                iostream=iostream,
                 work_dir=str(working_dir),
                 max_round=max_round,
                 seed=seed,
@@ -165,7 +160,6 @@ def start_or_continue_conversation(
     root_dir: Path = Path(".") / "logs",
     *,
     task: str = "Hi!",
-    iostream: IOWebsockets,
     roles: Optional[List[Dict[str, str]]] = None,
     max_round: int = 20,
     seed: int = 42,
@@ -178,7 +172,6 @@ def start_or_continue_conversation(
         conv_id=conv_id,
         root_dir=root_dir,
         task=task,
-        iostream=iostream,
         roles=roles,
         max_round=max_round,
         seed=seed,
@@ -195,10 +188,6 @@ def start_or_continue_conversation(
         return team_name, last_message
 
     else:
-        if initial_team:
-            for agent in initial_team.members:
-                agent.iostream = iostream
-            initial_team.manager.iostream = iostream
         return team_name, continue_conversation(team_name=team_name, message=task)
 
 
