@@ -20,6 +20,7 @@ with mock_env():
     from captn.captn_agents.application import (
         RETRY_MESSAGE,
         CaptnAgentRequest,
+        _get_message,
         chat,
     )
 
@@ -42,6 +43,18 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
             message="This is my task",
             user_id=-1,
             conv_id=-1,
+            all_messages=[
+                {
+                    "role": "assistant",
+                    "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                },
+                {
+                    "role": "user",
+                    "content": "I want to Remove 'Free' keyword because it is not performing well",
+                },
+            ],
+            agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+            is_continue_daily_analysis=False,
         )
         with pytest.raises(BadRequestError):
             chat(request=captn_request)
@@ -186,6 +199,18 @@ class TestConsoleIOWithWebsockets:
                 message="Business: airt.ai\nGoal: Increase brand awareness\nCurrent Situation: Running digital marketing campaigns\nWebsite: airt.ai\nDigital Marketing Objectives: Increase brand visibility, reach a wider audience, and improve brand recognition\nNext Steps: Analyze current Google Ads campaigns, identify opportunities for optimization, and create new strategies to increase brand awareness\nAny Other Information Related to Customer Brief: N/A",
                 user_id=1,
                 conv_id=1,
+                all_messages=[
+                    {
+                        "role": "assistant",
+                        "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                    },
+                    {
+                        "role": "user",
+                        "content": "I want to Remove 'Free' keyword because it is not performing well",
+                    },
+                ],
+                agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+                is_continue_daily_analysis=False,
                 retry=True,
             )
             with ws_connect(uri) as websocket:
@@ -223,3 +248,102 @@ class TestConsoleIOWithWebsockets:
 
         assert success_dict["success"]
         print("Test passed.", flush=True)
+
+
+def test_get_message_daily_analysis() -> None:
+
+    request = CaptnAgentRequest(
+        message="I want to Remove 'Free' keyword because it is not performing well",
+        user_id=-1,
+        conv_id=-1,
+        all_messages=[
+            {
+                "role": "assistant",
+                "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+            },
+            {
+                "role": "user",
+                "content": "I want to Remove 'Free' keyword because it is not performing well",
+            },
+        ],
+        agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+        is_continue_daily_analysis=False,
+    )
+    actual = _get_message(request)
+    expected = """
+### History ###
+This is the JSON encoded history of your conversation that made the Daily Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
+
+[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]
+
+### Daily Analysis ###
+Below is your daily analysis for 29-Jan-24
+
+Your campaigns have performed yesterday:
+ - Clicks: 124 clicks (+3.12%)
+ - Spend: $6.54 USD (-1.12%)
+ - Cost per click: $0.05 USD (+12.00%)
+
+### Proposed User Action ###
+1. Remove 'Free' keyword because it is not performing well
+2. Increase budget from $10/day to $20/day
+3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'
+4. Select some or all of them
+
+### User Action ###
+I want to Remove 'Free' keyword because it is not performing well
+"""
+    assert actual == expected
+
+
+def test_get_message_daily_analysis_continue() -> None:
+
+    request = CaptnAgentRequest(
+        message="I want to Remove 'Free' keyword because it is not performing well",
+        user_id=-1,
+        conv_id=-1,
+        all_messages=[
+            {
+                "role": "assistant",
+                "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+            },
+            {
+                "role": "user",
+                "content": "I want to Remove 'Free' keyword because it is not performing well",
+            },
+        ],
+        agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+        is_continue_daily_analysis=True,
+    )
+    actual = _get_message(request)
+    expected = "I want to Remove 'Free' keyword because it is not performing well"
+    assert actual == expected
+
+
+def test_get_message_normal_chat() -> None:
+
+    request = CaptnAgentRequest(
+        message="I want to Remove 'Free' keyword because it is not performing well",
+        user_id=-1,
+        conv_id=-1,
+        all_messages=[
+            {
+                "role": "assistant",
+                "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+            },
+            {
+                "role": "user",
+                "content": "I want to Remove 'Free' keyword because it is not performing well",
+            },
+        ],
+        agent_chat_history=None,
+        is_continue_daily_analysis=False,
+    )
+    actual = _get_message(request)
+    expected = "I want to Remove 'Free' keyword because it is not performing well"
+    assert actual == expected
+
+
+# def test_on_connect() -> None:
+#     with IOWebsockets.run_server_in_thread(on_connect=on_connect, port=8080) as uri:
+#         print(f"Websocket server started at {uri}.", flush=True)
