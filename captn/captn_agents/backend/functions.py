@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
+from pydantic import BaseModel
 from typing_extensions import Annotated
 
 from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
@@ -30,6 +31,14 @@ This parameter must be dictionary with two keys: 'suggestions': List[str] (a lis
 It is neccecery that the Pydantic model SmartSuggestions can be generated from this dictionary (SmartSuggestions(**smart_suggestions))!"""
 
 
+class TeamResponse(BaseModel):
+    message: str
+    smart_suggestions: Dict[str, Union[List[str], str]]
+    is_question: bool
+    status: str
+    terminate_groupchat: bool
+
+
 # @agent.register_for_llm(description=reply_to_client_2_desc)
 def reply_to_client_2(
     message: Annotated[str, "Message for the client"],
@@ -39,22 +48,22 @@ def reply_to_client_2(
     smart_suggestions: Annotated[
         Optional[Dict[str, Union[str, List[str]]]], smart_suggestions_description
     ] = None,
-) -> Dict[str, Any]:
+) -> str:
     if smart_suggestions:
         smart_suggestions_model = SmartSuggestions(**smart_suggestions)
         smart_suggestions = smart_suggestions_model.model_dump()
     else:
         smart_suggestions = {"suggestions": [""], "type": ""}
 
-    return_msg = {
-        "message": message,
-        "smart_suggestions": smart_suggestions,
-        # is_question must be true, otherwise text input box will not be displayed in the chat
-        "is_question": True,
-        "status": "completed" if completed else "pause",
-        "terminate_groupchat": True,
-    }
-    return return_msg
+    return_msg = TeamResponse(
+        message=message,
+        smart_suggestions=smart_suggestions,
+        is_question=True,
+        status="completed" if completed else "pause",
+        terminate_groupchat=True,
+    )
+
+    return return_msg.model_dump_json()
 
 
 YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
@@ -69,7 +78,7 @@ def ask_client_for_permission(
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
     resource_details: str,
     proposed_changes: str,
-) -> Dict[str, Any]:
+) -> str:
     query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query

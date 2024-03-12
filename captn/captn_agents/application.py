@@ -1,5 +1,4 @@
-import ast
-import json
+import traceback
 from datetime import date
 from typing import List, Optional
 
@@ -41,6 +40,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
                 )
                 print(f"Failed to read the message from the client: {e}")
+                traceback.print_stack()
                 return
             for i in range(num_of_retries):
                 try:
@@ -56,8 +56,8 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                         human_input_mode="NEVER",
                         class_name="google_ads_team",
                     )
-                    last_message_dict = ast.literal_eval(last_message)
-                    iostream.print(json.dumps(last_message_dict))
+                    iostream.print(last_message)
+
                     return
 
                 except Exception as e:
@@ -66,12 +66,16 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     if i < num_of_retries - 1:
                         iostream.print("Retrying the whole conversation...")
                         iostream.print("*" * 100)
+                    else:
+                        iostream.print(
+                            "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
+                        )
+                        traceback.print_exc()
+                        traceback.print_stack()
 
-            iostream.print(
-                "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
-            )
         except Exception as e:
             print(f"Agent conversation failed with an error: {e}")
+            traceback.print_stack()
 
 
 @router.post("/chat")
