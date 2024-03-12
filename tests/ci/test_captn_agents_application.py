@@ -10,7 +10,6 @@ from httpx import Request, Response
 from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
 
-from captn.captn_agents.backend.config import config_list_gpt_3_5
 from captn.captn_agents.backend.functions import TeamResponse
 
 from .helpers import mock_env
@@ -84,6 +83,8 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
 class TestConsoleIOWithWebsockets:
     @pytest.mark.skip(reason="Add AZURE keys to CI. After that, remove the skip.")
     def test_websockets_chat(self) -> None:
+        from captn.captn_agents.backend.config import config_list_gpt_3_5
+
         print("Testing setup", flush=True)
 
         success_dict = {"success": False}
