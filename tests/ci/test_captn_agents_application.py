@@ -10,7 +10,6 @@ from httpx import Request, Response
 from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
 
-from captn.captn_agents.application import on_connect
 from captn.captn_agents.backend.config import config_list_gpt_3_5
 from captn.captn_agents.backend.functions import TeamResponse
 
@@ -186,6 +185,8 @@ class TestConsoleIOWithWebsockets:
 
     @pytest.mark.skip(reason="TODO: run the application, mock google ads functions...")
     def test_team_chat(self) -> None:
+        from captn.captn_agents.application import on_connect
+
         print("Testing setup", flush=True)
 
         success_dict = {"success": False}
