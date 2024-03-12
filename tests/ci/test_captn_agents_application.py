@@ -10,8 +10,6 @@ from httpx import Request, Response
 from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
 
-from captn.captn_agents.backend.functions import TeamResponse
-
 from .helpers import mock_env
 
 with mock_env():
@@ -21,6 +19,7 @@ with mock_env():
         _get_message,
         chat,
     )
+    from captn.captn_agents.backend.functions import TeamResponse
 
 
 def test_chat_when_openai_bad_request_is_raised() -> None:
