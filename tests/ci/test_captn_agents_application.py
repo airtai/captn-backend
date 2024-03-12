@@ -70,6 +70,7 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
 
 
 class TestConsoleIOWithWebsockets:
+    @pytest.mark.skip(reason="Add AZURE keys to CI. After that, remove the skip.")
     def test_websockets_chat(self) -> None:
         print("Testing setup", flush=True)
 
