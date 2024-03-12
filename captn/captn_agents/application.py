@@ -1,7 +1,7 @@
 import ast
 import json
 from datetime import date
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, HTTPException
@@ -20,6 +20,9 @@ class CaptnAgentRequest(BaseModel):
     message: str
     user_id: int
     conv_id: int
+    all_messages: List[Dict[str, str]]
+    agent_chat_history: Optional[str]
+    is_continue_daily_analysis: bool
     retry: bool = True
 
 
@@ -29,6 +32,31 @@ class DailyAnalysisRequest(BaseModel):
 
 
 RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
+
+
+def _format_daily_analysis_msg(request: CaptnAgentRequest) -> str:
+    if request.is_continue_daily_analysis:
+        return request.message
+    ret_val = f"""
+### History ###
+This is the JSON encoded history of your conversation that made the Daily Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
+
+{request.agent_chat_history}
+
+### Daily Analysis ###
+{request.all_messages[0]['content']}
+
+### User Action ###
+{request.all_messages[-1]['content']}
+"""
+    # nosemgrep: python.flask.security.audit.directly-returned-format-string.directly-returned-format-string
+    return ret_val
+
+
+def _get_message(request: CaptnAgentRequest) -> str:
+    if request.agent_chat_history:
+        return _format_daily_analysis_msg(request)
+    return request.message
 
 
 def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
@@ -41,16 +69,17 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             )
             print(f"Failed to read the message from the client: {e}")
             return
+
         for i in range(num_of_retries):
             try:
                 request_json = message
                 request = CaptnAgentRequest.model_validate_json(request_json)
-                print("===============================================")
-                print(f"Received request: {request}", flush=True)
+
+                message = _get_message(request)
                 _, last_message = start_or_continue_conversation(
                     user_id=request.user_id,
                     conv_id=request.conv_id,
-                    task=request.message,
+                    task=message,
                     iostream=iostream,
                     max_round=80,
                     human_input_mode="NEVER",
@@ -125,6 +154,18 @@ if __name__ == "__main__":
         message="What are the metods for campaign optimization",
         user_id=3,
         conv_id=5,
+        all_messages=[
+            {
+                "role": "assistant",
+                "content": "Hi, I am your assistant. How can I help you today?",
+            },
+            {
+                "role": "user",
+                "content": "I want to Remove 'Free' keyword because it is not performing well",
+            },
+        ],
+        agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+        is_continue_daily_analysis=False,
     )
 
     last_message = chat(request=request)
@@ -136,6 +177,18 @@ if __name__ == "__main__":
         message="I have logged in",
         user_id=3,
         conv_id=5,
+        all_messages=[
+            {
+                "role": "assistant",
+                "content": "Hi, I am your assistant. How can I help you today?",
+            },
+            {
+                "role": "user",
+                "content": "I want to Remove 'Free' keyword because it is not performing well",
+            },
+        ],
+        agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+        is_continue_daily_analysis=False,
     )
     last_message = chat(request=request)
     print("*" * 100)
