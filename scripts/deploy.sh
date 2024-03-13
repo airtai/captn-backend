@@ -40,7 +40,7 @@ echo "INFO: Capturing docker container logs"
 $ssh_command "docker logs $container_name >> $log_file 2>&1 || echo 'No container logs to capture'"
 
 # Check if log file size exceeds 1GB (1073741824 bytes) and trim if necessary
-$ssh_command "if [ \$(stat -c%s \"$log_file\") -ge 100 ]; then echo 'Log file size exceeds 1GB, trimming...'; tail -c 100 \"$log_file\" > \"$log_file.tmp\" && mv \"$log_file.tmp\" \"$log_file\"; fi"
+$ssh_command "if [ \$(stat -c%s \"$log_file\") -ge 1073741824 ]; then echo 'Log file size exceeds 1GB, trimming...'; tail -c 1073741824 \"$log_file\" > \"$log_file.tmp\" && mv \"$log_file.tmp\" \"$log_file\"; fi"
 
 echo "INFO: stopping already running docker container"
 $ssh_command "docker stop $container_name || echo 'No containers available to stop'"
