@@ -440,7 +440,7 @@ headline: Optional[str], description: Optional[str], update_existing_headline_in
 final_url: Optional[str], final_mobile_urls: Optional[str], path1: Optional[str], path2: Optional[str])
 
 5. 'update_ad_group': Update the Google Ads Group, params: (customer_id: string, ad_group_id: string,
-clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
+clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 modification_question: str)
 This command can only update ad groups name, cpc_bid_micros and status
 
@@ -605,20 +605,10 @@ def _get_function_map(
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
         ),
-        "update_ad_group": lambda customer_id, ad_group_id, clients_approval_message, modification_question, name=None, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group": _get_update_ad_group(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroup(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                name=name,
-                cpc_bid_micros=cpc_bid_micros,
-                status=status,
-            ),
-            endpoint="/update-ad-group",
         ),
         "create_ad_group": lambda customer_id, campaign_id, clients_approval_message, modification_question, name, cpc_bid_micros=None, status=None: google_ads_create_update(
             user_id=user_id,
@@ -924,6 +914,60 @@ def _get_update_ad_group_ad(
         )
 
     return _update_ad_group_ad
+
+
+def _get_update_ad_group(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Callable[
+    [
+        str,
+        str,
+        str,
+        str,
+        Optional[str],
+        Optional[int],
+        Optional[Literal["ENABLED", "PAUSED"]],
+        str,
+    ],
+    Union[Dict[str, Any], str],
+]:
+    def _update_ad_group(
+        customer_id: str,
+        ad_group_id: str,
+        clients_approval_message: str,
+        modification_question: str,
+        name: Optional[str] = None,
+        cpc_bid_micros: Optional[int] = None,
+        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+        local_currency: Optional[str] = None,
+    ) -> Union[Dict[str, Any], str]:
+        if cpc_bid_micros is not None:
+            check_currency(
+                user_id=user_id,
+                conv_id=conv_id,
+                customer_id=customer_id,
+                local_currency=local_currency,
+            )
+
+        return google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=AdGroup(
+                customer_id=customer_id,
+                ad_group_id=ad_group_id,
+                name=name,
+                cpc_bid_micros=cpc_bid_micros,
+                status=status,
+            ),
+            endpoint="/update-ad-group",
+        )
+
+    return _update_ad_group
 
 
 def _get_create_campaign(
