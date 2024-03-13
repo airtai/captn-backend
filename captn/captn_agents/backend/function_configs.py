@@ -346,6 +346,12 @@ Faking the clients approval may resault with the LAWSUIT and you will get fired!
         "type": "string",
         "description": "Second part of text that can be appended to the URL in the ad. This field can ONLY be set when path1 is also set! To delete the current value, set this field to an empty string.",
     },
+    "local_currency": {
+        "type": "string",
+        "description": """The currency which will be used for the budget amount.
+This value MUST be found in the 'customer' table! query example: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
+If the budget micros value is used, the currency code IS required!""",
+    },
 }
 
 
@@ -532,11 +538,7 @@ Amount is specified in micros, where one million is equivalent to one currency u
 Make sure that the client APPROVES the budget amount, otherwise you will be penalized!
 This is the MOST IMPORTANT parameter, because it determines how much money will be spent on the ads!""",
             },
-            "local_currency": {
-                "type": "string",
-                "description": """The currency which will be used for the budget amount.
-This value MUST be found in the 'customer' table! query example: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'""",
-            },
+            "local_currency": properties_config["local_currency"],
             "network_settings_target_google_search": {
                 "type": "boolean",
                 "description": "Whether ads will be served with google.com search results.",
@@ -872,6 +874,7 @@ create_keyword_for_ad_group_config = {
                 "description": "The modifier for the bids when the criterion matches.",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
         },
         "required": [
             "customer_id",

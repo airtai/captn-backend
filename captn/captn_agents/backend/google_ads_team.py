@@ -471,7 +471,7 @@ This command can ONLY create NEGATIVE keywords assigned to the campaign
 
 11. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
 clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]], modification_question: str, cpc_bid_micros: Optional[int])
+status: Optional[Literal["ENABLED", "PAUSED"]], modification_question: str, cpc_bid_micros: Optional[int], local_currency: Optional[str])
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
@@ -710,23 +710,10 @@ def _get_function_map(
             ),
             endpoint="/add-negative-keywords-to-campaign",
         ),
-        "create_keyword_for_ad_group": lambda customer_id, ad_group_id, keyword_text, keyword_match_type, clients_approval_message, modification_question, status=None, negative=None, bid_modifier=None, cpc_bid_micros=None: google_ads_create_update(
+        "create_keyword_for_ad_group": _get_create_keyword_for_ad_group(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroupCriterion(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                status=status,
-                keyword_match_type=keyword_match_type,
-                keyword_text=keyword_text,
-                negative=negative,
-                bid_modifier=bid_modifier,
-                cpc_bid_micros=cpc_bid_micros,
-            ),
-            endpoint="/add-keywords-to-ad-group",
         ),
         "create_ad_group_ad": lambda customer_id, ad_group_id, clients_approval_message, modification_question, headlines, descriptions, final_url, path1=None, path2=None, status=None: google_ads_create_update(
             user_id=user_id,
@@ -817,16 +804,82 @@ def get_customer_currency(user_id: int, conv_id: int, customer_id: str) -> str:
 
 
 def check_currency(
-    user_id: int, conv_id: int, customer_id: str, local_currency: str
+    user_id: int, conv_id: int, customer_id: str, local_currency: Optional[str]
 ) -> None:
     cutomers_currency = get_customer_currency(
         user_id=user_id, conv_id=conv_id, customer_id=customer_id
     )
-    if cutomers_currency.upper() != local_currency.strip().upper():
+    if (
+        local_currency is None
+        or cutomers_currency.upper() != local_currency.strip().upper()
+    ):
         raise ValueError(
             f"""Error: Customer ({customer_id}) account has set currency ({cutomers_currency}) which is different from the provided currency ({local_currency=}).
 Please convert the budget to the customer's currency and ask the client for the approval with the new budget amount (in the customer's currency)."""
         )
+
+
+def _get_create_keyword_for_ad_group(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Callable[
+    [
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        Optional[Literal["ENABLED", "PAUSED"]],
+        Optional[bool],
+        Optional[float],
+        Optional[str],
+        Optional[int],
+    ],
+    Union[Dict[str, Any], str],
+]:
+    def _create_keyword_for_ad_group(
+        customer_id: str,
+        ad_group_id: str,
+        keyword_text: str,
+        keyword_match_type: str,
+        clients_approval_message: str,
+        modification_question: str,
+        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+        negative: Optional[bool] = None,
+        bid_modifier: Optional[float] = None,
+        local_currency: Optional[str] = None,
+        cpc_bid_micros: Optional[int] = None,
+    ) -> Union[Dict[str, Any], str]:
+        if cpc_bid_micros is not None:
+            check_currency(
+                user_id=user_id,
+                conv_id=conv_id,
+                customer_id=customer_id,
+                local_currency=local_currency,
+            )
+
+        return google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=AdGroupCriterion(
+                customer_id=customer_id,
+                ad_group_id=ad_group_id,
+                status=status,
+                keyword_match_type=keyword_match_type,
+                keyword_text=keyword_text,
+                negative=negative,
+                bid_modifier=bid_modifier,
+                cpc_bid_micros=cpc_bid_micros,
+            ),
+            endpoint="/add-keywords-to-ad-group",
+        )
+
+    return _create_keyword_for_ad_group
 
 
 def _get_create_campaign(
