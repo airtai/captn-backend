@@ -51,6 +51,34 @@ def test_check_for_client_approval_client_did_not_approve() -> None:
     assert error_msg.strip() == NOT_APPROVED
 
 
+def test_check_for_client_approval_modification_question_is_substring_of_question() -> (
+    None
+):
+    error_msg = _check_for_client_approval(
+        error_msg="",
+        clients_approval_message="yes",
+        modification_question="I want to change the ad_name to test. ",
+        clients_question_answere_list=[
+            ("i want to change the ad_name to test.Do you approve?", "yes")
+        ],
+    )
+    assert error_msg == ""
+
+
+def test_check_for_client_approval_modification_question_is_substring_of_question_but_answer_is_no() -> (
+    None
+):
+    error_msg = _check_for_client_approval(
+        error_msg="",
+        clients_approval_message="no",
+        modification_question="I want to change the ad_name to test. ",
+        clients_question_answere_list=[
+            ("i want to change the ad_name to test.Do you approve?", "no")
+        ],
+    )
+    assert error_msg.strip() == NOT_APPROVED
+
+
 class AdTest(BaseModel):
     ad_id: Optional[int] = None
     ad_name: str

@@ -23,8 +23,14 @@ def get_google_ads_team_capability() -> str:
     return prefix + "- " + "\n- ".join(capabilities)
 
 
-def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
-    params = {"user_id": user_id, "conv_id": conv_id}
+def get_login_url(
+    user_id: int, conv_id: int, force_new_login: bool = False
+) -> Dict[str, str]:
+    params = {
+        "user_id": user_id,
+        "conv_id": conv_id,
+        "force_new_login": force_new_login,
+    }
     response = requests.get(f"{BASE_URL}/login", params=params, timeout=60)
     retval: Dict[str, str] = response.json()
     return retval  # type: ignore[no-any-return]
@@ -176,7 +182,18 @@ def _check_for_client_approval(
         modification_question,
         clients_approval_message,
     ) not in clients_question_answere_list:
-        error_msg += "\n\n" + NOT_IN_QUESTION_ANSWER_LIST
+        in_question_answer_list = False
+        # Go in reverse order because approval messages are usually at the end of the list (as they are appended at the end of the list)
+        for question, answer in reversed(clients_question_answere_list):
+            if (
+                # Check if the modification_question is a substring of the question
+                modification_question.strip().lower() in question.strip().lower()
+                and clients_approval_message == answer
+            ):
+                in_question_answer_list = True
+                break
+        if not in_question_answer_list:
+            error_msg += "\n\n" + NOT_IN_QUESTION_ANSWER_LIST
     if clients_approval_message.lower().strip() != "yes":
         error_msg += "\n\n" + NOT_APPROVED
 

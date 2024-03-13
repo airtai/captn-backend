@@ -157,9 +157,9 @@ answer_to_team_lead_question_config = {
     },
 }
 
-get_login_url_config = {
-    "name": "get_login_url",
-    "description": "Get the users login url",
+change_google_account_config = {
+    "name": "change_google_account",
+    "description": """This method should be used only when the client explicitly asks for the change of the Google account (the account which will be used for Google Ads)!""",
     "parameters": {
         "type": "object",
         "properties": {},

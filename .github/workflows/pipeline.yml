@@ -49,6 +49,11 @@ jobs:
         INFOBIP_API_KEY: "dummy_key"
         INFOBIP_BASE_URL: "dummy_url"
         DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads"
+        AZURE_API_VERSION: ${{ secrets.STAGING_AZURE_API_VERSION }}
+        AZURE_API_ENDPOINT: ${{ secrets.STAGING_AZURE_API_ENDPOINT }}
+        AZURE_GPT4_MODEL: ${{ secrets.STAGING_AZURE_GPT4_MODEL }}
+        AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
+        AZURE_OPENAI_API_KEY_SWEDEN: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY_SWEDEN }}
       steps:
         - uses: actions/checkout@v4
         - name: Set up Python

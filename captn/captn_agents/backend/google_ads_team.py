@@ -3,8 +3,6 @@ __all__ = ["GoogleAdsTeam"]
 import ast
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from autogen.io.websockets import IOWebsockets
-
 from google_ads.model import (
     AdCopy,
     AdGroup,
@@ -18,11 +16,13 @@ from google_ads.model import (
 
 from ...google_ads.client import (
     execute_query,
+    get_login_url,
     google_ads_create_update,
     list_accessible_customers,
 )
 from .function_configs import (
     ask_client_for_permission_config,
+    change_google_account_config,
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
     create_ad_group_config,
@@ -48,14 +48,12 @@ from .functions import (
     get_info_from_the_web_page,
     reply_to_client_2,
 )
-
-# from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
 
 
 class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        # get_login_url_config,
+        change_google_account_config,
         list_accessible_customers_config,
         execute_query_config,
         reply_to_client_2_config,
@@ -129,7 +127,6 @@ sure it is understandable by non-experts.
         task: str,
         user_id: int,
         conv_id: int,
-        iostream: IOWebsockets,
         work_dir: str = "google_ads",
         max_round: int = 80,
         seed: int = 42,
@@ -141,7 +138,6 @@ sure it is understandable by non-experts.
             conv_id=conv_id,
             work_dir=work_dir,
             clients_question_answere_list=clients_question_answere_list,
-            iostream=iostream,
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -161,7 +157,6 @@ sure it is understandable by non-experts.
             temperature=temperature,
             name=name,
             clients_question_answere_list=clients_question_answere_list,
-            iostream=iostream,
         )
         self.conv_id = conv_id
         self.task = task
@@ -527,6 +522,8 @@ It should be used only for the clients web page(s), final_url(s) etc.
 This command should be used for retrieving the information from clients web page.
 If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc.
 
+19. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
+Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
@@ -540,7 +537,6 @@ def _get_function_map(
     conv_id: int,
     work_dir: str,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
-    iostream: Optional[IOWebsockets] = None,
 ) -> Dict[str, Any]:
     def _string_to_list(
         customer_ids: Optional[Union[List[str], str]]
@@ -557,7 +553,9 @@ def _get_function_map(
         )
 
     function_map = {
-        # "get_login_url": lambda: get_login_url(user_id=user_id, conv_id=conv_id),
+        "change_google_account": lambda: get_login_url(
+            user_id=user_id, conv_id=conv_id, force_new_login=True
+        ),
         "list_accessible_customers": lambda: list_accessible_customers(
             user_id=user_id, conv_id=conv_id
         ),
@@ -813,7 +811,7 @@ def _get_function_map(
             endpoint="/create-update-ad-copy",
         ),
         "get_info_from_the_web_page": lambda url, task, task_guidelines: get_info_from_the_web_page(
-            url=url, task=task, task_guidelines=task_guidelines, iostream=iostream
+            url=url, task=task, task_guidelines=task_guidelines
         ),
     }
 

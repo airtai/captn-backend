@@ -1,5 +1,5 @@
 from os import environ
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -9,11 +9,22 @@ INFOBIP_BASE_URL = environ["INFOBIP_BASE_URL"]
 
 def send_email(
     *,
-    from_email: str = "Capt’n.ai Support <support@captn.ai>",
+    from_email: Optional[str] = None,
     to_email: str,
     subject: str,
     body_text: str,
 ) -> Dict[str, Any]:
+    if from_email is None:
+        domain = environ.get("DOMAIN", None)
+
+        if domain is None:
+            from_email = "Capt’n.ai Staging Support <support-staging@captn.ai>"
+        else:
+            if "staging" in domain or "localhost" in domain or "127.0.0.1" in domain:
+                from_email = "Capt’n.ai Staging Support <support-staging@captn.ai>"
+            else:
+                from_email = "Capt’n.ai Support <support@captn.ai>"
+
     headers = {
         "Authorization": f"App {INFOBIP_API_KEY}",
         "Accept": "application/json",
