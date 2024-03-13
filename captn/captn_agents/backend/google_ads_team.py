@@ -453,7 +453,7 @@ This command can only update campaigns name and status
 7. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
 criterion_id: string, clients_approval_message: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 keyword_match_type: string, keyword_text: string,
-cpc_bid_micros: Optional[int], modification_question: str)
+cpc_bid_micros: Optional[int], local_currency: Optional[str], modification_question: str)
 
 8. 'update_campaigns_negative_keywords': Update the Google Ads keywords (on campaign level), params: (customer_id: string, campaign_id: string,
 criterion_id: string, clients_approval_message: string, keyword_match_type: string, keyword_text: string,
@@ -629,22 +629,10 @@ def _get_function_map(
             ),
             endpoint="/update-campaign",
         ),
-        "update_ad_group_criterion": lambda customer_id, ad_group_id, criterion_id, modification_question, clients_approval_message, status=None, cpc_bid_micros=None, keyword_match_type=None, keyword_text=None: google_ads_create_update(
+        "update_ad_group_criterion": _get_update_ad_group_criterion(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroupCriterion(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                criterion_id=criterion_id,
-                status=status,
-                cpc_bid_micros=cpc_bid_micros,
-                keyword_text=keyword_text,
-                keyword_match_type=keyword_match_type,
-            ),
-            endpoint="/update-ad-group-criterion",
         ),
         "update_campaigns_negative_keywords": lambda customer_id, campaign_id, criterion_id, clients_approval_message, modification_question, keyword_match_type=None, keyword_text=None: google_ads_create_update(
             user_id=user_id,
@@ -1012,6 +1000,65 @@ def _get_create_ad_group(
         )
 
     return _create_ad_group
+
+
+def _get_update_ad_group_criterion(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Callable[
+    [
+        str,
+        str,
+        str,
+        str,
+        str,
+        Optional[Literal["ENABLED", "PAUSED"]],
+        Optional[int],
+        Optional[str],
+        Optional[str],
+    ],
+    Union[Dict[str, Any], str],
+]:
+    def _update_ad_group_criterion(
+        customer_id: str,
+        ad_group_id: str,
+        criterion_id: str,
+        clients_approval_message: str,
+        modification_question: str,
+        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+        cpc_bid_micros: Optional[int] = None,
+        keyword_match_type: Optional[str] = None,
+        keyword_text: Optional[str] = None,
+        local_currency: Optional[str] = None,
+    ) -> Union[Dict[str, Any], str]:
+        if cpc_bid_micros is not None:
+            check_currency(
+                user_id=user_id,
+                conv_id=conv_id,
+                customer_id=customer_id,
+                local_currency=local_currency,
+            )
+
+        return google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=AdGroupCriterion(
+                customer_id=customer_id,
+                ad_group_id=ad_group_id,
+                criterion_id=criterion_id,
+                status=status,
+                cpc_bid_micros=cpc_bid_micros,
+                keyword_text=keyword_text,
+                keyword_match_type=keyword_match_type,
+            ),
+            endpoint="/update-ad-group-criterion",
+        )
+
+    return _update_ad_group_criterion
 
 
 def _get_create_campaign(

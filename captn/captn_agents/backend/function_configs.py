@@ -589,6 +589,7 @@ update_ad_group_criterion_config = {
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
             "keyword_match_type": properties_config["keyword_match_type"],
             "keyword_text": properties_config["keyword_text"],
         },
