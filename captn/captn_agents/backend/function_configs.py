@@ -427,6 +427,7 @@ update_ad_group_ad_config = {
             "clients_approval_message": properties_config["clients_approval_message"],
             "modification_question": properties_config["modification_question"],
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",

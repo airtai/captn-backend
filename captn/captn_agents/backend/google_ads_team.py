@@ -426,7 +426,7 @@ After EACH change you make, you MUST send a message to the client with the infor
 Do NOT do multiple changes at once and inform the client about all the changes at once you are done with all of them.
 
 3. 'update_ad_group_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
-clients_approval_message: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
+clients_approval_message: string, cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 modification_question: str)
 This command can only update ads cpc_bid_micros and status
 
@@ -575,22 +575,10 @@ def _get_function_map(
             resource_details=resource_details,
             proposed_changes=proposed_changes,
         ),
-        "update_ad_group_ad": lambda customer_id, ad_group_id, ad_id, clients_approval_message, modification_question, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "update_ad_group_ad": _get_update_ad_group_ad(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroupAd(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                ad_id=ad_id,
-                cpc_bid_micros=cpc_bid_micros,
-                status=status,
-                headlines=None,
-                descriptions=None,
-            ),
-            endpoint="/update-ad-group-ad",
         ),
         "create_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, modification_question, headline=None, description=None: google_ads_create_update(
             user_id=user_id,
@@ -880,6 +868,62 @@ def _get_create_keyword_for_ad_group(
         )
 
     return _create_keyword_for_ad_group
+
+
+def _get_update_ad_group_ad(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Callable[
+    [
+        str,
+        str,
+        str,
+        str,
+        str,
+        Optional[int],
+        Optional[Literal["ENABLED", "PAUSED"]],
+        str,
+    ],
+    Union[Dict[str, Any], str],
+]:
+    def _update_ad_group_ad(
+        customer_id: str,
+        ad_group_id: str,
+        ad_id: str,
+        clients_approval_message: str,
+        modification_question: str,
+        cpc_bid_micros: Optional[int] = None,
+        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+        local_currency: Optional[str] = None,
+    ) -> Union[Dict[str, Any], str]:
+        if cpc_bid_micros is not None:
+            check_currency(
+                user_id=user_id,
+                conv_id=conv_id,
+                customer_id=customer_id,
+                local_currency=local_currency,
+            )
+
+        return google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=AdGroupAd(
+                customer_id=customer_id,
+                ad_group_id=ad_group_id,
+                ad_id=ad_id,
+                cpc_bid_micros=cpc_bid_micros,
+                status=status,
+                headlines=None,
+                descriptions=None,
+            ),
+            endpoint="/update-ad-group-ad",
+        )
+
+    return _update_ad_group_ad
 
 
 def _get_create_campaign(
