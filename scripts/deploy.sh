@@ -33,8 +33,17 @@ fi
 
 ssh_command="ssh -o StrictHostKeyChecking=no -i key.pem azureuser@$DOMAIN"
 
+container_name="captn-backend"
+log_file="${container_name}.log"
+
+echo "INFO: Capturing docker container logs"
+$ssh_command "docker logs $container_name >> $log_file 2>&1 || echo 'No container logs to capture'"
+
+# Check if log file size exceeds 1GB (1073741824 bytes) and trim if necessary
+$ssh_command "if [ \$(stat -c%s \"$log_file\") -ge 100 ]; then echo 'Log file size exceeds 1GB, trimming...'; tail -c 100 \"$log_file\" > \"$log_file.tmp\" && mv \"$log_file.tmp\" \"$log_file\"; fi"
+
 echo "INFO: stopping already running docker container"
-$ssh_command "docker stop captn-backend || echo 'No containers available to stop'"
+$ssh_command "docker stop $container_name || echo 'No containers available to stop'"
 $ssh_command "docker container prune -f || echo 'No stopped containers to delete'"
 
 echo "INFO: pulling docker image"
@@ -46,7 +55,7 @@ echo "Deleting old image"
 $ssh_command "docker system prune -f || echo 'No images to delete'"
 
 echo "INFO: starting docker container"
-$ssh_command "docker run --name captn-backend \
+$ssh_command "docker run --name $container_name \
 	-p 8080:8080 -p $PORT:$PORT -v /etc/letsencrypt:/letsencrypt -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' \
 	-e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' \
 	-e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' \
