@@ -1404,3 +1404,56 @@ def test_execute_daily_analysis_workflow() -> None:
                                 )
 
                                 mock_update_chat_message_and_send_email.assert_called_once()
+
+
+def test_calculate_metrics_change() -> None:
+    metrics1 = KeywordMetrics(
+        impressions=8,
+        clicks=0,
+        interactions=0,
+        conversions=0,
+        cost_micros=0,
+        impressions_increase=None,
+        clicks_increase=None,
+        interactions_increase=None,
+        conversions_increase=None,
+        cost_micros_increase=None,
+        historical_quality_score=2,
+        historical_landing_page_quality_score="BELOW_AVERAGE",
+        historical_creative_quality_score="AVERAGE",
+        historical_quality_score_increase=None,
+    )
+    metrics2 = KeywordMetrics(
+        impressions=9,
+        clicks=1,
+        interactions=1,
+        conversions=0,
+        cost_micros=170000,
+        impressions_increase=None,
+        clicks_increase=None,
+        interactions_increase=None,
+        conversions_increase=None,
+        cost_micros_increase=None,
+        historical_quality_score=None,
+        historical_landing_page_quality_score=None,
+        historical_creative_quality_score=None,
+        historical_quality_score_increase=None,
+    )
+    result = calculate_metrics_change(metrics1, metrics2)
+    excepted_result = KeywordMetrics(
+        impressions=8,
+        clicks=0,
+        interactions=0,
+        conversions=0,
+        cost_micros=0,
+        impressions_increase=-11.11,
+        clicks_increase=None,
+        interactions_increase=None,
+        conversions_increase=0.0,
+        cost_micros_increase=None,
+        historical_quality_score=2,
+        historical_landing_page_quality_score="BELOW_AVERAGE",
+        historical_creative_quality_score="AVERAGE",
+        historical_quality_score_increase=None,
+    )
+    assert excepted_result == result

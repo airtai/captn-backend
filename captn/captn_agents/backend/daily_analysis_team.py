@@ -104,7 +104,7 @@ def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
         value2 = getattr(metrics2, key)
         if value == value2:
             return_metrics[key + "_increase"] = 0
-        elif value == 0 or value2 == 0:
+        elif value == 0 or value2 == 0 or value2 is None:
             return_metrics[key + "_increase"] = None
         else:
             return_metrics[key + "_increase"] = round(
@@ -1100,7 +1100,9 @@ Please propose the next steps and send the email to the client.
                     f"Send email function is not called for user_id: {user_id} - email {email}!"
                 )
         except Exception as e:
-            print(e)
+            print(
+                f"Daily analysis failed for user_id: {user_id} - email {email}.\nError: {e}"
+            )
             _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
         finally:
             if daily_analysis_team:
