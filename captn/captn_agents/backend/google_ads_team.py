@@ -16,11 +16,13 @@ from google_ads.model import (
 
 from ...google_ads.client import (
     execute_query,
+    get_login_url,
     google_ads_create_update,
     list_accessible_customers,
 )
 from .function_configs import (
     ask_client_for_permission_config,
+    change_google_account_config,
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
     create_ad_group_config,
@@ -46,14 +48,12 @@ from .functions import (
     get_info_from_the_web_page,
     reply_to_client_2,
 )
-
-# from .google_ads_mock import execute_query, get_login_url, list_accessible_customers
 from .team import Team
 
 
 class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        # get_login_url_config,
+        change_google_account_config,
         list_accessible_customers_config,
         execute_query_config,
         reply_to_client_2_config,
@@ -522,6 +522,8 @@ It should be used only for the clients web page(s), final_url(s) etc.
 This command should be used for retrieving the information from clients web page.
 If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc.
 
+19. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
+Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
 
 Commands starting with 'update' can only be used for updating and commands starting with 'create' can only be used for creating
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
@@ -551,7 +553,9 @@ def _get_function_map(
         )
 
     function_map = {
-        # "get_login_url": lambda: get_login_url(user_id=user_id, conv_id=conv_id),
+        "change_google_account": lambda: get_login_url(
+            user_id=user_id, conv_id=conv_id, force_new_login=True
+        ),
         "list_accessible_customers": lambda: list_accessible_customers(
             user_id=user_id, conv_id=conv_id
         ),
