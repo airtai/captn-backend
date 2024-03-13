@@ -400,6 +400,7 @@ create_ad_group_config = {
                 "description": "The name of the Ad Group",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad Group (ENABLED or PAUSED)",

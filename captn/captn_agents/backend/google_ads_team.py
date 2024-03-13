@@ -461,7 +461,7 @@ modification_question: str)
 This command can only update campaigns negative keywords keyword_match_type and keyword_text
 
 9. 'create_ad_group': Create the Google Ads Group, params: (customer_id: string, campaign_id: string, clients_approval_message: string,
-name: string, cpc_bid_micros: Optional[int], status: Optional[Literal["ENABLED", "PAUSED"]],
+name: string, cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
 modification_question: str)
 
 10. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
@@ -610,20 +610,10 @@ def _get_function_map(
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
         ),
-        "create_ad_group": lambda customer_id, campaign_id, clients_approval_message, modification_question, name, cpc_bid_micros=None, status=None: google_ads_create_update(
+        "create_ad_group": _get_create_ad_group(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroup(
-                customer_id=customer_id,
-                campaign_id=campaign_id,
-                name=name,
-                cpc_bid_micros=cpc_bid_micros,
-                status=status,
-            ),
-            endpoint="/create-ad-group",
         ),
         "update_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, name=None, status=None: google_ads_create_update(
             user_id=user_id,
@@ -968,6 +958,60 @@ def _get_update_ad_group(
         )
 
     return _update_ad_group
+
+
+def _get_create_ad_group(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Callable[
+    [
+        str,
+        str,
+        str,
+        str,
+        str,
+        Optional[int],
+        Optional[Literal["ENABLED", "PAUSED"]],
+        str,
+    ],
+    Union[Dict[str, Any], str],
+]:
+    def _create_ad_group(
+        customer_id: str,
+        campaign_id: str,
+        clients_approval_message: str,
+        modification_question: str,
+        name: str,
+        cpc_bid_micros: Optional[int] = None,
+        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+        local_currency: Optional[str] = None,
+    ) -> Union[Dict[str, Any], str]:
+        if cpc_bid_micros is not None:
+            check_currency(
+                user_id=user_id,
+                conv_id=conv_id,
+                customer_id=customer_id,
+                local_currency=local_currency,
+            )
+
+        return google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=AdGroup(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                name=name,
+                cpc_bid_micros=cpc_bid_micros,
+                status=status,
+            ),
+            endpoint="/create-ad-group",
+        )
+
+    return _create_ad_group
 
 
 def _get_create_campaign(
