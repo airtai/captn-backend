@@ -106,11 +106,12 @@ async def get_login_url(
     request: Request,
     user_id: int = Query(title="User ID"),
     conv_id: int = Query(title="Conversation ID"),
-    # chat_id: int = Query(title="Chat ID"),
+    force_new_login: bool = Query(title="Force new login", default=False),
 ) -> Dict[str, str]:
-    is_authenticated = await is_authenticated_for_ads(user_id=user_id)
-    if is_authenticated:
-        return {"login_url": "User is already authenticated"}
+    if not force_new_login:
+        is_authenticated = await is_authenticated_for_ads(user_id=user_id)
+        if is_authenticated:
+            return {"login_url": "User is already authenticated"}
 
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"

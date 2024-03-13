@@ -12,13 +12,15 @@ from websockets.sync.client import connect as ws_connect
 
 from .helpers import mock_env
 
-with mock_env():
+with mock_env(mock_azure_env=False):
     from captn.captn_agents.application import (
         RETRY_MESSAGE,
         CaptnAgentRequest,
         _get_message,
         chat,
+        on_connect,
     )
+    from captn.captn_agents.backend.config import config_list_gpt_3_5
     from captn.captn_agents.backend.functions import TeamResponse
 
 
@@ -80,10 +82,7 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
 
 
 class TestConsoleIOWithWebsockets:
-    @pytest.mark.skip(reason="Add AZURE keys to CI. After that, remove the skip.")
     def test_websockets_chat(self) -> None:
-        from captn.captn_agents.backend.config import config_list_gpt_3_5
-
         print("Testing setup", flush=True)
 
         success_dict = {"success": False}
@@ -185,8 +184,6 @@ class TestConsoleIOWithWebsockets:
 
     @pytest.mark.skip(reason="TODO: run the application, mock google ads functions...")
     def test_team_chat(self) -> None:
-        from captn.captn_agents.application import on_connect
-
         print("Testing setup", flush=True)
 
         success_dict = {"success": False}
@@ -343,8 +340,3 @@ def test_get_message_normal_chat() -> None:
     actual = _get_message(request)
     expected = "I want to Remove 'Free' keyword because it is not performing well"
     assert actual == expected
-
-
-# def test_on_connect() -> None:
-#     with IOWebsockets.run_server_in_thread(on_connect=on_connect, port=8080) as uri:
-#         print(f"Websocket server started at {uri}.", flush=True)

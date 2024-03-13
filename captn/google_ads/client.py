@@ -23,8 +23,14 @@ def get_google_ads_team_capability() -> str:
     return prefix + "- " + "\n- ".join(capabilities)
 
 
-def get_login_url(user_id: int, conv_id: int) -> Dict[str, str]:
-    params = {"user_id": user_id, "conv_id": conv_id}
+def get_login_url(
+    user_id: int, conv_id: int, force_new_login: bool = False
+) -> Dict[str, str]:
+    params = {
+        "user_id": user_id,
+        "conv_id": conv_id,
+        "force_new_login": force_new_login,
+    }
     response = requests.get(f"{BASE_URL}/login", params=params, timeout=60)
     retval: Dict[str, str] = response.json()
     return retval  # type: ignore[no-any-return]
