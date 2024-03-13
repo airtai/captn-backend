@@ -1,7 +1,7 @@
 __all__ = ["GoogleAdsTeam"]
 
 import ast
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 from google_ads.model import (
     AdCopy,
@@ -746,22 +746,10 @@ def _get_function_map(
             ),
             endpoint="/create-ad-group-ad",
         ),
-        "create_campaign": lambda customer_id, name, budget_amount_micros, local_currency, clients_approval_message, modification_question, status=None, network_settings_target_google_search=None, network_settings_target_search_network=None, network_settings_target_content_network=None: google_ads_create_update(
+        "create_campaign": _get_create_campaign(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=Campaign(
-                customer_id=customer_id,
-                name=name,
-                budget_amount_micros=budget_amount_micros,
-                status=status,
-                network_settings_target_google_search=network_settings_target_google_search,
-                network_settings_target_search_network=network_settings_target_search_network,
-                network_settings_target_content_network=network_settings_target_content_network,
-            ),
-            endpoint="/create-campaign",
         ),
         "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, negative=None, location_names=None, location_ids=None: google_ads_create_update(
             user_id=user_id,
@@ -816,6 +804,88 @@ def _get_function_map(
     }
 
     return function_map
+
+
+def get_customer_currency(user_id: int, conv_id: int, customer_id: str) -> str:
+    query = "SELECT customer.currency_code FROM customer"
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+
+    currency = ast.literal_eval(query_result)[customer_id][0]["customer"]["currencyCode"]  # type: ignore
+    return currency  # type: ignore
+
+
+def check_currency(
+    user_id: int, conv_id: int, customer_id: str, local_currency: str
+) -> None:
+    cutomers_currency = get_customer_currency(
+        user_id=user_id, conv_id=conv_id, customer_id=customer_id
+    )
+    if cutomers_currency.upper() != local_currency.strip().upper():
+        raise ValueError(
+            f"""Error: Customer ({customer_id}) account has set currency ({cutomers_currency}) which is different from the provided currency ({local_currency=}).
+Please convert the budget to the customer's currency and ask the client for the approval with the new budget amount (in the customer's currency)."""
+        )
+
+
+def _get_create_campaign(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Callable[
+    [
+        str,
+        str,
+        int,
+        str,
+        str,
+        str,
+        Optional[Literal["ENABLED", "PAUSED"]],
+        Optional[bool],
+        Optional[bool],
+        Optional[bool],
+    ],
+    Union[Dict[str, Any], str],
+]:
+    def _create_campaign(
+        customer_id: str,
+        name: str,
+        budget_amount_micros: int,
+        local_currency: str,
+        clients_approval_message: str,
+        modification_question: str,
+        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+        network_settings_target_google_search: Optional[bool] = None,
+        network_settings_target_search_network: Optional[bool] = None,
+        network_settings_target_content_network: Optional[bool] = None,
+    ) -> Union[Dict[str, Any], str]:
+        check_currency(
+            user_id=user_id,
+            conv_id=conv_id,
+            customer_id=customer_id,
+            local_currency=local_currency,
+        )
+
+        return google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=Campaign(
+                customer_id=customer_id,
+                name=name,
+                budget_amount_micros=budget_amount_micros,
+                status=status,
+                network_settings_target_google_search=network_settings_target_google_search,
+                network_settings_target_search_network=network_settings_target_search_network,
+                network_settings_target_content_network=network_settings_target_content_network,
+            ),
+            endpoint="/create-campaign",
+        )
+
+    return _create_campaign
 
 
 def _get_update_ad_copy(
