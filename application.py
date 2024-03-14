@@ -27,21 +27,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
     )  # second="*/59")
     scheduler.start()
 
-    host = environ.get("DOMAIN", "127.0.0.1")
-
-    if host != "127.0.0.1":
-        full_chain = f"/letsencrypt/live/{host}/fullchain.pem"
-        private_key = f"/letsencrypt/live/{host}/privkey.pem"
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        ssl_context.load_cert_chain(full_chain, private_key)
-    else:
-        ssl_context = None
-
     with IOWebsockets.run_server_in_thread(
         on_connect=on_connect,
         host="0.0.0.0",  # nosec [B104]
         port=8080,
-        ssl_context=ssl_context,
     ) as uri:
         print(f"Websocket server started at {uri}.", flush=True)
 

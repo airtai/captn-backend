@@ -56,7 +56,8 @@ $ssh_command "docker system prune -f || echo 'No images to delete'"
 
 echo "INFO: starting docker container"
 $ssh_command "docker run --name $container_name \
-	-p 8080:8080 -p $PORT:$PORT -v /etc/letsencrypt:/letsencrypt -e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' \
+	-p 8080:8080 -p $PORT:$PORT \
+	-e PORT='$PORT' -e DATABASE_URL='$DATABASE_URL' -e CLIENT_SECRET='$CLIENT_SECRET' \
 	-e DEVELOPER_TOKEN='$DEVELOPER_TOKEN' \
 	-e AZURE_API_VERSION='$AZURE_API_VERSION' -e AZURE_API_ENDPOINT='$AZURE_API_ENDPOINT' \
 	-e AZURE_GPT4_MODEL='$AZURE_GPT4_MODEL' -e AZURE_GPT35_MODEL='$AZURE_GPT35_MODEL' \
