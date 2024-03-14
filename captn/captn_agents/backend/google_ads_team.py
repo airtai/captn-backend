@@ -1,6 +1,7 @@
 __all__ = ["GoogleAdsTeam"]
 
 import ast
+from functools import wraps
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 from google_ads.model import (
@@ -666,7 +667,8 @@ def _get_function_map(
             ),
             endpoint="/add-negative-keywords-to-campaign",
         ),
-        "create_keyword_for_ad_group": _get_create_keyword_for_ad_group(
+        "create_keyword_for_ad_group": add_currency_check(
+            create_keyword_for_ad_group,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
@@ -775,67 +777,69 @@ Please convert the budget to the customer's currency and ask the client for the 
         )
 
 
-def _get_create_keyword_for_ad_group(
+def add_currency_check(
+    f: Callable[..., Any],
     user_id: int,
     conv_id: int,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
-) -> Callable[
-    [
-        str,
-        str,
-        str,
-        str,
-        str,
-        str,
-        Optional[Literal["ENABLED", "PAUSED"]],
-        Optional[bool],
-        Optional[float],
-        Optional[str],
-        Optional[int],
-    ],
-    Union[Dict[str, Any], str],
-]:
-    def _create_keyword_for_ad_group(
-        customer_id: str,
-        ad_group_id: str,
-        keyword_text: str,
-        keyword_match_type: str,
-        clients_approval_message: str,
-        modification_question: str,
-        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
-        negative: Optional[bool] = None,
-        bid_modifier: Optional[float] = None,
-        local_currency: Optional[str] = None,
-        cpc_bid_micros: Optional[int] = None,
-    ) -> Union[Dict[str, Any], str]:
-        if cpc_bid_micros is not None:
-            check_currency(
-                user_id=user_id,
-                conv_id=conv_id,
-                customer_id=customer_id,
-                local_currency=local_currency,
-            )
+    *,
+    micros_var_name: str = "cpc_bid_micros",
+) -> Callable[..., Any]:
+    @wraps(f)
+    def wrapper(
+        *, customer_id: str, local_currency: Optional[str] = None, **kwargs: Any
+    ) -> Any:
+        micros = kwargs.get(micros_var_name, None)
+        if micros is not None:
+            check_currency(user_id, conv_id, customer_id, local_currency)
 
-        return google_ads_create_update(
+        # f = partial(f, user_id=user_id, conv_id=conv_id, clients_question_answere_list=clients_question_answere_list)
+        return f(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroupCriterion(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                status=status,
-                keyword_match_type=keyword_match_type,
-                keyword_text=keyword_text,
-                negative=negative,
-                bid_modifier=bid_modifier,
-                cpc_bid_micros=cpc_bid_micros,
-            ),
-            endpoint="/add-keywords-to-ad-group",
+            customer_id=customer_id,
+            **kwargs,
         )
 
-    return _create_keyword_for_ad_group
+    return wrapper
+
+
+def create_keyword_for_ad_group(
+    *,
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    customer_id: str,
+    ad_group_id: str,
+    keyword_text: str,
+    keyword_match_type: str,
+    clients_approval_message: str,
+    modification_question: str,
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+    negative: Optional[bool] = None,
+    bid_modifier: Optional[float] = None,
+    cpc_bid_micros: Optional[int] = None,
+) -> Union[Dict[str, Any], str]:
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroupCriterion(
+            customer_id=customer_id,
+            ad_group_id=ad_group_id,
+            status=status,
+            keyword_match_type=keyword_match_type,
+            keyword_text=keyword_text,
+            negative=negative,
+            bid_modifier=bid_modifier,
+            cpc_bid_micros=cpc_bid_micros,
+        ),
+        endpoint="/add-keywords-to-ad-group",
+    )
 
 
 def _get_update_ad_group_ad(
