@@ -3,9 +3,6 @@ from typing import Any, Dict, Optional
 
 import requests
 
-INFOBIP_API_KEY = environ["INFOBIP_API_KEY"]
-INFOBIP_BASE_URL = environ["INFOBIP_BASE_URL"]
-
 
 def send_email(
     *,
@@ -14,6 +11,14 @@ def send_email(
     subject: str,
     body_text: str,
 ) -> Dict[str, Any]:
+    INFOBIP_API_KEY = environ.get("INFOBIP_API_KEY", None)
+    INFOBIP_BASE_URL = environ.get("INFOBIP_BASE_URL", None)
+
+    if INFOBIP_API_KEY is None or INFOBIP_BASE_URL is None:
+        raise Exception(
+            "INFOBIP_API_KEY and INFOBIP_BASE_URL environment variables are required."
+        )
+
     if from_email is None:
         domain = environ.get("DOMAIN", None)
 

@@ -44,5 +44,14 @@ for config in CONFIG_LIST:
         config.pop("api_base")
         # config.pop("api_type")
 
-config_list_gpt_3_5 = filter_config(CONFIG_LIST, {"model": "gpt-35-turbo-16k"})
-config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "airt-gpt4"})
+try:
+    config_list_gpt_3_5 = filter_config(CONFIG_LIST, {"model": "gpt-35-turbo-16k"})
+except Exception as e:
+    print(f"Error: {e}")
+    config_list_gpt_3_5 = []
+
+try:
+    config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "airt-gpt4"})
+except Exception as e:
+    print(f"Error: {e}")
+    config_list_gpt_4 = []
