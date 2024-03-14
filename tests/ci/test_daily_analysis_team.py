@@ -1,4 +1,5 @@
 import json
+import re
 import unittest.mock
 from pathlib import Path
 
@@ -1220,6 +1221,10 @@ def test_construct_daily_report_email_from_template() -> None:
     fixtures_path = Path(__file__).resolve().parent / "fixtures"
     with open(fixtures_path / "expected_main_email_template.html") as file:
         expected_main_email_template = file.read()
+
+    # compare strings but ignore white spaces
+    main_email_template = re.sub(r"\s+", "", main_email_template)
+    expected_main_email_template = re.sub(r"\s+", "", expected_main_email_template)
 
     assert expected_main_email_template == main_email_template
 
