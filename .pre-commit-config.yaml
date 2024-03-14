@@ -21,7 +21,7 @@ repos:
         name: Linter
         entry: "scripts/lint-pre-commit.sh"
         language: python
-        language_version: python3.10
+        language_version: python3.11
         types: [python]
         require_serial: true
         verbose: true
@@ -32,7 +32,7 @@ repos:
         name: Static analysis
         entry: "scripts/static-pre-commit.sh"
         language: python
-        language_version: python3.10
+        language_version: python3.11
         types: [python]
         require_serial: true
         verbose: true

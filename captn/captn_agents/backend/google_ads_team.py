@@ -576,7 +576,8 @@ def _get_function_map(
             resource_details=resource_details,
             proposed_changes=proposed_changes,
         ),
-        "update_ad_group_ad": _get_update_ad_group_ad(
+        "update_ad_group_ad": add_currency_check(
+            update_ad_group_ad,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
@@ -606,12 +607,14 @@ def _get_function_map(
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
         ),
-        "update_ad_group": _get_update_ad_group(
+        "update_ad_group": add_currency_check(
+            update_ad_group,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
         ),
-        "create_ad_group": _get_create_ad_group(
+        "create_ad_group": add_currency_check(
+            create_ad_group,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
@@ -630,7 +633,8 @@ def _get_function_map(
             ),
             endpoint="/update-campaign",
         ),
-        "update_ad_group_criterion": _get_update_ad_group_criterion(
+        "update_ad_group_criterion": add_currency_check(
+            update_ad_group_criterion,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
@@ -691,10 +695,12 @@ def _get_function_map(
             ),
             endpoint="/create-ad-group-ad",
         ),
-        "create_campaign": _get_create_campaign(
+        "create_campaign": add_currency_check(
+            create_campaign,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answere_list=clients_question_answere_list,
+            micros_var_name="budget_amount_micros",
         ),
         "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, negative=None, location_names=None, location_ids=None: google_ads_create_update(
             user_id=user_id,
@@ -793,7 +799,6 @@ def add_currency_check(
         if micros is not None:
             check_currency(user_id, conv_id, customer_id, local_currency)
 
-        # f = partial(f, user_id=user_id, conv_id=conv_id, clients_question_answere_list=clients_question_answere_list)
         return f(
             user_id=user_id,
             conv_id=conv_id,
@@ -842,286 +847,169 @@ def create_keyword_for_ad_group(
     )
 
 
-def _get_update_ad_group_ad(
+def update_ad_group_ad(
+    *,
     user_id: int,
     conv_id: int,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
-) -> Callable[
-    [
-        str,
-        str,
-        str,
-        str,
-        str,
-        Optional[int],
-        Optional[Literal["ENABLED", "PAUSED"]],
-        str,
-    ],
-    Union[Dict[str, Any], str],
-]:
-    def _update_ad_group_ad(
-        customer_id: str,
-        ad_group_id: str,
-        ad_id: str,
-        clients_approval_message: str,
-        modification_question: str,
-        cpc_bid_micros: Optional[int] = None,
-        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
-        local_currency: Optional[str] = None,
-    ) -> Union[Dict[str, Any], str]:
-        if cpc_bid_micros is not None:
-            check_currency(
-                user_id=user_id,
-                conv_id=conv_id,
-                customer_id=customer_id,
-                local_currency=local_currency,
-            )
+    customer_id: str,
+    ad_group_id: str,
+    ad_id: str,
+    clients_approval_message: str,
+    modification_question: str,
+    cpc_bid_micros: Optional[int] = None,
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+) -> Union[Dict[str, Any], str]:
 
-        return google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroupAd(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                ad_id=ad_id,
-                cpc_bid_micros=cpc_bid_micros,
-                status=status,
-                headlines=None,
-                descriptions=None,
-            ),
-            endpoint="/update-ad-group-ad",
-        )
-
-    return _update_ad_group_ad
-
-
-def _get_update_ad_group(
-    user_id: int,
-    conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
-) -> Callable[
-    [
-        str,
-        str,
-        str,
-        str,
-        Optional[str],
-        Optional[int],
-        Optional[Literal["ENABLED", "PAUSED"]],
-        str,
-    ],
-    Union[Dict[str, Any], str],
-]:
-    def _update_ad_group(
-        customer_id: str,
-        ad_group_id: str,
-        clients_approval_message: str,
-        modification_question: str,
-        name: Optional[str] = None,
-        cpc_bid_micros: Optional[int] = None,
-        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
-        local_currency: Optional[str] = None,
-    ) -> Union[Dict[str, Any], str]:
-        if cpc_bid_micros is not None:
-            check_currency(
-                user_id=user_id,
-                conv_id=conv_id,
-                customer_id=customer_id,
-                local_currency=local_currency,
-            )
-
-        return google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroup(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                name=name,
-                cpc_bid_micros=cpc_bid_micros,
-                status=status,
-            ),
-            endpoint="/update-ad-group",
-        )
-
-    return _update_ad_group
-
-
-def _get_create_ad_group(
-    user_id: int,
-    conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
-) -> Callable[
-    [
-        str,
-        str,
-        str,
-        str,
-        str,
-        Optional[int],
-        Optional[Literal["ENABLED", "PAUSED"]],
-        str,
-    ],
-    Union[Dict[str, Any], str],
-]:
-    def _create_ad_group(
-        customer_id: str,
-        campaign_id: str,
-        clients_approval_message: str,
-        modification_question: str,
-        name: str,
-        cpc_bid_micros: Optional[int] = None,
-        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
-        local_currency: Optional[str] = None,
-    ) -> Union[Dict[str, Any], str]:
-        if cpc_bid_micros is not None:
-            check_currency(
-                user_id=user_id,
-                conv_id=conv_id,
-                customer_id=customer_id,
-                local_currency=local_currency,
-            )
-
-        return google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroup(
-                customer_id=customer_id,
-                campaign_id=campaign_id,
-                name=name,
-                cpc_bid_micros=cpc_bid_micros,
-                status=status,
-            ),
-            endpoint="/create-ad-group",
-        )
-
-    return _create_ad_group
-
-
-def _get_update_ad_group_criterion(
-    user_id: int,
-    conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
-) -> Callable[
-    [
-        str,
-        str,
-        str,
-        str,
-        str,
-        Optional[Literal["ENABLED", "PAUSED"]],
-        Optional[int],
-        Optional[str],
-        Optional[str],
-    ],
-    Union[Dict[str, Any], str],
-]:
-    def _update_ad_group_criterion(
-        customer_id: str,
-        ad_group_id: str,
-        criterion_id: str,
-        clients_approval_message: str,
-        modification_question: str,
-        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
-        cpc_bid_micros: Optional[int] = None,
-        keyword_match_type: Optional[str] = None,
-        keyword_text: Optional[str] = None,
-        local_currency: Optional[str] = None,
-    ) -> Union[Dict[str, Any], str]:
-        if cpc_bid_micros is not None:
-            check_currency(
-                user_id=user_id,
-                conv_id=conv_id,
-                customer_id=customer_id,
-                local_currency=local_currency,
-            )
-
-        return google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroupCriterion(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                criterion_id=criterion_id,
-                status=status,
-                cpc_bid_micros=cpc_bid_micros,
-                keyword_text=keyword_text,
-                keyword_match_type=keyword_match_type,
-            ),
-            endpoint="/update-ad-group-criterion",
-        )
-
-    return _update_ad_group_criterion
-
-
-def _get_create_campaign(
-    user_id: int,
-    conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
-) -> Callable[
-    [
-        str,
-        str,
-        int,
-        str,
-        str,
-        str,
-        Optional[Literal["ENABLED", "PAUSED"]],
-        Optional[bool],
-        Optional[bool],
-        Optional[bool],
-    ],
-    Union[Dict[str, Any], str],
-]:
-    def _create_campaign(
-        customer_id: str,
-        name: str,
-        budget_amount_micros: int,
-        local_currency: str,
-        clients_approval_message: str,
-        modification_question: str,
-        status: Optional[Literal["ENABLED", "PAUSED"]] = None,
-        network_settings_target_google_search: Optional[bool] = None,
-        network_settings_target_search_network: Optional[bool] = None,
-        network_settings_target_content_network: Optional[bool] = None,
-    ) -> Union[Dict[str, Any], str]:
-        check_currency(
-            user_id=user_id,
-            conv_id=conv_id,
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroupAd(
             customer_id=customer_id,
-            local_currency=local_currency,
-        )
+            ad_group_id=ad_group_id,
+            ad_id=ad_id,
+            cpc_bid_micros=cpc_bid_micros,
+            status=status,
+            headlines=None,
+            descriptions=None,
+        ),
+        endpoint="/update-ad-group-ad",
+    )
 
-        return google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=Campaign(
-                customer_id=customer_id,
-                name=name,
-                budget_amount_micros=budget_amount_micros,
-                status=status,
-                network_settings_target_google_search=network_settings_target_google_search,
-                network_settings_target_search_network=network_settings_target_search_network,
-                network_settings_target_content_network=network_settings_target_content_network,
-            ),
-            endpoint="/create-campaign",
-        )
 
-    return _create_campaign
+def update_ad_group(
+    *,
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    customer_id: str,
+    ad_group_id: str,
+    clients_approval_message: str,
+    modification_question: str,
+    name: Optional[str] = None,
+    cpc_bid_micros: Optional[int] = None,
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+) -> Union[Dict[str, Any], str]:
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroup(
+            customer_id=customer_id,
+            ad_group_id=ad_group_id,
+            name=name,
+            cpc_bid_micros=cpc_bid_micros,
+            status=status,
+        ),
+        endpoint="/update-ad-group",
+    )
+
+
+def create_ad_group(
+    *,
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    customer_id: str,
+    campaign_id: str,
+    clients_approval_message: str,
+    modification_question: str,
+    name: str,
+    cpc_bid_micros: Optional[int] = None,
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+) -> Union[Dict[str, Any], str]:
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroup(
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            name=name,
+            cpc_bid_micros=cpc_bid_micros,
+            status=status,
+        ),
+        endpoint="/create-ad-group",
+    )
+
+
+def update_ad_group_criterion(
+    *,
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    customer_id: str,
+    ad_group_id: str,
+    criterion_id: str,
+    clients_approval_message: str,
+    modification_question: str,
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+    cpc_bid_micros: Optional[int] = None,
+    keyword_match_type: Optional[str] = None,
+    keyword_text: Optional[str] = None,
+) -> Union[Dict[str, Any], str]:
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroupCriterion(
+            customer_id=customer_id,
+            ad_group_id=ad_group_id,
+            criterion_id=criterion_id,
+            status=status,
+            cpc_bid_micros=cpc_bid_micros,
+            keyword_text=keyword_text,
+            keyword_match_type=keyword_match_type,
+        ),
+        endpoint="/update-ad-group-criterion",
+    )
+
+
+def create_campaign(
+    *,
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    customer_id: str,
+    name: str,
+    budget_amount_micros: int,
+    clients_approval_message: str,
+    modification_question: str,
+    status: Optional[Literal["ENABLED", "PAUSED"]] = None,
+    network_settings_target_google_search: Optional[bool] = None,
+    network_settings_target_search_network: Optional[bool] = None,
+    network_settings_target_content_network: Optional[bool] = None,
+) -> Union[Dict[str, Any], str]:
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=Campaign(
+            customer_id=customer_id,
+            name=name,
+            budget_amount_micros=budget_amount_micros,
+            status=status,
+            network_settings_target_google_search=network_settings_target_google_search,
+            network_settings_target_search_network=network_settings_target_search_network,
+            network_settings_target_content_network=network_settings_target_content_network,
+        ),
+        endpoint="/create-campaign",
+    )
 
 
 def _get_update_ad_copy(
