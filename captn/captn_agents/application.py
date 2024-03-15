@@ -62,7 +62,10 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
     with IOStream.set_default(iostream):
         try:
             try:
-                message = iostream.input()
+                original_message = iostream.input()
+                request = CaptnAgentRequest.model_validate_json(original_message)
+                message = _get_message(request)
+
             except Exception as e:
                 iostream.print(
                     "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
@@ -72,11 +75,6 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 return
             for i in range(num_of_retries):
                 try:
-                    request_json = message
-                    request = CaptnAgentRequest.model_validate_json(request_json)
-
-                    message = _get_message(request)
-
                     _, last_message = start_or_continue_conversation(
                         user_id=request.user_id,
                         conv_id=request.conv_id,
@@ -88,6 +86,15 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     iostream.print(last_message)
 
                     return
+
+                except BadRequestError as e:
+                    iostream.print(
+                        f"OpenAI classified the message as BadRequestError: {e}"
+                    )
+                    iostream.print(
+                        f"Retrying the request with message: {RETRY_MESSAGE}"
+                    )
+                    message = RETRY_MESSAGE
 
                 except Exception as e:
                     # TODO: error logging

@@ -1,6 +1,4 @@
-import ssl
 from contextlib import asynccontextmanager
-from os import environ
 from typing import AsyncGenerator
 
 from apscheduler.schedulers.background import BackgroundScheduler
