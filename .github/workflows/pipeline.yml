@@ -98,7 +98,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - run: docker pull ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME || docker pull ghcr.io/$GITHUB_REPOSITORY:dev || true
-            - run: docker build --build-arg PORT=$PORT -t ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME .
+            - run: docker build --build-arg PORT=$PORT -t ghcr.io/$GITHUB_REPOSITORY:${GITHUB_REF_NAME////-} .
             - name: Add tag latest if branch is main
               if: github.ref_name == 'main'
               run: docker tag ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME ghcr.io/$GITHUB_REPOSITORY:latest
