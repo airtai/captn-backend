@@ -6,7 +6,6 @@ __all__ = [
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from .banking_initial_team import BookingInitialTeam
 from .google_ads_team import GoogleAdsTeam
 from .initial_team import InitialTeam
 from .team import Team
@@ -75,13 +74,6 @@ roles_dictionary = {
     "initial_team": {
         "human_input_mode": {"NEVER": initial_team_roles_never, "ALWAYS": []},
         "class": InitialTeam,
-    },
-    "banking_initial_team": {
-        "human_input_mode": {
-            "NEVER": banking_initial_team_roles_always,  # banking_initial_team_roles_never,
-            "ALWAYS": banking_initial_team_roles_always,
-        },
-        "class": BookingInitialTeam,
     },
     "google_ads_team": {
         "human_input_mode": {
