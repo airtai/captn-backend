@@ -157,9 +157,9 @@ answer_to_team_lead_question_config = {
     },
 }
 
-get_login_url_config = {
-    "name": "get_login_url",
-    "description": "Get the users login url",
+change_google_account_config = {
+    "name": "change_google_account",
+    "description": """This method should be used only when the client explicitly asks for the change of the Google account (the account which will be used for Google Ads)!""",
     "parameters": {
         "type": "object",
         "properties": {},
@@ -346,6 +346,12 @@ Faking the clients approval may resault with the LAWSUIT and you will get fired!
         "type": "string",
         "description": "Second part of text that can be appended to the URL in the ad. This field can ONLY be set when path1 is also set! To delete the current value, set this field to an empty string.",
     },
+    "local_currency": {
+        "type": "string",
+        "description": """The currency which will be used for the budget amount.
+This value MUST be found in the 'customer' table! query example: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
+If the budget micros value is used, the currency code IS required!""",
+    },
 }
 
 
@@ -364,6 +370,7 @@ update_ad_group_config = {
                 "description": "The name of the Ad Group",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad Group (ENABLED or PAUSED)",
@@ -393,6 +400,7 @@ create_ad_group_config = {
                 "description": "The name of the Ad Group",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad Group (ENABLED or PAUSED)",
@@ -421,6 +429,7 @@ update_ad_group_ad_config = {
             "clients_approval_message": properties_config["clients_approval_message"],
             "modification_question": properties_config["modification_question"],
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
             "status": {
                 "type": "string",
                 "description": "The status of the Ad (ENABLED or PAUSED)",
@@ -532,11 +541,7 @@ Amount is specified in micros, where one million is equivalent to one currency u
 Make sure that the client APPROVES the budget amount, otherwise you will be penalized!
 This is the MOST IMPORTANT parameter, because it determines how much money will be spent on the ads!""",
             },
-            "local_currency": {
-                "type": "string",
-                "description": """The currency which will be used for the budget amount.
-This value MUST be found in the 'customer' table! query example: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'""",
-            },
+            "local_currency": properties_config["local_currency"],
             "network_settings_target_google_search": {
                 "type": "boolean",
                 "description": "Whether ads will be served with google.com search results.",
@@ -584,6 +589,7 @@ update_ad_group_criterion_config = {
                 "description": "The status of the Ad (ENABLED or PAUSED)",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
             "keyword_match_type": properties_config["keyword_match_type"],
             "keyword_text": properties_config["keyword_text"],
         },
@@ -751,6 +757,10 @@ At the end of the message, inform the client that the modifications will be made
     "parameters": {
         "type": "object",
         "properties": {
+            "customer_id": {
+                "type": "string",
+                "description": "Id of the customer for whom the changes will be made",
+            },
             "resource_details": {
                 "type": "string",
                 "description": """Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
@@ -765,10 +775,18 @@ Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 
                 "type": "string",
                 "description": """Explains which changes you want to make and why you want to make them.
 I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
+You MUST also tell about all the fields which will be effected by the changes, e.g.:
+'status' will be changed from 'ENABLED' to 'PAUSED'
+Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '2000000')
+
+e.g. for AdGroupAd:
+'final_url' will be set to 'https://my-web-page.com'
+Hedlines will be extended wit a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
+
 Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.""",
             },
         },
-        "required": ["resource_details", "proposed_changes"],
+        "required": ["customer_id", "resource_details", "proposed_changes"],
     },
 }
 
@@ -860,6 +878,7 @@ create_keyword_for_ad_group_config = {
                 "description": "The modifier for the bids when the criterion matches.",
             },
             "cpc_bid_micros": properties_config["cpc_bid_micros"],
+            "local_currency": properties_config["local_currency"],
         },
         "required": [
             "customer_id",

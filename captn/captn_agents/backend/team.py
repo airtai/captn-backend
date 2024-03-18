@@ -2,7 +2,6 @@ import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import autogen
-from autogen.io.websockets import IOWebsockets
 from fastcore.basics import patch
 
 from .config import config_list_gpt_4
@@ -71,7 +70,6 @@ class Team:
         self,
         roles: List[Dict[str, str]],
         name: str,
-        iostream: Optional[IOWebsockets] = None,
         function_map: Optional[Dict[str, Callable[[Any], Any]]] = None,
         work_dir: str = "my_default_workdir",
         max_round: int = 80,
@@ -83,7 +81,6 @@ class Team:
         self.roles = roles
         self.initial_message: str
         self.name: str
-        self.iostream = iostream
         self.max_round = max_round
         self.seed = seed
         self.temperature = temperature
@@ -121,7 +118,7 @@ class Team:
             "temperature": temperature,
             "tools": tools,
             "stream": True,
-            # "request_timeout": 800,
+            "timeout": 600,
         }
         return llm_config
 
@@ -148,7 +145,6 @@ class Team:
             groupchat=self.groupchat,
             llm_config=manager_llm_config,
             is_termination_msg=self._is_termination_msg,
-            iostream=self.iostream,
         )
 
     def _create_members(self) -> None:
@@ -189,7 +185,6 @@ Do NOT try to finish the task until other team members give their opinion.
                 llm_config=self.llm_config,
                 system_message=system_message,
                 is_termination_msg=self._is_termination_msg,
-                iostream=self.iostream,
             )
 
         return autogen.AssistantAgent(
@@ -199,7 +194,6 @@ Do NOT try to finish the task until other team members give their opinion.
             is_termination_msg=self._is_termination_msg,
             code_execution_config={"work_dir": self.work_dir},
             function_map=self.function_map,
-            iostream=self.iostream,
         )
 
     @property
@@ -280,8 +274,11 @@ You can leverage access to the following resources:
     async def a_initiate_chat(self) -> None:
         await self.manager.a_initiate_chat(self.manager, message=self.initial_message)
 
+    def get_messages(self) -> Any:
+        return self.groupchat.messages
+
     def get_last_message(self, add_prefix: bool = True) -> str:
-        last_message = self.groupchat.messages[-1]["content"]
+        last_message = self.get_messages()[-1]["content"]
         if isinstance(last_message, dict):
             last_message = json.dumps(last_message)
         last_message = last_message.replace("PAUSE", "").replace("TERMINATE", "")
@@ -292,9 +289,7 @@ You can leverage access to the following resources:
         return last_message  # type: ignore
 
     def continue_chat(self, message: str) -> None:
-        message = f"Response from the client:\n{message}"
         self.manager.send(recipient=self.manager, message=message)
 
     async def a_continue_chat(self, message: str) -> None:
-        message = f"Response from the client:\n{message}"
         await self.manager.a_send(recipient=self.manager, message=message)

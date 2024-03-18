@@ -2,6 +2,7 @@ __all__ = ["DailyAnalysisTeam"]
 
 import ast
 import json
+import traceback
 from collections import defaultdict
 from datetime import datetime, timedelta
 from os import environ
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import requests
+from autogen.io import IOConsole, IOStream
 from markdownify import markdownify as md
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt
@@ -104,7 +106,7 @@ def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
         value2 = getattr(metrics2, key)
         if value == value2:
             return_metrics[key + "_increase"] = 0
-        elif value == 0 or value2 == 0:
+        elif value == 0 or value2 == 0 or value2 is None:
             return_metrics[key + "_increase"] = None
         else:
             return_metrics[key + "_increase"] = round(
@@ -1000,52 +1002,54 @@ def execute_daily_analysis(
     send_only_to_emails: Optional[List[str]] = None,
     date: Optional[str] = None,
 ) -> None:
-    if date is None:
-        date = (datetime.today().date() - timedelta(1)).isoformat()
-    print("Starting daily analysis.")
-    id_email_dict = json.loads(get_user_ids_and_emails())
+    iostream = IOConsole()
+    with IOStream.set_default(iostream):
+        if date is None:
+            date = (datetime.today().date() - timedelta(1)).isoformat()
+        print("Starting daily analysis.")
+        id_email_dict = json.loads(get_user_ids_and_emails())
 
-    # if send_only_to_emails is None:
-    #     send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
+        # if send_only_to_emails is None:
+        #     send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
 
-    for user_id, email in id_email_dict.items():
-        if send_only_to_emails is not None and email not in send_only_to_emails:
-            print(f"Skipping user_id: {user_id} - email {email}")
-            continue
-
-        try:
-            daily_analysis_team = None
-            conv_id = _get_conv_id(user_id=user_id, email=email)
-            login_url_response = get_login_url(user_id=user_id, conv_id=conv_id).get(
-                "login_url"
-            )
-            if not login_url_response == ALREADY_AUTHENTICATED:
-                # _send_login_url_via_email(
-                #     user_id=user_id,
-                #     conv_id=conv_id,
-                #     login_url_response=login_url_response,  # type: ignore
-                #     client_email=email,
-                # )
-                # Do not proceed with Google Ads analysis for non authenticated users
-                print(
-                    f"Skiiping user_id: {user_id} - email {email} beacuse he hasn't logged in yet."
-                )
-                _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+        for user_id, email in id_email_dict.items():
+            if send_only_to_emails is not None and email not in send_only_to_emails:
+                print(f"Skipping user_id: {user_id} - email {email}")
                 continue
 
-            # Always get the daily report for the previous day
-            daily_reports = get_daily_report(
-                date=date, user_id=user_id, conv_id=conv_id
-            )
+            try:
+                daily_analysis_team = None
+                conv_id = _get_conv_id(user_id=user_id, email=email)
+                login_url_response = get_login_url(
+                    user_id=user_id, conv_id=conv_id
+                ).get("login_url")
+                if not login_url_response == ALREADY_AUTHENTICATED:
+                    # _send_login_url_via_email(
+                    #     user_id=user_id,
+                    #     conv_id=conv_id,
+                    #     login_url_response=login_url_response,  # type: ignore
+                    #     client_email=email,
+                    # )
+                    # Do not proceed with Google Ads analysis for non authenticated users
+                    print(
+                        f"Skiiping user_id: {user_id} - email {email} beacuse he hasn't logged in yet."
+                    )
+                    _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+                    continue
 
-            (
-                daily_report_message,
-                main_email_template,
-            ) = construct_daily_report_email_from_template(
-                daily_reports=json.loads(daily_reports), date=date
-            )
+                # Always get the daily report for the previous day
+                daily_reports = get_daily_report(
+                    date=date, user_id=user_id, conv_id=conv_id
+                )
 
-            task = f"""
+                (
+                    daily_report_message,
+                    main_email_template,
+                ) = construct_daily_report_email_from_template(
+                    daily_reports=json.loads(daily_reports), date=date
+                )
+
+                task = f"""
 You need to perform Google Ads Analysis for date: {date}.
 
 Check which ads have the highest cost and which have the highest number of conversions.
@@ -1065,43 +1069,48 @@ Here is also a HTML summary of the daily report which will be sent to the client
 Please propose the next steps and send the email to the client.
 """
 
-            daily_analysis_team = DailyAnalysisTeam(
-                task=task,
-                user_id=user_id,
-                conv_id=conv_id,
-            )
-            daily_analysis_team.initiate_chat()
-            last_message = daily_analysis_team.get_last_message(add_prefix=False)
-
-            messages_list = daily_analysis_team.groupchat.messages
-            check_if_send_email = messages_list[-2]
-            if (
-                "function_call" in check_if_send_email
-                and check_if_send_email["function_call"]["name"] == "send_email"
-            ):
-                if len(messages_list) < 3:
-                    messages = "[]"
-                else:
-                    # Don't include the first message (task) and the last message (send_email)
-                    messages = json.dumps(messages_list[1:-1])
-                last_message_json = ast.literal_eval(last_message)
-                _update_chat_message_and_send_email(
+                daily_analysis_team = DailyAnalysisTeam(
+                    task=task,
                     user_id=user_id,
                     conv_id=conv_id,
-                    client_email=email,
-                    messages=messages,
-                    initial_message_in_chat=daily_report_message,
-                    main_email_template=main_email_template,
-                    proposed_user_action=last_message_json["proposed_user_action"],
                 )
-            else:
-                raise ValueError(
-                    f"Send email function is not called for user_id: {user_id} - email {email}!"
+                daily_analysis_team.initiate_chat()
+                last_message = daily_analysis_team.get_last_message(add_prefix=False)
+
+                messages_list = daily_analysis_team.get_messages()
+                check_if_send_email = messages_list[-2]
+                if (
+                    "tool_calls" in check_if_send_email
+                    and check_if_send_email["tool_calls"][0]["function"]["name"]
+                    == "send_email"
+                ):
+                    if len(messages_list) < 3:
+                        messages = "[]"
+                    else:
+                        # Don't include the first message (task) and the last message (send_email)
+                        messages = json.dumps(messages_list[1:-1])
+                    last_message_json = ast.literal_eval(last_message)
+                    _update_chat_message_and_send_email(
+                        user_id=user_id,
+                        conv_id=conv_id,
+                        client_email=email,
+                        messages=messages,
+                        initial_message_in_chat=daily_report_message,
+                        main_email_template=main_email_template,
+                        proposed_user_action=last_message_json["proposed_user_action"],
+                    )
+                else:
+                    raise ValueError(
+                        f"Send email function is not called for user_id: {user_id} - email {email}!"
+                    )
+            except Exception as e:
+                print(
+                    f"Daily analysis failed for user_id: {user_id} - email {email}.\nError: {e}"
                 )
-        except Exception as e:
-            print(e)
-            _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
-        finally:
-            if daily_analysis_team:
-                Team.pop_team(team_name=daily_analysis_team.name)
-    print("Daily analysis completed.")
+                traceback.print_stack()
+                traceback.print_exc()
+                _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+            finally:
+                if daily_analysis_team:
+                    Team.pop_team(team_name=daily_analysis_team.name)
+        print("Daily analysis completed.")

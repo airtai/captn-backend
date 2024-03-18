@@ -10,8 +10,8 @@ __all__ = ["CONFIG_LIST"]
 load_dotenv()
 
 
-api_key_sweden = os.getenv("AZURE_OPENAI_API_KEY_SWEDEN")
-api_base_sweden = os.getenv("AZURE_API_ENDPOINT")
+api_key = os.getenv("AZURE_OPENAI_API_KEY")
+api_base = os.getenv("AZURE_API_ENDPOINT")
 gpt_4_model_name = os.getenv("AZURE_GPT4_MODEL")
 gpt_3_5_model_name = os.getenv("AZURE_GPT35_MODEL")
 
@@ -21,17 +21,17 @@ openai.api_version = os.getenv("AZURE_API_VERSION")
 CONFIG_LIST = [
     {
         "model": gpt_4_model_name,
-        "api_key": api_key_sweden,
-        "api_base": api_base_sweden,
-        "base_url": api_base_sweden,
+        "api_key": api_key,
+        "api_base": api_base,
+        "base_url": api_base,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
     },
     {
         "model": gpt_3_5_model_name,
-        "api_key": api_key_sweden,
-        "api_base": api_base_sweden,
-        "base_url": api_base_sweden,
+        "api_key": api_key,
+        "api_base": api_base,
+        "base_url": api_base,
         "api_type": openai.api_type,
         "api_version": openai.api_version,
     },
@@ -44,5 +44,14 @@ for config in CONFIG_LIST:
         config.pop("api_base")
         # config.pop("api_type")
 
-config_list_gpt_3_5 = filter_config(CONFIG_LIST, {"model": "gpt-35-turbo-16k"})
-config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "airt-gpt4"})
+try:
+    config_list_gpt_3_5 = filter_config(CONFIG_LIST, {"model": "gpt-35-turbo-16k"})
+except Exception as e:
+    print(f"Error: {e}")
+    config_list_gpt_3_5 = []
+
+try:
+    config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "airt-gpt4"})
+except Exception as e:
+    print(f"Error: {e}")
+    config_list_gpt_4 = []

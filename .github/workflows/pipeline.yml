@@ -47,6 +47,11 @@ jobs:
         INFOBIP_API_KEY: "dummy_key"
         INFOBIP_BASE_URL: "dummy_url"
         DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads"
+        AZURE_API_VERSION: ${{ secrets.STAGING_AZURE_API_VERSION }}
+        AZURE_API_ENDPOINT: ${{ secrets.STAGING_AZURE_API_ENDPOINT }}
+        AZURE_GPT4_MODEL: ${{ secrets.STAGING_AZURE_GPT4_MODEL }}
+        AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
+        AZURE_OPENAI_API_KEY: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}
       steps:
         - uses: actions/checkout@v4
         - name: Set up Python
@@ -89,7 +94,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - run: docker pull ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME || docker pull ghcr.io/$GITHUB_REPOSITORY:dev || true
-            - run: docker build --build-arg PORT=$PORT -t ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME .
+            - run: docker build --build-arg PORT=$PORT -t ghcr.io/$GITHUB_REPOSITORY:${GITHUB_REF_NAME////-} .
             - name: Add tag latest if branch is main
               if: github.ref_name == 'main'
               run: docker tag ghcr.io/$GITHUB_REPOSITORY:$GITHUB_REF_NAME ghcr.io/$GITHUB_REPOSITORY:latest
@@ -119,7 +124,7 @@ jobs:
             AZURE_API_ENDPOINT: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_ENDPOINT || secrets.STAGING_AZURE_API_ENDPOINT }}
             AZURE_GPT4_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT4_MODEL || secrets.STAGING_AZURE_GPT4_MODEL }}
             AZURE_GPT35_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT35_MODEL || secrets.STAGING_AZURE_GPT35_MODEL }}
-            AZURE_OPENAI_API_KEY_SWEDEN: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY_SWEDEN || secrets.STAGING_AZURE_OPENAI_API_KEY_SWEDEN }}
+            AZURE_OPENAI_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY || secrets.STAGING_AZURE_OPENAI_API_KEY }}
             INFOBIP_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_API_KEY || secrets.STAGING_INFOBIP_API_KEY }}
             INFOBIP_BASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_BASE_URL || secrets.STAGING_INFOBIP_BASE_URL }}
             SSH_KEY: ${{ github.ref_name == 'main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}

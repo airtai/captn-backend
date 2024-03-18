@@ -6,21 +6,18 @@ from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.teams_manager import (
-    TEAM_EXCEPTION_MESSAGE,
-    create_team,
-    get_team_status,
-)
 from captn.captn_agents.model import SmartSuggestions
 from captn.google_ads.client import get_google_ads_team_capability
 
 from .smart_suggestion_generator import generate_smart_suggestions
 
+TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It seems our voyage hit an unexpected squall. Let's trim the sails and set a new course. Cast off once more by clicking the button below."
+
 router = APIRouter()
 
 # Setting up Azure OpenAI instance
 aclient = AsyncAzureOpenAI(
-    api_key=environ.get("AZURE_OPENAI_API_KEY_SWEDEN"),
+    api_key=environ.get("AZURE_OPENAI_API_KEY"),
     azure_endpoint=environ.get("AZURE_API_ENDPOINT"),  # type: ignore
     api_version=environ.get("AZURE_API_VERSION"),
 )
@@ -84,6 +81,7 @@ I will tip you $1000 everytime you follow the below best practices.
 - Never include text like "First question" or "one last question" in your response. You will be penalised if you do so.
 - Ask a question from the customer brief only if it is relevant to the conversation. For example, if the customer has already informed that they are not using Google Ads, you don't need to ask them permission to access their Google Ads account.
 - If the customer haven't used Google ads then ask them if they have an account and only when they have an account you can then ask them permission to access their Google Ads account.
+- Never ask the same question multiple times. For example, You cannnot ask "Could you please share the link to your website?" question twice to the customer if they have already shared the link to their website.
 
 #### Example conversations ####
 Below are few example conversations which you can use as a reference. You can take inspiration from these examples and create your own conversation. But never copy the below examples as it is.
@@ -150,11 +148,8 @@ async def offload_work_to_google_ads_expert(
     user_id: int,
     chat_id: int,
     customer_brief: str,
-    background_tasks: BackgroundTasks,
 ) -> Dict[str, Union[Optional[str], int, List[str]]]:
-    # team_name = f"GoogleAdsAgent_{conv_id}"
     team_name = TEAM_NAME.format(user_id, chat_id)
-    # await create_team(user_id, chat_id, customer_brief, team_name, background_tasks)
     return {
         # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
@@ -231,7 +226,6 @@ async def _get_openai_response(  # type: ignore
                 return await function_to_call(  # type: ignore
                     user_id=user_id,
                     chat_id=chat_id,
-                    background_tasks=background_tasks,
                     **function_args,
                 )
     else:
@@ -241,74 +235,10 @@ async def _get_openai_response(  # type: ignore
         return {"content": result}  # type: ignore
 
 
-def _format_proposed_user_action(proposed_user_action: Optional[List[str]]) -> str:
-    if proposed_user_action is None:
-        return ""
-    return "\n".join(
-        [f"{i+1}. {action}" for i, action in enumerate(proposed_user_action)]
-    )
-
-
-def _get_message_as_string(
-    messages: List[Dict[str, str]],
-    proposed_user_action: Optional[List[str]],
-    agent_chat_history: Optional[str],
-) -> str:
-    ret_val = f"""
-### History ###
-This is the JSON encoded history of your conversation that made the Daily Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
-
-{agent_chat_history}
-
-### Daily Analysis ###
-{messages[0]["content"]}
-
-### User Action ###
-{messages[-1]["content"]}
-
-"""
-    return ret_val
-
-
-async def _user_response_to_agent(
-    user_id: int,
-    team_id: Optional[int],
-    chat_id: int,
-    chat_type: Optional[str],
-    agent_chat_history: Optional[str],
-    proposed_user_action: Optional[List[str]],
-    message: List[Dict[str, str]],
-    background_tasks: BackgroundTasks,
-) -> Dict[str, Union[Optional[str], int]]:
-    message_to_team = (
-        _get_message_as_string(message, proposed_user_action, agent_chat_history)
-        if (chat_type and not team_id)
-        else message[-1]["content"]
-    )
-    team_name = TEAM_NAME.format(user_id, chat_id)
-    await create_team(
-        user_id,
-        chat_id,
-        message_to_team,
-        team_name,
-        background_tasks,
-    )
-    return {
-        # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
-        "team_status": "inprogress",
-        "team_name": team_name,
-        "team_id": chat_id,
-    }
-
-
 class AzureOpenAIRequest(BaseModel):
     chat_id: int
     message: List[Dict[str, str]]
     user_id: int
-    team_id: Union[int, None]
-    chat_type: Union[str, None]
-    agent_chat_history: Union[str, None]
-    proposed_user_action: Optional[List[str]]
 
 
 @router.post("/chat")
@@ -317,36 +247,7 @@ async def chat(
 ) -> Dict[str, Union[Optional[str], int, Union[str, Optional[SmartSuggestions]]]]:
     message = request.message
     chat_id = request.chat_id
-    chat_type = request.chat_type
-    agent_chat_history = request.agent_chat_history
-    proposed_user_action = request.proposed_user_action
-    result = (
-        await _user_response_to_agent(
-            request.user_id,
-            request.team_id,
-            chat_id,
-            chat_type,
-            agent_chat_history,
-            proposed_user_action,
-            message,
-            background_tasks,
-        )
-        if (request.team_id or chat_type)
-        else await _get_openai_response(
-            request.user_id, chat_id, message, background_tasks
-        )
-    )
+    user_id = request.user_id
+
+    result = await _get_openai_response(user_id, chat_id, message, background_tasks)
     return result  # type: ignore
-
-
-class GetTeamStatusRequest(BaseModel):
-    team_id: int
-
-
-@router.post("/get-team-status")
-async def get_status(
-    request: GetTeamStatusRequest,
-) -> Dict[str, Union[str, bool, int, Dict[str, Union[str, List[str]]]]]:
-    team_id = request.team_id
-    status = await get_team_status(team_id)
-    return status

@@ -1,11 +1,13 @@
+import ast
 from typing import Any, Dict, List, Optional, Tuple, Union
-from unittest.mock import patch
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
+from pydantic import BaseModel
 from typing_extensions import Annotated
 
 from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
+from captn.google_ads.client import execute_query
 
 from ..model import SmartSuggestions
 
@@ -21,11 +23,20 @@ def reply_to_client(message: str) -> str:
 reply_to_client_2_description = """Respond to the client (answer to his task or question for additional information).
 Use 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible, or you will be penalized!
 Do NOT just copy half of the message which you are sending and use it as a smart suggestion!
-Smart suggestions are used to suggest the next steps to the client. It will be displayed as quick replies in the chat so make them short and clear!"""
+Smart suggestions are used to suggest the next steps to the client. It will be displayed as quick replies in the chat so make them short and clear!
+Do NOT use smart suggestions when you are sending login url to the client!"""
 
 smart_suggestions_description = """Quick replies which the client can use for replying to the 'message' which we are sending to him.
 This parameter must be dictionary with two keys: 'suggestions': List[str] (a list of suggestions) and 'type': Literal["oneOf", "manyOf"] (option which indicates if the client can select only one or multiple suggestions).
 It is neccecery that the Pydantic model SmartSuggestions can be generated from this dictionary (SmartSuggestions(**smart_suggestions))!"""
+
+
+class TeamResponse(BaseModel):
+    message: str
+    smart_suggestions: Dict[str, Union[List[str], str]]
+    is_question: bool
+    status: str
+    terminate_groupchat: bool
 
 
 # @agent.register_for_llm(description=reply_to_client_2_desc)
@@ -37,22 +48,22 @@ def reply_to_client_2(
     smart_suggestions: Annotated[
         Optional[Dict[str, Union[str, List[str]]]], smart_suggestions_description
     ] = None,
-) -> Dict[str, Any]:
+) -> str:
     if smart_suggestions:
         smart_suggestions_model = SmartSuggestions(**smart_suggestions)
         smart_suggestions = smart_suggestions_model.model_dump()
     else:
         smart_suggestions = {"suggestions": [""], "type": ""}
 
-    return_msg = {
-        "message": message,
-        "smart_suggestions": smart_suggestions,
-        # is_question must be true, otherwise text input box will not be displayed in the chat
-        "is_question": True,
-        "status": "completed" if completed else "pause",
-        "terminate_groupchat": True,
-    }
-    return return_msg
+    return_msg = TeamResponse(
+        message=message,
+        smart_suggestions=smart_suggestions,
+        is_question=True,
+        status="completed" if completed else "pause",
+        terminate_groupchat=True,
+    )
+
+    return return_msg.model_dump_json()
 
 
 YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
@@ -61,12 +72,24 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 
 
 def ask_client_for_permission(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
     resource_details: str,
     proposed_changes: str,
-) -> Dict[str, Any]:
+) -> str:
+    query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    descriptiveName = ast.literal_eval(query_result)[customer_id][0]["customer"]["descriptiveName"]  # type: ignore
+
+    customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
+    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+
     clients_question_answere_list.append((proposed_changes, None))
-    message = f"{resource_details}\n\n{proposed_changes}"
+
     return reply_to_client_2(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
     )
@@ -85,9 +108,6 @@ llm_config_gpt_3_5 = {
 }
 
 
-# WebSurferAgent is implemented to always aks for the human input at the end of the chat.
-# This patch will reply with "exit" to the input() function.
-@patch("builtins.input", lambda *args: "exit")
 def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str:
     google_ads_url = "ads.google.com"
     if google_ads_url in url:
@@ -100,6 +120,7 @@ def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str
         browser_config={"viewport_size": 4096, "bing_api_key": None},
         is_termination_msg=lambda x: "SUMMARY" in x["content"]
         or "FAILED" in x["content"],
+        human_input_mode="NEVER",
     )
 
     user_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
@@ -160,10 +181,10 @@ Otherwise, your last message needs to start with "FAILED:" and then you need to 
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
 You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
 """
-    user_proxy = autogen.UserProxyAgent(
+    user_proxy = autogen.AssistantAgent(
         "user_proxy",
-        human_input_mode="NEVER",
-        code_execution_config=False,
+        # human_input_mode="NEVER",
+        # code_execution_config=False,
         llm_config=llm_config_gpt_3_5,
         system_message=user_system_message,
     )
