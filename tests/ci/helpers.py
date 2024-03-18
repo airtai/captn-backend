@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 def get_mocked_azure_env() -> Dict[str, str]:
     return {
-        "AZURE_OPENAI_API_KEY_SWEDEN": "dummy",
+        "AZURE_OPENAI_API_KEY": "dummy",
         "AZURE_API_ENDPOINT": "dummy",
         "AZURE_API_VERSION": "dummy",
         "AZURE_GPT4_MODEL": "airt-gpt4",

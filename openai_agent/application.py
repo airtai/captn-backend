@@ -17,7 +17,7 @@ router = APIRouter()
 
 # Setting up Azure OpenAI instance
 aclient = AsyncAzureOpenAI(
-    api_key=environ.get("AZURE_OPENAI_API_KEY_SWEDEN"),
+    api_key=environ.get("AZURE_OPENAI_API_KEY"),
     azure_endpoint=environ.get("AZURE_API_ENDPOINT"),  # type: ignore
     api_version=environ.get("AZURE_API_VERSION"),
 )
