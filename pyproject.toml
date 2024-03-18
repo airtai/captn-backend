@@ -99,7 +99,7 @@ agents = [
     "pandas>=2.1",
     "fastcore==1.5.29",
     "asyncer==0.0.5",
-    "pydantic==2.6.3",
+    "pydantic==2.6.4",
     "markdownify==0.11.6",
     "tenacity==8.2.3",
 ]
