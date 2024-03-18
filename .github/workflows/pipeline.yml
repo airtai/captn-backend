@@ -53,7 +53,7 @@ jobs:
         AZURE_API_ENDPOINT: ${{ secrets.STAGING_AZURE_API_ENDPOINT }}
         AZURE_GPT4_MODEL: ${{ secrets.STAGING_AZURE_GPT4_MODEL }}
         AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
-        AZURE_OPENAI_API_KEY_SWEDEN: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY_SWEDEN }}
+        AZURE_OPENAI_API_KEY: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}
       steps:
         - uses: actions/checkout@v4
         - name: Set up Python
@@ -128,7 +128,7 @@ jobs:
             AZURE_API_ENDPOINT: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_ENDPOINT || secrets.STAGING_AZURE_API_ENDPOINT }}
             AZURE_GPT4_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT4_MODEL || secrets.STAGING_AZURE_GPT4_MODEL }}
             AZURE_GPT35_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT35_MODEL || secrets.STAGING_AZURE_GPT35_MODEL }}
-            AZURE_OPENAI_API_KEY_SWEDEN: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY_SWEDEN || secrets.STAGING_AZURE_OPENAI_API_KEY_SWEDEN }}
+            AZURE_OPENAI_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY || secrets.STAGING_AZURE_OPENAI_API_KEY }}
             INFOBIP_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_API_KEY || secrets.STAGING_INFOBIP_API_KEY }}
             INFOBIP_BASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_BASE_URL || secrets.STAGING_INFOBIP_BASE_URL }}
             SSH_KEY: ${{ github.ref_name == 'main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}

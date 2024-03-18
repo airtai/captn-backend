@@ -118,7 +118,7 @@ class Team:
             "temperature": temperature,
             "tools": tools,
             "stream": True,
-            # "request_timeout": 800,
+            "timeout": 600,
         }
         return llm_config
 
