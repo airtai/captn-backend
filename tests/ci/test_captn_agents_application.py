@@ -1,9 +1,9 @@
+import os
 import unittest
 from tempfile import TemporaryDirectory
 from typing import Dict
 
 import autogen
-import httpx
 import openai
 import pytest
 from autogen.cache import Cache
@@ -186,12 +186,56 @@ class TestConsoleIOWithWebsockets:
 
     # @pytest.mark.skip(reason="TODO: run the application, mock google ads functions...")
     def test_team_chat(self) -> None:
-        original_request_f = httpx.Client().send
+        # original_request_f = httpx.Client().send
 
-        def side_effect(request: Request, **kwargs: Dict[str, str]) -> Response:
+        # def side_effect(request: Request, **kwargs: Dict[str, str]) -> Response:
 
+        #     print(f"side_effect.counter: {side_effect.counter}")  # type: ignore
+        #     if side_effect.counter > 3 and side_effect.counter < 8:  # type: ignore
+        #         side_effect.counter += 1  # type: ignore
+        #         b_r_error_message = "The operation was timeout."
+        #         b_r_request = Request(
+        #             method="POST",
+        #             url="",
+        #         )
+        #         b_r_response = Response(status_code=400, request=b_r_request)
+
+        #         # raise openai.APITimeoutError(request=request)
+        #         raise openai.APIStatusError(
+        #             message=b_r_error_message,
+        #             response=b_r_response,
+        #             body={
+        #                 "error": {
+        #                     "code": "Timeout",
+        #                     "message": "The operation was timeout.",
+        #                 }
+        #             },
+        #         )
+        #     else:
+        #         print("Real request is being made!!!")
+        #         side_effect.counter += 1  # type: ignore
+        #         try:
+        #             response = original_request_f(request=request, stream=kwargs.get("stream", False))  # type: ignore
+        #             return response
+        #         except Exception as e:
+        #             print(e)
+        #             raise e
+        # read os env
+        azure_endpoint = os.environ.get("AZURE_API_ENDPOINT")
+        version = os.environ.get("AZURE_API_VERSION")
+        api_key = os.environ.get("AZURE_OPENAI_API_KEY")
+        # original_request_f = openai._base_client.SyncAPIClient(version=version, base_url = base_url, _strict_response_validation=False)._request
+        original_request_f = openai.AzureOpenAI(
+            api_key=api_key,
+            api_version=version,
+            azure_endpoint=azure_endpoint,  # type: ignore
+            _strict_response_validation=False,
+        )._request
+
+        def side_effect(**kwargs: Dict[str, str]) -> Response:
+            print(f"Remaining retries: {kwargs['remaining_retries']}")
             print(f"side_effect.counter: {side_effect.counter}")  # type: ignore
-            if side_effect.counter < 3:  # type: ignore
+            if side_effect.counter < 2:  # type: ignore
                 side_effect.counter += 1  # type: ignore
                 b_r_error_message = "The operation was timeout."
                 b_r_request = Request(
@@ -215,14 +259,17 @@ class TestConsoleIOWithWebsockets:
                 print("Real request is being made!!!")
                 side_effect.counter += 1  # type: ignore
                 try:
-                    response = original_request_f(request=request, stream=kwargs.get("stream", False))  # type: ignore
+                    response = original_request_f(**kwargs)  # type: ignore
                     return response
                 except Exception as e:
                     print(e)
                     raise e
 
         side_effect.counter = 0  # type: ignore
-        with unittest.mock.patch("httpx.Client.send") as mock_request:
+        with unittest.mock.patch(
+            # "httpx.Client.send"
+            "openai._base_client.SyncAPIClient._request"
+        ) as mock_request:
             mock_request.side_effect = side_effect
             print("Testing setup", flush=True)
 
