@@ -3,6 +3,8 @@ from tempfile import TemporaryDirectory
 from typing import Dict
 
 import autogen
+import httpx
+import openai
 import pytest
 from autogen.cache import Cache
 from autogen.io.websockets import IOStream, IOWebsockets
@@ -182,70 +184,112 @@ class TestConsoleIOWithWebsockets:
         assert success_dict["success"]
         print("Test passed.", flush=True)
 
-    @pytest.mark.skip(reason="TODO: run the application, mock google ads functions...")
+    # @pytest.mark.skip(reason="TODO: run the application, mock google ads functions...")
     def test_team_chat(self) -> None:
-        print("Testing setup", flush=True)
+        original_request_f = httpx.Client().send
 
-        success_dict = {"success": False}
+        def side_effect(request: Request, **kwargs: Dict[str, str]) -> Response:
 
-        with IOWebsockets.run_server_in_thread(on_connect=on_connect, port=8765) as uri:
-            print(
-                f" - test_setup() with websocket server running on {uri}.", flush=True
-            )
+            print(f"side_effect.counter: {side_effect.counter}")  # type: ignore
+            if side_effect.counter < 3:  # type: ignore
+                side_effect.counter += 1  # type: ignore
+                b_r_error_message = "The operation was timeout."
+                b_r_request = Request(
+                    method="POST",
+                    url="",
+                )
+                b_r_response = Response(status_code=400, request=b_r_request)
 
-            request = CaptnAgentRequest(
-                message="Business: airt.ai\nGoal: Increase brand awareness\nCurrent Situation: Running digital marketing campaigns\nWebsite: airt.ai\nDigital Marketing Objectives: Increase brand visibility, reach a wider audience, and improve brand recognition\nNext Steps: Analyze current Google Ads campaigns, identify opportunities for optimization, and create new strategies to increase brand awareness\nAny Other Information Related to Customer Brief: N/A",
-                user_id=1,
-                conv_id=1,
-                all_messages=[
-                    {
-                        "role": "assistant",
-                        "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                # raise openai.APITimeoutError(request=request)
+                raise openai.APIStatusError(
+                    message=b_r_error_message,
+                    response=b_r_response,
+                    body={
+                        "error": {
+                            "code": "Timeout",
+                            "message": "The operation was timeout.",
+                        }
                     },
-                    {
-                        "role": "user",
-                        "content": "I want to Remove 'Free' keyword because it is not performing well",
-                    },
-                ],
-                agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
-                is_continue_daily_analysis=False,
-                retry=True,
-            )
-            with ws_connect(uri) as websocket:
-                print(f" - Connected to server on {uri}", flush=True)
+                )
+            else:
+                print("Real request is being made!!!")
+                side_effect.counter += 1  # type: ignore
+                try:
+                    response = original_request_f(request=request, stream=kwargs.get("stream", False))  # type: ignore
+                    return response
+                except Exception as e:
+                    print(e)
+                    raise e
 
-                print(" - Sending message to server.", flush=True)
-                # websocket.send("2+2=?")
-                websocket.send(request.model_dump_json())
+        side_effect.counter = 0  # type: ignore
+        with unittest.mock.patch("httpx.Client.send") as mock_request:
+            mock_request.side_effect = side_effect
+            print("Testing setup", flush=True)
 
-                while True:
-                    message = websocket.recv()
-                    try:
-                        team_response = TeamResponse.model_validate_json(message)
-                        assert team_response.terminate_groupchat
-                        return
-                    except Exception:
-                        pass
+            success_dict = {"success": False}
 
-                    message = (
-                        message.decode("utf-8")
-                        if isinstance(message, bytes)
-                        else message
-                    )
-                    # # drop the newline character
-                    # if message.endswith("\n"):
-                    #     message = message[:-1]
+            with IOWebsockets.run_server_in_thread(
+                on_connect=on_connect, port=8765
+            ) as uri:
+                print(
+                    f" - test_setup() with websocket server running on {uri}.",
+                    flush=True,
+                )
 
-                    # print("This was the message: ")
-                    print(message, end="", flush=True)
+                request = CaptnAgentRequest(
+                    message="Business: airt.ai\nGoal: Increase brand awareness\nCurrent Situation: Running digital marketing campaigns\nWebsite: airt.ai\nDigital Marketing Objectives: Increase brand visibility, reach a wider audience, and improve brand recognition\nNext Steps: Analyze current Google Ads campaigns, identify opportunities for optimization, and create new strategies to increase brand awareness\nAny Other Information Related to Customer Brief: N/A",
+                    user_id=1,
+                    conv_id=1,
+                    all_messages=[
+                        {
+                            "role": "assistant",
+                            "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                        },
+                        {
+                            "role": "user",
+                            "content": "I want to Remove 'Free' keyword because it is not performing well",
+                        },
+                    ],
+                    agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+                    is_continue_daily_analysis=False,
+                    retry=True,
+                )
+                with ws_connect(uri) as websocket:
+                    # patch openai._base_client._request
+                    print(f" - Connected to server on {uri}", flush=True)
 
-                    if "TERMINATE" in message:
-                        print()
-                        print(" - Received TERMINATE message. Exiting.", flush=True)
-                        break
+                    print(" - Sending message to server.", flush=True)
+                    # websocket.send("2+2=?")
+                    websocket.send(request.model_dump_json())
 
-        assert success_dict["success"]
-        print("Test passed.", flush=True)
+                    while True:
+                        message = websocket.recv()
+                        try:
+                            team_response = TeamResponse.model_validate_json(message)
+                            assert team_response.terminate_groupchat
+                            return
+                        except Exception:
+                            pass
+
+                        message = (
+                            message.decode("utf-8")
+                            if isinstance(message, bytes)
+                            else message
+                        )
+                        # # drop the newline character
+                        # if message.endswith("\n"):
+                        #     message = message[:-1]
+
+                        # print("This was the message: ")
+                        print(message, end="", flush=True)
+
+                        if "TERMINATE" in message:
+                            print()
+                            print(" - Received TERMINATE message. Exiting.", flush=True)
+                            break
+
+            assert success_dict["success"]
+            print("Test passed.", flush=True)
 
     def test_try_to_continue_the_conversation_on_exceptions(self) -> None:
         print("Testing setup", flush=True)
