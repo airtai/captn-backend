@@ -44,7 +44,7 @@ $ssh_command "if [ \$(stat -c%s \"$log_file\") -ge 1073741824 ]; then echo 'Log 
 
 echo "INFO: stopping already running docker containers"
 # $ssh_command "docker stop $container_name || echo 'No containers available to stop'"
-$ssh_command "docker-compose down || echo 'No containers available to stop'"
+$ssh_command "export PORT='$PORT' && docker-compose down || echo 'No containers available to stop'"
 $ssh_command "docker container prune -f || echo 'No stopped containers to delete'"
 
 echo "INFO: SCPing docker-compose.yaml"
@@ -59,8 +59,6 @@ echo "Deleting old image"
 $ssh_command "docker system prune -f || echo 'No images to delete'"
 
 echo "INFO: starting docker containers"
-
-$ssh_command "export PORT='$PORT' && echo 'PORT is' && echo $PORT"
 
 $ssh_command "export GITHUB_REPOSITORY='$GITHUB_REPOSITORY' TAG='$TAG' container_name='$container_name' \
 	PORT='$PORT' DATABASE_URL='$DATABASE_URL' CLIENT_SECRET='$CLIENT_SECRET' \

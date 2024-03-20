@@ -47,7 +47,7 @@ services:
   prometheus:  # nosemgrep
     image: prom/prometheus:v2.48.1
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - ./etc/prometheus:/workspace
     command:
