@@ -208,8 +208,12 @@ def google_ads_create_update(
     ad: BaseModel,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
     endpoint: str = "/update-ad-group-ad",
+    skip_fields_check: bool = False,
 ) -> Union[Dict[str, Any], str]:
-    error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    if not skip_fields_check:
+        error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    else:
+        error_msg = ""
     error_msg = _check_for_client_approval(
         error_msg=error_msg,
         clients_approval_message=clients_approval_message,

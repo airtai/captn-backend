@@ -1,18 +1,25 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
+
+from annotated_types import Len
+from pydantic import BaseModel, Field, StringConstraints
+from typing_extensions import Annotated
 
 from captn.captn_agents.backend.google_ads_team import (
     GoogleAdsTeam,
     get_campaign_creation_team_shared_functions,
 )
 from captn.captn_agents.backend.team import Team
+from captn.google_ads.client import google_ads_create_update
 
 from .function_configs import (
     ask_client_for_permission_config,
     change_google_account_config,
+    create_ad_group_with_ad_and_keywords_config,
     create_campaign_config,
     execute_query_config,
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
+    properties_config,
     reply_to_client_2_config,
 )
 
@@ -26,6 +33,7 @@ class CampaignCreationTeam(Team):
         get_info_from_the_web_page_config,
         list_accessible_customers_config,
         reply_to_client_2_config,
+        create_ad_group_with_ad_and_keywords_config,
     ]
 
     _default_roles = [
@@ -155,6 +163,57 @@ as they will be featured on a webpage to ensure a user-friendly presentation.
 Here is a list of things which you CAN do:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - create campaigns
+- Create Ad Group, Ad and keywords by using the following command create_ad_group_with_ad_and_keywords
+
+here is an example of how to use the create_ad_group_with_ad_and_keywords command:
+ad_group_with_ad_and_keywords must be a json with the following structure:
+{
+  "customer_id": "1111",
+  "campaign_id": "1212",
+  "ad_group": {
+    "customer_id": null,
+    "status": "ENABLED",
+    "campaign_id": null,
+    "name": "ad_group",
+    "cpc_bid_micros": null
+  },
+  "ad_group_ad": {
+    "customer_id": null,
+    "status": "ENABLED",
+    "ad_group_id": null,
+    "final_url": "https://www.example.com",
+    "headlines": [
+      "headline1",
+      "headline2",
+      "headline3"
+    ],
+    "descriptions": [
+      "description1",
+      "description2"
+    ],
+    "path1": null,
+    "path2": null
+  },
+  "keywords": [
+    {
+      "customer_id": null,
+      "status": "ENABLED",
+      "ad_group_id": null,
+      "keyword_text": "keyword1",
+      "keyword_match_type": "EXACT"
+    },
+    {
+      "customer_id": null,
+      "status": "ENABLED",
+      "ad_group_id": null,
+      "keyword_text": "keyword2",
+      "keyword_match_type": "EXACT"
+    }
+  ]
+}
+and two additional parameters:
+- clients_approval_message: "yes"
+- modification_question: "Can I make the following changes to your account?"
 
 
 VERY IMPORTANT NOTES:
@@ -186,5 +245,159 @@ def _get_function_map(
         )
     )
 
-    # TODO: Add additional functions here
-    return campaign_creation_team_shared_function_map
+    function_map = {
+        "create_ad_group_with_ad_and_keywords": lambda ad_group_with_ad_and_keywords, clients_approval_message, modification_question: create_ad_group_with_ad_and_keywords(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+        )
+    }
+    function_map.update(campaign_creation_team_shared_function_map)
+    return function_map
+
+
+class AdBase(BaseModel):
+    customer_id: Optional[
+        Annotated[
+            str, Field(..., description=properties_config["customer_id"]["description"])
+        ]
+    ] = None
+    status: Annotated[
+        Literal["ENABLED", "PAUSED"],
+        Field(..., description="The status of the resource (ENABLED or PAUSED)"),
+    ]
+
+
+class AdGroupAd(AdBase):
+    ad_group_id: Optional[
+        Annotated[str, Field(..., description="Always set this field to None")]
+    ] = None
+    final_url: Annotated[
+        str, Field(..., description=properties_config["final_url"]["description"])
+    ]
+    headlines: Annotated[
+        List[Annotated[str, StringConstraints(max_length=30)]],
+        Len(min_length=3, max_length=15),
+    ]
+    descriptions: Annotated[
+        List[Annotated[str, StringConstraints(max_length=90)]],
+        Len(min_length=2, max_length=4),
+    ]
+    path1: Optional[
+        Annotated[
+            str, Field(..., description=properties_config["path1"]["description"])
+        ]
+    ] = None
+    path2: Optional[
+        Annotated[
+            str, Field(..., description=properties_config["path2"]["description"])
+        ]
+    ] = None
+
+
+class AdGroupCriterion(AdBase):
+    ad_group_id: Optional[
+        Annotated[str, Field(..., description="Always set this field to None")]
+    ] = None
+    keyword_text: Annotated[
+        str, Field(..., description=properties_config["keyword_text"]["description"])
+    ]
+    keyword_match_type: Annotated[
+        Literal["EXACT", "BROAD", "PHRASE"],
+        Field(..., description=properties_config["keyword_match_type"]["description"]),
+    ]
+
+
+class AdGroup(AdBase):
+    campaign_id: Annotated[
+        Optional[str],
+        Field(..., description=properties_config["campaign_id"]["description"]),
+    ] = None
+    name: Annotated[str, Field(..., description="The name of the Ad Group")]
+    cpc_bid_micros: Annotated[
+        Optional[int], properties_config["cpc_bid_micros"]["description"]
+    ] = None
+
+
+class AdGroupWithAdAndKeywords(BaseModel):
+    customer_id: Annotated[
+        str, Field(..., description=properties_config["customer_id"]["description"])
+    ]
+    campaign_id: Annotated[
+        str, Field(..., description=properties_config["campaign_id"]["description"])
+    ]
+    ad_group: AdGroup
+    ad_group_ad: AdGroupAd
+    keywords: List[AdGroupCriterion]
+
+
+def _get_resource_id_from_response(response: str) -> str:
+    return response.split("/")[-1].replace(".", "")
+
+
+def create_ad_group_with_ad_and_keywords(
+    user_id: int,
+    conv_id: int,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    # ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+    ad_group_with_ad_and_keywords: Dict[str, Any],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]
+    ],
+    modification_question: Annotated[str, properties_config["modification_question"]],
+) -> str:
+    ad_group_with_ad_and_keywords_model = AdGroupWithAdAndKeywords(
+        **ad_group_with_ad_and_keywords
+    )
+    ad_group = ad_group_with_ad_and_keywords_model.ad_group
+    ad_group.customer_id = ad_group_with_ad_and_keywords_model.customer_id
+    ad_group.campaign_id = ad_group_with_ad_and_keywords_model.campaign_id
+
+    ad_group_response = google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=ad_group,
+        endpoint="/create-ad-group",
+        skip_fields_check=True,
+    )
+    response = f"Ad group: {ad_group_response}\n"
+    ad_group_id = _get_resource_id_from_response(ad_group_response)  # type: ignore
+
+    ad_group_ad = ad_group_with_ad_and_keywords_model.ad_group_ad
+    ad_group_ad.customer_id = ad_group_with_ad_and_keywords_model.customer_id
+    ad_group_ad.ad_group_id = ad_group_id
+
+    ad_group_ad_response = google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answere_list=clients_question_answere_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=ad_group_ad,
+        endpoint="/create-ad-group-ad",
+        skip_fields_check=True,
+    )
+    response += f"Ad group ad: {ad_group_ad_response}\n"
+
+    for keyword in ad_group_with_ad_and_keywords_model.keywords:
+        keyword.customer_id = ad_group_with_ad_and_keywords_model.customer_id
+        keyword.ad_group_id = ad_group_id
+        keyword_response = google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad=keyword,
+            endpoint="/add-keywords-to-ad-group",
+            skip_fields_check=True,
+        )
+        response += f"Keyword: {keyword_response}\n"
+
+    return response

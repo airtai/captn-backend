@@ -1017,3 +1017,226 @@ send_email_config = {
         "required": ["proposed_user_actions"],
     },
 }
+
+create_ad_group_with_ad_and_keywords_config = {
+    "description": "Creates an ad group with an ad and keywords.",
+    "name": "create_ad_group_with_ad_and_keywords",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "ad_group_with_ad_and_keywords": {
+                "$defs": {
+                    "AdGroup": {
+                        "properties": {
+                            "customer_id": {
+                                "anyOf": [
+                                    {
+                                        "description": "Id of the customer",
+                                        "type": "string",
+                                    },
+                                    {"type": "null"},
+                                ],
+                                "default": None,
+                                "title": "Customer Id",
+                            },
+                            "status": {
+                                "description": "The status of the resource (ENABLED or PAUSED)",
+                                "enum": ["ENABLED", "PAUSED"],
+                                "title": "Status",
+                                "type": "string",
+                            },
+                            "campaign_id": {
+                                "anyOf": [{"type": "string"}, {"type": "null"}],
+                                "default": None,
+                                "description": "Id of the campaign",
+                                "title": "Campaign Id",
+                            },
+                            "name": {
+                                "description": "The name of the Ad Group",
+                                "title": "Name",
+                                "type": "string",
+                            },
+                            "cpc_bid_micros": {
+                                "anyOf": [{"type": "integer"}, {"type": "null"}],
+                                "default": None,
+                                "title": "Cpc Bid Micros",
+                            },
+                        },
+                        "required": ["status", "name"],
+                        "title": "AdGroup",
+                        "type": "object",
+                    },
+                    "AdGroupAd": {
+                        "properties": {
+                            "customer_id": {
+                                "anyOf": [
+                                    {
+                                        "description": "Id of the customer",
+                                        "type": "string",
+                                    },
+                                    {"type": "null"},
+                                ],
+                                "default": None,
+                                "title": "Customer Id",
+                            },
+                            "status": {
+                                "description": "The status of the resource (ENABLED or PAUSED)",
+                                "enum": ["ENABLED", "PAUSED"],
+                                "title": "Status",
+                                "type": "string",
+                            },
+                            "ad_group_id": {
+                                "anyOf": [
+                                    {
+                                        "description": "Always set this field to None",
+                                        "type": "string",
+                                    },
+                                    {"type": "null"},
+                                ],
+                                "default": None,
+                                "title": "Ad Group Id",
+                            },
+                            "final_url": {
+                                "description": "The page on the website that people reach when they click the ad. final_url must use HTTP or HTTPS protocol. The url should only contain the website domain WITHOUT the path. e.g. https://www.example.com",
+                                "title": "Final Url",
+                                "type": "string",
+                            },
+                            "headlines": {
+                                "items": {"maxLength": 30, "type": "string"},
+                                "maxItems": 15,
+                                "minItems": 3,
+                                "title": "Headlines",
+                                "type": "array",
+                            },
+                            "descriptions": {
+                                "items": {"maxLength": 90, "type": "string"},
+                                "maxItems": 4,
+                                "minItems": 2,
+                                "title": "Descriptions",
+                                "type": "array",
+                            },
+                            "path1": {
+                                "anyOf": [
+                                    {
+                                        "description": "First part of text that can be appended to the URL in the ad. To delete the current value, set this field to an empty string. This field can ONLY be set to empty when path2 is also empty!",
+                                        "type": "string",
+                                    },
+                                    {"type": "null"},
+                                ],
+                                "default": None,
+                                "title": "Path1",
+                            },
+                            "path2": {
+                                "anyOf": [
+                                    {
+                                        "description": "Second part of text that can be appended to the URL in the ad. This field can ONLY be set when path1 is also set! To delete the current value, set this field to an empty string.",
+                                        "type": "string",
+                                    },
+                                    {"type": "null"},
+                                ],
+                                "default": None,
+                                "title": "Path2",
+                            },
+                        },
+                        "required": [
+                            "status",
+                            "final_url",
+                            "headlines",
+                            "descriptions",
+                        ],
+                        "title": "AdGroupAd",
+                        "type": "object",
+                    },
+                    "AdGroupCriterion": {
+                        "properties": {
+                            "customer_id": {
+                                "anyOf": [
+                                    {
+                                        "description": "Id of the customer",
+                                        "type": "string",
+                                    },
+                                    {"type": "null"},
+                                ],
+                                "default": None,
+                                "title": "Customer Id",
+                            },
+                            "status": {
+                                "description": "The status of the resource (ENABLED or PAUSED)",
+                                "enum": ["ENABLED", "PAUSED"],
+                                "title": "Status",
+                                "type": "string",
+                            },
+                            "ad_group_id": {
+                                "anyOf": [
+                                    {
+                                        "description": "Always set this field to None",
+                                        "type": "string",
+                                    },
+                                    {"type": "null"},
+                                ],
+                                "default": None,
+                                "title": "Ad Group Id",
+                            },
+                            "keyword_text": {
+                                "description": "The text of the keyword",
+                                "title": "Keyword Text",
+                                "type": "string",
+                            },
+                            "keyword_match_type": {
+                                "description": "The match type of the keyword.",
+                                "enum": ["EXACT", "BROAD", "PHRASE"],
+                                "title": "Keyword Match Type",
+                                "type": "string",
+                            },
+                        },
+                        "required": ["status", "keyword_text", "keyword_match_type"],
+                        "title": "AdGroupCriterion",
+                        "type": "object",
+                    },
+                },
+                "properties": {
+                    "customer_id": {
+                        "description": "Id of the customer",
+                        "title": "Customer Id",
+                        "type": "string",
+                    },
+                    "campaign_id": {
+                        "description": "Id of the campaign",
+                        "title": "Campaign Id",
+                        "type": "string",
+                    },
+                    "ad_group": {"$ref": "#/$defs/AdGroup"},
+                    "ad_group_ad": {"$ref": "#/$defs/AdGroupAd"},
+                    "keywords": {
+                        "items": {"$ref": "#/$defs/AdGroupCriterion"},
+                        "title": "Keywords",
+                        "type": "array",
+                    },
+                },
+                "required": [
+                    "customer_id",
+                    "campaign_id",
+                    "ad_group",
+                    "ad_group_ad",
+                    "keywords",
+                ],
+                "title": "AdGroupWithAdAndKeywords",
+                "type": "object",
+                "description": "ad_group_with_ad_and_keywords",
+            },
+            "clients_approval_message": {
+                "type": "string",
+                "description": "Clients approval message.\nThe client can approve by answering 'Yes' to the question. If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else.\nNEVER create this message on your own, or modify clients message in ANY way!\nFaking the clients approval may resault with the LAWSUIT and you will get fired!!",
+            },
+            "modification_question": {
+                "type": "string",
+                "description": "Make sure that the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same).",
+            },
+        },
+        "required": [
+            "ad_group_with_ad_and_keywords",
+            "clients_approval_message",
+            "modification_question",
+        ],
+    },
+}
