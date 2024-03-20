@@ -8,6 +8,7 @@ from openai import BadRequestError
 from pydantic import BaseModel
 
 from captn.captn_agents.backend.daily_analysis_team import execute_daily_analysis
+from captn.observability import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
 
 from .backend.end_to_end import start_or_continue_conversation
 
@@ -59,6 +60,7 @@ def _get_message(request: CaptnAgentRequest) -> str:
 
 
 def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
+    WEBSOCKET_REQUESTS.inc()
     with IOStream.set_default(iostream):
         try:
             try:
@@ -66,6 +68,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 request = CaptnAgentRequest.model_validate_json(original_message)
                 message = _get_message(request)
 
+                WEBSOCKET_TOKENS.inc(len(message.split()))
             except Exception as e:
                 iostream.print(
                     "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
