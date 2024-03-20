@@ -6,6 +6,8 @@ __all__ = [
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from captn.captn_agents.backend.campaign_creation_team import CampaignCreationTeam
+
 from .google_ads_team import GoogleAdsTeam
 from .initial_team import InitialTeam
 from .team import Team
@@ -46,29 +48,6 @@ When you want to ask the user a question directly or return to him a summary of 
     },
 ]
 
-banking_initial_team_roles_never = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a proxy between the client and the Account_manager. do NOT suggest any code or execute the code by yourself.""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in the bank.",
-    },
-]
-
-banking_initial_team_roles_always = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a proxy between client and the Account_manager. When you want to ask the client a question or return to him a summary of what has been done,
-    use the 'reply_to_client' command. The message which will be sent to the user must ALWAYS be written in CROATIAN language.""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in the bank.",
-    },
-]
-
 
 roles_dictionary = {
     "initial_team": {
@@ -81,6 +60,13 @@ roles_dictionary = {
             "ALWAYS": None,
         },
         "class": GoogleAdsTeam,
+    },
+    "campaign_creation_team": {
+        "human_input_mode": {
+            "NEVER": None,
+            "ALWAYS": None,
+        },
+        "class": CampaignCreationTeam,
     },
 }
 
