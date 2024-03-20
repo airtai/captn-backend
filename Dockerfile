@@ -29,8 +29,9 @@ COPY migrations ./migrations
 COPY google_ads ./google_ads
 COPY openai_agent ./openai_agent
 COPY captn ./captn
+COPY etc ./etc
 COPY templates ./templates
-COPY application.py scripts/* schema.prisma pyproject.toml ./
+COPY application.py scripts/* schema.prisma pyproject.toml uvicorn-log-config.json ./
 RUN pip install -e ".[dev]"
 
 EXPOSE ${PORT}
