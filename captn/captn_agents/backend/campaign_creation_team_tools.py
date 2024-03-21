@@ -1,4 +1,4 @@
-from typing import Callable, List, Literal, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 from annotated_types import Len
 from autogen.agentchat import AssistantAgent, ConversableAgent
@@ -94,14 +94,14 @@ def _get_resource_id_from_response(response: str) -> str:
     return response.split("/")[-1].replace(".", "")
 
 
-def create_ad_group_with_ad_and_keywords(
+def _create_ad_group(
     user_id: int,
     conv_id: int,
     clients_question_answer_list: List[Tuple[str, Optional[str]]],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
     clients_approval_message: str,
     modification_question: str,
-) -> str:
+) -> Union[Dict[str, Any], str]:
     ad_group = ad_group_with_ad_and_keywords.ad_group
     ad_group.customer_id = ad_group_with_ad_and_keywords.customer_id
     ad_group.campaign_id = ad_group_with_ad_and_keywords.campaign_id
@@ -116,9 +116,19 @@ def create_ad_group_with_ad_and_keywords(
         endpoint="/create-ad-group",
         skip_fields_check=True,
     )
-    response = f"Ad group: {ad_group_response}\n"
-    ad_group_id = _get_resource_id_from_response(ad_group_response)  # type: ignore
 
+    return ad_group_response
+
+
+def _create_ad_group_ad(
+    user_id: int,
+    conv_id: int,
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+    clients_approval_message: str,
+    modification_question: str,
+    ad_group_id: str,
+) -> Union[Dict[str, Any], str]:
     ad_group_ad = ad_group_with_ad_and_keywords.ad_group_ad
     ad_group_ad.customer_id = ad_group_with_ad_and_keywords.customer_id
     ad_group_ad.ad_group_id = ad_group_id
@@ -133,22 +143,103 @@ def create_ad_group_with_ad_and_keywords(
         endpoint="/create-ad-group-ad",
         skip_fields_check=True,
     )
-    response += f"Ad group ad: {ad_group_ad_response}\n"
+    return ad_group_ad_response
 
+
+def _create_ad_group_keyword(
+    user_id: int,
+    conv_id: int,
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    ad_group_keyword: AdGroupCriterionForCreation,
+    clients_approval_message: str,
+    modification_question: str,
+    ad_group_id: str,
+    customer_id: str,
+) -> Union[Dict[str, Any], str]:
+    ad_group_keyword.customer_id = customer_id
+    ad_group_keyword.ad_group_id = ad_group_id
+    keyword_response = google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=ad_group_keyword,
+        endpoint="/add-keywords-to-ad-group",
+        skip_fields_check=True,
+    )
+    return keyword_response
+
+
+def _create_ad_group_keywords(
+    user_id: int,
+    conv_id: int,
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+    clients_approval_message: str,
+    modification_question: str,
+    ad_group_id: str,
+) -> Union[Dict[str, Any], str]:
+    response = ""
     for keyword in ad_group_with_ad_and_keywords.keywords:
-        keyword.customer_id = ad_group_with_ad_and_keywords.customer_id
-        keyword.ad_group_id = ad_group_id
-        keyword_response = google_ads_create_update(
+        keyword_response = _create_ad_group_keyword(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answer_list=clients_question_answer_list,
+            ad_group_keyword=keyword,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
-            ad=keyword,
-            endpoint="/add-keywords-to-ad-group",
-            skip_fields_check=True,
+            ad_group_id=ad_group_id,
+            customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
-        response += f"Keyword: {keyword_response}\n"
+        response += f"Keyword: {keyword_response}\n"  # type: ignore
+    return response
+
+
+def create_ad_group_with_ad_and_keywords(
+    user_id: int,
+    conv_id: int,
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+    clients_approval_message: str,
+    modification_question: str,
+) -> Union[Dict[str, Any], str]:
+    # TODO: If any of the creation fails, we should rollback the changes
+    # and return the error message (delete ad_group, other resources will be deleted automatically)
+    ad_group_response = _create_ad_group(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+    )
+    if isinstance(ad_group_response, dict):
+        return ad_group_response
+    response = f"Ad group: {ad_group_response}\n"
+    ad_group_id = _get_resource_id_from_response(ad_group_response)
+
+    ad_group_ad_response = _create_ad_group_ad(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad_group_id=ad_group_id,
+    )
+    response += f"Ad group ad: {ad_group_ad_response}\n"
+
+    ad_group_keywords_response = _create_ad_group_keywords(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad_group_id=ad_group_id,
+    )
+    response += ad_group_keywords_response  # type: ignore
 
     return response
 
@@ -196,7 +287,7 @@ def add_create_ad_group_with_ad_and_keywords_to_agent(
         ],
         clients_approval_message: Annotated[str, clients_approval_message_desc],
         modification_question: Annotated[str, modification_question_desc],
-    ) -> str:
+    ) -> Union[Dict[str, Any], str]:
         return create_ad_group_with_ad_and_keywords(
             user_id=user_id,
             conv_id=conv_id,

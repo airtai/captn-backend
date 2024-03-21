@@ -92,30 +92,38 @@ class TestCampaignCreationTeam:
         )
 
         with unittest.mock.patch(
-            "captn.captn_agents.backend.google_ads_team.list_accessible_customers"
+            "captn.captn_agents.backend.google_ads_team.list_accessible_customers",
         ) as mock_list_accessible_customers:
             with unittest.mock.patch(
                 "captn.captn_agents.backend.google_ads_team.ask_client_for_permission"
             ) as mock_ask_client_for_permission:
-
                 with unittest.mock.patch(
-                    "captn.captn_agents.backend.campaign_creation_team_tools.google_ads_create_update"
-                ) as mock_google_ads_create_update:
-                    mock_list_accessible_customers.return_value = ["1111"]
-                    mock_ask_client_for_permission.return_value = "yes"
-                    # create ad group and ad
-                    side_effect = [
-                        "Created customers/1212/adGroups/3434.",
-                        "Created customers/1212/adGroupAds/3434~5656.",
-                    ]
-                    # create 10 keywords
-                    for i in range(10):
-                        side_effect.append(
-                            f"Created customers/1212/adGroupCriteria/3434~{i}."
-                        )
-                    mock_google_ads_create_update.side_effect = side_effect
+                    "captn.captn_agents.backend.campaign_creation_team_tools._create_ad_group"
+                ) as mock_create_ad_group:
+                    with unittest.mock.patch(
+                        "captn.captn_agents.backend.campaign_creation_team_tools._create_ad_group_ad"
+                    ) as mock_create_ad_group_ad:
+                        with unittest.mock.patch(
+                            "captn.captn_agents.backend.campaign_creation_team_tools._create_ad_group_keyword"
+                        ) as mock_create_ad_group_keyword:
 
-                    campaign_creation_team.initiate_chat()
+                            mock_list_accessible_customers.return_value = ["1111"]
+                            mock_ask_client_for_permission.return_value = "yes"
+                            mock_create_ad_group.return_value = (
+                                "Created customers/1212/adGroups/3434."
+                            )
+                            mock_create_ad_group_ad.return_value = (
+                                "Created customers/1212/adGroupAds/3434~5656."
+                            )
+                            # create 10 keywords
+                            side_effect = [
+                                f"Created customers/1212/adGroupCriteria/3434~{i}."
+                                for i in range(10)
+                            ]
+                            mock_create_ad_group_keyword.side_effect = side_effect
 
-                    # At least 3 calls to google_ads_create_update: 1 ad group, 1 ad, 1 (or more) keywords
-                    assert mock_google_ads_create_update.call_count >= 3
+                            campaign_creation_team.initiate_chat()
+
+                            mock_create_ad_group.assert_called_once()
+                            mock_create_ad_group_ad.assert_called_once()
+                            mock_create_ad_group_keyword.assert_called()
