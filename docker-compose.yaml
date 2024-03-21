@@ -1,0 +1,81 @@
+x-logging: &default-logging
+  driver: loki
+  options:
+    loki-url: 'http://localhost:3100/api/prom/push'
+    loki-pipeline-stages: |
+      - multiline:
+          firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
+          max_wait_time: 3s
+      - regex:
+          expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
+
+version: "3.4"
+
+services:
+  loki:  # nosemgrep
+    image: grafana/loki:2.9.3
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+
+  app-a:  # nosemgrep
+    # build: ./fastapi_app/
+    image: ghcr.io/${GITHUB_REPOSITORY}:${TAG}
+    container_name: ${container_name}
+    ports:
+      - "${PORT}:${PORT}"
+      - "8080:8080"
+    depends_on:
+      - loki
+    environment:
+      - PORT=${PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+      - DEVELOPER_TOKEN=${DEVELOPER_TOKEN}
+      - AZURE_API_VERSION=${AZURE_API_VERSION}
+      - AZURE_API_ENDPOINT=${AZURE_API_ENDPOINT}
+      - AZURE_GPT4_MODEL=${AZURE_GPT4_MODEL}
+      - AZURE_GPT35_MODEL=${AZURE_GPT35_MODEL}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - INFOBIP_BASE_URL=${INFOBIP_BASE_URL}
+      - INFOBIP_API_KEY=${INFOBIP_API_KEY}
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
+      - REDIRECT_DOMAIN=${REDIRECT_DOMAIN}
+      - DOMAIN=${DOMAIN}
+    logging: *default-logging
+
+  prometheus:  # nosemgrep
+    image: prom/prometheus:v2.48.1
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./etc/prometheus:/workspace
+    command:
+      - --config.file=/workspace/prometheus.yml
+      - --enable-feature=exemplar-storage
+    depends_on:
+      - loki
+    logging: *default-logging
+
+  tempo:  # nosemgrep
+    image: grafana/tempo:2.3.1
+    command: [ "--target=all", "--storage.trace.backend=local", "--storage.trace.local.path=/var/tempo", "--auth.enabled=false" ]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      - loki
+    logging: *default-logging
+
+  grafana:  # nosemgrep
+    image: grafana/grafana:10.2.3
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./etc/grafana/:/etc/grafana/provisioning/datasources
+      - ./etc/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./etc/dashboards:/etc/grafana/dashboards
+    depends_on:
+      - loki
+      - prometheus
+    logging: *default-logging
