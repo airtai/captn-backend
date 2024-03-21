@@ -12,6 +12,7 @@ from websockets.sync.client import connect as ws_connect
 
 from .helpers import mock_env
 
+# TODO: use monkeypatch to mock deleted env vars
 with mock_env(mock_azure_env=False):
     from captn.captn_agents.application import (
         RETRY_MESSAGE,
@@ -20,7 +21,7 @@ with mock_env(mock_azure_env=False):
         chat,
         on_connect,
     )
-    from captn.captn_agents.backend.config import config_list_gpt_3_5
+    from captn.captn_agents.backend.config import Config
     from captn.captn_agents.backend.functions import TeamResponse
 
 
@@ -101,8 +102,10 @@ class TestConsoleIOWithWebsockets:
 
                     initial_msg = iostream.input()
 
+                    config = Config()
+
                     llm_config = {
-                        "config_list": config_list_gpt_3_5,
+                        "config_list": config.config_list_gpt_3_5,
                         "stream": True,
                     }
 
