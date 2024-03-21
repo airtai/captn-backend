@@ -10,18 +10,15 @@ from httpx import Request, Response
 from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
 
-from .helpers import mock_env
-
-with mock_env(mock_azure_env=False):
-    from captn.captn_agents.application import (
-        RETRY_MESSAGE,
-        CaptnAgentRequest,
-        _get_message,
-        chat,
-        on_connect,
-    )
-    from captn.captn_agents.backend.config import config_list_gpt_3_5
-    from captn.captn_agents.backend.functions import TeamResponse
+from captn.captn_agents.application import (
+    RETRY_MESSAGE,
+    CaptnAgentRequest,
+    _get_message,
+    chat,
+    on_connect,
+)
+from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.functions import TeamResponse
 
 
 def test_chat_when_openai_bad_request_is_raised() -> None:
@@ -101,8 +98,10 @@ class TestConsoleIOWithWebsockets:
 
                     initial_msg = iostream.input()
 
+                    config = Config()
+
                     llm_config = {
-                        "config_list": config_list_gpt_3_5,
+                        "config_list": config.config_list_gpt_3_5,
                         "stream": True,
                     }
 

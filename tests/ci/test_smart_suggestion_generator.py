@@ -4,14 +4,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from .helpers import mock_env
-
-with mock_env():
-    from captn.captn_agents.model import SmartSuggestions
-    from openai_agent.smart_suggestion_generator import (
-        _format_conversation,
-        generate_smart_suggestions,
-    )
+from captn.captn_agents.model import SmartSuggestions
+from openai_agent.smart_suggestion_generator import (
+    _format_conversation,
+    generate_smart_suggestions,
+)
 
 test_smart_suggestions = {"suggestions": [""], "type": "oneOf"}
 TEST_CONTENT = SmartSuggestions(**test_smart_suggestions).model_dump()

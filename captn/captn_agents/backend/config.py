@@ -1,57 +1,72 @@
 import os
+from typing import Dict, List
 
 import openai
 from autogen import __version__ as autogen_version
 from autogen.oai.openai_utils import filter_config
 from dotenv import load_dotenv
 
-__all__ = ["CONFIG_LIST"]
-
-load_dotenv()
+__all__ = ("Config",)
 
 
-api_key = os.getenv("AZURE_OPENAI_API_KEY")
-api_base = os.getenv("AZURE_API_ENDPOINT")
-gpt_4_model_name = os.getenv("AZURE_GPT4_MODEL")
-gpt_3_5_model_name = os.getenv("AZURE_GPT35_MODEL")
+class Config:
+    def __init__(self) -> None:
+        load_dotenv()
 
-openai.api_type = "azure"
-openai.api_version = os.getenv("AZURE_API_VERSION")
+        api_key = os.getenv("AZURE_OPENAI_API_KEY")
+        api_base = os.getenv("AZURE_API_ENDPOINT")
+        gpt_4_model_name = os.getenv("AZURE_GPT4_MODEL")
+        gpt_3_5_model_name = os.getenv("AZURE_GPT35_MODEL")
 
-CONFIG_LIST = [
-    {
-        "model": gpt_4_model_name,
-        "api_key": api_key,
-        "api_base": api_base,
-        "base_url": api_base,
-        "api_type": openai.api_type,
-        "api_version": openai.api_version,
-    },
-    {
-        "model": gpt_3_5_model_name,
-        "api_key": api_key,
-        "api_base": api_base,
-        "base_url": api_base,
-        "api_type": openai.api_type,
-        "api_version": openai.api_version,
-    },
-]
+        openai.api_type = "azure"
+        openai.api_version = os.getenv("AZURE_API_VERSION")
 
-for config in CONFIG_LIST:
-    if autogen_version < "0.2.":
-        config.pop("base_url")
-    else:
-        config.pop("api_base")
-        # config.pop("api_type")
+        self.CONFIG_LIST = [
+            {
+                "model": gpt_4_model_name,
+                "api_key": api_key,
+                "api_base": api_base,
+                "base_url": api_base,
+                "api_type": openai.api_type,
+                "api_version": openai.api_version,
+            },
+            {
+                "model": gpt_3_5_model_name,
+                "api_key": api_key,
+                "api_base": api_base,
+                "base_url": api_base,
+                "api_type": openai.api_type,
+                "api_version": openai.api_version,
+            },
+        ]
 
-try:
-    config_list_gpt_3_5 = filter_config(CONFIG_LIST, {"model": "gpt-35-turbo-16k"})
-except Exception as e:
-    print(f"Error: {e}")
-    config_list_gpt_3_5 = []
+        for config in self.CONFIG_LIST:
+            if autogen_version < "0.2.":
+                config.pop("base_url")
+            else:
+                config.pop("api_base")
+                # config.pop("api_type")
 
-try:
-    config_list_gpt_4 = filter_config(CONFIG_LIST, {"model": "airt-gpt4"})
-except Exception as e:
-    print(f"Error: {e}")
-    config_list_gpt_4 = []
+    @property
+    def config_list_gpt_3_5(self) -> List[Dict[str, str]]:
+        try:
+            config_list: List[Dict[str, str]] = filter_config(
+                self.CONFIG_LIST, {"model": "gpt-35-turbo-16k"}
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            config_list = []
+
+        return config_list
+
+    @property
+    def config_list_gpt_4(self) -> List[Dict[str, str]]:
+        try:
+            config_list: List[Dict[str, str]] = filter_config(
+                self.CONFIG_LIST, {"model": "airt-gpt4"}
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            config_list = []
+
+        return config_list
