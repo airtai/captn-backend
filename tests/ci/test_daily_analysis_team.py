@@ -6,31 +6,28 @@ from pathlib import Path
 import pytest
 from tenacity import RetryError
 
-from .helpers import mock_env
-
-with mock_env():
-    from captn.captn_agents.backend.daily_analysis_team import (
-        REACT_APP_API_URL,
-        AdGroup,
-        AdGroupAd,
-        Campaign,
-        Keyword,
-        KeywordMetrics,
-        Metrics,
-        _add_metrics_message,
-        _update_chat_message_and_send_email,
-        _update_message_and_campaigns_template,
-        calculate_metrics_change,
-        compare_reports,
-        construct_daily_report_email_from_template,
-        execute_daily_analysis,
-        get_campaigns_report,
-        get_daily_ad_group_ads_report,
-        get_daily_keywords_report,
-        get_web_status_code_report_for_campaign,
-        google_ads_api_call,
-    )
-    from captn.google_ads.client import ALREADY_AUTHENTICATED
+from captn.captn_agents.backend.daily_analysis_team import (
+    REACT_APP_API_URL,
+    AdGroup,
+    AdGroupAd,
+    Campaign,
+    Keyword,
+    KeywordMetrics,
+    Metrics,
+    _add_metrics_message,
+    _update_chat_message_and_send_email,
+    _update_message_and_campaigns_template,
+    calculate_metrics_change,
+    compare_reports,
+    construct_daily_report_email_from_template,
+    execute_daily_analysis,
+    get_campaigns_report,
+    get_daily_ad_group_ads_report,
+    get_daily_keywords_report,
+    get_web_status_code_report_for_campaign,
+    google_ads_api_call,
+)
+from captn.google_ads.client import ALREADY_AUTHENTICATED
 
 
 def test_metrics() -> None:
