@@ -69,11 +69,13 @@ sure it is understandable by non-experts.
         self.task = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
-        function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=work_dir,
-            clients_question_answer_list=clients_question_answer_list,
+        function_map: Dict[str, Callable[[Any], Any]] = (
+            get_campaign_creation_team_shared_functions(
+                user_id=user_id,
+                conv_id=conv_id,
+                work_dir=work_dir,
+                clients_question_answer_list=clients_question_answer_list,
+            )
         )
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
@@ -293,35 +295,3 @@ Otherwise, incorrect budget will be set for the campaign!
 8. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
 
 """
-
-
-def _get_function_map(
-    user_id: int,
-    conv_id: int,
-    work_dir: str,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-) -> Dict[str, Any]:
-    campaign_creation_team_shared_function_map = (
-        get_campaign_creation_team_shared_functions(
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=work_dir,
-            clients_question_answer_list=clients_question_answer_list,
-        )
-    )
-
-    return campaign_creation_team_shared_function_map
-
-    # function_map = {
-    #     "create_ad_group_with_ad_and_keywords": lambda ad_group_with_ad_and_keywords, clients_approval_message, modification_question: create_ad_group_with_ad_and_keywords(
-    #         user_id=user_id,
-    #         conv_id=conv_id,
-    #         clients_question_answer_list=clients_question_answer_list,
-    #         ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-    #         clients_approval_message=clients_approval_message,
-    #         modification_question=modification_question,
-    #     )
-    # }
-    # function_map.update(campaign_creation_team_shared_function_map)
-
-    # return function_map
