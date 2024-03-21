@@ -15,6 +15,8 @@ from markdownify import markdownify as md
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt
 
+from captn.captn_agents.backend.google_ads_team import string_to_list
+
 from ...email.send_email import send_email as send_email_infobip
 from ...google_ads.client import (
     ALREADY_AUTHENTICATED,
@@ -832,20 +834,6 @@ You can execute the provided queries ONLY by using the 'execute_query' command!
 
 
 def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
-    def _string_to_list(
-        customer_ids: Optional[Union[List[str], str]]
-    ) -> Optional[List[str]]:
-        if customer_ids is None or isinstance(customer_ids, list):
-            return customer_ids
-
-        customer_ids_list = ast.literal_eval(customer_ids)
-        if isinstance(customer_ids_list, list):
-            return customer_ids_list
-
-        raise TypeError(
-            "Error: parameter customer_ids must be a list of strings. e.g. ['1', '5', '10']"
-        )
-
     function_map = {
         "list_accessible_customers": lambda: list_accessible_customers(
             user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
@@ -853,7 +841,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
             user_id=user_id,
             conv_id=conv_id,
-            customer_ids=_string_to_list(customer_ids),
+            customer_ids=string_to_list(customer_ids),
             query=query,
             work_dir=work_dir,
         ),
