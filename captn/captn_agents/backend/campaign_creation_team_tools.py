@@ -70,9 +70,10 @@ class AdGroupForCreation(AdBase):
         Field(..., description=properties_config["campaign_id"]["description"]),
     ] = None
     name: Annotated[str, Field(..., description="The name of the Ad Group")]
-    cpc_bid_micros: Annotated[
-        Optional[int], properties_config["cpc_bid_micros"]["description"]
-    ] = None
+    # budget for the ad group isn't needed for creation
+    # cpc_bid_micros: Annotated[
+    #     Optional[int], properties_config["cpc_bid_micros"]["description"]
+    # ] = None
 
 
 class AdGroupWithAdAndKeywords(BaseModel):
@@ -82,9 +83,11 @@ class AdGroupWithAdAndKeywords(BaseModel):
     campaign_id: Annotated[
         str, Field(..., description=properties_config["campaign_id"]["description"])
     ]
-    ad_group: AdGroupForCreation
-    ad_group_ad: AdGroupAdForCreation
-    keywords: List[AdGroupCriterionForCreation]
+    ad_group: Annotated[AdGroupForCreation, "The ad group to be created"]
+    ad_group_ad: Annotated[
+        AdGroupAdForCreation, "The ad for the ad group which will be created"
+    ]
+    keywords: Annotated[List[AdGroupCriterionForCreation], Len(min_length=1)]
 
 
 def _get_resource_id_from_response(response: str) -> str:

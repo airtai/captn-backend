@@ -225,6 +225,17 @@ and two additional parameters:
 - modification_question: "Can I make the following changes to your account?"
 
 
+smart suggestions examples:
+Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
+Do NOT use smart suggestions for open ended questions or questions which require the clients input.
+
+When you ask the client for some suggestions (e.g. which headline should be added), you should also generate smart suggestions like:
+"smart_suggestions": {
+    "suggestions":["Add headline x", "Add headline y", "Add headline z"],
+    "type":"manyOf"
+}
+
+
 VERY IMPORTANT NOTES:
 The first and the MOST IMPORTANT thing is that you can NOT make any permanent changes without the clients approval!!!
 Make sure that you explicitly tell the client which changes you want, which resource and attribute will be affected and wait for the permission!
@@ -236,7 +247,52 @@ This is a template which you should follow when you are asked to optimize campai
 
     @property
     def _commands(self) -> str:
-        return ""
+        return """## Commands
+All team members have access to the following command:
+1. reply_to_client: Ask the client for additional information, params: (message: string, completed: bool, smart_suggestions: Optional[Dict[str, Union[str, List[str]]]])
+The 'message' parameter must contain all information useful to the client, because the client does not see your team's conversation (only the information sent in the 'message' parameter)
+As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
+Never reference 'client' within the message:
+e.g. "We need to ask client for the approval" should be changed to "Do you approve these changes?"
+It is VERY important that you use the 'smart_suggestions' parameter!
+Use it so the client can easily choose between multiple options and make a quick reply by clicking on the suggestion.
+e.g.:
+"smart_suggestions": {
+    'suggestions': ['Please make some headlines suggestions', 'Please make some descriptions suggestions'],
+    'type': 'manyOf'
+}
+
+2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
+params: (customer_id: str, resource_details: str, proposed_changes: str)
+'proposed_changes' parameter must contain info about each field which you want to modify and it MUST refernce it by the EXACT name as the one you are going to use in the modification method.
+
+You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
+
+3. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
+
+4. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
+Example of customer_ids parameter: ["12", "44", "111"]
+
+5. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
+It should be used only for the clients web page(s), final_url(s) etc.
+This command should be used for retrieving the information from clients web page.
+If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc.
+
+6. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
+Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
+
+7. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
+network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
+clients_approval_message: string, modification_question: str)
+Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
+You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
+For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
+If the client specifies the 'budget_amount_micros' in another currency, you must convert it to the local currency!
+Otherwise, incorrect budget will be set for the campaign!
+
+8. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
+
+"""
 
 
 def _get_function_map(
