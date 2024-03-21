@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import autogen
 from fastcore.basics import patch
 
-from .config import config_list_gpt_4
+from .config import Config
 
 _completions_create_original = autogen.oai.client.OpenAIClient.create
 
@@ -112,8 +112,9 @@ class Team:
             if cls._functions
             else None
         )
+        config = Config()
         llm_config = {
-            "config_list": config_list_gpt_4,
+            "config_list": config.config_list_gpt_4,
             "seed": seed,
             "temperature": temperature,
             "tools": tools,

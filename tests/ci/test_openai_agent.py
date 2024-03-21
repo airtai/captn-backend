@@ -4,13 +4,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from .helpers import mock_env
-
-with mock_env():
-    from openai_agent.application import (
-        _get_openai_response,
-    )
-
+from openai_agent.application import _get_openai_response
 
 TEST_CONTENT = "This is a test content"
 

@@ -5,19 +5,12 @@ from fastapi import HTTPException, status
 
 from google_ads.application import (
     MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG,
+    _check_if_customer_id_is_manager_or_exception_is_raised,
     _set_fields_ad_copy,
     _set_headline_or_description,
+    create_geo_targeting_for_campaign,
 )
-from google_ads.model import AdCopy
-
-from .helpers import mock_env
-
-with mock_env():
-    from google_ads.application import (
-        _check_if_customer_id_is_manager_or_exception_is_raised,
-        create_geo_targeting_for_campaign,
-    )
-    from google_ads.model import GeoTargetCriterion
+from google_ads.model import AdCopy, GeoTargetCriterion
 
 
 @pytest.mark.asyncio

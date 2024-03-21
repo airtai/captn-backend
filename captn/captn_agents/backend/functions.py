@@ -6,10 +6,9 @@ from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from pydantic import BaseModel
 from typing_extensions import Annotated
 
-from captn.captn_agents.backend.config import config_list_gpt_3_5, config_list_gpt_4
-from captn.google_ads.client import execute_query
-
+from ...google_ads.client import execute_query
 from ..model import SmartSuggestions
+from .config import Config
 
 
 def ask_for_additional_info(question: str) -> str:
@@ -95,15 +94,17 @@ def ask_client_for_permission(
     )
 
 
+config = Config()
+
 llm_config_gpt_4 = {
     "timeout": 600,
-    "config_list": config_list_gpt_4,
+    "config_list": config.config_list_gpt_4,
     "temperature": 0,
 }
 
 llm_config_gpt_3_5 = {
     "timeout": 600,
-    "config_list": config_list_gpt_3_5,
+    "config_list": config.config_list_gpt_3_5,
     "temperature": 0,
 }
 
