@@ -26,7 +26,7 @@ def test_check_for_client_approval() -> None:
         error_msg="",
         clients_approval_message="yes ",
         modification_question="modification_question",
-        clients_question_answere_list=[("modification_question", "yes ")],
+        clients_question_answer_list=[("modification_question", "yes ")],
     )
     assert error_msg == ""
 
@@ -36,7 +36,7 @@ def test_check_for_client_approval_not_in_qa_list() -> None:
         error_msg="",
         clients_approval_message="yes",
         modification_question="modification_question",
-        clients_question_answere_list=[("aa", "bb")],
+        clients_question_answer_list=[("aa", "bb")],
     )
     assert error_msg.strip() == NOT_IN_QUESTION_ANSWER_LIST
 
@@ -46,7 +46,7 @@ def test_check_for_client_approval_client_did_not_approve() -> None:
         error_msg="",
         clients_approval_message="yes 123",
         modification_question="modification_question",
-        clients_question_answere_list=[("modification_question", "yes 123")],
+        clients_question_answer_list=[("modification_question", "yes 123")],
     )
     assert error_msg.strip() == NOT_APPROVED
 
@@ -58,7 +58,7 @@ def test_check_for_client_approval_modification_question_is_substring_of_questio
         error_msg="",
         clients_approval_message="yes",
         modification_question="I want to change the ad_name to test. ",
-        clients_question_answere_list=[
+        clients_question_answer_list=[
             ("i want to change the ad_name to test.Do you approve?", "yes")
         ],
     )
@@ -72,7 +72,7 @@ def test_check_for_client_approval_modification_question_is_substring_of_questio
         error_msg="",
         clients_approval_message="no",
         modification_question="I want to change the ad_name to test. ",
-        clients_question_answere_list=[
+        clients_question_answer_list=[
             ("i want to change the ad_name to test.Do you approve?", "no")
         ],
     )
@@ -120,7 +120,7 @@ def test_check_fields_are_mentioned_to_the_client_returns_empty_string_when_ever
 
 
 def test_google_ads_create_update_raises_error() -> None:
-    clients_question_answere_list: List[Tuple[str, Optional[str]]] = [
+    clients_question_answer_list: List[Tuple[str, Optional[str]]] = [
         ("modification_question", "yes")
     ]
     modification_question = "Do you approve?"
@@ -133,7 +133,7 @@ def test_google_ads_create_update_raises_error() -> None:
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=ad,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         )
 
     assert e.value.args[0] == (

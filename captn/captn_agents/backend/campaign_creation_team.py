@@ -1,25 +1,21 @@
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
-
-from annotated_types import Len
-from pydantic import BaseModel, Field, StringConstraints
-from typing_extensions import Annotated
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from captn.captn_agents.backend.google_ads_team import (
     GoogleAdsTeam,
     get_campaign_creation_team_shared_functions,
 )
 from captn.captn_agents.backend.team import Team
-from captn.google_ads.client import google_ads_create_update
 
+from .campaign_creation_team_tools import (
+    add_create_ad_group_with_ad_and_keywords_to_agent,
+)
 from .function_configs import (
     ask_client_for_permission_config,
     change_google_account_config,
-    create_ad_group_with_ad_and_keywords_config,
     create_campaign_config,
     execute_query_config,
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
-    properties_config,
     reply_to_client_2_config,
 )
 
@@ -33,7 +29,6 @@ class CampaignCreationTeam(Team):
         get_info_from_the_web_page_config,
         list_accessible_customers_config,
         reply_to_client_2_config,
-        create_ad_group_with_ad_and_keywords_config,
     ]
 
     _default_roles = [
@@ -69,12 +64,16 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        clients_question_answere_list: List[Tuple[str, Optional[str]]] = []
+        self.user_id = user_id
+        self.conv_id = conv_id
+        self.task = task
+
+        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
             user_id=user_id,
             conv_id=conv_id,
             work_dir=work_dir,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         )
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
@@ -92,17 +91,27 @@ sure it is understandable by non-experts.
             seed=seed,
             temperature=temperature,
             name=name,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         )
 
-        self.conv_id = conv_id
-        self.task = task
-        self.llm_config = CampaignCreationTeam.get_llm_config(
+        self.llm_config = CampaignCreationTeam._get_llm_config(
             seed=seed, temperature=temperature
         )
 
         self._create_members()
+
+        self._add_tools()
+
         self._create_initial_message()
+
+    def _add_tools(self) -> None:
+        for agent in self.members:
+            add_create_ad_group_with_ad_and_keywords_to_agent(
+                agent=agent,
+                user_id=self.user_id,
+                conv_id=self.conv_id,
+                clients_question_answer_list=self.clients_question_answer_list,
+            )
 
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
@@ -234,170 +243,29 @@ def _get_function_map(
     user_id: int,
     conv_id: int,
     work_dir: str,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, Any]:
     campaign_creation_team_shared_function_map = (
         get_campaign_creation_team_shared_functions(
             user_id=user_id,
             conv_id=conv_id,
             work_dir=work_dir,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         )
     )
 
-    function_map = {
-        "create_ad_group_with_ad_and_keywords": lambda ad_group_with_ad_and_keywords, clients_approval_message, modification_question: create_ad_group_with_ad_and_keywords(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-        )
-    }
-    function_map.update(campaign_creation_team_shared_function_map)
-    return function_map
+    return campaign_creation_team_shared_function_map
 
+    # function_map = {
+    #     "create_ad_group_with_ad_and_keywords": lambda ad_group_with_ad_and_keywords, clients_approval_message, modification_question: create_ad_group_with_ad_and_keywords(
+    #         user_id=user_id,
+    #         conv_id=conv_id,
+    #         clients_question_answer_list=clients_question_answer_list,
+    #         ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+    #         clients_approval_message=clients_approval_message,
+    #         modification_question=modification_question,
+    #     )
+    # }
+    # function_map.update(campaign_creation_team_shared_function_map)
 
-class AdBase(BaseModel):
-    customer_id: Optional[
-        Annotated[
-            str, Field(..., description=properties_config["customer_id"]["description"])
-        ]
-    ] = None
-    status: Annotated[
-        Literal["ENABLED", "PAUSED"],
-        Field(..., description="The status of the resource (ENABLED or PAUSED)"),
-    ]
-
-
-class AdGroupAd(AdBase):
-    ad_group_id: Optional[
-        Annotated[str, Field(..., description="Always set this field to None")]
-    ] = None
-    final_url: Annotated[
-        str, Field(..., description=properties_config["final_url"]["description"])
-    ]
-    headlines: Annotated[
-        List[Annotated[str, StringConstraints(max_length=30)]],
-        Len(min_length=3, max_length=15),
-    ]
-    descriptions: Annotated[
-        List[Annotated[str, StringConstraints(max_length=90)]],
-        Len(min_length=2, max_length=4),
-    ]
-    path1: Optional[
-        Annotated[
-            str, Field(..., description=properties_config["path1"]["description"])
-        ]
-    ] = None
-    path2: Optional[
-        Annotated[
-            str, Field(..., description=properties_config["path2"]["description"])
-        ]
-    ] = None
-
-
-class AdGroupCriterion(AdBase):
-    ad_group_id: Optional[
-        Annotated[str, Field(..., description="Always set this field to None")]
-    ] = None
-    keyword_text: Annotated[
-        str, Field(..., description=properties_config["keyword_text"]["description"])
-    ]
-    keyword_match_type: Annotated[
-        Literal["EXACT", "BROAD", "PHRASE"],
-        Field(..., description=properties_config["keyword_match_type"]["description"]),
-    ]
-
-
-class AdGroup(AdBase):
-    campaign_id: Annotated[
-        Optional[str],
-        Field(..., description=properties_config["campaign_id"]["description"]),
-    ] = None
-    name: Annotated[str, Field(..., description="The name of the Ad Group")]
-    cpc_bid_micros: Annotated[
-        Optional[int], properties_config["cpc_bid_micros"]["description"]
-    ] = None
-
-
-class AdGroupWithAdAndKeywords(BaseModel):
-    customer_id: Annotated[
-        str, Field(..., description=properties_config["customer_id"]["description"])
-    ]
-    campaign_id: Annotated[
-        str, Field(..., description=properties_config["campaign_id"]["description"])
-    ]
-    ad_group: AdGroup
-    ad_group_ad: AdGroupAd
-    keywords: List[AdGroupCriterion]
-
-
-def _get_resource_id_from_response(response: str) -> str:
-    return response.split("/")[-1].replace(".", "")
-
-
-def create_ad_group_with_ad_and_keywords(
-    user_id: int,
-    conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
-    # ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
-    ad_group_with_ad_and_keywords: Dict[str, Any],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]
-    ],
-    modification_question: Annotated[str, properties_config["modification_question"]],
-) -> str:
-    ad_group_with_ad_and_keywords_model = AdGroupWithAdAndKeywords(
-        **ad_group_with_ad_and_keywords
-    )
-    ad_group = ad_group_with_ad_and_keywords_model.ad_group
-    ad_group.customer_id = ad_group_with_ad_and_keywords_model.customer_id
-    ad_group.campaign_id = ad_group_with_ad_and_keywords_model.campaign_id
-
-    ad_group_response = google_ads_create_update(
-        user_id=user_id,
-        conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
-        ad=ad_group,
-        endpoint="/create-ad-group",
-        skip_fields_check=True,
-    )
-    response = f"Ad group: {ad_group_response}\n"
-    ad_group_id = _get_resource_id_from_response(ad_group_response)  # type: ignore
-
-    ad_group_ad = ad_group_with_ad_and_keywords_model.ad_group_ad
-    ad_group_ad.customer_id = ad_group_with_ad_and_keywords_model.customer_id
-    ad_group_ad.ad_group_id = ad_group_id
-
-    ad_group_ad_response = google_ads_create_update(
-        user_id=user_id,
-        conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
-        ad=ad_group_ad,
-        endpoint="/create-ad-group-ad",
-        skip_fields_check=True,
-    )
-    response += f"Ad group ad: {ad_group_ad_response}\n"
-
-    for keyword in ad_group_with_ad_and_keywords_model.keywords:
-        keyword.customer_id = ad_group_with_ad_and_keywords_model.customer_id
-        keyword.ad_group_id = ad_group_id
-        keyword_response = google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=keyword,
-            endpoint="/add-keywords-to-ad-group",
-            skip_fields_check=True,
-        )
-        response += f"Keyword: {keyword_response}\n"
-
-    return response
+    # return function_map

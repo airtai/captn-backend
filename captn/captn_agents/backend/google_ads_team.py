@@ -133,12 +133,12 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        clients_question_answere_list: List[Tuple[str, Optional[str]]] = []
+        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
             user_id=user_id,
             conv_id=conv_id,
             work_dir=work_dir,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -157,11 +157,11 @@ sure it is understandable by non-experts.
             seed=seed,
             temperature=temperature,
             name=name,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         )
         self.conv_id = conv_id
         self.task = task
-        self.llm_config = GoogleAdsTeam.get_llm_config(
+        self.llm_config = GoogleAdsTeam._get_llm_config(
             seed=seed, temperature=temperature
         )
 
@@ -552,7 +552,7 @@ def get_campaign_creation_team_shared_functions(
     user_id: int,
     conv_id: int,
     work_dir: str,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, Any]:
     function_map = {
         "change_google_account": lambda: get_login_url(
@@ -573,7 +573,7 @@ def get_campaign_creation_team_shared_functions(
             user_id=user_id,
             conv_id=conv_id,
             customer_id=customer_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             resource_details=resource_details,
             proposed_changes=proposed_changes,
         ),
@@ -584,7 +584,7 @@ def get_campaign_creation_team_shared_functions(
             create_campaign,
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             micros_var_name="budget_amount_micros",
         ),
     }
@@ -595,19 +595,19 @@ def _get_function_map(
     user_id: int,
     conv_id: int,
     work_dir: str,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, Any]:
     function_map = {
         "update_ad_group_ad": add_currency_check(
             update_ad_group_ad,
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         ),
         "create_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, modification_question, headline=None, description=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=AdCopy(
@@ -627,24 +627,24 @@ def _get_function_map(
         "update_ad_copy": _get_update_ad_copy(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         ),
         "update_ad_group": add_currency_check(
             update_ad_group,
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         ),
         "create_ad_group": add_currency_check(
             create_ad_group,
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         ),
         "update_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, name=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=Campaign(
@@ -659,12 +659,12 @@ def _get_function_map(
             update_ad_group_criterion,
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         ),
         "update_campaigns_negative_keywords": lambda customer_id, campaign_id, criterion_id, clients_approval_message, modification_question, keyword_match_type=None, keyword_text=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=CampaignCriterion(
@@ -679,7 +679,7 @@ def _get_function_map(
         "create_negative_keyword_for_campaign": lambda customer_id, campaign_id, keyword_text, keyword_match_type, clients_approval_message, modification_question, status=None, negative=None, bid_modifier=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=CampaignCriterion(
@@ -697,12 +697,12 @@ def _get_function_map(
             create_keyword_for_ad_group,
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         ),
         "create_ad_group_ad": lambda customer_id, ad_group_id, clients_approval_message, modification_question, headlines, descriptions, final_url, path1=None, path2=None, status=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=AdGroupAd(
@@ -720,7 +720,7 @@ def _get_function_map(
         "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, negative=None, location_names=None, location_ids=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=GeoTargetCriterion(
@@ -735,7 +735,7 @@ def _get_function_map(
         "remove_google_ads_resource": lambda customer_id, resource_id, resource_type, clients_approval_message, modification_question, parent_id=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=RemoveResource(
@@ -749,7 +749,7 @@ def _get_function_map(
         "remove_ad_copy_headline_or_description": lambda customer_id, ad_id, clients_approval_message, modification_question, update_existing_headline_index=None, update_existing_description_index=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=AdCopy(
@@ -771,7 +771,7 @@ def _get_function_map(
             user_id=user_id,
             conv_id=conv_id,
             work_dir=work_dir,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
         )
     )
     function_map.update(campaign_creation_team_shared_function_map)
@@ -809,7 +809,7 @@ def add_currency_check(
     f: Callable[..., Any],
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     *,
     micros_var_name: str = "cpc_bid_micros",
 ) -> Callable[..., Any]:
@@ -824,7 +824,7 @@ def add_currency_check(
         return f(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             customer_id=customer_id,
             **kwargs,
         )
@@ -836,7 +836,7 @@ def create_keyword_for_ad_group(
     *,
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     customer_id: str,
     ad_group_id: str,
     keyword_text: str,
@@ -852,7 +852,7 @@ def create_keyword_for_ad_group(
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
+        clients_question_answer_list=clients_question_answer_list,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
         ad=AdGroupCriterion(
@@ -873,7 +873,7 @@ def update_ad_group_ad(
     *,
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     customer_id: str,
     ad_group_id: str,
     ad_id: str,
@@ -886,7 +886,7 @@ def update_ad_group_ad(
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
+        clients_question_answer_list=clients_question_answer_list,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
         ad=AdGroupAd(
@@ -906,7 +906,7 @@ def update_ad_group(
     *,
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     customer_id: str,
     ad_group_id: str,
     clients_approval_message: str,
@@ -919,7 +919,7 @@ def update_ad_group(
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
+        clients_question_answer_list=clients_question_answer_list,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
         ad=AdGroup(
@@ -937,7 +937,7 @@ def create_ad_group(
     *,
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     customer_id: str,
     campaign_id: str,
     clients_approval_message: str,
@@ -950,7 +950,7 @@ def create_ad_group(
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
+        clients_question_answer_list=clients_question_answer_list,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
         ad=AdGroup(
@@ -968,7 +968,7 @@ def update_ad_group_criterion(
     *,
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     customer_id: str,
     ad_group_id: str,
     criterion_id: str,
@@ -983,7 +983,7 @@ def update_ad_group_criterion(
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
+        clients_question_answer_list=clients_question_answer_list,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
         ad=AdGroupCriterion(
@@ -1003,7 +1003,7 @@ def create_campaign(
     *,
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     customer_id: str,
     name: str,
     budget_amount_micros: int,
@@ -1018,7 +1018,7 @@ def create_campaign(
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answere_list=clients_question_answere_list,
+        clients_question_answer_list=clients_question_answer_list,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
         ad=Campaign(
@@ -1037,7 +1037,7 @@ def create_campaign(
 def _get_update_ad_copy(
     user_id: int,
     conv_id: int,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> Callable[
     [
         str,
@@ -1079,7 +1079,7 @@ def _get_update_ad_copy(
         return google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
+            clients_question_answer_list=clients_question_answer_list,
             clients_approval_message=clients_approval_message,
             modification_question=modification_question,
             ad=AdCopy(
@@ -1103,7 +1103,7 @@ def _get_update_ad_copy(
 def answer_the_question(answer: str, team_name: str) -> str:
     answer = answer.strip()
     google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
-    google_ads_team.update_clients_question_answere_list(answer)
+    google_ads_team.update_clients_question_answer_list(answer)
 
     google_ads_team.continue_chat(message=answer)
 

@@ -76,7 +76,7 @@ class Team:
         seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
-        clients_question_answere_list: List[Tuple[str, Optional[str]]] = [],  # noqa
+        clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
     ):
         self.roles = roles
         self.initial_message: str
@@ -90,7 +90,7 @@ class Team:
         self.llm_config: Optional[Dict[str, Any]] = None
         self.name = name
         self.human_input_mode = human_input_mode
-        self.clients_question_answere_list = clients_question_answere_list
+        self.clients_question_answer_list = clients_question_answer_list
         Team._store_team(self.name, self)
 
     @classmethod
@@ -106,7 +106,9 @@ class Team:
         raise NotImplementedError()
 
     @classmethod
-    def get_llm_config(cls, seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
+    def _get_llm_config(
+        cls, seed: int = 42, temperature: float = 0.2
+    ) -> Dict[str, Any]:
         tools = (
             [{"type": "function", "function": f} for f in cls._functions]
             if cls._functions
@@ -123,13 +125,13 @@ class Team:
         }
         return llm_config
 
-    def update_clients_question_answere_list(self, message: str) -> None:
+    def update_clients_question_answer_list(self, message: str) -> None:
         if (
-            len(self.clients_question_answere_list) > 0
-            and self.clients_question_answere_list[-1][1] is None
+            len(self.clients_question_answer_list) > 0
+            and self.clients_question_answer_list[-1][1] is None
         ):
-            self.clients_question_answere_list[-1] = (
-                self.clients_question_answere_list[-1][0],
+            self.clients_question_answer_list[-1] = (
+                self.clients_question_answer_list[-1][0],
                 message,
             )
 

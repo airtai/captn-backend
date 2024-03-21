@@ -51,7 +51,7 @@ class PlanningTeam(Team):
             name=name,
         )
 
-        self.llm_config = PlanningTeam.get_llm_config(
+        self.llm_config = PlanningTeam._get_llm_config(
             seed=seed, temperature=temperature
         )
 
