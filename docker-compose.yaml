@@ -14,11 +14,12 @@ version: "3.4"
 services:
   loki:  # nosemgrep
     image: grafana/loki:2.9.3
+    container_name: loki
     command: -config.file=/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
 
-  app-a:  # nosemgrep
+  fastapi-app:  # nosemgrep
     # build: ./fastapi_app/
     image: ghcr.io/${GITHUB_REPOSITORY}:${TAG}
     container_name: ${container_name}
@@ -46,6 +47,7 @@ services:
 
   prometheus:  # nosemgrep
     image: prom/prometheus:v2.48.1
+    container_name: prometheus
     ports:
       - "9091:9090"
     volumes:
@@ -59,6 +61,7 @@ services:
 
   tempo:  # nosemgrep
     image: grafana/tempo:2.3.1
+    container_name: tempo
     command: [ "--target=all", "--storage.trace.backend=local", "--storage.trace.local.path=/var/tempo", "--auth.enabled=false" ]
     ports:
       - "4317:4317"
@@ -69,6 +72,7 @@ services:
 
   grafana:  # nosemgrep
     image: grafana/grafana:10.2.3
+    container_name: grafana
     ports:
       - "3000:3000"
     volumes:
