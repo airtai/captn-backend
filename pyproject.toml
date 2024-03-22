@@ -91,7 +91,7 @@ agents = [
     "prisma==0.12.0",
     "google-ads==23.1.0",
     "httpx==0.27.0",
-    "uvicorn==0.28.0",
+    "uvicorn==0.29.0",
     "python-dotenv==1.0.1",
     "pyautogen[websurfer,websockets] @ git+https://github.com/microsoft/autogen.git@3a82f35",
     #"pyautogen[websurfer]==0.2.9",
