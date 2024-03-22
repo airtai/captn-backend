@@ -20,7 +20,7 @@ import google_ads  # noqa
 import openai_agent  # noqa
 
 
-APP_NAME = environ.get("APP_NAME", "app")
+APP_NAME = environ.get("APP_NAME", "fastapi-app")
 OTLP_GRPC_ENDPOINT = environ.get("OTLP_GRPC_ENDPOINT", "http://tempo:4317")
 
 
