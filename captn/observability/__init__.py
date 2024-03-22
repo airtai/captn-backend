@@ -1,15 +1,11 @@
-from captn.observability.utils import (
-    WEBSOCKET_REQUESTS,
-    WEBSOCKET_TOKENS,
+from captn.observability.fastapi_utils import (
     PrometheusMiddleware,
     metrics,
     setting_otlp,
 )
 
 __all__ = (
+    "PrometheusMiddleware",
     "metrics",
     "setting_otlp",
-    "PrometheusMiddleware",
-    "WEBSOCKET_REQUESTS",
-    "WEBSOCKET_TOKENS",
 )

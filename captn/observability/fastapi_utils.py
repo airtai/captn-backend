@@ -48,13 +48,6 @@ REQUESTS_IN_PROGRESS = Gauge(
 )
 
 
-WEBSOCKET_REQUESTS = Counter(
-    "websocket_requests_total", "Total count of websocket requests"
-)
-
-WEBSOCKET_TOKENS = Counter("websocket_tokens_total", "Total count of websocket tokens")
-
-
 class PrometheusMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp, app_name: str = "fastapi-app") -> None:
         super().__init__(app)
