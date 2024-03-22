@@ -71,9 +71,9 @@ services:
     ports:
       - "4317:4317"
       - "4318:4318"
-    user: "$UID:$GID"
-    volumes:
-      - ./tempo_data:/var/tempo
+    # user: "$UID:$GID"
+    # volumes:
+    #   - ./tempo_data:/var/tempo
     depends_on:
       - loki
     logging: *default-logging
