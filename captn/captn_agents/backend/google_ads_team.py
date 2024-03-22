@@ -1110,13 +1110,3 @@ def answer_the_question(answer: str, team_name: str) -> str:
     last_message = google_ads_team.get_last_message()
 
     return last_message
-
-
-async def a_answer_the_question(answer: str, team_name: str) -> str:
-    google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
-
-    await google_ads_team.a_continue_chat(message=answer)
-
-    last_message = google_ads_team.get_last_message()
-
-    return last_message

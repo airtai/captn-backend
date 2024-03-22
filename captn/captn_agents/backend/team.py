@@ -271,11 +271,8 @@ You can leverage access to the following resources:
 {self._final_section}
 """
 
-    def initiate_chat(self) -> None:
-        self.manager.initiate_chat(self.manager, message=self.initial_message)
-
-    async def a_initiate_chat(self) -> None:
-        await self.manager.a_initiate_chat(self.manager, message=self.initial_message)
+    def initiate_chat(self, **kwargs: Any) -> None:
+        self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
 
     def get_messages(self) -> Any:
         return self.groupchat.messages
@@ -293,6 +290,3 @@ You can leverage access to the following resources:
 
     def continue_chat(self, message: str) -> None:
         self.manager.send(recipient=self.manager, message=message)
-
-    async def a_continue_chat(self, message: str) -> None:
-        await self.manager.a_send(recipient=self.manager, message=message)
