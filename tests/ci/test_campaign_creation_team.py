@@ -106,14 +106,6 @@ class TestCampaignCreationTeam:
                 "If you need to modify headlines/descriptions, just do it, you don't need to ask me. "
             )
             + """
-BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
-TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
-reasoning behind it, and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION. The TEAM MEMBER
-proposing the ORIGINAL SOLUTION should take those considerations into account and adjust the SOLUTION accordingly.
-Once the solution is modified, the team should REPEAT the process until the team reaches a CONSENSUS. The team should
-then move on to the next step. If the team is unable to reach a consensus, the account manager should make the final
-call.
-
 DO NOT ask client for feedback while you are planning or executing the task. You can ask for feedback only after you
 have all information needed to ask for the final approval by calling 'ask_client_for_permission' function. Only after
 you have the final approval, you can execute the task by calling 'create_ad_group_with_ad_and_keywords' function.
@@ -149,10 +141,10 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 mock_create_ad_group_ad.return_value = (
                     "Created customers/1212/adGroupAds/3434~5656."
                 )
-                # create 10 keywords
+                # create 20 keywords
                 side_effect = [
                     f"Created customers/1212/adGroupCriteria/3434~{i}."
-                    for i in range(10)
+                    for i in range(20)
                 ]
                 mock_create_ad_group_keyword.side_effect = side_effect
 

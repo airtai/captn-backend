@@ -132,8 +132,13 @@ The client has sent you the task to create a digital campaign for them. And this
     @property
     def _guidelines(self) -> str:
         return """## Guidelines
-1. Before solving the current task given to you, carefully write down all assumptions and ask any clarification
-questions using the 'reply_to_client' function.
+1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
+TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
+reasoning behind it, and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION. The TEAM MEMBER
+proposing the ORIGINAL SOLUTION should take those considerations into account and adjust the SOLUTION accordingly.
+Once the solution is modified, the team should REPEAT the process until the team reaches a CONSENSUS. The team should
+then move on to the next step. If the team is unable to reach a consensus, the account manager should make the final
+call. If you need additional information, use the 'reply_to_client' command to ask the client for it.
 Also, if a Website is provided in the client brief, use the 'get_info_from_the_web_page' command to get the summary of the web page.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
 3. If you receive a login url, forward it to the client by using the 'reply_to_client' function.
@@ -155,6 +160,7 @@ You can NOT execute anything else, so do not suggest changes which you can NOT p
 Always return these kind of links in the EXACT following format: <a href="https://ads.google.com/aw/campaigns?campaignId=1212121212" target=\"_blank\">1212121212</a>
 IMPORTANT: the page MUST be opened in the NEW Tab (do not forget 'target' parameter)!
 31. When using 'execute_query' command, try to use as small query as possible and retrieve only the needed columns
+Use it only to retrieve the information about the currency and already existing campaigns, but do NOT waste time on retrieving the information which is not needed for the new campaign creation.
 32. Ad Copy headlines can have MAXIMUM 30 characters and descriptions can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length or you will be penalized!
 33. If the client sends you invalid headline/description, do not try to modify it yourself! Explain the problems to him and suggest valid headline/description.
 34. Ad rules:
@@ -186,7 +192,6 @@ ad_group_with_ad_and_keywords must be a json with the following structure:
     "status": "ENABLED",
     "campaign_id": null,
     "name": "ad_group",
-    "cpc_bid_micros": null
   },
   "ad_group_ad": {
     "customer_id": null,
@@ -291,7 +296,36 @@ You can use the following query for retrieving the local currency: SELECT custom
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
 If the client specifies the 'budget_amount_micros' in another currency, you must convert it to the local currency!
 Otherwise, incorrect budget will be set for the campaign!
+When asking the client for the approval, you must explicitly tell him about the parameters which you are going to set,
+i.e. it is mandatory that the 'proposed_changes' parameter contains ALL the parameters which will be used:
+- name
+- status
+- budget_amount_micros (if not told differently, suggest small budget, e.g. 3 EUR)
+- network_settings_target_google_search
+- network_settings_target_search_network
+- network_settings_target_content_network
+Otherwise, we will NOT be able to create a new campaign!
+
+Here is an example of correct 'proposed_changes' parameter:
+    We are planning to create a new campaign for airt technologies d.o.o. with the following details:
+
+    Campaign name: xyz
+    Daily budget: 3 EUR (budget_amount_micros will be set to 3000000)
+    Currency: EUR
+    Status: Enabled
+    Targeting: Google Search Network and Google Display Network
+    The campaign will focus on promoting your AI-powered framework and products such as FastStream and Monotonic Neural Networks.
+
+    We apologize for the oversight. In addition to the previously mentioned details, the campaign will have the following settings:
+
+    'budget_amount_micros' will be set to 3000000
+    'network_settings_target_google_search' will be set to true
+    'network_settings_target_search_network' will be set to true
+    'network_settings_target_content_network' will be set to true
+    Do you approve the creation of this new campaign with the specified details and settings? To approve, please answer 'Yes'.
+
 
 8. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
+When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 
 """
