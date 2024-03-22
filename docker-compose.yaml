@@ -18,6 +18,8 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
+    volumes:
+      - ./loki_data:/loki
 
   fastapi-app:  # nosemgrep
     # build: ./fastapi_app/
@@ -52,6 +54,7 @@ services:
       - "9091:9090"
     volumes:
       - ./etc/prometheus:/workspace
+      - ./prometheus_data:/prometheus
     command:
       - --config.file=/workspace/prometheus.yml
       - --enable-feature=exemplar-storage
@@ -66,6 +69,8 @@ services:
     ports:
       - "4317:4317"
       - "4318:4318"
+    volumes:
+      - ./tempo_data:/var/tempo
     depends_on:
       - loki
     logging: *default-logging
@@ -79,6 +84,7 @@ services:
       - ./etc/grafana/:/etc/grafana/provisioning/datasources
       - ./etc/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./etc/dashboards:/etc/grafana/dashboards
+      - ./grafana_data:/var/lib/grafana
     depends_on:
       - loki
       - prometheus
