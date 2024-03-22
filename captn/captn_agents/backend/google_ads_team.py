@@ -533,26 +533,27 @@ but if it is important to the client, you can give advice on how to do it manual
 """
 
 
-def _get_function_map(
+def string_to_list(
+    customer_ids: Optional[Union[List[str], str]]
+) -> Optional[List[str]]:
+    if customer_ids is None or isinstance(customer_ids, list):
+        return customer_ids
+
+    customer_ids_list = ast.literal_eval(customer_ids)
+    if isinstance(customer_ids_list, list):
+        return customer_ids_list
+
+    raise TypeError(
+        "Error: parameter customer_ids must be a list of strings. e.g. ['1', '5', '10']"
+    )
+
+
+def get_campaign_creation_team_shared_functions(
     user_id: int,
     conv_id: int,
     work_dir: str,
     clients_question_answere_list: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, Any]:
-    def _string_to_list(
-        customer_ids: Optional[Union[List[str], str]]
-    ) -> Optional[List[str]]:
-        if customer_ids is None or isinstance(customer_ids, list):
-            return customer_ids
-
-        customer_ids_list = ast.literal_eval(customer_ids)
-        if isinstance(customer_ids_list, list):
-            return customer_ids_list
-
-        raise TypeError(
-            "Error: parameter customer_ids must be a list of strings. e.g. ['1', '5', '10']"
-        )
-
     function_map = {
         "change_google_account": lambda: get_login_url(
             user_id=user_id, conv_id=conv_id, force_new_login=True
@@ -563,7 +564,7 @@ def _get_function_map(
         "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
             user_id=user_id,
             conv_id=conv_id,
-            customer_ids=_string_to_list(customer_ids),
+            customer_ids=string_to_list(customer_ids),
             query=query,
             work_dir=work_dir,
         ),
@@ -576,6 +577,27 @@ def _get_function_map(
             resource_details=resource_details,
             proposed_changes=proposed_changes,
         ),
+        "get_info_from_the_web_page": lambda url, task, task_guidelines: get_info_from_the_web_page(
+            url=url, task=task, task_guidelines=task_guidelines
+        ),
+        "create_campaign": add_currency_check(
+            create_campaign,
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answere_list=clients_question_answere_list,
+            micros_var_name="budget_amount_micros",
+        ),
+    }
+    return function_map
+
+
+def _get_function_map(
+    user_id: int,
+    conv_id: int,
+    work_dir: str,
+    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+) -> Dict[str, Any]:
+    function_map = {
         "update_ad_group_ad": add_currency_check(
             update_ad_group_ad,
             user_id=user_id,
@@ -695,13 +717,6 @@ def _get_function_map(
             ),
             endpoint="/create-ad-group-ad",
         ),
-        "create_campaign": add_currency_check(
-            create_campaign,
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answere_list=clients_question_answere_list,
-            micros_var_name="budget_amount_micros",
-        ),
         "create_geo_targeting_for_campaign": lambda customer_id, campaign_id, clients_approval_message, modification_question, negative=None, location_names=None, location_ids=None: google_ads_create_update(
             user_id=user_id,
             conv_id=conv_id,
@@ -749,10 +764,17 @@ def _get_function_map(
             ),
             endpoint="/create-update-ad-copy",
         ),
-        "get_info_from_the_web_page": lambda url, task, task_guidelines: get_info_from_the_web_page(
-            url=url, task=task, task_guidelines=task_guidelines
-        ),
     }
+
+    campaign_creation_team_shared_function_map = (
+        get_campaign_creation_team_shared_functions(
+            user_id=user_id,
+            conv_id=conv_id,
+            work_dir=work_dir,
+            clients_question_answere_list=clients_question_answere_list,
+        )
+    )
+    function_map.update(campaign_creation_team_shared_function_map)
 
     return function_map
 

@@ -2,10 +2,7 @@ from unittest import mock
 
 import autogen
 
-from .helpers import mock_env
-
-with mock_env():
-    from captn.captn_agents.backend.team import Team
+from captn.captn_agents.backend.team import Team
 
 roles = [
     {"Name": "Role1", "Description": "Description1"},
