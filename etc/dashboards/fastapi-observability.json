@@ -1150,7 +1150,7 @@
         "x": 12,
         "y": 30
       },
-      "id": 24,
+      "id": 25,
       "options": {
         "legend": {
           "calcs": [],
@@ -1171,7 +1171,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "websocket_tokens_total",
+          "expr": "rate(websocket_requests_total[1m])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -1181,7 +1181,7 @@
           "useBackend": false
         }
       ],
-      "title": "Websocket Tokens",
+      "title": "Websocket Requests per min",
       "type": "timeseries"
     },
     {
@@ -1249,7 +1249,7 @@
         "x": 0,
         "y": 38
       },
-      "id": 25,
+      "id": 24,
       "options": {
         "legend": {
           "calcs": [],
@@ -1270,7 +1270,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "rate(websocket_requests_total[1m])",
+          "expr": "websocket_tokens_total",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -1280,7 +1280,7 @@
           "useBackend": false
         }
       ],
-      "title": "Websocket Requests per min",
+      "title": "Websocket Tokens",
       "type": "timeseries"
     },
     {

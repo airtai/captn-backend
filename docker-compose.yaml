@@ -60,6 +60,7 @@ services:
     command:
       - --config.file=/workspace/prometheus.yml
       - --enable-feature=exemplar-storage
+      - --storage.tsdb.retention.size=1GB
     depends_on:
       - loki
     logging: *default-logging
