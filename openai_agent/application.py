@@ -163,7 +163,6 @@ async def offload_work_to_google_ads_expert(
         "team_name": team_name,
         "team_id": chat_id,
         "customer_brief": customer_brief,
-        "google_ads_team": google_ads_team,
     }
 
 

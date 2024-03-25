@@ -64,7 +64,7 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
                     task="This is my task",
                     max_round=80,
                     human_input_mode="NEVER",
-                    class_name="google_ads_team",
+                    class_name="default_team",
                 ),
                 unittest.mock.call(
                     user_id=-1,
@@ -72,7 +72,7 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
                     task=RETRY_MESSAGE,  # The second call is a retry message
                     max_round=80,
                     human_input_mode="NEVER",
-                    class_name="google_ads_team",
+                    class_name="default_team",
                 ),
             ]
         )
@@ -322,7 +322,7 @@ class TestConsoleIOWithWebsockets:
                     task=message,
                     max_round=80,
                     human_input_mode="NEVER",
-                    class_name="google_ads_team",
+                    class_name="default_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
@@ -330,7 +330,7 @@ class TestConsoleIOWithWebsockets:
                     task=message,
                     max_round=80,
                     human_input_mode="NEVER",
-                    class_name="google_ads_team",
+                    class_name="default_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
@@ -338,7 +338,7 @@ class TestConsoleIOWithWebsockets:
                     task=RETRY_MESSAGE,
                     max_round=80,
                     human_input_mode="NEVER",
-                    class_name="google_ads_team",
+                    class_name="default_team",
                 ),
             ]
         )

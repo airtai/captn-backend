@@ -11,7 +11,7 @@ from captn.captn_agents.backend.team import Team
     "class_name",
     ["default_team", "campaign_creation_team", "should raise"],
 )
-def test__get_initial_team(class_name: str) -> None:
+def test_get_initial_team(class_name: str) -> None:
     with TemporaryDirectory() as tmp_dir:
         kwargs = {
             "user_id": 123,
@@ -31,6 +31,6 @@ def test__get_initial_team(class_name: str) -> None:
             with pytest.raises(ValueError, match="Unknown team name"):
                 _get_initial_team(**kwargs)  # type: ignore[arg-type]
         else:
-            team = _get_initial_team(**kwargs)  # type: ignore[arg-type]
+            initial_team, team_name, _ = _get_initial_team(**kwargs)  # type: ignore[arg-type]
 
-            assert isinstance(team, Team)
+            assert isinstance(initial_team, Team)
