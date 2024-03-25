@@ -8,7 +8,7 @@ from openai import BadRequestError
 from pydantic import BaseModel
 
 from captn.captn_agents.backend.daily_analysis_team import execute_daily_analysis
-from captn.observability import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
+from captn.observability.websocket_utils import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
 
 from .backend.end_to_end import start_or_continue_conversation
 
