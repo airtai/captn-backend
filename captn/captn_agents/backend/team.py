@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 import autogen
 from fastcore.basics import patch
@@ -32,11 +32,40 @@ def create(
     return _completions_create_original(self, params=params)
 
 
+T = TypeVar("T")
+
+
 class Team:
     _team_name_counter: int = 0
     _functions: Optional[List[Dict[str, Any]]] = None
 
     _teams: Dict[str, "Team"] = {}
+
+    _team_registry: Dict[str, Type["Team"]] = {}
+
+    @classmethod
+    def register_team(cls, name: str) -> Callable[[T], T]:
+        def _inner(cls: T) -> T:
+            cls_typed: Type["Team"] = cls  # type: ignore[assignment]
+            if name in cls_typed._team_registry:
+                raise ValueError(f"Team name '{name}' already exists")
+            if cls_typed in cls_typed._team_registry.values():  # type: ignore[comparison-overlap]
+                raise ValueError(f"Team class '{cls_typed}' already exists")
+            cls_typed._team_registry[name] = cls_typed  # type: ignore[assignment]
+            return cls_typed  # type: ignore[return-value]
+
+        return _inner
+
+    @classmethod
+    def get_class_by_name(cls, name: str) -> Type["Team"]:
+        try:
+            return Team._team_registry[name]
+        except KeyError as e:
+            raise ValueError(f"Unknown team name: '{name}'") from e
+
+    @classmethod
+    def get_team_names(cls) -> List[str]:
+        return list(cls._team_registry.keys())
 
     @staticmethod
     def _store_team(team_name: str, team: "Team") -> None:

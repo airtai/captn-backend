@@ -20,6 +20,7 @@ from .function_configs import (
 )
 
 
+@Team.register_team("campaign_creation_team")
 class CampaignCreationTeam(Team):
     _functions: List[Dict[str, Any]] = [
         ask_client_for_permission_config,

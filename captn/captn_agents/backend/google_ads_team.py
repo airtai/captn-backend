@@ -52,6 +52,7 @@ from .functions import (
 from .team import Team
 
 
+@Team.register_team("default_team")
 class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
         change_google_account_config,

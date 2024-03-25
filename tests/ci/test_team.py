@@ -1,6 +1,8 @@
+from typing import Iterator
 from unittest import mock
 
 import autogen
+import pytest
 
 from captn.captn_agents.backend.team import Team
 
@@ -70,3 +72,27 @@ def test_update_clients_question_answer_list() -> None:
         ("Question1", "Answer1"),
         ("Question2", "Answer3"),
     ]
+
+
+class TestTeamRegistry:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+        if "my name" in Team._team_registry:
+            del Team._team_registry["my name"]
+
+        yield
+
+        if "my name" in Team._team_registry:
+            del Team._team_registry["my name"]
+
+    def test_register_team(self) -> None:
+        @Team.register_team(name="my name")
+        class MyTeam(Team):
+            pass
+
+        assert "my name" in Team._team_registry
+        assert Team._team_registry["my name"] == MyTeam
+
+        factory = Team.get_class_by_name("my name")
+
+        assert factory == MyTeam

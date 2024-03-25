@@ -4,12 +4,8 @@ __all__ = [
 ]
 
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
-from captn.captn_agents.backend.campaign_creation_team import CampaignCreationTeam
-
-from .google_ads_team import GoogleAdsTeam
-from .initial_team import InitialTeam
 from .team import Team
 
 initial_team_roles_never = [
@@ -49,28 +45,6 @@ When you want to ask the user a question directly or return to him a summary of 
 ]
 
 
-roles_dictionary = {
-    "initial_team": {
-        "human_input_mode": {"NEVER": initial_team_roles_never, "ALWAYS": []},
-        "class": InitialTeam,
-    },
-    "google_ads_team": {
-        "human_input_mode": {
-            "NEVER": None,
-            "ALWAYS": None,
-        },
-        "class": GoogleAdsTeam,
-    },
-    "campaign_creation_team": {
-        "human_input_mode": {
-            "NEVER": None,
-            "ALWAYS": None,
-        },
-        "class": CampaignCreationTeam,
-    },
-}
-
-
 def _get_initial_team(
     user_id: int,
     conv_id: int,
@@ -88,10 +62,7 @@ def _get_initial_team(
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
 
-    initial_team_class: Team = roles_dictionary[class_name]["class"]  # type: ignore
-    if roles is None:
-        roles = roles_dictionary[class_name]["human_input_mode"][human_input_mode]  # type: ignore
-
+    initial_team_class: Type[Team] = Team.get_class_by_name(class_name)
     initial_team = None
     try:
         team_name = Team.get_user_conv_team_name(
@@ -105,29 +76,15 @@ def _get_initial_team(
         create_new_conv = True
 
     if create_new_conv:
-        if issubclass(initial_team_class, InitialTeam):  # type: ignore
-            initial_team = initial_team_class(  # type: ignore
-                user_id=user_id,
-                conv_id=conv_id,
-                task=task,
-                roles=roles,
-                work_dir=str(working_dir),
-                max_round=max_round,
-                seed=seed,
-                temperature=temperature,
-                human_input_mode=human_input_mode,
-                use_async=use_async,
-            )
-        else:
-            initial_team = initial_team_class(  # type: ignore
-                user_id=user_id,
-                conv_id=conv_id,
-                task=task,
-                work_dir=str(working_dir),
-                max_round=max_round,
-                seed=seed,
-                temperature=temperature,
-            )
+        initial_team = initial_team_class(  # type: ignore
+            user_id=user_id,
+            conv_id=conv_id,
+            task=task,
+            work_dir=str(working_dir),
+            max_round=max_round,
+            seed=seed,
+            temperature=temperature,
+        )
 
     return initial_team, team_name, create_new_conv
 
