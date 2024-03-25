@@ -72,6 +72,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 request = CaptnAgentRequest.model_validate_json(original_message)
                 message = _get_message(request)
 
+                # ToDo: fix this @rjambercic
                 WEBSOCKET_TOKENS.inc(len(message.split()))
             except Exception as e:
                 iostream.print(
