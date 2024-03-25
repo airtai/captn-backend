@@ -2,9 +2,11 @@ import traceback
 from datetime import date
 from typing import Dict, List, Literal, Optional
 
+import openai
 from autogen.io.websockets import IOStream, IOWebsockets
 from fastapi import APIRouter, HTTPException
 from openai import BadRequestError
+from prometheus_client import Counter
 from pydantic import BaseModel
 
 from captn.captn_agents.backend.campaign_creation_team import CampaignCreationTeam
@@ -19,9 +21,12 @@ router = APIRouter()
 
 google_ads_team_names = Team.get_team_names()
 
+# TODO: Check this with Davor
 print(
     f"Imported google_ads_team: {GoogleAdsTeam} and campaign_creation_team: {CampaignCreationTeam} so the @Team.register_team decorator is working correctly."
 )
+
+OPENAI_TIMEOUTS = Counter("openai_timeouts_total", "Total count of openai timeouts")
 
 
 class CaptnAgentRequest(BaseModel):
@@ -69,6 +74,23 @@ def _get_message(request: CaptnAgentRequest) -> str:
     return request.message
 
 
+ON_FAILURE_MESSAGE = "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
+
+
+def _handle_exception(
+    iostream: IOWebsockets, num_of_retries: int, e: Exception, retry: int
+) -> None:
+    # TODO: error logging
+    iostream.print(f"Agent conversation failed with an error: {e}")
+    if retry < num_of_retries - 1:
+        iostream.print("Retrying the whole conversation...")
+        iostream.print("*" * 100)
+    else:
+        iostream.print(ON_FAILURE_MESSAGE)
+        traceback.print_exc()
+        traceback.print_stack()
+
+
 def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
     WEBSOCKET_REQUESTS.inc()
     with IOStream.set_default(iostream):
@@ -81,9 +103,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 # ToDo: fix this @rjambercic
                 WEBSOCKET_TOKENS.inc(len(message.split()))
             except Exception as e:
-                iostream.print(
-                    "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
-                )
+                iostream.print(ON_FAILURE_MESSAGE)
                 print(f"Failed to read the message from the client: {e}")
                 traceback.print_stack()
                 return
@@ -111,18 +131,15 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     )
                     message = RETRY_MESSAGE
 
+                except openai.APITimeoutError as e:
+                    OPENAI_TIMEOUTS.inc()
+                    _handle_exception(
+                        iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
+                    )
                 except Exception as e:
-                    # TODO: error logging
-                    iostream.print(f"Agent conversation failed with an error: {e}")
-                    if i < num_of_retries - 1:
-                        iostream.print("Retrying the whole conversation...")
-                        iostream.print("*" * 100)
-                    else:
-                        iostream.print(
-                            "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
-                        )
-                        traceback.print_exc()
-                        traceback.print_stack()
+                    _handle_exception(
+                        iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
+                    )
 
         except Exception as e:
             print(f"Agent conversation failed with an error: {e}")

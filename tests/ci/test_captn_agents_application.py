@@ -1,16 +1,19 @@
 import unittest
 from tempfile import TemporaryDirectory
-from typing import Dict
+from typing import Callable, Dict
 
 import autogen
+import openai
 import pytest
 from autogen.cache import Cache
 from autogen.io.websockets import IOStream, IOWebsockets
 from httpx import Request, Response
 from openai import BadRequestError
+from prometheus_client import REGISTRY
 from websockets.sync.client import connect as ws_connect
 
 from captn.captn_agents.application import (
+    ON_FAILURE_MESSAGE,
     RETRY_MESSAGE,
     CaptnAgentRequest,
     _get_message,
@@ -79,6 +82,28 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
 
 
 class TestConsoleIOWithWebsockets:
+
+    @pytest.fixture()
+    def setup(self) -> None:
+        self.request = CaptnAgentRequest(
+            message="Business: airt.ai\nGoal: Increase brand awareness\nCurrent Situation: Running digital marketing campaigns\nWebsite: airt.ai\nDigital Marketing Objectives: Increase brand visibility, reach a wider audience, and improve brand recognition\nNext Steps: Analyze current Google Ads campaigns, identify opportunities for optimization, and create new strategies to increase brand awareness\nAny Other Information Related to Customer Brief: N/A",
+            user_id=1,
+            conv_id=1,
+            all_messages=[
+                {
+                    "role": "assistant",
+                    "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                },
+                {
+                    "role": "user",
+                    "content": "I want to Remove 'Free' keyword because it is not performing well",
+                },
+            ],
+            agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
+            is_continue_daily_analysis=False,
+            retry=True,
+        )
+
     def test_websockets_chat(self) -> None:
         print("Testing setup", flush=True)
 
@@ -182,7 +207,7 @@ class TestConsoleIOWithWebsockets:
         print("Test passed.", flush=True)
 
     @pytest.mark.skip(reason="TODO: run the application, mock google ads functions...")
-    def test_team_chat(self) -> None:
+    def test_team_chat(self, setup: Callable[[None], None]) -> None:
         print("Testing setup", flush=True)
 
         success_dict = {"success": False}
@@ -192,30 +217,12 @@ class TestConsoleIOWithWebsockets:
                 f" - test_setup() with websocket server running on {uri}.", flush=True
             )
 
-            request = CaptnAgentRequest(
-                message="Business: airt.ai\nGoal: Increase brand awareness\nCurrent Situation: Running digital marketing campaigns\nWebsite: airt.ai\nDigital Marketing Objectives: Increase brand visibility, reach a wider audience, and improve brand recognition\nNext Steps: Analyze current Google Ads campaigns, identify opportunities for optimization, and create new strategies to increase brand awareness\nAny Other Information Related to Customer Brief: N/A",
-                user_id=1,
-                conv_id=1,
-                all_messages=[
-                    {
-                        "role": "assistant",
-                        "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
-                    },
-                    {
-                        "role": "user",
-                        "content": "I want to Remove 'Free' keyword because it is not performing well",
-                    },
-                ],
-                agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
-                is_continue_daily_analysis=False,
-                retry=True,
-            )
             with ws_connect(uri) as websocket:
                 print(f" - Connected to server on {uri}", flush=True)
 
                 print(" - Sending message to server.", flush=True)
                 # websocket.send("2+2=?")
-                websocket.send(request.model_dump_json())
+                websocket.send(self.request.model_dump_json())
 
                 while True:
                     message = websocket.recv()
@@ -246,7 +253,9 @@ class TestConsoleIOWithWebsockets:
         assert success_dict["success"]
         print("Test passed.", flush=True)
 
-    def test_try_to_continue_the_conversation_on_exceptions(self) -> None:
+    def test_try_to_continue_the_conversation_on_exceptions(
+        self, setup: Callable[[None], None]
+    ) -> None:
         print("Testing setup", flush=True)
 
         success_dict = {"success": False}
@@ -256,24 +265,6 @@ class TestConsoleIOWithWebsockets:
                 f" - test_setup() with websocket server running on {uri}.", flush=True
             )
 
-            request = CaptnAgentRequest(
-                message="Business: airt.ai\nGoal: Increase brand awareness\nCurrent Situation: Running digital marketing campaigns\nWebsite: airt.ai\nDigital Marketing Objectives: Increase brand visibility, reach a wider audience, and improve brand recognition\nNext Steps: Analyze current Google Ads campaigns, identify opportunities for optimization, and create new strategies to increase brand awareness\nAny Other Information Related to Customer Brief: N/A",
-                user_id=1,
-                conv_id=1,
-                all_messages=[
-                    {
-                        "role": "assistant",
-                        "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
-                    },
-                    {
-                        "role": "user",
-                        "content": "I want to Remove 'Free' keyword because it is not performing well",
-                    },
-                ],
-                agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
-                is_continue_daily_analysis=False,
-                retry=True,
-            )
             with ws_connect(uri) as websocket:
                 # mock start_or_continue_conversation
                 with unittest.mock.patch(
@@ -296,7 +287,7 @@ class TestConsoleIOWithWebsockets:
                     print(f" - Connected to server on {uri}", flush=True)
 
                     print(" - Sending message to server.", flush=True)
-                    websocket.send(request.model_dump_json())
+                    websocket.send(self.request.model_dump_json())
 
                     while True:
                         message = websocket.recv()
@@ -313,7 +304,7 @@ class TestConsoleIOWithWebsockets:
                             success_dict["success"] = True
                             break
 
-        message = _get_message(request)
+        message = _get_message(self.request)
         mock_start_or_continue_conversation.assert_has_calls(
             [
                 unittest.mock.call(
@@ -344,6 +335,58 @@ class TestConsoleIOWithWebsockets:
         )
         assert success_dict["success"]
         print("Test passed.", flush=True)
+
+    def test_on_connect_prometheus_error_logging(
+        self, setup: Callable[[None], None]
+    ) -> None:
+        with IOWebsockets.run_server_in_thread(on_connect=on_connect, port=8765) as uri:
+            print(
+                f" - test_setup() with websocket server running on {uri}.", flush=True
+            )
+
+            with ws_connect(uri) as websocket:
+                # mock start_or_continue_conversation always to raise an exception
+                with unittest.mock.patch(
+                    "captn.captn_agents.application.start_or_continue_conversation"
+                ) as mock_start_or_continue_conversation:
+                    api_timeout_request = Request(
+                        method="POST",
+                        url="",
+                    )
+
+                    mock_start_or_continue_conversation.side_effect = (
+                        openai.APITimeoutError(request=api_timeout_request)
+                    )
+
+                    print(f" - Connected to server on {uri}", flush=True)
+
+                    print(" - Sending message to server.", flush=True)
+
+                    old_openai_timeouts = REGISTRY.get_sample_value(
+                        "openai_timeouts_total"
+                    )
+                    websocket.send(self.request.model_dump_json())
+
+                    while True:
+                        message = websocket.recv()
+
+                        message = (
+                            message.decode("utf-8")
+                            if isinstance(message, bytes)
+                            else message
+                        )
+                        if ON_FAILURE_MESSAGE in message:
+                            print()
+                            print(
+                                " - Received ON_FAILURE_MESSAGE. Exiting.", flush=True
+                            )
+
+                            break
+
+                    new_openai_timeouts = REGISTRY.get_sample_value(
+                        "openai_timeouts_total"
+                    )
+                    assert new_openai_timeouts == old_openai_timeouts + 3  # type: ignore
 
 
 def test_get_message_daily_analysis() -> None:
