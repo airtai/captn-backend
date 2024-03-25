@@ -678,7 +678,7 @@ sure it is understandable by non-experts.
         )
         self.conv_id = conv_id
         self.task = task
-        self.llm_config = DailyAnalysisTeam.get_llm_config(
+        self.llm_config = DailyAnalysisTeam._get_llm_config(
             seed=seed, temperature=temperature
         )
 

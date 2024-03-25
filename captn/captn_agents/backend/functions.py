@@ -74,7 +74,7 @@ def ask_client_for_permission(
     user_id: int,
     conv_id: int,
     customer_id: str,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     resource_details: str,
     proposed_changes: str,
 ) -> str:
@@ -87,7 +87,7 @@ def ask_client_for_permission(
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
     message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
 
-    clients_question_answere_list.append((proposed_changes, None))
+    clients_question_answer_list.append((proposed_changes, None))
 
     return reply_to_client_2(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS

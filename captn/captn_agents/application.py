@@ -1,18 +1,27 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from autogen.io.websockets import IOStream, IOWebsockets
 from fastapi import APIRouter, HTTPException
 from openai import BadRequestError
 from pydantic import BaseModel
 
+from captn.captn_agents.backend.campaign_creation_team import CampaignCreationTeam
 from captn.captn_agents.backend.daily_analysis_team import execute_daily_analysis
+from captn.captn_agents.backend.google_ads_team import GoogleAdsTeam
+from captn.captn_agents.backend.team import Team
 from captn.observability.websocket_utils import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
 
 from .backend.end_to_end import start_or_continue_conversation
 
 router = APIRouter()
+
+google_ads_team_names = Team.get_team_names()
+
+print(
+    f"Imported google_ads_team: {GoogleAdsTeam} and campaign_creation_team: {CampaignCreationTeam} so the @Team.register_team decorator is working correctly."
+)
 
 
 class CaptnAgentRequest(BaseModel):
@@ -20,6 +29,7 @@ class CaptnAgentRequest(BaseModel):
     message: str
     user_id: int
     conv_id: int
+    google_ads_team: Literal[tuple(google_ads_team_names)] = "default_team"  # type: ignore[valid-type]
     all_messages: List[Dict[str, str]]
     agent_chat_history: Optional[str]
     is_continue_daily_analysis: bool
@@ -79,13 +89,14 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 return
             for i in range(num_of_retries):
                 try:
+                    class_name = request.google_ads_team
                     _, last_message = start_or_continue_conversation(
                         user_id=request.user_id,
                         conv_id=request.conv_id,
                         task=message,
                         max_round=80,
                         human_input_mode="NEVER",
-                        class_name="google_ads_team",
+                        class_name=class_name,
                     )
                     iostream.print(last_message)
 
@@ -127,7 +138,7 @@ def chat(request: CaptnAgentRequest) -> str:
             task=request.message,
             max_round=80,
             human_input_mode="NEVER",
-            class_name="google_ads_team",
+            class_name=request.google_ads_team,
         )
 
     except BadRequestError as e:

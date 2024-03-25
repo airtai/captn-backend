@@ -536,10 +536,10 @@ create_campaign_config = {
             },
             "budget_amount_micros": {
                 "type": "number",
-                "description": """The amount of the budget, in the LOCAL CURRENCY for the account (defined in the local_currency parameter).
+                "description": """The DAILY amount of the budget, in the LOCAL CURRENCY for the account (defined in the local_currency parameter).
 Amount is specified in micros, where one million is equivalent to one currency unit. Monthly spend is capped at 30.4 times this amount.
 Make sure that the client APPROVES the budget amount, otherwise you will be penalized!
-This is the MOST IMPORTANT parameter, because it determines how much money will be spent on the ads!""",
+This is the MOST IMPORTANT parameter, because it determines how much money will be spent PER DAY on the ads!""",
             },
             "local_currency": properties_config["local_currency"],
             "network_settings_target_google_search": {

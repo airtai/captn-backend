@@ -62,7 +62,7 @@ class ExecutionTeam(Team):
         )
 
         self.plan = plan
-        self.llm_config = ExecutionTeam.get_llm_config(
+        self.llm_config = ExecutionTeam._get_llm_config(
             seed=seed, temperature=temperature
         )
 

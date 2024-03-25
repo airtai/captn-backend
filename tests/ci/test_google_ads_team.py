@@ -33,7 +33,7 @@ class TestGoogleAdsTeam:
 
             if micros_var_name is None:
                 f_with_check = add_currency_check(
-                    f, user_id=123, conv_id=456, clients_question_answere_list=[]
+                    f, user_id=123, conv_id=456, clients_question_answer_list=[]
                 )
                 micros_var_name = "cpc_bid_micros"
             else:
@@ -41,7 +41,7 @@ class TestGoogleAdsTeam:
                     f,
                     user_id=123,
                     conv_id=456,
-                    clients_question_answere_list=[],
+                    clients_question_answer_list=[],
                     micros_var_name=micros_var_name,
                 )
 
@@ -96,7 +96,7 @@ class TestGoogleAdsTeam:
                 f,
                 user_id=123,
                 conv_id=456,
-                clients_question_answere_list=[],
+                clients_question_answer_list=[],
                 micros_var_name=micros_var_name,
             )
 
@@ -125,7 +125,7 @@ class TestGoogleAdsTeam:
                 ad=model(
                     **kwargs,
                 ),
-                clients_question_answere_list=[],
+                clients_question_answer_list=[],
                 endpoint=endpoint,
             )
 

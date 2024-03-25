@@ -62,7 +62,7 @@ class InitialTeam(Team):
         )
 
         self.task = task
-        self.llm_config = self.__class__.get_llm_config(
+        self.llm_config = self.__class__._get_llm_config(
             seed=seed, temperature=temperature
         )
 
