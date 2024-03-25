@@ -88,7 +88,7 @@ testing = [
 agents = [
     "fastapi==0.110.0",
     "APScheduler==3.10.4",
-    "prisma==0.12.0",
+    "prisma==0.13.1",
     "google-ads==23.1.0",
     "httpx==0.27.0",
     "uvicorn==0.29.0",
