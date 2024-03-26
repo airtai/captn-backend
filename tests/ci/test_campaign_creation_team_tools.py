@@ -82,7 +82,7 @@ class TestTools:
         )
 
         with unittest.mock.patch(
-            "captn.captn_agents.backend.campaign_creation_team_tools.google_ads_create_update"
+            "captn.captn_agents.backend.tools._campaign_creation_team_tools.google_ads_create_update"
         ) as mock_google_ads_create_update:
             side_effect = [
                 "Created customers/1212/adGroups/3434.",
