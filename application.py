@@ -4,12 +4,10 @@ from os import environ
 from typing import AsyncGenerator
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from autogen.io.websockets import IOWebsockets
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse  # noqa: E402
 
-from captn.captn_agents.application import on_connect
 from captn.captn_agents.backend.daily_analysis_team import execute_daily_analysis
 from captn.observability import PrometheusMiddleware, metrics, setting_otlp
 
@@ -32,15 +30,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
     )  # second="*/59")
     scheduler.start()
 
-    with IOWebsockets.run_server_in_thread(
-        on_connect=on_connect,
-        host="0.0.0.0",  # nosec [B104]
-        port=8080,
-    ) as uri:
-        print(f"Websocket server started at {uri}.", flush=True)
+    # with IOWebsockets.run_server_in_thread(
+    #     on_connect=on_connect,
+    #     host="0.0.0.0",  # nosec [B104]
+    #     port=8080,
+    # ) as uri:
+    #     print(f"Websocket server started at {uri}.", flush=True)
 
-        yield
-    # yield
+    #     yield
+    yield
 
 
 app = FastAPI(lifespan=lifespan)
