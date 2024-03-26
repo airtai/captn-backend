@@ -1,15 +1,9 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from captn.captn_agents.backend.google_ads_team import (
-    GoogleAdsTeam,
-    get_campaign_creation_team_shared_functions,
-)
-from captn.captn_agents.backend.team import Team
-
-from .campaign_creation_team_tools import (
+from ..tools._campaign_creation_team_tools import (
     add_create_ad_group_with_ad_and_keywords_to_agent,
 )
-from .function_configs import (
+from ..tools._function_configs import (
     ask_client_for_permission_config,
     change_google_account_config,
     create_campaign_config,
@@ -18,6 +12,13 @@ from .function_configs import (
     list_accessible_customers_config,
     reply_to_client_2_config,
 )
+from ._google_ads_team import (
+    GoogleAdsTeam,
+    get_campaign_creation_team_shared_functions,
+)
+from ._team import Team
+
+__all__ = ("CampaignCreationTeam",)
 
 
 @Team.register_team("campaign_creation_team")

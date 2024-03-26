@@ -1,27 +1,11 @@
-from ..model import suggestions_description, type_description
-from .functions import (
+from ...model import suggestions_description, type_description
+from ._functions import (
     reply_to_client_2_description,
     smart_suggestions_description,
 )
 
-create_execution_team_config = {
-    "name": "create_execution_team",
-    "description": "Create the team which will execute the plan",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "plan": {
-                "type": "string",
-                "description": "The plan for the execution team",
-            },
-            "roles": {
-                "type": "string",
-                "description": "List of the team roles in charge of executing the plan (e.g. roles=['QA', 'Developer', 'Systrem_Arhitect'])",
-            },
-        },
-        "required": ["plan, roles"],
-    },
-}
+# TODO: complete this
+__all__ = ("ask_for_additional_info_config",)
 
 ask_for_additional_info_config = {
     "name": "ask_for_additional_info",
@@ -35,25 +19,6 @@ ask_for_additional_info_config = {
             },
         },
         "required": ["question"],
-    },
-}
-
-answer_to_execution_team_config = {
-    "name": "answer_to_execution_team",
-    "description": "Answer to the question which was asked by the execution team",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "answer": {
-                "type": "string",
-                "description": "The answer to the question",
-            },
-            "team_name": {
-                "type": "string",
-                "description": "Name of the team which asked the question",
-            },
-        },
-        "required": ["answer", "team_name"],
     },
 }
 

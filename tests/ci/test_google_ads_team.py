@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.google_ads_team import (
+from captn.captn_agents.backend.teams._google_ads_team import (
     add_currency_check,
     check_currency,
     create_ad_group,
@@ -25,7 +25,7 @@ class TestGoogleAdsTeam:
     @pytest.mark.parametrize("micros_var_name", [None, "budget_micros"])
     def test_add_currency_check(self, micros_var_name: Optional[str]) -> None:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.google_ads_team.get_customer_currency"
+            "captn.captn_agents.backend.teams._google_ads_team.get_customer_currency"
         ) as mock_get_customer_currency:
             mock_get_customer_currency.return_value = "EUR"
 
@@ -84,9 +84,9 @@ class TestGoogleAdsTeam:
         **kwargs: Any,
     ) -> None:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.google_ads_team.get_customer_currency"
+            "captn.captn_agents.backend.teams._google_ads_team.get_customer_currency"
         ) as mock_get_customer_currency, unittest.mock.patch(
-            "captn.captn_agents.backend.google_ads_team.google_ads_create_update"
+            "captn.captn_agents.backend.teams._google_ads_team.google_ads_create_update"
         ) as mock_google_ads_create_update:
 
             mock_get_customer_currency.return_value = "EUR"
@@ -232,7 +232,7 @@ class TestGoogleAdsTeam:
 
 def test_get_customer_currency() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.execute_query"
+        "captn.captn_agents.backend.teams._google_ads_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {"12121212": [{"customer": {"currencyCode": "EUR"}}]}
@@ -243,7 +243,7 @@ def test_get_customer_currency() -> None:
 
 def test_check_currency_raises_exception_if_incorrect_currency() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.execute_query"
+        "captn.captn_agents.backend.teams._google_ads_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {"12121212": [{"customer": {"currencyCode": "EUR"}}]}
@@ -266,7 +266,7 @@ Please convert the budget to the customer's currency and ask the client for the 
 
 def test_check_currency_raises_exception_if_currency_is_none() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.google_ads_team.execute_query"
+        "captn.captn_agents.backend.teams._google_ads_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {"12121212": [{"customer": {"currencyCode": "EUR"}}]}

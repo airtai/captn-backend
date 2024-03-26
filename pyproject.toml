@@ -194,10 +194,10 @@ convention = "google"
 
 minversion = "7.0"
 
-addopts = "-q -m 'not slow'"
+addopts = "-vv"
 
 testpaths = [
-    "tests",
+    "tests/ci",
 ]
 
 markers = [
