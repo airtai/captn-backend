@@ -110,6 +110,9 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
         try:
             try:
                 original_message = iostream.input()
+                if original_message == "ping":
+                    iostream.print("pong")
+                    return
                 request = CaptnAgentRequest.model_validate_json(original_message)
                 message = _get_message(request)
 
