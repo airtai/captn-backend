@@ -27,6 +27,10 @@ print(
 )
 
 OPENAI_TIMEOUTS = Counter("openai_timeouts_total", "Total count of openai timeouts")
+OPENAI_TIMEOUTS_THREE_IN_A_ROW = Counter(
+    "openai_timeouts_three_in_a_row_total",
+    "Total count of three in a row openai timeouts",
+)
 
 
 class CaptnAgentRequest(BaseModel):
@@ -86,6 +90,8 @@ def _handle_exception(
         iostream.print("Retrying the whole conversation...")
         iostream.print("*" * 100)
     else:
+        if isinstance(e, openai.APITimeoutError):
+            OPENAI_TIMEOUTS_THREE_IN_A_ROW.inc()
         iostream.print(ON_FAILURE_MESSAGE)
         traceback.print_exc()
         traceback.print_stack()

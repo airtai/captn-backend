@@ -365,6 +365,9 @@ class TestConsoleIOWithWebsockets:
                     old_openai_timeouts = REGISTRY.get_sample_value(
                         "openai_timeouts_total"
                     )
+                    old_openai_three_in_a_row_timeouts = REGISTRY.get_sample_value(
+                        "openai_timeouts_three_in_a_row_total"
+                    )
                     websocket.send(self.request.model_dump_json())
 
                     while True:
@@ -386,7 +389,11 @@ class TestConsoleIOWithWebsockets:
                     new_openai_timeouts = REGISTRY.get_sample_value(
                         "openai_timeouts_total"
                     )
+                    new_openai_three_in_a_row_timeouts = REGISTRY.get_sample_value(
+                        "openai_timeouts_three_in_a_row_total"
+                    )
                     assert new_openai_timeouts == old_openai_timeouts + 3  # type: ignore
+                    assert new_openai_three_in_a_row_timeouts == old_openai_three_in_a_row_timeouts + 1  # type: ignore
 
 
 def test_get_message_daily_analysis() -> None:
