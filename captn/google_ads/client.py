@@ -8,6 +8,15 @@ from pydantic import BaseModel
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
 
+__all__ = (
+    "get_google_ads_team_capability",
+    "get_login_url",
+    "list_accessible_customers",
+    "execute_query",
+    "get_user_ids_and_emails",
+    "google_ads_create_update",
+)
+
 
 def get_google_ads_team_capability() -> str:
     prefix = "Your capabilities are centered around Google Ads campaigns and include:\n"

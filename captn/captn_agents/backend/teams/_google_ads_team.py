@@ -1,5 +1,3 @@
-__all__ = ["GoogleAdsTeam"]
-
 import ast
 from functools import wraps
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
@@ -15,13 +13,13 @@ from google_ads.model import (
     RemoveResource,
 )
 
-from ...google_ads.client import (
+from ....google_ads.client import (
     execute_query,
     get_login_url,
     google_ads_create_update,
     list_accessible_customers,
 )
-from .function_configs import (
+from ..tools._function_configs import (
     ask_client_for_permission_config,
     change_google_account_config,
     create_ad_copy_headline_or_description_config,
@@ -44,12 +42,14 @@ from .function_configs import (
     update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
-from .functions import (
+from ..tools._functions import (
     ask_client_for_permission,
     get_info_from_the_web_page,
     reply_to_client_2,
 )
-from .team import Team
+from ._team import Team
+
+__all__ = ("GoogleAdsTeam",)
 
 
 @Team.register_team("default_team")

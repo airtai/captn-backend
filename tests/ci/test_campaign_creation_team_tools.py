@@ -2,7 +2,8 @@ import unittest
 
 from autogen.agentchat import AssistantAgent
 
-from captn.captn_agents.backend.campaign_creation_team_tools import (
+from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
     AdGroupCriterionForCreation,
     AdGroupForCreation,
@@ -10,7 +11,6 @@ from captn.captn_agents.backend.campaign_creation_team_tools import (
     add_create_ad_group_with_ad_and_keywords_to_agent,
     create_ad_group_with_ad_and_keywords,
 )
-from captn.captn_agents.backend.config import Config
 
 
 class TestTools:
@@ -82,7 +82,7 @@ class TestTools:
         )
 
         with unittest.mock.patch(
-            "captn.captn_agents.backend.campaign_creation_team_tools.google_ads_create_update"
+            "captn.captn_agents.backend.tools._campaign_creation_team_tools.google_ads_create_update"
         ) as mock_google_ads_create_update:
             side_effect = [
                 "Created customers/1212/adGroups/3434.",

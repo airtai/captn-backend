@@ -1,47 +1,11 @@
-__all__ = [
-    "start_or_continue_conversation",
-    "continue_conversation",
-]
-
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type
 
-from .team import Team
+from .teams import Team
 
-initial_team_roles_never = [
-    {
-        "Name": "User_proxy",
-        "Description": "Your job is to comunicate with the Account_manager, do NOT suggest any code or execute the code by yourself",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in digital marketing agency.",
-    },
-]
-
-captn_initial_team_roles_never = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a user with a task for the Account_manager, do NOT suggest any code or execute the code by yourself.
-If you receive a login link, just reply with: 'I am logged in now'""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in the digital agency. Your job is to communicate with the User_proxy.",
-    },
-]
-
-captn_initial_team_roles_always = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a proxy between the real user and the Account_manager. When you want to ask the client a question or return to him a summary of what has been done,
-use the 'reply_to_client' command.""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": """You are an account manager in the digital agency. Your job is to communicate with the User_proxy.
-When you want to ask the user a question directly or return to him a summary of what has been done, use the 'reply_to_client' command.""",
-    },
+__all__ = [
+    "start_or_continue_conversation",
+    "continue_conversation",
 ]
 
 

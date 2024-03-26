@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from tenacity import RetryError
 
-from captn.captn_agents.backend.daily_analysis_team import (
+from captn.captn_agents.backend.teams._daily_analysis_team import (
     REACT_APP_API_URL,
     AdGroup,
     AdGroupAd,
@@ -104,7 +104,7 @@ def test_keywords_metrics() -> None:
 
 def test_get_daily_ad_group_ads_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {
@@ -284,7 +284,7 @@ def test_get_daily_ad_group_ads_report() -> None:
 
 def test_get_daily_keywords_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {
@@ -764,11 +764,11 @@ def test_compare_reports() -> None:
 
 def test_get_campaigns_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
     ) as mock_execute_query:
         # mock get_ad_groups_report
         with unittest.mock.patch(
-            "captn.captn_agents.backend.daily_analysis_team.get_ad_groups_report"
+            "captn.captn_agents.backend.teams._daily_analysis_team.get_ad_groups_report"
         ) as mock_get_ad_groups_report:
             mock_execute_query.return_value = str(
                 {
@@ -1229,7 +1229,7 @@ def test_construct_daily_report_email_from_template() -> None:
 def test_send_email() -> None:
     with unittest.mock.patch("requests.post") as mock_post:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.daily_analysis_team.send_email_infobip"
+            "captn.captn_agents.backend.teams._daily_analysis_team.send_email_infobip"
         ) as mock_send_email_infobip:
             mock_post.return_value.status_code = 200
             mock_post.return_value.json = lambda: {"chatID": 239}
@@ -1265,10 +1265,10 @@ def test_send_email() -> None:
 
 def test_execute_daily_analysis_with_incorrect_emails() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.daily_analysis_team.get_user_ids_and_emails"
+        "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails"
     ) as mock_get_user_ids_and_emails:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.daily_analysis_team._get_conv_id"
+            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id"
         ) as mock_get_conv_id:
             mock_get_user_ids_and_emails.return_value = json.dumps(
                 {
@@ -1285,7 +1285,7 @@ def test_execute_daily_analysis_with_incorrect_emails() -> None:
 
 def test_google_ads_api_call_reties_three_times() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.daily_analysis_team.list_accessible_customers"
+        "captn.captn_agents.backend.teams._daily_analysis_team.list_accessible_customers"
     ) as mock_list_accessible_customers:
         mock_list_accessible_customers.side_effect = [
             ValueError("Error1"),
@@ -1304,7 +1304,7 @@ def test_google_ads_api_call_reties_three_times() -> None:
 
 def test_google_ads_api_call_reties_returns_result_in_second_attempt() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.daily_analysis_team.list_accessible_customers"
+        "captn.captn_agents.backend.teams._daily_analysis_team.list_accessible_customers"
     ) as mock_list_accessible_customers:
         mock_list_accessible_customers.side_effect = [ValueError("Error1"), ["1", "2"]]
         result = google_ads_api_call(
@@ -1319,31 +1319,31 @@ def test_google_ads_api_call_reties_returns_result_in_second_attempt() -> None:
 
 def test_execute_daily_analysis_workflow() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.daily_analysis_team.get_user_ids_and_emails"
+        "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails"
     ) as mock_get_user_ids_and_emails:
 
         with unittest.mock.patch(
-            "captn.captn_agents.backend.daily_analysis_team._get_conv_id"
+            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id"
         ) as mock_get_conv_id:
 
             with unittest.mock.patch(
-                "captn.captn_agents.backend.daily_analysis_team.get_login_url"
+                "captn.captn_agents.backend.teams._daily_analysis_team.get_login_url"
             ) as mock_get_login_url:
 
                 with unittest.mock.patch(
-                    "captn.captn_agents.backend.daily_analysis_team.get_daily_report"
+                    "captn.captn_agents.backend.teams._daily_analysis_team.get_daily_report"
                 ) as mock_get_daily_report:
 
                     with unittest.mock.patch(
-                        "captn.captn_agents.backend.daily_analysis_team.DailyAnalysisTeam.initiate_chat"
+                        "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.initiate_chat"
                     ) as mock_initiate_chat:
 
                         with unittest.mock.patch(
-                            "captn.captn_agents.backend.daily_analysis_team.DailyAnalysisTeam.get_messages",
+                            "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.get_messages",
                         ) as mock_messages:
 
                             with unittest.mock.patch(
-                                "captn.captn_agents.backend.daily_analysis_team._update_chat_message_and_send_email"
+                                "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email"
                             ) as mock_update_chat_message_and_send_email:
                                 mock_get_user_ids_and_emails.return_value = (
                                     """{"1": "robert@airt.ai"}"""
