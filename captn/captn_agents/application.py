@@ -7,21 +7,12 @@ from fastapi import APIRouter, HTTPException
 from openai import BadRequestError
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.campaign_creation_team import CampaignCreationTeam
-from captn.captn_agents.backend.daily_analysis_team import execute_daily_analysis
-from captn.captn_agents.backend.google_ads_team import GoogleAdsTeam
-from captn.captn_agents.backend.team import Team
-from captn.observability.websocket_utils import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
-
-from .backend.end_to_end import start_or_continue_conversation
+from ..observability.websocket_utils import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
+from .backend import Team, execute_daily_analysis, start_or_continue_conversation
 
 router = APIRouter()
 
 google_ads_team_names = Team.get_team_names()
-
-print(
-    f"Imported google_ads_team: {GoogleAdsTeam} and campaign_creation_team: {CampaignCreationTeam} so the @Team.register_team decorator is working correctly."
-)
 
 
 class CaptnAgentRequest(BaseModel):

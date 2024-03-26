@@ -4,7 +4,7 @@ from unittest import mock
 import autogen
 import pytest
 
-from captn.captn_agents.backend.team import Team
+from captn.captn_agents.backend.teams._team import Team
 
 roles = [
     {"Name": "Role1", "Description": "Description1"},
@@ -12,7 +12,7 @@ roles = [
 ]
 
 
-@mock.patch("captn.captn_agents.backend.team.Team._get_team_name_prefix")
+@mock.patch("captn.captn_agents.backend.teams._team.Team._get_team_name_prefix")
 def test_get_new_team_name(mock_get_team_name_prefix: mock.MagicMock) -> None:
     mock_get_team_name_prefix.return_value = "Team"
     assert Team._get_new_team_name() == "Team_0"

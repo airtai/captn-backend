@@ -5,8 +5,7 @@ from typing import Dict, List, Union
 import requests
 from openai import AsyncAzureOpenAI
 
-from captn.captn_agents.backend.daily_analysis_team import REACT_APP_API_URL
-from captn.captn_agents.model import SmartSuggestions
+from captn import REACT_APP_API_URL, SmartSuggestions
 
 
 def _format_conversation(messages: List[Dict[str, str]]) -> str:

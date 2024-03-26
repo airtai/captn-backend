@@ -6,9 +6,18 @@ from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from pydantic import BaseModel
 from typing_extensions import Annotated
 
-from ...google_ads.client import execute_query
-from ..model import SmartSuggestions
-from .config import Config
+from ....google_ads.client import execute_query
+from ...model import SmartSuggestions
+from ..config import Config
+
+__all__ = (
+    "ask_for_additional_info",
+    "reply_to_client",
+    "reply_to_client_2",
+    "ask_client_for_permission",
+    "get_info_from_the_web_page",
+    "send_email",
+)
 
 
 def ask_for_additional_info(question: str) -> str:

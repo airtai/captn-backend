@@ -3,8 +3,8 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+from captn.captn_agents.backend import Team
 from captn.captn_agents.backend.end_to_end import _get_initial_team
-from captn.captn_agents.backend.team import Team
 
 
 @pytest.mark.parametrize(

@@ -5,9 +5,8 @@ from autogen.agentchat import AssistantAgent, ConversableAgent
 from pydantic import BaseModel, Field, StringConstraints
 from typing_extensions import Annotated
 
-from captn.google_ads.client import google_ads_create_update
-
-from .function_configs import properties_config
+from ....google_ads.client import google_ads_create_update
+from ._function_configs import properties_config
 
 __all__ = ("add_create_ad_group_with_ad_and_keywords_to_agent",)
 
