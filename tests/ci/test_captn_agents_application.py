@@ -9,7 +9,6 @@ from autogen.cache import Cache
 from autogen.io.websockets import IOStream, IOWebsockets
 from httpx import Request, Response
 from openai import BadRequestError
-from prometheus_client import REGISTRY
 from websockets.sync.client import connect as ws_connect
 
 from captn.captn_agents.application import (
@@ -345,10 +344,21 @@ class TestConsoleIOWithWebsockets:
             )
 
             with ws_connect(uri) as websocket:
-                # mock start_or_continue_conversation always to raise an exception
                 with unittest.mock.patch(
                     "captn.captn_agents.application.start_or_continue_conversation"
-                ) as mock_start_or_continue_conversation:
+                ) as mock_start_or_continue_conversation, unittest.mock.patch(
+                    "captn.captn_agents.application.OPENAI_TIMEOUTS"
+                ) as mock_openai_timeouts, unittest.mock.patch(
+                    "captn.captn_agents.application.THREE_IN_A_ROW_EXCEPTIONS"
+                ) as mock_three_in_a_row_exceptions, unittest.mock.patch(
+                    "captn.captn_agents.application.BAD_REQUEST_ERRORS"
+                ) as mock_bad_request_errors, unittest.mock.patch(
+                    "captn.captn_agents.application.REGULAR_EXCEPTIONS"
+                ) as mock_regular_exceptions, unittest.mock.patch(
+                    "captn.captn_agents.application.INVALID_MESSAGE_IN_IOSTREAM"
+                ) as mock_invalid_message_in_iostream, unittest.mock.patch(
+                    "captn.captn_agents.application.RANDOM_EXCEPTIONS"
+                ) as mock_random_exceptions:
                     api_timeout_request = Request(
                         method="POST",
                         url="",
@@ -362,12 +372,6 @@ class TestConsoleIOWithWebsockets:
 
                     print(" - Sending message to server.", flush=True)
 
-                    old_openai_timeouts = REGISTRY.get_sample_value(
-                        "openai_timeouts_total"
-                    )
-                    old_openai_three_in_a_row_timeouts = REGISTRY.get_sample_value(
-                        "openai_timeouts_three_in_a_row_total"
-                    )
                     websocket.send(self.request.model_dump_json())
 
                     while True:
@@ -386,14 +390,12 @@ class TestConsoleIOWithWebsockets:
 
                             break
 
-                    new_openai_timeouts = REGISTRY.get_sample_value(
-                        "openai_timeouts_total"
-                    )
-                    new_openai_three_in_a_row_timeouts = REGISTRY.get_sample_value(
-                        "openai_timeouts_three_in_a_row_total"
-                    )
-                    assert new_openai_timeouts == old_openai_timeouts + 3  # type: ignore
-                    assert new_openai_three_in_a_row_timeouts == old_openai_three_in_a_row_timeouts + 1  # type: ignore
+                    assert mock_openai_timeouts.inc.call_count == 3
+                    assert mock_three_in_a_row_exceptions.inc.call_count == 1
+                    mock_bad_request_errors.assert_not_called()
+                    mock_regular_exceptions.assert_not_called()
+                    mock_invalid_message_in_iostream.assert_not_called()
+                    mock_random_exceptions.assert_not_called()
 
 
 def test_get_message_daily_analysis() -> None:

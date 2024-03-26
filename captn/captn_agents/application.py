@@ -17,10 +17,23 @@ router = APIRouter()
 google_ads_team_names = Team.get_team_names()
 
 
+THREE_IN_A_ROW_EXCEPTIONS = Counter(
+    "three_in_a_row_exceptions_total",
+    "Total count of three in a row exceptions",
+)
 OPENAI_TIMEOUTS = Counter("openai_timeouts_total", "Total count of openai timeouts")
-OPENAI_TIMEOUTS_THREE_IN_A_ROW = Counter(
-    "openai_timeouts_three_in_a_row_total",
-    "Total count of three in a row openai timeouts",
+
+BAD_REQUEST_ERRORS = Counter(
+    "bad_request_errors_total", "Total count of bad request errors"
+)
+REGULAR_EXCEPTIONS = Counter(
+    "regular_exceptions_total", "Total count of regular exceptions"
+)
+INVALID_MESSAGE_IN_IOSTREAM = Counter(
+    "invalid_message_in_iostream_total", "Total count of invalid messages in iostream"
+)
+RANDOM_EXCEPTIONS = Counter(
+    "random_exceptions_total", "Total count of random exceptions"
 )
 
 
@@ -77,12 +90,15 @@ def _handle_exception(
 ) -> None:
     # TODO: error logging
     iostream.print(f"Agent conversation failed with an error: {e}")
+    if isinstance(e, openai.APITimeoutError):
+        OPENAI_TIMEOUTS.inc()
+    else:
+        REGULAR_EXCEPTIONS.inc()
     if retry < num_of_retries - 1:
         iostream.print("Retrying the whole conversation...")
         iostream.print("*" * 100)
     else:
-        if isinstance(e, openai.APITimeoutError):
-            OPENAI_TIMEOUTS_THREE_IN_A_ROW.inc()
+        THREE_IN_A_ROW_EXCEPTIONS.inc()
         iostream.print(ON_FAILURE_MESSAGE)
         traceback.print_exc()
         traceback.print_stack()
@@ -100,6 +116,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 # ToDo: fix this @rjambercic
                 WEBSOCKET_TOKENS.inc(len(message.split()))
             except Exception as e:
+                INVALID_MESSAGE_IN_IOSTREAM.inc()
                 iostream.print(ON_FAILURE_MESSAGE)
                 print(f"Failed to read the message from the client: {e}")
                 traceback.print_stack()
@@ -120,6 +137,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     return
 
                 except BadRequestError as e:
+                    BAD_REQUEST_ERRORS.inc()
                     iostream.print(
                         f"OpenAI classified the message as BadRequestError: {e}"
                     )
@@ -128,17 +146,13 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     )
                     message = RETRY_MESSAGE
 
-                except openai.APITimeoutError as e:
-                    OPENAI_TIMEOUTS.inc()
-                    _handle_exception(
-                        iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
-                    )
                 except Exception as e:
                     _handle_exception(
                         iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
                     )
 
         except Exception as e:
+            RANDOM_EXCEPTIONS.inc()
             print(f"Agent conversation failed with an error: {e}")
             traceback.print_stack()
 
