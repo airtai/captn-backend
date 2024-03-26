@@ -5,14 +5,14 @@ from typing import Iterator, Optional
 import pytest
 from autogen.cache import Cache
 
-from captn.captn_agents.backend.campaign_creation_team import CampaignCreationTeam
-from captn.captn_agents.backend.campaign_creation_team_tools import (
+from captn.captn_agents.backend.team import Team
+from captn.captn_agents.backend.team.campaign_creation_team import CampaignCreationTeam
+from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
 )
-from captn.captn_agents.backend.team import Team
 
 
 class TestCampaignCreationTeam:

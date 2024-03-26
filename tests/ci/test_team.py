@@ -4,7 +4,7 @@ from unittest import mock
 import autogen
 import pytest
 
-from captn.captn_agents.backend.team import Team
+from captn.captn_agents.backend.teams._team import Team
 
 roles = [
     {"Name": "Role1", "Description": "Description1"},

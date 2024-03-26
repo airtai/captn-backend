@@ -1,5 +1,3 @@
-__all__ = ["DailyAnalysisTeam"]
-
 import ast
 import json
 import traceback
@@ -15,24 +13,28 @@ from markdownify import markdownify as md
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt
 
-from captn.captn_agents.backend.google_ads_team import string_to_list
-
-from ...email.send_email import send_email as send_email_infobip
-from ...google_ads.client import (
+from ....email.send_email import send_email as send_email_infobip
+from ....google_ads.client import (
     ALREADY_AUTHENTICATED,
     execute_query,
     get_login_url,
     get_user_ids_and_emails,
     list_accessible_customers,
 )
-from .function_configs import (
+from ..tools._function_configs import (
     execute_query_config,
     get_info_from_the_web_page_config,
     list_accessible_customers_config,
     send_email_config,
 )
-from .functions import get_info_from_the_web_page, send_email
-from .team import Team
+from ..tools._functions import get_info_from_the_web_page, send_email
+from ._google_ads_team import string_to_list
+from ._team import Team
+
+__all__ = ("DailyAnalysisTeam",)
+
+REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
+REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
 
 
 class Metrics(BaseModel):
@@ -852,10 +854,6 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
     }
 
     return function_map
-
-
-REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
-REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
 
 
 def _create_final_html_message(

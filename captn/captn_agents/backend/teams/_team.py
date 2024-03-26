@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 import autogen
 from fastcore.basics import patch
 
-from .config import Config
+from ..config import Config
 
 _completions_create_original = autogen.oai.client.OpenAIClient.create
 

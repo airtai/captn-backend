@@ -6,9 +6,7 @@ from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from captn.captn_agents.model import SmartSuggestions
-from captn.google_ads.client import get_google_ads_team_capability
-
+from ..captn import SmartSuggestions, Team, get_google_ads_team_capability
 from .smart_suggestion_generator import generate_smart_suggestions
 
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It seems our voyage hit an unexpected squall. Let's trim the sails and set a new course. Cast off once more by clicking the button below."
@@ -144,10 +142,7 @@ You have the tendency to make the below mistakes. You SHOULD aviod them at all c
 - Asking questions even if it is not relevant to the conversation. For example, if the customer has already informed that they are not using Google Ads, you again ask them permission to access their Google Ads account.
 """
 
-TEAM_NAMES = {
-    "default_team": "default_team_{}_{}",
-    "campaign_creation_team": "campaign_creation_team_{}_{}",
-}
+TEAM_NAMES = {name: name + "_{}_{}" for name in Team.get_team_names()}
 
 
 async def offload_work_to_google_ads_expert(
@@ -163,6 +158,7 @@ async def offload_work_to_google_ads_expert(
         "team_name": team_name,
         "team_id": chat_id,
         "customer_brief": customer_brief,
+        "google_ads_team": google_ads_team,
     }
 
 

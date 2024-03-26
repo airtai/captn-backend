@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from tenacity import RetryError
 
-from captn.captn_agents.backend.daily_analysis_team import (
+from captn.captn_agents.backend.teams._daily_analysis_team import (
     REACT_APP_API_URL,
     AdGroup,
     AdGroupAd,
