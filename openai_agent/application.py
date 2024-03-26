@@ -145,7 +145,7 @@ You have the tendency to make the below mistakes. You SHOULD aviod them at all c
 """
 
 TEAM_NAMES = {
-    "default_team": "google_ads_team_{}_{}",
+    "default_team": "default_team_{}_{}",
     "campaign_creation_team": "campaign_creation_team_{}_{}",
 }
 
