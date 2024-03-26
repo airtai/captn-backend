@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.google_ads_team import (
+from captn.captn_agents.backend.teams._google_ads_team import (
     add_currency_check,
     check_currency,
     create_ad_group,

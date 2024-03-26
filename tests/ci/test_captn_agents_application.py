@@ -18,7 +18,7 @@ from captn.captn_agents.application import (
     on_connect,
 )
 from captn.captn_agents.backend.config import Config
-from captn.captn_agents.backend.functions import TeamResponse
+from captn.captn_agents.backend.tools._functions import TeamResponse
 
 
 def test_chat_when_openai_bad_request_is_raised() -> None:

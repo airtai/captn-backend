@@ -6,7 +6,9 @@ from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from ..captn import SmartSuggestions, Team, get_google_ads_team_capability
+from captn.captn_agents import SmartSuggestions, Team
+from captn.google_ads import get_google_ads_team_capability
+
 from .smart_suggestion_generator import generate_smart_suggestions
 
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It seems our voyage hit an unexpected squall. Let's trim the sails and set a new course. Cast off once more by clicking the button below."

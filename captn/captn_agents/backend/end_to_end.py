@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type
 
-from . import Team
+from .teams import Team
 
 __all__ = [
     "start_or_continue_conversation",

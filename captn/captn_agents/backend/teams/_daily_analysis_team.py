@@ -426,7 +426,7 @@ def get_web_status_code_report_for_campaign(
 
 
 EMAIL_TEMPLATES_PATH = (
-    Path(__file__).parent.parent.parent.parent.absolute() / "templates" / "email"
+    Path(__file__).parent.parent.parent.parent.parent.absolute() / "templates" / "email"
 )
 with open(str(EMAIL_TEMPLATES_PATH / "main_email_template.html")) as file:
     MAIN_EMAIL_TEMPLATE = file.read()
