@@ -5,10 +5,10 @@ from typing import Iterator, Optional
 import pytest
 from autogen.cache import Cache
 
+from captn.captn_agents.backend.teams import Team
 from captn.captn_agents.backend.teams._campaign_creation_team import (
     CampaignCreationTeam,
 )
-from captn.captn_agents.backend.teams._team import Team
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
     AdGroupCriterionForCreation,
@@ -122,17 +122,17 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
             )
 
             with unittest.mock.patch(
-                "captn.captn_agents.backend.google_ads_team.list_accessible_customers",
+                "captn.captn_agents.backend.teams._google_ads_team.list_accessible_customers",
             ) as mock_list_accessible_customers, unittest.mock.patch(
-                "captn.captn_agents.backend.google_ads_team.ask_client_for_permission"
+                "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission"
             ) as mock_ask_client_for_permission, unittest.mock.patch(
-                "captn.captn_agents.backend.campaign_creation_team_tools._create_ad_group"
+                "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group"
             ) as mock_create_ad_group, unittest.mock.patch(
-                "captn.captn_agents.backend.campaign_creation_team_tools._create_ad_group_ad"
+                "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_ad"
             ) as mock_create_ad_group_ad, unittest.mock.patch(
-                "captn.captn_agents.backend.campaign_creation_team_tools._create_ad_group_keyword"
+                "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword"
             ) as mock_create_ad_group_keyword, unittest.mock.patch(
-                "captn.captn_agents.backend.google_ads_team.get_info_from_the_web_page"
+                "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page"
             ) as mock_get_info_from_the_web_page:
 
                 mock_list_accessible_customers.return_value = ["1111"]
