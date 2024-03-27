@@ -109,7 +109,6 @@ def _handle_exception(
 
 
 def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
-    WEBSOCKET_REQUESTS.inc()
     with IOStream.set_default(iostream):
         try:
             try:
@@ -118,6 +117,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     PING_REQUESTS.inc()
                     iostream.print("pong")
                     return
+                WEBSOCKET_REQUESTS.inc()
                 request = CaptnAgentRequest.model_validate_json(original_message)
                 message = _get_message(request)
 
