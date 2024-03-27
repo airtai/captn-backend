@@ -1468,7 +1468,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "openai_timeouts_total",
+          "expr": "openai_api_status_error_total",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -1478,7 +1478,7 @@
           "useBackend": false
         }
       ],
-      "title": "OpenAI timeouts total",
+      "title": "OpenAI api status error total",
       "type": "timeseries"
     },
     {
@@ -1567,7 +1567,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "increase(openai_timeouts_total[1m])",
+          "expr": "increase(openai_api_status_error_total[1m])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -1577,7 +1577,7 @@
           "useBackend": false
         }
       ],
-      "title": "OpenAI timeouts per min",
+      "title": "OpenAI api status error per min",
       "type": "timeseries"
     },
     {
@@ -2832,6 +2832,6 @@
   "timezone": "",
   "title": "FastAPI Observability",
   "uid": "fastapi-observability",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }

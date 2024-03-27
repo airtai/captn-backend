@@ -347,8 +347,8 @@ class TestConsoleIOWithWebsockets:
                 with unittest.mock.patch(
                     "captn.captn_agents.application.start_or_continue_conversation"
                 ) as mock_start_or_continue_conversation, unittest.mock.patch(
-                    "captn.captn_agents.application.OPENAI_TIMEOUTS"
-                ) as mock_openai_timeouts, unittest.mock.patch(
+                    "captn.captn_agents.application.OPENAI_API_STATUS_ERROR"
+                ) as mock_openai_api_status_error, unittest.mock.patch(
                     "captn.captn_agents.application.THREE_IN_A_ROW_EXCEPTIONS"
                 ) as mock_three_in_a_row_exceptions, unittest.mock.patch(
                     "captn.captn_agents.application.BAD_REQUEST_ERRORS"
@@ -359,13 +359,28 @@ class TestConsoleIOWithWebsockets:
                 ) as mock_invalid_message_in_iostream, unittest.mock.patch(
                     "captn.captn_agents.application.RANDOM_EXCEPTIONS"
                 ) as mock_random_exceptions:
-                    api_timeout_request = Request(
+                    b_r_error_message = "The operation was timeout."
+                    b_r_request = Request(
                         method="POST",
                         url="",
                     )
+                    b_r_response = Response(status_code=400, request=b_r_request)
+
+                    api_status_error = openai.APIStatusError(
+                        message=b_r_error_message,
+                        response=b_r_response,
+                        body={
+                            "error": {
+                                "code": "Timeout",
+                                "message": "The operation was timeout.",
+                            }
+                        },
+                    )
 
                     mock_start_or_continue_conversation.side_effect = (
-                        openai.APITimeoutError(request=api_timeout_request)
+                        api_status_error,
+                        api_status_error,
+                        api_status_error,
                     )
 
                     print(f" - Connected to server on {uri}", flush=True)
@@ -390,7 +405,7 @@ class TestConsoleIOWithWebsockets:
 
                             break
 
-                    assert mock_openai_timeouts.inc.call_count == 3
+                    assert mock_openai_api_status_error.inc.call_count == 3
                     assert mock_three_in_a_row_exceptions.inc.call_count == 1
                     mock_bad_request_errors.assert_not_called()
                     mock_regular_exceptions.assert_not_called()

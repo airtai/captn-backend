@@ -2,10 +2,9 @@ import traceback
 from datetime import date
 from typing import Dict, List, Literal, Optional
 
-import openai
 from autogen.io.websockets import IOStream, IOWebsockets
 from fastapi import APIRouter, HTTPException
-from openai import BadRequestError
+from openai import APIStatusError, BadRequestError
 from prometheus_client import Counter
 from pydantic import BaseModel
 
@@ -25,7 +24,9 @@ THREE_IN_A_ROW_EXCEPTIONS = Counter(
     "three_in_a_row_exceptions_total",
     "Total count of three in a row exceptions",
 )
-OPENAI_TIMEOUTS = Counter("openai_timeouts_total", "Total count of openai timeouts")
+OPENAI_API_STATUS_ERROR = Counter(
+    "openai_api_status_error", "Total count of openai api status errors"
+)
 
 BAD_REQUEST_ERRORS = Counter(
     "bad_request_errors_total", "Total count of bad request errors"
@@ -94,8 +95,8 @@ def _handle_exception(
 ) -> None:
     # TODO: error logging
     iostream.print(f"Agent conversation failed with an error: {e}")
-    if isinstance(e, openai.APITimeoutError):
-        OPENAI_TIMEOUTS.inc()
+    if isinstance(e, APIStatusError):
+        OPENAI_API_STATUS_ERROR.inc()
     else:
         REGULAR_EXCEPTIONS.inc()
     if retry < num_of_retries - 1:
