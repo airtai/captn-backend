@@ -2765,7 +2765,7 @@
           "useBackend": false
         }
       ],
-      "title": "Ping Request per min",
+      "title": "Ping Requests per min",
       "type": "timeseries"
     }
   ],
