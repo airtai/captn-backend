@@ -9,7 +9,11 @@ from openai import BadRequestError
 from prometheus_client import Counter
 from pydantic import BaseModel
 
-from ..observability.websocket_utils import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
+from ..observability.websocket_utils import (
+    PING_REQUESTS,
+    WEBSOCKET_REQUESTS,
+    WEBSOCKET_TOKENS,
+)
 from .backend import Team, execute_daily_analysis, start_or_continue_conversation
 
 router = APIRouter()
@@ -111,6 +115,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             try:
                 original_message = iostream.input()
                 if original_message == "ping":
+                    PING_REQUESTS.inc()
                     iostream.print("pong")
                     return
                 request = CaptnAgentRequest.model_validate_json(original_message)
