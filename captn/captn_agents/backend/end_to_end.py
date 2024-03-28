@@ -1,88 +1,12 @@
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Type
+
+from .teams import Team
+
 __all__ = [
     "start_or_continue_conversation",
     "continue_conversation",
 ]
-
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-
-from .google_ads_team import GoogleAdsTeam
-from .initial_team import InitialTeam
-from .team import Team
-
-initial_team_roles_never = [
-    {
-        "Name": "User_proxy",
-        "Description": "Your job is to comunicate with the Account_manager, do NOT suggest any code or execute the code by yourself",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in digital marketing agency.",
-    },
-]
-
-captn_initial_team_roles_never = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a user with a task for the Account_manager, do NOT suggest any code or execute the code by yourself.
-If you receive a login link, just reply with: 'I am logged in now'""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in the digital agency. Your job is to communicate with the User_proxy.",
-    },
-]
-
-captn_initial_team_roles_always = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a proxy between the real user and the Account_manager. When you want to ask the client a question or return to him a summary of what has been done,
-use the 'reply_to_client' command.""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": """You are an account manager in the digital agency. Your job is to communicate with the User_proxy.
-When you want to ask the user a question directly or return to him a summary of what has been done, use the 'reply_to_client' command.""",
-    },
-]
-
-banking_initial_team_roles_never = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a proxy between the client and the Account_manager. do NOT suggest any code or execute the code by yourself.""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in the bank.",
-    },
-]
-
-banking_initial_team_roles_always = [
-    {
-        "Name": "User_proxy",
-        "Description": """You are a proxy between client and the Account_manager. When you want to ask the client a question or return to him a summary of what has been done,
-    use the 'reply_to_client' command. The message which will be sent to the user must ALWAYS be written in CROATIAN language.""",
-    },
-    {
-        "Name": "Account_manager",
-        "Description": "You are an account manager in the bank.",
-    },
-]
-
-
-roles_dictionary = {
-    "initial_team": {
-        "human_input_mode": {"NEVER": initial_team_roles_never, "ALWAYS": []},
-        "class": InitialTeam,
-    },
-    "google_ads_team": {
-        "human_input_mode": {
-            "NEVER": None,
-            "ALWAYS": None,
-        },
-        "class": GoogleAdsTeam,
-    },
-}
 
 
 def _get_initial_team(
@@ -102,10 +26,7 @@ def _get_initial_team(
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
 
-    initial_team_class: Team = roles_dictionary[class_name]["class"]  # type: ignore
-    if roles is None:
-        roles = roles_dictionary[class_name]["human_input_mode"][human_input_mode]  # type: ignore
-
+    initial_team_class: Type[Team] = Team.get_class_by_name(class_name)
     initial_team = None
     try:
         team_name = Team.get_user_conv_team_name(
@@ -119,29 +40,15 @@ def _get_initial_team(
         create_new_conv = True
 
     if create_new_conv:
-        if issubclass(initial_team_class, InitialTeam):  # type: ignore
-            initial_team = initial_team_class(  # type: ignore
-                user_id=user_id,
-                conv_id=conv_id,
-                task=task,
-                roles=roles,
-                work_dir=str(working_dir),
-                max_round=max_round,
-                seed=seed,
-                temperature=temperature,
-                human_input_mode=human_input_mode,
-                use_async=use_async,
-            )
-        else:
-            initial_team = initial_team_class(  # type: ignore
-                user_id=user_id,
-                conv_id=conv_id,
-                task=task,
-                work_dir=str(working_dir),
-                max_round=max_round,
-                seed=seed,
-                temperature=temperature,
-            )
+        initial_team = initial_team_class(  # type: ignore
+            user_id=user_id,
+            conv_id=conv_id,
+            task=task,
+            work_dir=str(working_dir),
+            max_round=max_round,
+            seed=seed,
+            temperature=temperature,
+        )
 
     return initial_team, team_name, create_new_conv
 
@@ -186,7 +93,7 @@ def start_or_continue_conversation(
 def continue_conversation(team_name: str, message: str) -> str:
     message = message.strip()
     initial_team = Team.get_team(team_name)
-    initial_team.update_clients_question_answere_list(message)
+    initial_team.update_clients_question_answer_list(message)
 
     initial_team.continue_chat(message=message)
 

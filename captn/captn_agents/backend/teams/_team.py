@@ -1,10 +1,10 @@
 import json
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 import autogen
 from fastcore.basics import patch
 
-from .config import Config
+from ..config import Config
 
 _completions_create_original = autogen.oai.client.OpenAIClient.create
 
@@ -32,11 +32,40 @@ def create(
     return _completions_create_original(self, params=params)
 
 
+T = TypeVar("T")
+
+
 class Team:
     _team_name_counter: int = 0
     _functions: Optional[List[Dict[str, Any]]] = None
 
     _teams: Dict[str, "Team"] = {}
+
+    _team_registry: Dict[str, Type["Team"]] = {}
+
+    @classmethod
+    def register_team(cls, name: str) -> Callable[[T], T]:
+        def _inner(cls: T) -> T:
+            cls_typed: Type["Team"] = cls  # type: ignore[assignment]
+            if name in cls_typed._team_registry:
+                raise ValueError(f"Team name '{name}' already exists")
+            if cls_typed in cls_typed._team_registry.values():  # type: ignore[comparison-overlap]
+                raise ValueError(f"Team class '{cls_typed}' already exists")
+            cls_typed._team_registry[name] = cls_typed  # type: ignore[assignment]
+            return cls_typed  # type: ignore[return-value]
+
+        return _inner
+
+    @classmethod
+    def get_class_by_name(cls, name: str) -> Type["Team"]:
+        try:
+            return Team._team_registry[name]
+        except KeyError as e:
+            raise ValueError(f"Unknown team name: '{name}'") from e
+
+    @classmethod
+    def get_team_names(cls) -> List[str]:
+        return list(cls._team_registry.keys())
 
     @staticmethod
     def _store_team(team_name: str, team: "Team") -> None:
@@ -76,7 +105,7 @@ class Team:
         seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
-        clients_question_answere_list: List[Tuple[str, Optional[str]]] = [],  # noqa
+        clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
     ):
         self.roles = roles
         self.initial_message: str
@@ -90,7 +119,7 @@ class Team:
         self.llm_config: Optional[Dict[str, Any]] = None
         self.name = name
         self.human_input_mode = human_input_mode
-        self.clients_question_answere_list = clients_question_answere_list
+        self.clients_question_answer_list = clients_question_answer_list
         Team._store_team(self.name, self)
 
     @classmethod
@@ -106,7 +135,9 @@ class Team:
         raise NotImplementedError()
 
     @classmethod
-    def get_llm_config(cls, seed: int = 42, temperature: float = 0.2) -> Dict[str, Any]:
+    def _get_llm_config(
+        cls, seed: int = 42, temperature: float = 0.2
+    ) -> Dict[str, Any]:
         tools = (
             [{"type": "function", "function": f} for f in cls._functions]
             if cls._functions
@@ -123,13 +154,13 @@ class Team:
         }
         return llm_config
 
-    def update_clients_question_answere_list(self, message: str) -> None:
+    def update_clients_question_answer_list(self, message: str) -> None:
         if (
-            len(self.clients_question_answere_list) > 0
-            and self.clients_question_answere_list[-1][1] is None
+            len(self.clients_question_answer_list) > 0
+            and self.clients_question_answer_list[-1][1] is None
         ):
-            self.clients_question_answere_list[-1] = (
-                self.clients_question_answere_list[-1][0],
+            self.clients_question_answer_list[-1] = (
+                self.clients_question_answer_list[-1][0],
                 message,
             )
 
@@ -269,11 +300,8 @@ You can leverage access to the following resources:
 {self._final_section}
 """
 
-    def initiate_chat(self) -> None:
-        self.manager.initiate_chat(self.manager, message=self.initial_message)
-
-    async def a_initiate_chat(self) -> None:
-        await self.manager.a_initiate_chat(self.manager, message=self.initial_message)
+    def initiate_chat(self, **kwargs: Any) -> None:
+        self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
 
     def get_messages(self) -> Any:
         return self.groupchat.messages
@@ -291,6 +319,3 @@ You can leverage access to the following resources:
 
     def continue_chat(self, message: str) -> None:
         self.manager.send(recipient=self.manager, message=message)
-
-    async def a_continue_chat(self, message: str) -> None:
-        await self.manager.a_send(recipient=self.manager, message=message)

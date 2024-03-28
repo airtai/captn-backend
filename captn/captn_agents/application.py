@@ -1,18 +1,45 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from autogen.io.websockets import IOStream, IOWebsockets
 from fastapi import APIRouter, HTTPException
-from openai import BadRequestError
+from openai import APIStatusError, BadRequestError
+from prometheus_client import Counter
 from pydantic import BaseModel
 
-from captn.captn_agents.backend.daily_analysis_team import execute_daily_analysis
-from captn.observability.websocket_utils import WEBSOCKET_REQUESTS, WEBSOCKET_TOKENS
-
-from .backend.end_to_end import start_or_continue_conversation
+from ..observability.websocket_utils import (
+    PING_REQUESTS,
+    WEBSOCKET_REQUESTS,
+    WEBSOCKET_TOKENS,
+)
+from .backend import Team, execute_daily_analysis, start_or_continue_conversation
 
 router = APIRouter()
+
+google_ads_team_names = Team.get_team_names()
+
+
+THREE_IN_A_ROW_EXCEPTIONS = Counter(
+    "three_in_a_row_exceptions_total",
+    "Total count of three in a row exceptions",
+)
+OPENAI_API_STATUS_ERROR = Counter(
+    "openai_api_status_error", "Total count of openai api status errors"
+)
+
+BAD_REQUEST_ERRORS = Counter(
+    "bad_request_errors_total", "Total count of bad request errors"
+)
+REGULAR_EXCEPTIONS = Counter(
+    "regular_exceptions_total", "Total count of regular exceptions"
+)
+INVALID_MESSAGE_IN_IOSTREAM = Counter(
+    "invalid_message_in_iostream_total", "Total count of invalid messages in iostream"
+)
+RANDOM_EXCEPTIONS = Counter(
+    "random_exceptions_total", "Total count of random exceptions"
+)
 
 
 class CaptnAgentRequest(BaseModel):
@@ -20,6 +47,7 @@ class CaptnAgentRequest(BaseModel):
     message: str
     user_id: int
     conv_id: int
+    google_ads_team: Literal[tuple(google_ads_team_names)] = "default_team"  # type: ignore[valid-type]
     all_messages: List[Dict[str, str]]
     agent_chat_history: Optional[str]
     is_continue_daily_analysis: bool
@@ -59,38 +87,66 @@ def _get_message(request: CaptnAgentRequest) -> str:
     return request.message
 
 
+ON_FAILURE_MESSAGE = "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
+
+
+def _handle_exception(
+    iostream: IOWebsockets, num_of_retries: int, e: Exception, retry: int
+) -> None:
+    # TODO: error logging
+    iostream.print(f"Agent conversation failed with an error: {e}")
+    if isinstance(e, APIStatusError):
+        OPENAI_API_STATUS_ERROR.inc()
+    else:
+        REGULAR_EXCEPTIONS.inc()
+    if retry < num_of_retries - 1:
+        iostream.print("Retrying the whole conversation...")
+        iostream.print("*" * 100)
+    else:
+        THREE_IN_A_ROW_EXCEPTIONS.inc()
+        iostream.print(ON_FAILURE_MESSAGE)
+        traceback.print_exc()
+        traceback.print_stack()
+
+
 def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
-    WEBSOCKET_REQUESTS.inc()
     with IOStream.set_default(iostream):
         try:
             try:
                 original_message = iostream.input()
+                if original_message == "ping":
+                    PING_REQUESTS.inc()
+                    iostream.print("pong")
+                    return
+                WEBSOCKET_REQUESTS.inc()
                 request = CaptnAgentRequest.model_validate_json(original_message)
                 message = _get_message(request)
 
+                # ToDo: fix this @rjambercic
                 WEBSOCKET_TOKENS.inc(len(message.split()))
             except Exception as e:
-                iostream.print(
-                    "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
-                )
+                INVALID_MESSAGE_IN_IOSTREAM.inc()
+                iostream.print(ON_FAILURE_MESSAGE)
                 print(f"Failed to read the message from the client: {e}")
                 traceback.print_stack()
                 return
             for i in range(num_of_retries):
                 try:
+                    class_name = request.google_ads_team
                     _, last_message = start_or_continue_conversation(
                         user_id=request.user_id,
                         conv_id=request.conv_id,
                         task=message,
                         max_round=80,
                         human_input_mode="NEVER",
-                        class_name="google_ads_team",
+                        class_name=class_name,
                     )
                     iostream.print(last_message)
 
                     return
 
                 except BadRequestError as e:
+                    BAD_REQUEST_ERRORS.inc()
                     iostream.print(
                         f"OpenAI classified the message as BadRequestError: {e}"
                     )
@@ -100,19 +156,12 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     message = RETRY_MESSAGE
 
                 except Exception as e:
-                    # TODO: error logging
-                    iostream.print(f"Agent conversation failed with an error: {e}")
-                    if i < num_of_retries - 1:
-                        iostream.print("Retrying the whole conversation...")
-                        iostream.print("*" * 100)
-                    else:
-                        iostream.print(
-                            "We are sorry, but we are unable to continue the conversation. Please create a new chat in a few minutes to continue."
-                        )
-                        traceback.print_exc()
-                        traceback.print_stack()
+                    _handle_exception(
+                        iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
+                    )
 
         except Exception as e:
+            RANDOM_EXCEPTIONS.inc()
             print(f"Agent conversation failed with an error: {e}")
             traceback.print_stack()
 
@@ -126,7 +175,7 @@ def chat(request: CaptnAgentRequest) -> str:
             task=request.message,
             max_round=80,
             human_input_mode="NEVER",
-            class_name="google_ads_team",
+            class_name=request.google_ads_team,
         )
 
     except BadRequestError as e:

@@ -13,3 +13,6 @@ tmp*
 
 .*env
 .venv*
+
+
+*_data/

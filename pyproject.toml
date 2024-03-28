@@ -76,6 +76,7 @@ test-core = [
     "dirty-equals==0.7.1.post0",
     "pyarrow==15.0.1",
     "tabulate==0.9.0",
+    "pytest-retry==1.6.2",
 ]
 
 testing = [
@@ -108,8 +109,6 @@ agents = [
     "opentelemetry-instrumentation-logging==0.43b0",
     "opentelemetry-exporter-otlp==1.22.0",
 ]
-
-
 dev = [
     "captn[lint,testing,agents]",
 ]
@@ -192,18 +191,23 @@ extend-immutable-calls = ["fastapi.Depends"]
 convention = "google"
 
 [tool.pytest.ini_options]
+
 minversion = "7.0"
-addopts = "-q -m 'not slow'"
+
+addopts = "-vv"
+
 testpaths = [
-    "tests",
+    "tests/ci",
 ]
+
 markers = [
-    "rabbit",
-    "kafka",
-    "nats",
-    "slow",
-    "all",
+    "openai: mark test as using openai.",
 ]
+
+# needed for pytest-retry
+retries = 2
+retry_delay = 0.5
+cumulative_timing = false
 
 [tool.coverage.run]
 parallel = true

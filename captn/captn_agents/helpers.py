@@ -1,10 +1,35 @@
 from contextlib import asynccontextmanager
 from os import environ
-from typing import Optional
+from typing import Any, Callable, Optional
 
 from prisma import Prisma  # type: ignore[attr-defined]
 
 
+def retry_context_manager(num_retries: int = 3) -> Callable[[Any], Any]:  # type: ignore
+    def _retry_context_manager(context_manager: Any) -> Any:
+        @asynccontextmanager
+        async def retry_on_fail(
+            context_manager: Any = context_manager,
+            num_retries: int = num_retries,
+            *args: Any,
+            **kwargs: Any,
+        ) -> Any:
+            for i in range(num_retries):
+                try:
+                    async with context_manager(*args, **kwargs) as ret_val:  # type: ignore
+                        yield ret_val
+                        break
+                except Exception as e:
+                    print(f"Caught exception {e} on attempt {i}")
+                    if i == num_retries - 1:
+                        raise e
+
+        return retry_on_fail
+
+    return _retry_context_manager
+
+
+@retry_context_manager(num_retries=3)  # type: ignore
 @asynccontextmanager  # type: ignore
 async def get_db_connection(db_url: Optional[str] = None) -> Prisma:  # type: ignore
     if not db_url:

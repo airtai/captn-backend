@@ -1,8 +1,10 @@
+from typing import Iterator
 from unittest import mock
 
 import autogen
+import pytest
 
-from captn.captn_agents.backend.team import Team
+from captn.captn_agents.backend.teams._team import Team
 
 roles = [
     {"Name": "Role1", "Description": "Description1"},
@@ -10,7 +12,7 @@ roles = [
 ]
 
 
-@mock.patch("captn.captn_agents.backend.team.Team._get_team_name_prefix")
+@mock.patch("captn.captn_agents.backend.teams._team.Team._get_team_name_prefix")
 def test_get_new_team_name(mock_get_team_name_prefix: mock.MagicMock) -> None:
     mock_get_team_name_prefix.return_value = "Team"
     assert Team._get_new_team_name() == "Team_0"
@@ -55,18 +57,42 @@ def test_is_termination_msg() -> None:
     assert Team._is_termination_msg({"content": "Woohoo TERMINATE ..."}) is False
 
 
-def test_update_clients_question_answere_list() -> None:
+def test_update_clients_question_answer_list() -> None:
     team = Team(roles=roles, name="Team_3")
-    team.clients_question_answere_list.append(("Question1", None))
-    team.update_clients_question_answere_list("Answer1")
-    assert team.clients_question_answere_list == [("Question1", "Answer1")]
+    team.clients_question_answer_list.append(("Question1", None))
+    team.update_clients_question_answer_list("Answer1")
+    assert team.clients_question_answer_list == [("Question1", "Answer1")]
 
-    team.update_clients_question_answere_list("Answer2")
-    assert team.clients_question_answere_list == [("Question1", "Answer1")]
+    team.update_clients_question_answer_list("Answer2")
+    assert team.clients_question_answer_list == [("Question1", "Answer1")]
 
-    team.clients_question_answere_list.append(("Question2", None))
-    team.update_clients_question_answere_list("Answer3")
-    assert team.clients_question_answere_list == [
+    team.clients_question_answer_list.append(("Question2", None))
+    team.update_clients_question_answer_list("Answer3")
+    assert team.clients_question_answer_list == [
         ("Question1", "Answer1"),
         ("Question2", "Answer3"),
     ]
+
+
+class TestTeamRegistry:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+        if "my name" in Team._team_registry:
+            del Team._team_registry["my name"]
+
+        yield
+
+        if "my name" in Team._team_registry:
+            del Team._team_registry["my name"]
+
+    def test_register_team(self) -> None:
+        @Team.register_team(name="my name")
+        class MyTeam(Team):
+            pass
+
+        assert "my name" in Team._team_registry
+        assert Team._team_registry["my name"] == MyTeam
+
+        factory = Team.get_class_by_name("my name")
+
+        assert factory == MyTeam

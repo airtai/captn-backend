@@ -8,6 +8,15 @@ from pydantic import BaseModel
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
 
+__all__ = (
+    "get_google_ads_team_capability",
+    "get_login_url",
+    "list_accessible_customers",
+    "execute_query",
+    "get_user_ids_and_emails",
+    "google_ads_create_update",
+)
+
 
 def get_google_ads_team_capability() -> str:
     prefix = "Your capabilities are centered around Google Ads campaigns and include:\n"
@@ -176,15 +185,15 @@ def _check_for_client_approval(
     error_msg: str,
     modification_question: str,
     clients_approval_message: str,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> str:
     if (
         modification_question,
         clients_approval_message,
-    ) not in clients_question_answere_list:
+    ) not in clients_question_answer_list:
         in_question_answer_list = False
         # Go in reverse order because approval messages are usually at the end of the list (as they are appended at the end of the list)
-        for question, answer in reversed(clients_question_answere_list):
+        for question, answer in reversed(clients_question_answer_list):
             if (
                 # Check if the modification_question is a substring of the question
                 modification_question.strip().lower() in question.strip().lower()
@@ -206,15 +215,19 @@ def google_ads_create_update(
     clients_approval_message: str,
     modification_question: str,
     ad: BaseModel,
-    clients_question_answere_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
     endpoint: str = "/update-ad-group-ad",
+    skip_fields_check: bool = False,
 ) -> Union[Dict[str, Any], str]:
-    error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    if not skip_fields_check:
+        error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
+    else:
+        error_msg = ""
     error_msg = _check_for_client_approval(
         error_msg=error_msg,
         clients_approval_message=clients_approval_message,
         modification_question=modification_question,
-        clients_question_answere_list=clients_question_answere_list,
+        clients_question_answer_list=clients_question_answer_list,
     )
     if error_msg:
         raise ValueError(error_msg)
