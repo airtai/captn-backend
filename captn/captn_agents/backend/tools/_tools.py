@@ -1,19 +1,21 @@
-from contextlib import contextmanager
-from contextvars import ContextVar
 import functools
 import inspect
 import types
-from typing import Any, Callable, Iterator, List, NamedTuple, Optional, Tuple, TypeVar
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Any, Callable, Dict, Iterator, NamedTuple, Optional, TypeVar
 
 from autogen.agentchat import ConversableAgent, UserProxyAgent
 
 T = TypeVar("T")
 F = TypeVar("F", bound=Callable[..., Any])
 
+
 class FunctionInfo(NamedTuple):
     function: Callable[..., Any]
     name: str
     description: str
+
 
 class ToolboxContext:
     _context: ContextVar[Optional[Any]] = ContextVar("context")
@@ -33,7 +35,10 @@ class ToolboxContext:
         finally:
             ToolboxContext._context.reset(token)
 
-def _args_kwargs_to_kwargs(func, args, kwargs):
+
+def _args_kwargs_to_kwargs(
+    func: Callable[..., Any], args: Any, kwargs: Any
+) -> Dict[str, Any]:
     sig = inspect.signature(func)
     param_names = list(sig.parameters.keys())
 
@@ -51,14 +56,26 @@ def _args_kwargs_to_kwargs(func, args, kwargs):
 
     return combined_kwargs
 
+
 class Toolbox:
     def __init__(self) -> None:
-        self._functions: List[FunctionInfo] = []
+        self._functions: Dict[str, FunctionInfo] = {}
 
-    def add_function(self, f: Callable[..., Any], description: str, *, name: Optional[str] = None) -> None:
-        if name is None:
-            name = f.__name__
-        self._functions.append(FunctionInfo(f, name, description))
+    def add_function(
+        self, description: str, *, name: Optional[str] = None
+    ) -> Callable[[F], F]:
+        def decorator(
+            f: F, name: Optional[str] = name, description: str = description
+        ) -> F:
+            if name is None:
+                name = f.__name__
+            if name in self._functions:
+                raise ValueError(f"Function with name {name} already added.")
+            self._functions[name] = FunctionInfo(f, name, description)
+
+            return f
+
+        return decorator
 
     def _inject_context(self, info: FunctionInfo) -> FunctionInfo:
         """Injects the context into the function if it has a context parameter.
@@ -85,19 +102,41 @@ class Toolbox:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 context = ToolboxContext.get_context()
                 new_kwargs = _args_kwargs_to_kwargs(f, args, kwargs)
-                print(f"Injecting context {context} into {f.__name__}: {args=}, {kwargs=} -> {new_kwargs=}")
+                print(
+                    f"Injecting context {context} into {f.__name__}: {args=}, {kwargs=} -> {new_kwargs=}"
+                )
                 return f(context=context, **new_kwargs)
 
-            new_function = types.FunctionType(wrapper.__code__, wrapper.__globals__, f"{f.__name__}_injected", wrapper.__defaults__, wrapper.__closure__)
-            new_function.__signature__ = new_signature
+            new_function = types.FunctionType(
+                wrapper.__code__,
+                wrapper.__globals__,
+                f"{f.__name__}_injected",
+                wrapper.__defaults__,
+                wrapper.__closure__,
+            )
+            new_function.__signature__ = new_signature  # type: ignore[attr-defined]
 
             info = FunctionInfo(new_function, info.name, info.description)
 
         return info
 
-    def add_to_agent(self, agent: ConversableAgent, user_proxy: Optional[UserProxyAgent] = None) -> None:
-        for info in self._functions:
+    def add_to_agent(
+        self, agent: ConversableAgent, user_proxy: Optional[UserProxyAgent] = None
+    ) -> Dict[str, FunctionInfo]:
+        # inject context into all the functions where needed
+        retval = {
+            name: self._inject_context(info) for name, info in self._functions.items()
+        }
+
+        # register the functions with the agent and user_proxy if needed
+        for info in retval.values():
             info = self._inject_context(info)
-            agent.register_for_llm(name=info.name, description=info.description)(info.function)
+            agent.register_for_llm(name=info.name, description=info.description)(
+                info.function
+            )
             if user_proxy is not None:
-                user_proxy.register_for_llm(name=info.name, description=info.description)(info.function)
+                user_proxy.register_for_llm(
+                    name=info.name, description=info.description
+                )(info.function)
+
+        return retval
