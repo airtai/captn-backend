@@ -182,7 +182,6 @@ async def login_callback(
     redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
     logged_in_message = "I have successfully logged in"
     # redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}&team_id={task.team_id}&team_name={task.team_name}"
-    # chat_uuid = get_chat_uuid_from_id(chat_id)
     redirect_uri = f"{redirect_domain}/chat/{chat_uuid}?msg={logged_in_message}"
     return RedirectResponse(redirect_uri)
 
