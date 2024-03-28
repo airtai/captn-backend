@@ -16,6 +16,7 @@ from ._google_ads_team import (
     GoogleAdsTeam,
     get_campaign_creation_team_shared_functions,
 )
+from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
 __all__ = ("CampaignCreationTeam",)
@@ -256,20 +257,13 @@ This is a template which you should follow when you are asked to optimize campai
 
     @property
     def _commands(self) -> str:
-        return """## Commands
+        return f"""## Commands
 All team members have access to the following command:
-1. reply_to_client: Ask the client for additional information, params: (message: string, completed: bool, smart_suggestions: Optional[Dict[str, Union[str, List[str]]]])
-The 'message' parameter must contain all information useful to the client, because the client does not see your team's conversation (only the information sent in the 'message' parameter)
-As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
-Never reference 'client' within the message:
-e.g. "We need to ask client for the approval" should be changed to "Do you approve these changes?"
-It is VERY important that you use the 'smart_suggestions' parameter!
-Use it so the client can easily choose between multiple options and make a quick reply by clicking on the suggestion.
-e.g.:
-"smart_suggestions": {
+1. {REPLY_TO_CLIENT_COMMAND}
+"smart_suggestions": {{
     'suggestions': ['Please make some headlines suggestions', 'Please make some descriptions suggestions'],
     'type': 'manyOf'
-}
+}}
 
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 params: (customer_id: str, resource_details: str, proposed_changes: str)
@@ -282,10 +276,7 @@ You MUST use this before you make ANY permanent changes. ALWAYS use this command
 4. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
 Example of customer_ids parameter: ["12", "44", "111"]
 
-5. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
-It should be used only for the clients web page(s), final_url(s) etc.
-This command should be used for retrieving the information from clients web page.
-If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc.
+5. {GET_INFO_FROM_THE_WEB_COMMAND}
 
 6. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
 Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
@@ -330,10 +321,10 @@ Here is an example of correct 'proposed_changes' parameter:
 8. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 
-"""
+"""  # nosec: [B608]
 
-    @property
-    def capabilities(self) -> str:
+    @classmethod
+    def get_capabilities(cls) -> str:
         return """Campaign Creation Team capabilities:
 - Get the information about the client's Google Ads account (campaigns, ad groups, ads, keywords etc.)
 - Create new campaign
@@ -342,8 +333,8 @@ When asking the client for the approval, you must explicitly tell him which fina
 - Create new keywords
 """
 
-    @property
-    def brief_template(self) -> str:
+    @classmethod
+    def get_brief_template(cls) -> str:
         return """Here is a template for the customer brief:
 A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
 

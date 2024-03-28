@@ -300,12 +300,12 @@ You can leverage access to the following resources:
 {self._final_section}
 """
 
-    @property
-    def capabilities(self) -> str:
+    @classmethod
+    def get_capabilities(cls) -> str:
         raise NotImplementedError()
 
-    @property
-    def brief_template(self) -> str:
+    @classmethod
+    def get_brief_template(cls) -> str:
         raise NotImplementedError()
 
     def initiate_chat(self, **kwargs: Any) -> None:

@@ -533,15 +533,15 @@ For the actions which we do not support currently, tell the client that you curr
 but if it is important to the client, you can give advice on how to do it manually within the Google Ads UI.
 """
 
-    @property
-    def capabilities(self) -> str:
+    @classmethod
+    def get_capabilities(cls) -> str:
         return """Google Ads team capabilities:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - create/update/remove campaign, ad group, ad, keyword, location targeting
 """
 
-    @property
-    def brief_template(self) -> str:
+    @classmethod
+    def get_brief_template(cls) -> str:
         return """Here is a template for the customer brief:
 A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
 
