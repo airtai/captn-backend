@@ -1,0 +1,237 @@
+import inspect
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Iterator
+from unittest.mock import MagicMock
+
+import pytest
+from typing_extensions import Annotated
+
+from captn.captn_agents.backend.toolboxes.base import (
+    FunctionInfo,
+    Toolbox,
+    ToolboxContext,
+    _args_kwargs_to_kwargs,
+)
+
+
+def test_args_kwargs_to_kwargs() -> None:
+    def f1(i: int, s: str) -> None:
+        pass  # pragma: no cover
+
+    assert _args_kwargs_to_kwargs(f1, (42, "hello"), {}) == {"i": 42, "s": "hello"}
+    assert _args_kwargs_to_kwargs(f1, (42,), {"s": "hello"}) == {"i": 42, "s": "hello"}
+    assert _args_kwargs_to_kwargs(f1, (), {"i": 42, "s": "hello"}) == {
+        "i": 42,
+        "s": "hello",
+    }
+
+    def f2(i: int, context: Any, s: str) -> None:
+        pass  # pragma: no cover
+
+    assert _args_kwargs_to_kwargs(f2, (42, "hello"), {}) == {"i": 42, "s": "hello"}
+    assert _args_kwargs_to_kwargs(f2, (42,), {"s": "hello"}) == {"i": 42, "s": "hello"}
+    assert _args_kwargs_to_kwargs(f2, (), {"i": 42, "s": "hello"}) == {
+        "i": 42,
+        "s": "hello",
+    }
+
+
+class TestToolboxContext:
+
+    def test_get_context(self) -> None:
+        context = object()
+        with ToolboxContext.set_context(context):
+            assert ToolboxContext.get_context() == context
+
+
+class TestToolbox:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+
+        def f(
+            i: Annotated[int, "an integer parameter"], s: Annotated[str, "a greeting"]
+        ) -> str:
+            return "ok"
+
+        @dataclass
+        class MyContext:
+            id: int
+            name: str
+            mobile: str
+
+        def g(
+            i: Annotated[int, "an integer parameter"],
+            context: MyContext,
+            s: Annotated[str, "a greeting"],
+        ) -> str:
+            return "ok"
+
+        self.f = f
+        self.g = g
+
+        yield
+
+    def test_inject_context_noop(self) -> None:
+        toolbox = Toolbox()
+
+        def function(i: int, s: str) -> None:
+            pass
+
+        new_info = toolbox._inject_context(
+            FunctionInfo(function, "function", "description")
+        )
+
+        old_signature = inspect.signature(function)
+        new_signature = inspect.signature(new_info.function)
+
+        assert old_signature == new_signature
+
+    def test_inject_context_successfully(self) -> None:
+        toolbox = Toolbox()
+
+        mock = MagicMock(return_value=3.14)
+
+        def f(i: int, context: Any, s: str) -> float:
+            return mock(i, context, s)  # type: ignore[no-any-return]
+
+        new_info = toolbox._inject_context(FunctionInfo(f, "function", "description"))
+
+        old_signature = inspect.signature(f)
+        new_signature = inspect.signature(new_info.function)
+
+        assert "context" in old_signature.parameters.keys()
+        assert "context" not in new_signature.parameters.keys()
+
+        new_function = new_info.function
+        context = object()
+
+        result = f(42, context, "hello")
+        mock.assert_called_once_with(42, context, "hello")
+        mock.reset_mock()
+
+        with ToolboxContext.set_context(context):
+            result = new_function(42, "hello")
+
+            assert result == mock.return_value
+            mock.assert_called_once_with(42, context, "hello")
+
+    def test_add_function_with_simple_parameters(self) -> None:
+        toolbox = Toolbox()
+
+        toolbox.add_function("this is description of the function f")(self.f)
+        f_info = FunctionInfo(self.f, "f", "this is description of the function f")
+        assert toolbox._functions == {"f": f_info}
+
+        toolbox.add_function("this is description of the function")(self.g)
+        g_info = FunctionInfo(self.g, "g", "this is description of the function")
+        assert toolbox._functions == {"f": f_info, "g": g_info}
+
+    def test_add_function_with_custom_name(self) -> None:
+        toolbox = Toolbox()
+
+        toolbox.add_function(
+            "this is description of the function f", name="function_f"
+        )(self.f)
+        f_info = FunctionInfo(
+            self.f, "function_f", "this is description of the function f"
+        )
+        assert toolbox._functions == {"function_f": f_info}
+
+        toolbox.add_function("this is description of the function", name="function_g")(
+            self.g
+        )
+        g_info = FunctionInfo(
+            self.g, "function_g", "this is description of the function"
+        )
+        assert toolbox._functions == {"function_f": f_info, "function_g": g_info}
+
+    def test_add_function_with_same_name(self) -> None:
+        toolbox = Toolbox()
+
+        toolbox.add_function(
+            "this is description of the function f", name="function_f"
+        )(self.f)
+        f_info = FunctionInfo(
+            self.f, "function_f", "this is description of the function f"
+        )
+        assert toolbox._functions == {"function_f": f_info}
+
+        with pytest.raises(ValueError):
+            toolbox.add_function(
+                "this is description of the function", name="function_f"
+            )(self.g)
+
+    def test_add_function_with_same_function(self) -> None:
+        toolbox = Toolbox()
+
+        toolbox.add_function("this is description of the function f")(self.f)
+        f_info = FunctionInfo(self.f, "f", "this is description of the function f")
+        assert toolbox._functions == {"f": f_info}
+
+        toolbox.add_function(
+            "this is description of the function f", name="yet_another_f"
+        )(self.f)
+        yet_another_f_info = FunctionInfo(
+            self.f, "yet_another_f", "this is description of the function f"
+        )
+        assert toolbox._functions == {"f": f_info, "yet_another_f": yet_another_f_info}
+
+    @pytest.fixture
+    def agent_mocks(self) -> Dict[str, MagicMock]:
+        agent = MagicMock()
+        agent.register_for_llm = MagicMock()
+
+        register_for_llm = MagicMock()
+
+        def agent_side_effect(*args: Any, **kwargs: Any) -> Callable[..., Any]:
+            def _inner(f: Callable[..., Any]) -> Callable[..., Any]:
+                register_for_llm(*args, **kwargs, function=f)
+                return f
+
+            return _inner
+
+        agent.register_for_llm.side_effect = agent_side_effect
+
+        user_proxy = MagicMock()
+        user_proxy.register_for_execution = MagicMock()
+
+        return dict(  # noqa: C408 unnecessary dict call
+            agent=agent, register_for_llm=register_for_llm, user_proxy=user_proxy
+        )
+
+    def test_add_functions_to_agent(self, agent_mocks: Dict[str, MagicMock]) -> None:
+        # create a mock agent and user_proxy
+        agent = agent_mocks["agent"]
+        register_for_llm = agent_mocks["register_for_llm"]
+        user_proxy = agent_mocks["user_proxy"]
+
+        toolbox = Toolbox()
+
+        toolbox.add_function("this is description of the function f")(self.f)
+        toolbox.add_function("this is description of the function g")(self.g)
+
+        registered_functions = toolbox.add_to_agent(agent, user_proxy)
+        assert len(registered_functions) == 2
+        assert "f" in registered_functions
+        assert "g" in registered_functions
+        assert registered_functions["f"] == FunctionInfo(
+            self.f, "f", "this is description of the function f"
+        )
+
+        agent.register_for_llm.assert_any_call(
+            name="f", description="this is description of the function f"
+        )
+        register_for_llm.assert_any_call(
+            name="f",
+            description="this is description of the function f",
+            function=self.f,
+        )
+
+        agent.register_for_llm.assert_any_call(
+            name="g", description="this is description of the function g"
+        )
+        register_for_llm.assert_any_call(
+            name="g",
+            description="this is description of the function g",
+            function=registered_functions["g"].function,
+        )
