@@ -331,3 +331,29 @@ Here is an example of correct 'proposed_changes' parameter:
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 
 """
+
+    @property
+    def capabilities(self) -> str:
+        return """Campaign Creation Team capabilities:
+- Get the information about the client's Google Ads account (campaigns, ad groups, ads, keywords etc.)
+- Create new campaign
+- Create new ad groups
+- Create new ads
+- Create new keywords
+"""
+
+    @property
+    def brief_template(self) -> str:
+        return """Here is a template for the customer brief:
+A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
+
+Business:
+Goal:
+Current Situation:
+Website:
+Digital Marketing Objectives:
+Next Steps:
+Any Other Information Related to Customer Brief:
+
+Please extract and represent relevant details from the conversation under these headings
+"""

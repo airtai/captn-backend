@@ -300,6 +300,14 @@ You can leverage access to the following resources:
 {self._final_section}
 """
 
+    @property
+    def capabilities(self) -> str:
+        raise NotImplementedError()
+
+    @property
+    def brief_template(self) -> str:
+        raise NotImplementedError()
+
     def initiate_chat(self, **kwargs: Any) -> None:
         self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
 
