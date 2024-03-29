@@ -254,7 +254,13 @@ class TestToolbox:
 
     @pytest.mark.openai
     def test_add_functions_to_agent_with_openai(self) -> None:
-        agent = AssistantAgent(name="agent", llm_config={"model": "gpt-3.5-turbo"})
+        agent = AssistantAgent(
+            name="agent",
+            llm_config={
+                "model": "gpt-3.5-turbo",
+                "api_key": "dummy",  # pragma: allowlist secret
+            },
+        )
         user_proxy = UserProxyAgent(name="user_proxy")
 
         toolbox = Toolbox()
