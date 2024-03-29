@@ -1,14 +1,15 @@
 import functools
 import inspect
+import logging
 import types
-from contextlib import contextmanager
-from contextvars import ContextVar
-from typing import Any, Callable, Dict, Iterator, NamedTuple, Optional, TypeVar
+from typing import Any, Callable, Dict, NamedTuple, Optional, TypeVar
 
 from autogen.agentchat import ConversableAgent, UserProxyAgent
 
 T = TypeVar("T")
 F = TypeVar("F", bound=Callable[..., Any])
+
+logger = logging.getLogger(__name__)
 
 
 class FunctionInfo(NamedTuple):
@@ -17,30 +18,17 @@ class FunctionInfo(NamedTuple):
     description: str
 
 
-class ToolboxContext:
-    _context: ContextVar[Optional[Any]] = ContextVar("context")
-    _context.set(None)
-
-    @staticmethod
-    def get_context() -> Any:
-        return ToolboxContext._context.get()
-        ...
-
-    @contextmanager
-    @staticmethod
-    def set_context(context: Any) -> Iterator[None]:
-        token = ToolboxContext._context.set(context)
-        try:
-            yield
-        finally:
-            ToolboxContext._context.reset(token)
-
-
 def _args_kwargs_to_kwargs(
     func: Callable[..., Any], args: Any, kwargs: Any
 ) -> Dict[str, Any]:
     sig = inspect.signature(func)
     param_names = list(sig.parameters.keys())
+
+    if "context" in param_names:
+        if len(param_names) != len(args) + len(kwargs) + 1:
+            raise ValueError(
+                f"Wrong number of arguments for function '{func.__name__}' ({len(args) + len(kwargs)}), should be {len(param_names) - 1}."
+            )
 
     # Map `args` to their corresponding parameter names
     args_as_kwargs = {}
@@ -60,6 +48,7 @@ def _args_kwargs_to_kwargs(
 class Toolbox:
     def __init__(self) -> None:
         self._functions: Dict[str, FunctionInfo] = {}
+        self._context: Optional[Any] = None
 
     def add_function(
         self, description: str, *, name: Optional[str] = None
@@ -76,6 +65,12 @@ class Toolbox:
             return f
 
         return decorator
+
+    def get_function_info(self, name: str) -> FunctionInfo:
+        return self._functions[name]
+
+    def get_function(self, name: str) -> Callable[..., Any]:
+        return self._functions[name].function
 
     def _inject_context(self, info: FunctionInfo) -> FunctionInfo:
         """Injects the context into the function if it has a context parameter.
@@ -100,7 +95,7 @@ class Toolbox:
             # remove context from the signature and create a new function that injects the context
             @functools.wraps(f)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                context = ToolboxContext.get_context()
+                context = self.get_context()
                 new_kwargs = _args_kwargs_to_kwargs(f, args, kwargs)
                 print(
                     f"Injecting context {context} into {f.__name__}: {args=}, {kwargs=} -> {new_kwargs=}"
@@ -130,13 +125,25 @@ class Toolbox:
 
         # register the functions with the agent and user_proxy if needed
         for info in retval.values():
-            info = self._inject_context(info)
             agent.register_for_llm(name=info.name, description=info.description)(
                 info.function
             )
             if user_proxy is not None:
-                user_proxy.register_for_llm(
-                    name=info.name, description=info.description
-                )(info.function)
+                user_proxy.register_for_execution(name=info.name)(info.function)
+            else:
+                logger.warning(
+                    f"UserProxyAgent not provided. Registering {info.name} for execution with {agent.name}."
+                )
+                agent.register_for_llm(name=info.name, description=info.description)(
+                    info.function
+                )
+
+        print(f"add_to_agent(): {retval=}")
 
         return retval
+
+    def set_context(self, context: Any) -> None:
+        self._context = context
+
+    def get_context(self) -> Optional[Any]:
+        return self._context

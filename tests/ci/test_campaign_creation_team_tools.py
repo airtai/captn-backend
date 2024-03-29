@@ -1,6 +1,6 @@
 import unittest
 
-from autogen.agentchat import AssistantAgent
+from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
@@ -8,8 +8,9 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
-    add_create_ad_group_with_ad_and_keywords_to_agent,
-    create_ad_group_with_ad_and_keywords,
+    Context,
+    # create_ad_group_with_ad_and_keywords,
+    campaign_creation_team_toolbox,
 )
 
 
@@ -21,13 +22,16 @@ class TestTools:
 
     def test_llm_config(self) -> None:
         agent = AssistantAgent(name="agent", llm_config=self.llm_config)
+        user_proxy = UserProxyAgent(name="user_proxy")
 
-        add_create_ad_group_with_ad_and_keywords_to_agent(
-            agent=agent,
-            user_id=1,
-            conv_id=1,
-            clients_question_answer_list=[("question", "yes")],
-        )
+        campaign_creation_team_toolbox.add_to_agent(agent, user_proxy)
+
+        # add_create_ad_group_with_ad_and_keywords_to_agent(
+        #     agent=agent,
+        #     user_id=1,
+        #     conv_id=1,
+        #     clients_question_answer_list=[("question", "yes")],
+        # )
 
         llm_config = agent.llm_config
         # print(f"{llm_config=}")
@@ -92,13 +96,22 @@ class TestTools:
             ]
             mock_google_ads_create_update.side_effect = side_effect
 
-            response = create_ad_group_with_ad_and_keywords(
+            context = Context(
                 user_id=1,
                 conv_id=1,
                 clients_question_answer_list=[("question", "yes")],
+            )
+            create_ad_group_with_ad_and_keywords = (
+                campaign_creation_team_toolbox.get_function(
+                    "create_ad_group_with_ad_and_keywords"
+                )
+            )
+            campaign_creation_team_toolbox.set_context(context)
+
+            response = create_ad_group_with_ad_and_keywords(
+                ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
                 clients_approval_message="yes",
                 modification_question="question",
-                ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
             )
 
             expected_response = f"""Ad group: {side_effect[0]}

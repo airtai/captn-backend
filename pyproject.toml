@@ -168,6 +168,8 @@ include = '\.pyi?$'
 fix = true
 line-length = 88
 target-version = "py38"
+include = ["captn/**/*.py", "google_ads/**/*.py", "openai_agent/**/*.py", "tests/**/*.py", "application.py/**/*.py", "pyproject.toml"]
+exclude = []
 
 [tool.ruff.lint]
 select = [
@@ -180,7 +182,7 @@ select = [
     "Q",  # flake8-quotes
 ]
 ignore = [
-    "E501",  # line too long, handled by black
+    "E501",  # line too long, handled by ruff format
     "C901",  # too complex
 ]
 
@@ -189,6 +191,10 @@ extend-immutable-calls = ["fastapi.Depends"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.format]
+
+docstring-code-format = true
 
 [tool.pytest.ini_options]
 

@@ -81,7 +81,6 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
 
 
 class TestConsoleIOWithWebsockets:
-
     @pytest.fixture()
     def setup(self) -> None:
         self.request = CaptnAgentRequest(
@@ -414,7 +413,6 @@ class TestConsoleIOWithWebsockets:
 
 
 def test_get_message_daily_analysis() -> None:
-
     request = CaptnAgentRequest(
         message="I want to Remove 'Free' keyword because it is not performing well",
         user_id=-1,
@@ -460,7 +458,6 @@ I want to Remove 'Free' keyword because it is not performing well
 
 
 def test_get_message_daily_analysis_continue() -> None:
-
     request = CaptnAgentRequest(
         message="I want to Remove 'Free' keyword because it is not performing well",
         user_id=-1,
@@ -484,7 +481,6 @@ def test_get_message_daily_analysis_continue() -> None:
 
 
 def test_get_message_normal_chat() -> None:
-
     request = CaptnAgentRequest(
         message="I want to Remove 'Free' keyword because it is not performing well",
         user_id=-1,

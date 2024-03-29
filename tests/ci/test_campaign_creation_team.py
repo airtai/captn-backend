@@ -47,18 +47,20 @@ class TestCampaignCreationTeam:
 
         self.ad_group_with_ad_and_keywords: Optional[AdGroupWithAdAndKeywords] = None
 
+        self.ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
+            customer_id="1111",
+            campaign_id="1212",
+            ad_group=ad_group,
+            ad_group_ad=ad_group_ad,
+            keywords=[keyword1, keyword2],
+        )
+
+        Team._teams.clear()
         try:
-            self.ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
-                customer_id="1111",
-                campaign_id="1212",
-                ad_group=ad_group,
-                ad_group_ad=ad_group_ad,
-                keywords=[keyword1, keyword2],
-            )
             yield
         finally:
-            # do some cleanup if neede
-            self.ad_group_with_ad_and_keywords = None
+            # do some cleanup if needed
+            Team._teams.clear()
 
     def test_init(self, setup_ad_group_with_ad_and_keywords: None) -> None:
         campaign_creation_team = CampaignCreationTeam(
@@ -77,6 +79,10 @@ class TestCampaignCreationTeam:
             expected_no_tools = 8
             for agent in campaign_creation_team.members:
                 # execution of the tools
+                print()
+                for k, v in agent.function_map.items():
+                    print(f"  - {k=}, {v=}")
+                print()
                 assert len(agent.function_map) == expected_no_tools
 
                 # specification of the tools
@@ -134,7 +140,6 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
             ) as mock_create_ad_group_keyword, unittest.mock.patch(
                 "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page"
             ) as mock_get_info_from_the_web_page:
-
                 mock_list_accessible_customers.return_value = ["1111"]
                 mock_ask_client_for_permission.return_value = "yes"
                 mock_create_ad_group.return_value = (

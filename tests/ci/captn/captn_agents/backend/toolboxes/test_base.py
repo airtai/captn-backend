@@ -1,15 +1,16 @@
 import inspect
 from dataclasses import dataclass
+from functools import wraps
 from typing import Any, Callable, Dict, Iterator
 from unittest.mock import MagicMock
 
 import pytest
+from autogen.agentchat import AssistantAgent, UserProxyAgent
 from typing_extensions import Annotated
 
 from captn.captn_agents.backend.toolboxes.base import (
     FunctionInfo,
     Toolbox,
-    ToolboxContext,
     _args_kwargs_to_kwargs,
 )
 
@@ -36,18 +37,9 @@ def test_args_kwargs_to_kwargs() -> None:
     }
 
 
-class TestToolboxContext:
-
-    def test_get_context(self) -> None:
-        context = object()
-        with ToolboxContext.set_context(context):
-            assert ToolboxContext.get_context() == context
-
-
 class TestToolbox:
     @pytest.fixture(autouse=True)
     def setup(self) -> Iterator[None]:
-
         def f(
             i: Annotated[int, "an integer parameter"], s: Annotated[str, "a greeting"]
         ) -> str:
@@ -109,11 +101,11 @@ class TestToolbox:
         mock.assert_called_once_with(42, context, "hello")
         mock.reset_mock()
 
-        with ToolboxContext.set_context(context):
-            result = new_function(42, "hello")
+        toolbox.set_context(context)
+        result = new_function(42, "hello")
 
-            assert result == mock.return_value
-            mock.assert_called_once_with(42, context, "hello")
+        assert result == mock.return_value
+        mock.assert_called_once_with(42, context, "hello")
 
     def test_add_function_with_simple_parameters(self) -> None:
         toolbox = Toolbox()
@@ -178,6 +170,8 @@ class TestToolbox:
 
     @pytest.fixture
     def agent_mocks(self) -> Dict[str, MagicMock]:
+        # agent
+
         agent = MagicMock()
         agent.register_for_llm = MagicMock()
 
@@ -192,18 +186,37 @@ class TestToolbox:
 
         agent.register_for_llm.side_effect = agent_side_effect
 
+        # user proxy
+
         user_proxy = MagicMock()
         user_proxy.register_for_execution = MagicMock()
 
+        register_for_execution = MagicMock()
+
+        def user_proxy_side_effect(*args: Any, **kwargs: Any) -> Callable[..., Any]:
+            def _inner(f: Callable[..., Any]) -> Callable[..., Any]:
+                register_for_execution(*args, **kwargs, function=f)
+                return f
+
+            return _inner
+
+        user_proxy.register_for_execution.side_effect = user_proxy_side_effect
+
         return dict(  # noqa: C408 unnecessary dict call
-            agent=agent, register_for_llm=register_for_llm, user_proxy=user_proxy
+            agent=agent,
+            register_for_llm=register_for_llm,
+            user_proxy=user_proxy,
+            register_for_execution=register_for_execution,
         )
 
-    def test_add_functions_to_agent(self, agent_mocks: Dict[str, MagicMock]) -> None:
+    def test_add_functions_to_agent_with_mock(
+        self, agent_mocks: Dict[str, MagicMock]
+    ) -> None:
         # create a mock agent and user_proxy
         agent = agent_mocks["agent"]
         register_for_llm = agent_mocks["register_for_llm"]
         user_proxy = agent_mocks["user_proxy"]
+        register_for_execution = agent_mocks["register_for_execution"]
 
         toolbox = Toolbox()
 
@@ -227,6 +240,9 @@ class TestToolbox:
             function=self.f,
         )
 
+        user_proxy.register_for_execution.assert_any_call(name="f")
+        register_for_execution.assert_any_call(name="f", function=self.f)
+
         agent.register_for_llm.assert_any_call(
             name="g", description="this is description of the function g"
         )
@@ -235,3 +251,50 @@ class TestToolbox:
             description="this is description of the function g",
             function=registered_functions["g"].function,
         )
+
+    @pytest.mark.openai
+    def test_add_functions_to_agent_with_openai(self) -> None:
+        agent = AssistantAgent(name="agent", llm_config={"model": "gpt-3.5-turbo"})
+        user_proxy = UserProxyAgent(name="user_proxy")
+
+        toolbox = Toolbox()
+
+        f = MagicMock(return_value="ok from f")
+
+        @wraps(self.f)
+        def wrapper_f(*args: Any, **kwargs: Any) -> Any:
+            return f(*args, **kwargs)
+
+        g = MagicMock(return_value="ok from g")
+
+        @wraps(self.g)
+        def wrapper_g(*args: Any, **kwargs: Any) -> Any:
+            return g(*args, **kwargs)
+
+        toolbox.add_function("this is description of the function f")(wrapper_f)
+        toolbox.add_function("this is description of the function g")(wrapper_g)
+
+        func_info_map = toolbox.add_to_agent(agent, user_proxy)
+
+        tools = agent.llm_config["tools"]
+        functions = [tool["function"]["name"] for tool in tools]
+        assert functions == ["f", "g"]
+
+        function_map = {name: info.function for name, info in func_info_map.items()}
+        assert list(function_map.keys()) == ["f", "g"]
+
+        context = object()
+        toolbox.set_context(context)
+
+        actual = user_proxy.function_map["f"](42, "hello")
+        assert actual == "ok from f"
+        f.assert_called_once_with(42, "hello")
+
+        actual = user_proxy.function_map["g"](123, "hi")
+        assert actual == "ok from g"
+        g.assert_called_once_with(i=123, context=context, s="hi")
+
+        with pytest.raises(
+            ValueError, match="Wrong number of arguments for function 'g'"
+        ):
+            user_proxy.function_map["g"](123, context, "hi")

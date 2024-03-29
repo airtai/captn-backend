@@ -6,8 +6,11 @@ pyup_dirs --py38-plus --recursive captn google_ads openai_agent tests applicatio
 # echo "Running isort..."
 # isort captn captn_agents google_ads openai_agent application.py
 
-echo "Running ruff..."
-ruff check captn google_ads openai_agent tests application.py --fix
+echo "Running ruff check..."
+ruff check --fix
 
-echo "Running black..."
-black captn google_ads openai_agent tests application.py
+echo "Running ruff formatter (black replacement)..."
+ruff format
+
+# echo "Running black..."
+# black captn google_ads openai_agent tests application.py

@@ -91,7 +91,9 @@ def ask_client_for_permission(
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
     )
-    descriptiveName = ast.literal_eval(query_result)[customer_id][0]["customer"]["descriptiveName"]  # type: ignore
+    descriptiveName = ast.literal_eval(query_result)[customer_id][0]["customer"][  # type: ignore
+        "descriptiveName"
+    ]
 
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
     message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"

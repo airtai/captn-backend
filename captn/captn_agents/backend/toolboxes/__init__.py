@@ -1,3 +1,3 @@
-from .base import FunctionInfo, Toolbox, ToolboxContext
+from .base import FunctionInfo, Toolbox
 
-__all__ = ["FunctionInfo", "Toolbox", "ToolboxContext"]
+__all__ = ["FunctionInfo", "Toolbox"]
