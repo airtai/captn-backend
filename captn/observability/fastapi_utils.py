@@ -114,7 +114,8 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
 
 def metrics(request: Request) -> Response:
     return Response(
-        generate_latest(REGISTRY), headers={"Content-Type": CONTENT_TYPE_LATEST}  # type: ignore [no-untyped-call]
+        generate_latest(REGISTRY),  # type: ignore [no-untyped-call]
+        headers={"Content-Type": CONTENT_TYPE_LATEST},
     )
 
 
