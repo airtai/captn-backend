@@ -536,8 +536,11 @@ but if it is important to the client, you can give advice on how to do it manual
     @classmethod
     def get_capabilities(cls) -> str:
         return """Google Ads team capabilities:
+This team has a wide range of capabilities, including the ability to:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - create/update/remove campaign, ad group, ad, keyword, location targeting
+
+The only problem is that the team is very slow. So if you have a specific task which another team can do faster, you should ask them to do it.
 """
 
     @classmethod

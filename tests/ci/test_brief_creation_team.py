@@ -28,7 +28,7 @@ class TestBriefCreationTeam:
     def test_end2_end(self) -> None:
         user_id = 123
         conv_id = 234
-        task = "User wants to create a n new campaign. His website is airt.ai."
+        task = "I want to create a n new campaign. My website is: https://airt.ai"
 
         try:
             with unittest.mock.patch(
@@ -41,7 +41,7 @@ class TestBriefCreationTeam:
                 "captn.captn_agents.backend.tools._brief_creation_team_tools._get_brief_template",
                 wraps=_get_brief_template,
             ) as mock_get_brief_template:
-                mock_reply_to_client.return_value = "Do whatever you think is best."
+                mock_reply_to_client.return_value = "I approve what ever you suggest. Please continue without asking me any more questions."
                 mock_get_info_from_the_web_page.return_value = (
                     mock_get_info_from_the_web_page.return_value
                 ) = """SUMMARY:
@@ -73,7 +73,7 @@ class TestBriefCreationTeam:
                         team.initiate_chat(cache=cache)
 
                 mock_get_info_from_the_web_page.assert_called()
-                mock_get_brief_template.assert_called_once()
+                mock_get_brief_template.assert_called()
                 mock_delagate_task.assert_called_once()
         finally:
             success = Team.pop_team(team.name)

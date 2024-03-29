@@ -1,5 +1,7 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from captn.captn_agents.backend.config import Config
+
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
 from ..tools._function_configs import (
     get_info_from_the_web_page_config,
@@ -22,7 +24,8 @@ class BriefCreationTeam(Team):
     _default_roles = [
         {
             "Name": "Copywriter",
-            "Description": "You are a Copywriter in the digital agency",
+            "Description": """You are a Copywriter in the digital agency.
+Never introduce yourself when writing messages. E.g. do not write 'As a copywriter'""",
         },
         {
             "Name": "Account_manager",
@@ -34,6 +37,7 @@ including steps and expected outcomes.
 Once the initial task given to the team is completed by implementing proposed solutions, you must write down the
 accomplished work and execute the 'reply_to_client' command. That message will be forwarded to the client so make
 sure it is understandable by non-experts.
+Never introduce yourself when writing messages. E.g. do not write 'As an account manager'
 """,
         },
     ]
@@ -75,8 +79,9 @@ sure it is understandable by non-experts.
             clients_question_answer_list=clients_question_answer_list,
         )
 
+        config = Config()
         self.llm_config = BriefCreationTeam._get_llm_config(
-            seed=seed, temperature=temperature
+            seed=seed, temperature=temperature, config_list=config.config_list_gpt_3_5
         )
 
         self._create_members()
@@ -112,6 +117,9 @@ sure it is understandable by non-experts.
     @property
     def _task(self) -> str:
         return f"""You are a team in charge of creating customer brief which will be used by one of the teams which you will choose depending on the task.
+Create a detailed brief based on the task provided by the client. The brief should be clear and concise and should contain all the necessary information for the chosen team to complete the task.
+Brief creation is your ONLY task. You are NOT responsible for the following steps after the brief is created.
+
 Here is the current brief/information we have gathered:
 {self.task}
 """
@@ -130,35 +138,35 @@ Here is the current brief/information we have gathered:
         )
 
         return f"""### Guidelines
-0. Do NOT repeat the content of the previous messages nor repeat your role.
-1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
-TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
-reasoning behind it, and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION. The TEAM MEMBER
-proposing the ORIGINAL SOLUTION should take those considerations into account and adjust the SOLUTION accordingly.
-Once the solution is modified, the team should REPEAT the process until the team reaches a CONSENSUS. The team should
-then move on to the next step. If the team is unable to reach a consensus, the account manager should make the final
-call. If you need additional information, use the 'reply_to_client' command to ask the client for it.
-
+1. Do NOT repeat the content of the previous messages nor repeat your role.
+Write short and clear messages. Nobody likes to read long messages. Be concise and to the point.
 
 2. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
 {avaliable_team_names_and_their_descriptions_str}
 
-3. After you have chosen the team, use the 'reply_to_client' command to inform the client about the chosen team and their capabilities.
-If the client agrees with the chosen team, proceed to the next step.
-Otherwise, use the 'reply_to_client' command to suggest another team to the client.
+3. After you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
 
-4. After you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
-
-5. Use 'get_info_from_the_web_page' command to get information from the web page. This information can be used to create the brief.
+4. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
+It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
+If the client has provided a link to the web page and you do not try to gather information from the web page, you will be penalized!
 If you are unable to retrieve the information, use the 'reply_to_client' command to ask the client for the information which you need.
 
-6. When you have gathered all the information, create a detailed brief
+5. When you have gathered all the information, create a detailed brief.
+Team members should discuss and agree on the content of the brief before sending it to the chosen team.
 
-7. Finally, use the 'delagate_task' command to send the brief to the chosen team.
+6. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
+
+Guidelines SUMMARY:
+- Write a detailed step-by-step plan
+- Choose the appropriate team
+- Get the brief template
+- Get information from the web page (do NOT forget this step, it is the MOST IMPORTANT step!)
+- Create a detailed brief
+- Delagate the task to the chosen team. Use this command ONLY after you have retrieved the information from the web page and created the brief.
 
 
-Additional information:
-When using reply_to_client command, try to use the 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible.
+## Additional Guidelines
+1. When using reply_to_client command, try to use the 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible.
 Do NOT use smart suggestions for open ended questions or questions which require the clients input.
 
 smart suggestions examples:
@@ -168,6 +176,17 @@ When you ask the client for some suggestions (e.g. which headline should be adde
     "suggestions":["Create Google Ads campaign", "increase trafic"],
     "type":"manyOf"
 }}
+
+The client can see only the messages and the smart suggestions which are sent to him by using the 'reply_to_client' command. He can NOT see the chat history between the team members!!
+So make sure you include all the necessary information in the messages and smart suggestions which you are sending by using the 'reply_to_client' command.
+
+2. Use reply_to_client only when you need additional information from the client or when you need an approval for the next step i.e. use it as little as possible.
+Do NOT send messages like "We will keep you updated on the progress" because the client is only interested in the final result.
+If you know what to do, just do it and do NOT use reply_to_client for informing the client about the progress.
+
+3. There is only 'reply_to_client' command, account_manager_reply_to_client or copywriter_reply_to_client commands do NOT exist.
+
+3. NEVER tell the client which command you are using, he/she does not need to know that. Just ask the question or provide the information.
 """
 
     @property
@@ -182,9 +201,11 @@ All team members have access to the following command:
 
 2. {GET_INFO_FROM_THE_WEB_COMMAND}
 
-3. 'get_brief_template': Get the brief template which will be used by the selected team. params: (team_name: string)
+3. 'get_brief_template': Get the TEMPLATE for the customer brief you will need to create. params: (team_name: string)
+Use this command ONLY one time after you have chosen the team.
 
-4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string)
+4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
+summary_from_web_page contains the summary retrieved from the clients web page by using the 'get_info_from_the_web_page' command.
 """
 
 

@@ -330,11 +330,14 @@ When asking the client for the approval, you must explicitly tell him which fina
     @classmethod
     def get_capabilities(cls) -> str:
         return """Campaign Creation Team capabilities:
+This team is perfect for creating Google Ads campaigns and everything that comes with it.
 - Get the information about the client's Google Ads account (campaigns, ad groups, ads, keywords etc.)
 - Create new campaign
 - Create new ad groups
 - Create new ads
 - Create new keywords
+
+The main benefit of this team is that they get the job very QUICKLY!
 """
 
     @classmethod

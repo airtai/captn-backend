@@ -20,10 +20,11 @@ def _delagate_task(
     team_name: str,
     task: str,
     customers_brief: str,
+    summary_from_web_page: str,
 ) -> str:
     team_class: Type[Team] = Team.get_class_by_name(team_name)
 
-    final_task = f"Here is the customer brief:\n{customers_brief}\n\nAnd the task is following:\n{task}"
+    final_task = f"Here is the customer brief:\n{customers_brief}\n\nAdditional info from the web page:\n{summary_from_web_page}\n\nAnd the task is following:\n{task}"
     team = team_class(  # type: ignore
         task=final_task,
         user_id=user_id,
@@ -56,7 +57,7 @@ def create_brief_creation_team_toolbox(
     toolbox.set_context(context)
 
     @toolbox.add_function(
-        "Get the brief template which will be used by the selected team"
+        "Get the TEMPLATE for the customer brief you will need to create"
     )
     def get_brief_template(
         team_name: Annotated[str, "The name of the team"],
@@ -68,6 +69,7 @@ def create_brief_creation_team_toolbox(
         team_name: Annotated[str, "The name of the team"],
         task: Annotated[str, "The task to be delagated"],
         customers_brief: Annotated[str, "The brief from the customer"],
+        summary_from_web_page: Annotated[str, "The summary of the web page content"],
         context: Context,
     ) -> str:
         return _delagate_task(
@@ -76,6 +78,7 @@ def create_brief_creation_team_toolbox(
             team_name=team_name,
             task=task,
             customers_brief=customers_brief,
+            summary_from_web_page=summary_from_web_page,
         )
 
     return toolbox

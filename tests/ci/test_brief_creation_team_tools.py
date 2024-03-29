@@ -50,7 +50,7 @@ class TestTools:
 
         llm_config = agent.llm_config
         name_desc_dict = {
-            "get_brief_template": "Get the brief template which will be used by the selected team",
+            "get_brief_template": "Get the TEMPLATE for the customer brief you will need to create",
             "delagate_task": "Delagate the task to the selected team",
         }
         _check_llm_config(llm_config, name_desc_dict)
@@ -80,6 +80,7 @@ class TestTools:
                     team_name="default_team",
                     task="Just give me a list of all the customer ids.",
                     customers_brief="No brief",
+                    summary_from_web_page="Summary from web page",
                     context=context,
                 )
 

@@ -136,16 +136,19 @@ class Team:
 
     @classmethod
     def _get_llm_config(
-        cls, seed: int = 42, temperature: float = 0.2
+        cls,
+        seed: int = 42,
+        temperature: float = 0.2,
+        config_list: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
         tools = (
             [{"type": "function", "function": f} for f in cls._functions]
             if cls._functions
             else None
         )
-        config = Config()
+        config_list = Config().config_list_gpt_4 if config_list is None else config_list
         llm_config = {
-            "config_list": config.config_list_gpt_4,
+            "config_list": config_list,
             "seed": seed,
             "temperature": temperature,
             "tools": tools,
