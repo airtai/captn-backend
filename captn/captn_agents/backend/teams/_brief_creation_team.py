@@ -1,5 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from ..tools._brief_creation_team_tools import add_delagate_task, add_get_brief_template
 from ..tools._function_configs import (
     get_info_from_the_web_page_config,
     reply_to_client_2_config,
@@ -85,7 +86,9 @@ sure it is understandable by non-experts.
         self._create_initial_message()
 
     def _add_tools(self) -> None:
-        pass
+        for agent in self.members:
+            add_get_brief_template(agent=agent)
+            add_delagate_task(agent=agent, user_id=self.user_id, conv_id=self.conv_id)
 
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
