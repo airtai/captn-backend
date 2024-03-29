@@ -1,5 +1,7 @@
 import unittest
 
+import pytest
+
 from captn.captn_agents.backend.teams import BriefCreationTeam, Team
 
 from .test_brief_creation_team_tools import BRIEF_CREATION_TEAM_RESPONSE
@@ -16,6 +18,8 @@ class TestBriefCreationTeam:
             len(avaliable_teams_and_their_descriptions) == len(Team._team_registry) - 1
         )
 
+    @pytest.mark.flaky
+    @pytest.mark.openai
     def test_end2_end(self) -> None:
         user_id = 123
         conv_id = 234
