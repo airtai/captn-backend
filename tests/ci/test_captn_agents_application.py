@@ -102,6 +102,7 @@ class TestConsoleIOWithWebsockets:
             retry=True,
         )
 
+    @pytest.mark.openai
     def test_websockets_chat(self) -> None:
         print("Testing setup", flush=True)
 

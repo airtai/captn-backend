@@ -8,7 +8,7 @@ from ....google_ads.client import google_ads_create_update
 from ..toolboxes import Toolbox
 from ._function_configs import properties_config
 
-__all__ = ("campaign_creation_team_toolbox",)
+__all__ = ("create_campaign_creation_team_toolbox",)
 
 
 class AdBase(BaseModel):
@@ -201,82 +201,95 @@ class Context(BaseModel):
     clients_question_answer_list: List[Tuple[str, Optional[str]]]
 
 
-campaign_creation_team_toolbox = Toolbox()
+def create_campaign_creation_team_toolbox(
+    user_id: int,
+    conv_id: int,
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+) -> Toolbox:
+    toolbox = Toolbox()
 
-clients_approval_message_desc = properties_config["clients_approval_message"][
-    "description"
-]
-
-modification_question_desc = properties_config["modification_question"]["description"]
-
-
-@campaign_creation_team_toolbox.add_function(
-    "Create an ad group with a single ad and a list of keywords"
-)
-def create_ad_group_with_ad_and_keywords(
-    ad_group_with_ad_and_keywords: Annotated[
-        AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
-    ],
-    clients_approval_message: Annotated[str, clients_approval_message_desc],
-    modification_question: Annotated[str, modification_question_desc],
-    # the context will be injected by the toolbox
-    context: Context,
-) -> Union[Dict[str, Any], str]:
-    """Create an ad group with a single ad and a list of keywords
-
-    Args:
-        ad_group_with_ad_and_keywords (AdGroupWithAdAndKeywords): The ad group with an ad and a list of keywords
-        clients_approval_message (str): The approval message from the client
-        modification_question (str): The question to ask the client for approval
-        context (Context): The context. It will be injected by the toolbox and not available to the LLM proposing the code.
-            It should be set up prior to calling `ìnitialize_chat` or `send_message` by calling `toolbox.set_context` function.
-
-    Returns:
-        Union[Dict[str, Any], str]: The response message
-    """
-    # TODO: If any of the creation fails, we should rollback the changes
-    # and return the error message (delete ad_group, other resources will be deleted automatically)
-
-    user_id = context.user_id
-    conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
-
-    ad_group_response = _create_ad_group(
+    context = Context(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
     )
-    if isinstance(ad_group_response, dict):
-        return ad_group_response
-    response = f"Ad group: {ad_group_response}\n"
-    ad_group_id = _get_resource_id_from_response(ad_group_response)
+    toolbox.set_context(context)
 
-    ad_group_ad_response = _create_ad_group_ad(
-        user_id=user_id,
-        conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
-        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
-        ad_group_id=ad_group_id,
-    )
-    response += f"Ad group ad: {ad_group_ad_response}\n"
+    clients_approval_message_desc = properties_config["clients_approval_message"][
+        "description"
+    ]
 
-    ad_group_keywords_response = _create_ad_group_keywords(
-        user_id=user_id,
-        conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
-        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
-        ad_group_id=ad_group_id,
-    )
-    response += ad_group_keywords_response  # type: ignore
+    modification_question_desc = properties_config["modification_question"][
+        "description"
+    ]
 
-    return response
+    @toolbox.add_function("Create an ad group with a single ad and a list of keywords")
+    def create_ad_group_with_ad_and_keywords(
+        ad_group_with_ad_and_keywords: Annotated[
+            AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
+        ],
+        clients_approval_message: Annotated[str, clients_approval_message_desc],
+        modification_question: Annotated[str, modification_question_desc],
+        # the context will be injected by the toolbox
+        context: Context,
+    ) -> Union[Dict[str, Any], str]:
+        """Create an ad group with a single ad and a list of keywords
+
+        Args:
+            ad_group_with_ad_and_keywords (AdGroupWithAdAndKeywords): The ad group with an ad and a list of keywords
+            clients_approval_message (str): The approval message from the client
+            modification_question (str): The question to ask the client for approval
+            context (Context): The context. It will be injected by the toolbox and not available to the LLM proposing the code.
+                It should be set up prior to calling `ìnitialize_chat` or `send_message` by calling `toolbox.set_context` function.
+
+        Returns:
+            Union[Dict[str, Any], str]: The response message
+        """
+        # TODO: If any of the creation fails, we should rollback the changes
+        # and return the error message (delete ad_group, other resources will be deleted automatically)
+
+        user_id = context.user_id
+        conv_id = context.conv_id
+        clients_question_answer_list = context.clients_question_answer_list
+
+        ad_group_response = _create_ad_group(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answer_list=clients_question_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+        )
+        if isinstance(ad_group_response, dict):
+            return ad_group_response
+        response = f"Ad group: {ad_group_response}\n"
+        ad_group_id = _get_resource_id_from_response(ad_group_response)
+
+        ad_group_ad_response = _create_ad_group_ad(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answer_list=clients_question_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad_group_id=ad_group_id,
+        )
+        response += f"Ad group ad: {ad_group_ad_response}\n"
+
+        ad_group_keywords_response = _create_ad_group_keywords(
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answer_list=clients_question_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            clients_approval_message=clients_approval_message,
+            modification_question=modification_question,
+            ad_group_id=ad_group_id,
+        )
+        response += ad_group_keywords_response  # type: ignore
+
+        return response
+
+    return toolbox
 
 
 # def add_create_ad_group_with_ad_and_keywords_to_agent(
