@@ -60,19 +60,8 @@ def add_delagate_task(
         # TODO: Update Team._teams with the new team for the user_id-conv_id pair
 
         team.initiate_chat()
+        # the last message is TeamResponse in json encoded string
         last_message = team.get_last_message(add_prefix=False)
         return last_message
-
-        # return TeamResponse
-
-    #     return_msg = TeamResponse(
-    #         message=message,
-    #         smart_suggestions=smart_suggestions,
-    #         is_question=True,
-    #         status="completed" if completed else "pause",
-    #         terminate_groupchat=True,
-    #     )
-
-    # return return_msg.model_dump_json()
 
     return _delagate_task  # type: ignore
