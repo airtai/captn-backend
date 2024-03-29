@@ -235,9 +235,9 @@ def get_ad_groups_report(
             keywords=keywords,
             ad_group_ads=ad_group_ads,
         )
-        campaign_ad_groups_dict[ad_group_result["campaign"]["id"]][
-            ad_group.id
-        ] = ad_group
+        campaign_ad_groups_dict[ad_group_result["campaign"]["id"]][ad_group.id] = (
+            ad_group
+        )
 
     return campaign_ad_groups_dict
 
@@ -311,9 +311,9 @@ def get_daily_ad_group_ads_report(
                 cost_micros=ad_group_ad_result["metrics"]["costMicros"],
             ),
         )
-        ad_group_ads_dict[ad_group_ad_result["adGroup"]["id"]][
-            ad_group_ad.id
-        ] = ad_group_ad
+        ad_group_ads_dict[ad_group_ad_result["adGroup"]["id"]][ad_group_ad.id] = (
+            ad_group_ad
+        )
 
     return ad_group_ads_dict
 
@@ -338,7 +338,9 @@ def compare_reports(
         _calculate_update_metrics(campaign_id, campaign, report_yesterday)  # type: ignore
         for ad_group_id, ad_group in campaign.ad_groups.items():
             _calculate_update_metrics(
-                ad_group_id, ad_group, report_yesterday[campaign_id].ad_groups  # type: ignore
+                ad_group_id,
+                ad_group,
+                report_yesterday[campaign_id].ad_groups,  # type: ignore
             )
             for keyword_id, keyword in ad_group.keywords.items():
                 _calculate_update_metrics(
@@ -379,7 +381,9 @@ def get_daily_report_for_customer(
         customer_ids=[customer_id],
         query=query,
     )
-    currency = ast.literal_eval(query_result)[customer_id][0]["customer"]["currencyCode"]  # type: ignore
+    currency = ast.literal_eval(query_result)[customer_id][0]["customer"][
+        "currencyCode"
+    ]  # type: ignore
     return DailyCustomerReports2(
         customer_id=customer_id, currency=currency, campaigns=compared_campaigns_report
     )

@@ -21,7 +21,6 @@ class TestConfig:
         assert config_list_gpt_3_5 != [], self._message
 
     def test_config_list_gpt_3_5_fail(self, monkeypatch: pytest.MonkeyPatch) -> None:
-
         monkeypatch.delenv("AZURE_GPT35_MODEL")
 
         config_list_gpt_3_5 = Config().config_list_gpt_3_5
@@ -34,7 +33,6 @@ class TestConfig:
         assert config_list_gpt_4 != [], self._message
 
     def test_config_list_gpt_4_fail(self, monkeypatch: pytest.MonkeyPatch) -> None:
-
         monkeypatch.delenv("AZURE_GPT4_MODEL")
 
         config_list_gpt_4 = Config().config_list_gpt_4

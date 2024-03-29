@@ -79,7 +79,7 @@ async def get_user(user_id: Union[int, str]) -> Any:
 
 
 async def get_user_id_chat_uuid_from_chat_id(
-    chat_id: Union[int, str]
+    chat_id: Union[int, str],
 ) -> Tuple[int, str]:
     wasp_db_url = await get_wasp_db_url()
     async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
@@ -1300,7 +1300,10 @@ async def create_geo_targeting_for_campaign(
     client = await _get_client(user_id=user_id)
 
     if location_ids is None:
-        return _get_geo_target_constant_by_names(client=client, location_names=location_names)  # type: ignore
+        return _get_geo_target_constant_by_names(
+            client=client,
+            location_names=location_names,  # type: ignore[arg-type]
+        )
 
     return _create_locations_by_ids_to_campaign(
         client=client,
