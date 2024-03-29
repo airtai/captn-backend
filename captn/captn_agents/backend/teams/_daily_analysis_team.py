@@ -861,13 +861,13 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
 
 
 def _create_final_html_message(
-    main_email_template: str, proposed_user_action: List[str], conv_id: int
+    main_email_template: str, proposed_user_action: List[str], conv_uuid: str
 ) -> str:
     proposed_user_actions_section = ""
     proposed_action_template = PROPOSED_ACTION_TEMPLATE
 
     for i, action in enumerate(proposed_user_action):
-        proposed_user_actions_section += f"<li>{action} (<a href='{REDIRECT_DOMAIN}/chat/{conv_id}?selected_user_action={i+1}'>Link</a>)</li>"
+        proposed_user_actions_section += f"<li>{action} (<a href='{REDIRECT_DOMAIN}/chat/{conv_uuid}?selected_user_action={i+1}'>Link</a>)</li>"
 
     proposed_action_template = proposed_action_template.replace(
         "{proposed_actions_li_tags}", proposed_user_actions_section
@@ -882,6 +882,7 @@ def _create_final_html_message(
 def _update_chat_message_and_send_email(
     user_id: int,
     conv_id: int,
+    conv_uuid: str,
     client_email: str,
     messages: str,
     initial_message_in_chat: str,
@@ -910,7 +911,7 @@ def _update_chat_message_and_send_email(
         raise ValueError(response.content)
 
     main_email_template = _create_final_html_message(
-        main_email_template, proposed_user_action, conv_id
+        main_email_template, proposed_user_action, conv_uuid
     )
 
     send_email_infobip(
@@ -964,7 +965,7 @@ DO NOT PRCEED WITH GOOGLE ADS ANALYSIS EXCEPT IF THE CLIENT ASKS YOU TO DO SO.]"
     )
 
 
-def _get_conv_id(user_id: int, email: str) -> int:
+def _get_conv_id_and_uuid(user_id: int, email: str) -> Tuple[int, str]:
     data = {"userId": user_id}
 
     response = requests.post(
@@ -974,7 +975,8 @@ def _get_conv_id(user_id: int, email: str) -> int:
         ValueError(f"Wasn't able to create chat for user_id: {user_id} - email {email}")
 
     conv_id = response.json()["chatId"]
-    return conv_id  # type: ignore
+    conv_uuid = response.json()["chatUUID"]
+    return conv_id, conv_uuid  # type: ignore
 
 
 def _delete_chat_webhook(user_id: int, conv_id: int) -> None:
@@ -1009,7 +1011,7 @@ def execute_daily_analysis(
 
             try:
                 daily_analysis_team = None
-                conv_id = _get_conv_id(user_id=user_id, email=email)
+                conv_id, conv_uuid = _get_conv_id_and_uuid(user_id=user_id, email=email)
                 login_url_response = get_login_url(
                     user_id=user_id, conv_id=conv_id
                 ).get("login_url")
@@ -1083,6 +1085,7 @@ Please propose the next steps and send the email to the client.
                     _update_chat_message_and_send_email(
                         user_id=user_id,
                         conv_id=conv_id,
+                        conv_uuid=conv_uuid,
                         client_email=email,
                         messages=messages,
                         initial_message_in_chat=daily_report_message,

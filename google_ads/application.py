@@ -78,7 +78,9 @@ async def get_user(user_id: Union[int, str]) -> Any:
 #     return user_id, chat_id
 
 
-async def get_user_id_from_chat(chat_id: Union[int, str]) -> Any:
+async def get_user_id_chat_uuid_from_chat_id(
+    chat_id: Union[int, str],
+) -> Tuple[int, str]:
     wasp_db_url = await get_wasp_db_url()
     async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
         chat = await db.query_first(
@@ -87,7 +89,8 @@ async def get_user_id_from_chat(chat_id: Union[int, str]) -> Any:
         if not chat:
             raise HTTPException(status_code=404, detail=f"chat {chat} not found")
     user_id = chat["userId"]
-    return user_id
+    chat_uuid = chat["uuid"]
+    return user_id, chat_uuid
 
 
 async def is_authenticated_for_ads(user_id: int) -> bool:
@@ -130,7 +133,7 @@ async def login_callback(
     code: str = Query(title="Authorization Code"), state: str = Query(title="State")
 ) -> RedirectResponse:
     chat_id = state
-    user_id = await get_user_id_from_chat(chat_id)
+    user_id, chat_uuid = await get_user_id_chat_uuid_from_chat_id(chat_id)
     # user_id, chat_id = await get_user_id_chat_id_from_conversation(conv_id)
     user = await get_user(user_id=user_id)
 
@@ -179,7 +182,7 @@ async def login_callback(
     redirect_domain = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
     logged_in_message = "I have successfully logged in"
     # redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}&team_id={task.team_id}&team_name={task.team_name}"
-    redirect_uri = f"{redirect_domain}/chat/{chat_id}?msg={logged_in_message}"
+    redirect_uri = f"{redirect_domain}/chat/{chat_uuid}?msg={logged_in_message}"
     return RedirectResponse(redirect_uri)
 
 
