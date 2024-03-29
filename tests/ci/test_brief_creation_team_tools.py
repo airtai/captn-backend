@@ -11,6 +11,8 @@ from captn.captn_agents.backend.tools._brief_creation_team_tools import (
 )
 from captn.captn_agents.backend.tools._functions import TeamResponse
 
+BRIEF_CREATION_TEAM_RESPONSE = r"""{"message":"Here is the list of all customer IDs accessible to you:\n- 7119828439\n- 7587037554","smart_suggestions":{"suggestions":[""],"type":""},"is_question":true,"status":"completed","terminate_groupchat":true}"""
+
 
 class TestTools:
     def setup(self) -> None:
@@ -51,8 +53,6 @@ class TestTools:
     def test_delagate_task(self) -> None:
         agent = AssistantAgent(name="agent", llm_config=self.llm_config)
 
-        default_team_response = r"""{"message":"Here is the list of all customer IDs accessible to you:\n- 7119828439\n- 7587037554","smart_suggestions":{"suggestions":[""],"type":""},"is_question":true,"status":"completed","terminate_groupchat":true}"""
-
         # patch Team.initiate_chat and get_last_message
         with unittest.mock.patch(
             "captn.captn_agents.backend.teams._team.Team.initiate_chat"
@@ -60,7 +60,7 @@ class TestTools:
             "captn.captn_agents.backend.teams._team.Team.get_last_message"
         ) as mock_get_last_message:
             mock_initiate_chat.return_value = None
-            mock_get_last_message.return_value = default_team_response
+            mock_get_last_message.return_value = BRIEF_CREATION_TEAM_RESPONSE
 
             try:
                 delagate_task_f = add_delagate_task(agent=agent, user_id=1, conv_id=1)

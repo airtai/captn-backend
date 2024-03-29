@@ -173,6 +173,10 @@ All team members have access to the following command:
 }}
 
 2. {GET_INFO_FROM_THE_WEB_COMMAND}
+
+3. 'get_brief_template': Get the brief template which will be used by the selected team. params: (team_name: string)
+
+4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string)
 """
 
 
