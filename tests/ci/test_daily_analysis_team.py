@@ -1238,6 +1238,7 @@ def test_send_email() -> None:
             _update_chat_message_and_send_email(
                 user_id=1,
                 conv_id=239,
+                conv_uuid="f0d2e864-9fe2-4fa0-b9a7-e8381ed14ef9",
                 client_email="myemail@mail.com",
                 messages="[{'content': 'test'}{content: 'test2'}]",
                 initial_message_in_chat="test",
@@ -1268,8 +1269,8 @@ def test_execute_daily_analysis_with_incorrect_emails() -> None:
         "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails"
     ) as mock_get_user_ids_and_emails:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id"
-        ) as mock_get_conv_id:
+            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid"
+        ) as mock_get_conv_id_and_uuid:
             mock_get_user_ids_and_emails.return_value = json.dumps(
                 {
                     1: "name@mail.com",
@@ -1280,7 +1281,7 @@ def test_execute_daily_analysis_with_incorrect_emails() -> None:
             execute_daily_analysis(
                 send_only_to_emails=["bla1@mail.com", "bla2@mail.com"]
             )
-            mock_get_conv_id.assert_not_called()
+            mock_get_conv_id_and_uuid.assert_not_called()
 
 
 def test_google_ads_api_call_reties_three_times() -> None:
@@ -1323,8 +1324,8 @@ def test_execute_daily_analysis_workflow() -> None:
     ) as mock_get_user_ids_and_emails:
 
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id"
-        ) as mock_get_conv_id:
+            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid"
+        ) as mock_get_conv_id_and_uuid:
 
             with unittest.mock.patch(
                 "captn.captn_agents.backend.teams._daily_analysis_team.get_login_url"
@@ -1348,7 +1349,10 @@ def test_execute_daily_analysis_workflow() -> None:
                                 mock_get_user_ids_and_emails.return_value = (
                                     """{"1": "robert@airt.ai"}"""
                                 )
-                                mock_get_conv_id.return_value = -1
+                                mock_get_conv_id_and_uuid.return_value = (
+                                    -1,
+                                    "f0d2e864-9fe2-4fa0-b9a7-e8381ed14ef9",
+                                )
                                 mock_get_login_url.return_value = {
                                     "login_url": ALREADY_AUTHENTICATED
                                 }
