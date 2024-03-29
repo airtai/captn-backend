@@ -252,7 +252,6 @@ class TestToolbox:
             function=registered_functions["g"].function,
         )
 
-    @pytest.mark.openai
     def test_add_functions_to_agent_with_openai(self) -> None:
         agent = AssistantAgent(
             name="agent",

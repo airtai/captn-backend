@@ -106,50 +106,67 @@ jobs:
               if: github.ref_name == 'main' || github.ref_name == 'dev'
               run: docker push ghcr.io/$GITHUB_REPOSITORY --all-tags
 
+    # https://github.com/marketplace/actions/alls-green#why
+    check: # This job does nothing and is only used for the branch protection
+      if: github.event.pull_request.draft == false
+
+      needs:
+        - test
+        - static_analysis
+        - docker_build_push
+
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Decide whether the needed jobs succeeded or failed
+          uses: re-actors/alls-green@release/v1 # nosemgrep
+          with:
+            jobs: ${{ toJSON(needs) }}
+
     deploy:
-        runs-on: ubuntu-22.04
-        defaults:
-            run:
-                shell: bash
-        needs: [static_analysis, test, docker_build_push]
-        if: github.ref_name == 'main' || github.ref_name == 'dev'
-        env:
-            GITHUB_USERNAME: ${{ github.actor }}
-            GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-            DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
-            PORT: ${{ vars.PORT }}
+          runs-on: ubuntu-22.04
+          defaults:
+              run:
+                  shell: bash
+          needs: [check]
+          if: github.ref_name == 'main' || github.ref_name == 'dev'
+          env:
+              GITHUB_USERNAME: ${{ github.actor }}
+              GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+              DEVELOPER_TOKEN: ${{ secrets.DEVELOPER_TOKEN }}
+              PORT: ${{ vars.PORT }}
 
-            DOMAIN: ${{ github.ref_name == 'main' && vars.PROD_DOMAIN || vars.STAGING_DOMAIN }}
-            REDIRECT_DOMAIN: ${{ github.ref_name == 'main' && vars.PROD_REDIRECT_DOMAIN || vars.STAGING_REDIRECT_DOMAIN }}
-            CLIENT_SECRET: ${{ github.ref_name == 'main' && secrets.PROD_CLIENT_SECRET || secrets.STAGING_CLIENT_SECRET }}
-            DATABASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_DATABASE_URL || secrets.STAGING_DATABASE_URL }}
-            REACT_APP_API_URL: ${{ github.ref_name == 'main' && secrets.PROD_REACT_APP_API_URL || secrets.STAGING_REACT_APP_API_URL }}
-            AZURE_API_VERSION: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_VERSION || secrets.STAGING_AZURE_API_VERSION }}
-            AZURE_API_ENDPOINT: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_ENDPOINT || secrets.STAGING_AZURE_API_ENDPOINT }}
-            AZURE_GPT4_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT4_MODEL || secrets.STAGING_AZURE_GPT4_MODEL }}
-            AZURE_GPT35_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT35_MODEL || secrets.STAGING_AZURE_GPT35_MODEL }}
-            AZURE_OPENAI_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY || secrets.STAGING_AZURE_OPENAI_API_KEY }}
-            INFOBIP_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_API_KEY || secrets.STAGING_INFOBIP_API_KEY }}
-            INFOBIP_BASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_BASE_URL || secrets.STAGING_INFOBIP_BASE_URL }}
-            SSH_KEY: ${{ github.ref_name == 'main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}
-        steps:
-            - uses: actions/checkout@v3 # Don't change it to cheackout@v4. V4 is not working with container image.
-            # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989
-            - run: chown -R $(id -u):$(id -g) $PWD
+              DOMAIN: ${{ github.ref_name == 'main' && vars.PROD_DOMAIN || vars.STAGING_DOMAIN }}
+              REDIRECT_DOMAIN: ${{ github.ref_name == 'main' && vars.PROD_REDIRECT_DOMAIN || vars.STAGING_REDIRECT_DOMAIN }}
+              CLIENT_SECRET: ${{ github.ref_name == 'main' && secrets.PROD_CLIENT_SECRET || secrets.STAGING_CLIENT_SECRET }}
+              DATABASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_DATABASE_URL || secrets.STAGING_DATABASE_URL }}
+              REACT_APP_API_URL: ${{ github.ref_name == 'main' && secrets.PROD_REACT_APP_API_URL || secrets.STAGING_REACT_APP_API_URL }}
+              AZURE_API_VERSION: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_VERSION || secrets.STAGING_AZURE_API_VERSION }}
+              AZURE_API_ENDPOINT: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_API_ENDPOINT || secrets.STAGING_AZURE_API_ENDPOINT }}
+              AZURE_GPT4_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT4_MODEL || secrets.STAGING_AZURE_GPT4_MODEL }}
+              AZURE_GPT35_MODEL: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_GPT35_MODEL || secrets.STAGING_AZURE_GPT35_MODEL }}
+              AZURE_OPENAI_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_AZURE_OPENAI_API_KEY || secrets.STAGING_AZURE_OPENAI_API_KEY }}
+              INFOBIP_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_API_KEY || secrets.STAGING_INFOBIP_API_KEY }}
+              INFOBIP_BASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_BASE_URL || secrets.STAGING_INFOBIP_BASE_URL }}
+              SSH_KEY: ${{ github.ref_name == 'main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}
+          steps:
+              - uses: actions/checkout@v3 # Don't change it to cheackout@v4. V4 is not working with container image.
+              # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989
+              - run: chown -R $(id -u):$(id -g) $PWD
 
-            - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "TAG=latest" >> $GITHUB_ENV ; else echo "TAG=dev" >> $GITHUB_ENV ; fi;
+              - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "TAG=latest" >> $GITHUB_ENV ; else echo "TAG=dev" >> $GITHUB_ENV ; fi;
 
-            - run: echo "PATH=$PATH:/github/home/.local/bin" >> $GITHUB_ENV
-            - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
-            - run: eval $(ssh-agent -s)
-            - run: mkdir -p ~/.ssh
-            - run: chmod 700 ~/.ssh
-            - run: ssh-keyscan "$DOMAIN" >> ~/.ssh/known_hosts
-            - run: chmod 644 ~/.ssh/known_hosts
-            - run: echo "$SSH_KEY" | base64 --decode > key.pem
-            - run: chmod 600 key.pem
+              - run: echo "PATH=$PATH:/github/home/.local/bin" >> $GITHUB_ENV
+              - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+              - run: eval $(ssh-agent -s)
+              - run: mkdir -p ~/.ssh
+              - run: chmod 700 ~/.ssh
+              - run: ssh-keyscan "$DOMAIN" >> ~/.ssh/known_hosts
+              - run: chmod 644 ~/.ssh/known_hosts
+              - run: echo "$SSH_KEY" | base64 --decode > key.pem
+              - run: chmod 600 key.pem
 
-            - run: ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker images"
-            - run: bash scripts/deploy.sh
+              - run: ssh -o StrictHostKeyChecking=no -i key.pem azureuser@"$DOMAIN" "docker images"
+              - run: bash scripts/deploy.sh
 
-            - run: rm key.pem
+              - run: rm key.pem
