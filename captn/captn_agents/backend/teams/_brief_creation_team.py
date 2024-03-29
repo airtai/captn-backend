@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from ..tools._brief_creation_team_tools import add_delagate_task, add_get_brief_template
+from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
 from ..tools._function_configs import (
     get_info_from_the_web_page_config,
     reply_to_client_2_config,
@@ -86,9 +86,12 @@ sure it is understandable by non-experts.
         self._create_initial_message()
 
     def _add_tools(self) -> None:
+        self.toolbox = create_brief_creation_team_toolbox(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+        )
         for agent in self.members:
-            add_get_brief_template(agent=agent)
-            add_delagate_task(agent=agent, user_id=self.user_id, conv_id=self.conv_id)
+            self.toolbox.add_to_agent(agent, agent)
 
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
@@ -127,6 +130,7 @@ Here is the current brief/information we have gathered:
         )
 
         return f"""### Guidelines
+0. Do NOT repeat the content of the previous messages nor repeat your role.
 1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
 TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
 reasoning behind it, and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION. The TEAM MEMBER
@@ -139,14 +143,18 @@ call. If you need additional information, use the 'reply_to_client' command to a
 2. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
 {avaliable_team_names_and_their_descriptions_str}
 
-3. After you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
+3. After you have chosen the team, use the 'reply_to_client' command to inform the client about the chosen team and their capabilities.
+If the client agrees with the chosen team, proceed to the next step.
+Otherwise, use the 'reply_to_client' command to suggest another team to the client.
 
-4. Use 'get_info_from_the_web_page' command to get information from the web page. This information can be used to create the brief.
+4. After you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
+
+5. Use 'get_info_from_the_web_page' command to get information from the web page. This information can be used to create the brief.
 If you are unable to retrieve the information, use the 'reply_to_client' command to ask the client for the information which you need.
 
-5. When you have gathered all the information, create a detailed brief
+6. When you have gathered all the information, create a detailed brief
 
-6. Finally, use the 'delagate_task' command to send the brief to the chosen team.
+7. Finally, use the 'delagate_task' command to send the brief to the chosen team.
 
 
 Additional information:
@@ -183,7 +191,9 @@ All team members have access to the following command:
 def _get_function_map() -> Dict[str, Any]:
     function_map = {
         "reply_to_client": reply_to_client_2,
-        "get_info_from_the_web_page": lambda url, task, task_guidelines: get_info_from_the_web_page(
+        "get_info_from_the_web_page": lambda url,
+        task,
+        task_guidelines: get_info_from_the_web_page(
             url=url, task=task, task_guidelines=task_guidelines
         ),
     }

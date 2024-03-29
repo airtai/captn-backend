@@ -1,34 +1,20 @@
-from typing import Callable, Optional, Type
+from typing import Type
 
-from autogen.agentchat import AssistantAgent, ConversableAgent
+from pydantic import BaseModel
 from typing_extensions import Annotated
 
 from ..teams._team import Team
+from ..toolboxes import Toolbox
 
 
-def add_get_brief_template(
-    *,
-    agent: AssistantAgent,
-    executor: Optional[ConversableAgent] = None,
-) -> Callable[..., str]:
-    if executor is None:
-        executor = agent
-
-    @executor.register_for_execution()  # type: ignore[misc]
-    @agent.register_for_llm(  # type: ignore[misc]
-        name="get_brief_template",
-        description="Get the brief template which will be used by the selected team",
-    )
-    def _get_brief_template(
-        team_name: Annotated[str, "The name of the team"],
-    ) -> str:
-        team_class: Type[Team] = Team.get_class_by_name(team_name)
-        return team_class.get_brief_template()
-
-    return _get_brief_template  # type: ignore
+def _get_brief_template(
+    team_name: str,
+) -> str:
+    team_class: Type[Team] = Team.get_class_by_name(team_name)
+    return team_class.get_brief_template()
 
 
-def delagate_task(
+def _delagate_task(
     user_id: int,
     conv_id: int,
     team_name: str,
@@ -52,32 +38,44 @@ def delagate_task(
     return last_message
 
 
-def add_delagate_task(
-    *,
-    agent: AssistantAgent,
-    executor: Optional[ConversableAgent] = None,
+class Context(BaseModel):
+    user_id: int
+    conv_id: int
+
+
+def create_brief_creation_team_toolbox(
     user_id: int,
     conv_id: int,
-) -> Callable[..., str]:
-    if executor is None:
-        executor = agent
+) -> Toolbox:
+    toolbox = Toolbox()
 
-    @executor.register_for_execution()  # type: ignore[misc]
-    @agent.register_for_llm(  # type: ignore[misc]
-        name="delagate_task",
-        description="Delagate the task to the selected team",
+    context = Context(
+        user_id=user_id,
+        conv_id=conv_id,
     )
-    def _delagate_task(
+    toolbox.set_context(context)
+
+    @toolbox.add_function(
+        "Get the brief template which will be used by the selected team"
+    )
+    def get_brief_template(
+        team_name: Annotated[str, "The name of the team"],
+    ) -> str:
+        return _get_brief_template(team_name)
+
+    @toolbox.add_function("Delagate the task to the selected team")
+    def delagate_task(
         team_name: Annotated[str, "The name of the team"],
         task: Annotated[str, "The task to be delagated"],
         customers_brief: Annotated[str, "The brief from the customer"],
+        context: Context,
     ) -> str:
-        return delagate_task(
-            user_id=user_id,
-            conv_id=conv_id,
+        return _delagate_task(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
             team_name=team_name,
             task=task,
             customers_brief=customers_brief,
         )
 
-    return _delagate_task  # type: ignore
+    return toolbox

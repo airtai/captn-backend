@@ -1,13 +1,13 @@
 import unittest
 from typing import Any, Dict
 
-from autogen.agentchat import AssistantAgent
+from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.teams._team import Team
 from captn.captn_agents.backend.tools._brief_creation_team_tools import (
-    add_delagate_task,
-    add_get_brief_template,
+    Context,
+    create_brief_creation_team_toolbox,
 )
 from captn.captn_agents.backend.tools._functions import TeamResponse
 
@@ -19,6 +19,11 @@ class TestTools:
         self.llm_config = {
             "config_list": Config().config_list_gpt_3_5,
         }
+
+        self.toolbox = create_brief_creation_team_toolbox(
+            user_id=12345,
+            conv_id=67890,
+        )
 
     def test_llm_config(self) -> None:
         def _check_llm_config(
@@ -39,9 +44,9 @@ class TestTools:
                 ]
 
         agent = AssistantAgent(name="agent", llm_config=self.llm_config)
+        user_proxy = UserProxyAgent(name="user_proxy")
 
-        add_get_brief_template(agent=agent)
-        add_delagate_task(agent=agent, user_id=123, conv_id=567)
+        self.toolbox.add_to_agent(agent, user_proxy)
 
         llm_config = agent.llm_config
         name_desc_dict = {
@@ -53,6 +58,8 @@ class TestTools:
     def test_delagate_task(self) -> None:
         agent = AssistantAgent(name="agent", llm_config=self.llm_config)
 
+        self.toolbox.add_to_agent(agent, agent)
+
         # patch Team.initiate_chat and get_last_message
         with unittest.mock.patch(
             "captn.captn_agents.backend.teams._team.Team.initiate_chat"
@@ -63,11 +70,17 @@ class TestTools:
             mock_get_last_message.return_value = BRIEF_CREATION_TEAM_RESPONSE
 
             try:
-                delagate_task_f = add_delagate_task(agent=agent, user_id=1, conv_id=1)
+                context = Context(
+                    user_id=12345,
+                    conv_id=67890,
+                )
+
+                delagate_task_f = self.toolbox.get_function("delagate_task")
                 response = delagate_task_f(
                     team_name="default_team",
                     task="Just give me a list of all the customer ids.",
                     customers_brief="No brief",
+                    context=context,
                 )
 
                 team_response = TeamResponse.model_validate_json(response)
