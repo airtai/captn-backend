@@ -1122,15 +1122,3 @@ def _get_update_ad_copy(
         )
 
     return _update_ad_copy
-
-
-def answer_the_question(answer: str, team_name: str) -> str:
-    answer = answer.strip()
-    google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
-    google_ads_team.update_clients_question_answer_list(answer)
-
-    google_ads_team.continue_chat(message=answer)
-
-    last_message = google_ads_team.get_last_message()
-
-    return last_message

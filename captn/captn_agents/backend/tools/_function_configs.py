@@ -177,25 +177,6 @@ create_google_ads_team_config = {
     },
 }
 
-answer_the_question_config = {
-    "name": "answer_the_question",
-    "description": "Answer to the question",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "answer": {
-                "type": "string",
-                "description": "The answer to the question",
-            },
-            "team_name": {
-                "type": "string",
-                "description": "Name of the team which asked the question",
-            },
-        },
-        "required": ["answer", "team_name"],
-    },
-}
-
 calculate_credit_config = {
     "name": "calculate_credit",
     "description": "Calculate the credit",
