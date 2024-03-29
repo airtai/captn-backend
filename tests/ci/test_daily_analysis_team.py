@@ -1322,27 +1322,21 @@ def test_execute_daily_analysis_workflow() -> None:
     with unittest.mock.patch(
         "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails"
     ) as mock_get_user_ids_and_emails:
-
         with unittest.mock.patch(
             "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid"
         ) as mock_get_conv_id_and_uuid:
-
             with unittest.mock.patch(
                 "captn.captn_agents.backend.teams._daily_analysis_team.get_login_url"
             ) as mock_get_login_url:
-
                 with unittest.mock.patch(
                     "captn.captn_agents.backend.teams._daily_analysis_team.get_daily_report"
                 ) as mock_get_daily_report:
-
                     with unittest.mock.patch(
                         "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.initiate_chat"
                     ) as mock_initiate_chat:
-
                         with unittest.mock.patch(
                             "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.get_messages",
                         ) as mock_messages:
-
                             with unittest.mock.patch(
                                 "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email"
                             ) as mock_update_chat_message_and_send_email:
