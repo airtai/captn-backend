@@ -6,6 +6,7 @@ THRESHOLD=30
 # List of domains for which to check and renew certificates
 DOMAINS=("$DOMAIN")
 
+echo "Stopping nginx"
 sudo service nginx stop
 
 for domain in "${DOMAINS[@]}"; do
@@ -24,8 +25,9 @@ for domain in "${DOMAINS[@]}"; do
             echo "Certificate renewal failed for $domain."
         fi
     else
-        echo "Certificate for $domain is not expiring within the next $THRESHOLD days. No action needed."
+        echo "Certificate for $domain is not expiring within the next $THRESHOLD days, expiring after $days_until_expiry days. No action needed."
     fi
 done
 
+echo "Restarting nginx"
 sudo service nginx restart
