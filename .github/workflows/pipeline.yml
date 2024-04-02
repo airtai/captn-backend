@@ -157,7 +157,7 @@ jobs:
               - run: if [[ $GITHUB_REF_NAME == "main" ]]; then echo "TAG=latest" >> $GITHUB_ENV ; else echo "TAG=dev" >> $GITHUB_ENV ; fi;
 
               - run: echo "PATH=$PATH:/github/home/.local/bin" >> $GITHUB_ENV
-              - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
+              - run: 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git gettext -y )'
               - run: eval $(ssh-agent -s)
               - run: mkdir -p ~/.ssh
               - run: chmod 700 ~/.ssh
