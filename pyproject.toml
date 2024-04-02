@@ -208,6 +208,9 @@ testpaths = [
 
 markers = [
     "openai: mark test as using openai.",
+    "brief_creation_team: maker test as end2end testing of the brief_creation_team",
+    "campaign_creation_team: maker test as end2end testing of the campaign_creation_team",
+    "google_ads_team: maker test as end2end testing of the google_ads_team_team",
 ]
 
 # needed for pytest-retry

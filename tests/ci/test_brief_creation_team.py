@@ -31,6 +31,7 @@ class TestBriefCreationTeam:
 
     @pytest.mark.flaky
     @pytest.mark.openai
+    @pytest.mark.brief_creation_team
     def test_end2_end(self) -> None:
         user_id = 123
         conv_id = 234

@@ -103,6 +103,7 @@ class TestCampaignCreationTeam:
 
     @pytest.mark.flaky
     @pytest.mark.openai
+    @pytest.mark.campaign_creation_team
     def test_end2end(self, setup_ad_group_with_ad_and_keywords: None) -> None:
         task = (
             (
