@@ -1,4 +1,5 @@
 import inspect
+import unittest
 from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable, Dict, Iterator
@@ -112,11 +113,11 @@ class TestToolbox:
 
         toolbox.add_function("this is description of the function f")(self.f)
         f_info = FunctionInfo(self.f, "f", "this is description of the function f")
-        assert toolbox._functions == {"f": f_info}
+        assert toolbox._function_infos == {"f": f_info}
 
         toolbox.add_function("this is description of the function")(self.g)
         g_info = FunctionInfo(self.g, "g", "this is description of the function")
-        assert toolbox._functions == {"f": f_info, "g": g_info}
+        assert toolbox._function_infos == {"f": f_info, "g": g_info}
 
     def test_add_function_with_custom_name(self) -> None:
         toolbox = Toolbox()
@@ -127,7 +128,7 @@ class TestToolbox:
         f_info = FunctionInfo(
             self.f, "function_f", "this is description of the function f"
         )
-        assert toolbox._functions == {"function_f": f_info}
+        assert toolbox._function_infos == {"function_f": f_info}
 
         toolbox.add_function("this is description of the function", name="function_g")(
             self.g
@@ -135,7 +136,7 @@ class TestToolbox:
         g_info = FunctionInfo(
             self.g, "function_g", "this is description of the function"
         )
-        assert toolbox._functions == {"function_f": f_info, "function_g": g_info}
+        assert toolbox._function_infos == {"function_f": f_info, "function_g": g_info}
 
     def test_add_function_with_same_name(self) -> None:
         toolbox = Toolbox()
@@ -146,7 +147,7 @@ class TestToolbox:
         f_info = FunctionInfo(
             self.f, "function_f", "this is description of the function f"
         )
-        assert toolbox._functions == {"function_f": f_info}
+        assert toolbox._function_infos == {"function_f": f_info}
 
         with pytest.raises(ValueError):
             toolbox.add_function(
@@ -158,7 +159,7 @@ class TestToolbox:
 
         toolbox.add_function("this is description of the function f")(self.f)
         f_info = FunctionInfo(self.f, "f", "this is description of the function f")
-        assert toolbox._functions == {"f": f_info}
+        assert toolbox._function_infos == {"f": f_info}
 
         toolbox.add_function(
             "this is description of the function f", name="yet_another_f"
@@ -166,7 +167,10 @@ class TestToolbox:
         yet_another_f_info = FunctionInfo(
             self.f, "yet_another_f", "this is description of the function f"
         )
-        assert toolbox._functions == {"f": f_info, "yet_another_f": yet_another_f_info}
+        assert toolbox._function_infos == {
+            "f": f_info,
+            "yet_another_f": yet_another_f_info,
+        }
 
     @pytest.fixture
     def agent_mocks(self) -> Dict[str, MagicMock]:
@@ -287,6 +291,7 @@ class TestToolbox:
 
         function_map = {name: info.function for name, info in func_info_map.items()}
         assert list(function_map.keys()) == ["f", "g"]
+        assert function_map["f"]._origin == toolbox.functions.f  # type: ignore[attr-defined]
 
         context = object()
         toolbox.set_context(context)
@@ -303,3 +308,11 @@ class TestToolbox:
             ValueError, match="Wrong number of arguments for function 'g'"
         ):
             user_proxy.function_map["g"](123, context, "hi")
+
+        # test mockup
+        with unittest.mock.patch.object(
+            toolbox.functions, "f", return_value="mocked"
+        ) as mock_f:
+            actual = user_proxy.function_map["f"](42, "hello")
+            assert actual == "mocked"
+            mock_f.assert_called_once_with(42, "hello")
