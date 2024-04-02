@@ -149,10 +149,6 @@ class Toolbox:
 
         # register the functions with the agent and user_proxy if needed
         for info in retval.values():
-            print(f"Registering {info.name} with {agent.name}.", flush=True)  # type: ignore[notexisting]
-            print(f"{info.function=}, {type(info.function)}", flush=True)  # type: ignore[notexisting]
-            signature = inspect.signature(info.function)  # type: ignore[notexisting]
-            print(f"{signature=}", flush=True)  # type: ignore[notexisting]
             agent.register_for_llm(name=info.name, description=info.description)(
                 info.function
             )

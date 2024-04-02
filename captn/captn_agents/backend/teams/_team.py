@@ -68,21 +68,30 @@ class Team:
         return list(cls._team_registry.keys())
 
     @staticmethod
-    def _store_team(team_name: str, team: "Team") -> None:
+    def _construct_team_name(user_id: int, conv_id: int) -> str:
+        name = f"{str(user_id)}_{str(conv_id)}"
+
+        return name
+
+    @staticmethod
+    def _store_team(user_id: int, conv_id: int, team: "Team") -> None:
+        team_name = Team._construct_team_name(user_id, conv_id)
         if team_name in Team._teams:
             raise ValueError(f"Team name '{team_name}' already exists")
 
         Team._teams[team_name] = team
 
     @staticmethod
-    def get_team(team_name: str) -> "Team":
+    def get_team(user_id: int, conv_id: int) -> "Team":
+        team_name = Team._construct_team_name(user_id, conv_id)
         try:
             return Team._teams[team_name]
         except KeyError as e:
             raise ValueError(f"Unknown team name: '{team_name}'") from e
 
     @staticmethod
-    def pop_team(team_name: str) -> Optional["Team"]:
+    def pop_team(user_id: int, conv_id: int) -> Optional["Team"]:
+        team_name = Team._construct_team_name(user_id, conv_id)
         try:
             return Team._teams.pop(team_name)
         except KeyError:
@@ -97,8 +106,9 @@ class Team:
 
     def __init__(
         self,
+        user_id: int,
+        conv_id: int,
         roles: List[Dict[str, str]],
-        name: str,
         function_map: Optional[Dict[str, Callable[[Any], Any]]] = None,
         work_dir: str = "my_default_workdir",
         max_round: int = 80,
@@ -107,6 +117,8 @@ class Team:
         human_input_mode: str = "NEVER",
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
     ):
+        self.user_id = user_id
+        self.conv_id = conv_id
         self.roles = roles
         self.initial_message: str
         self.name: str
@@ -117,22 +129,10 @@ class Team:
         self.function_map = function_map
         self.work_dir = work_dir
         self.llm_config: Optional[Dict[str, Any]] = None
-        self.name = name
         self.human_input_mode = human_input_mode
         self.clients_question_answer_list = clients_question_answer_list
-        Team._store_team(self.name, self)
-
-    @classmethod
-    def _get_new_team_name(cls) -> str:
-        name_prefix = cls._get_team_name_prefix()
-        name = f"{name_prefix}_{cls._team_name_counter}"
-        cls._team_name_counter = cls._team_name_counter + 1
-
-        return name
-
-    @classmethod
-    def _get_team_name_prefix(cls) -> str:
-        raise NotImplementedError()
+        self.name = Team._construct_team_name(user_id=user_id, conv_id=conv_id)
+        Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
     @classmethod
     def _get_llm_config(

@@ -29,12 +29,8 @@ def _get_initial_team(
     initial_team_class: Type[Team] = Team.get_class_by_name(class_name)
     initial_team = None
     try:
-        team_name = Team.get_user_conv_team_name(
-            name_prefix=initial_team_class._get_team_name_prefix(),
-            user_id=user_id,
-            conv_id=conv_id,
-        )
-        initial_team = Team.get_team(team_name)  # type: ignore
+        team_name = Team._construct_team_name(user_id=user_id, conv_id=conv_id)
+        initial_team = Team.get_team(user_id=user_id, conv_id=conv_id)
         create_new_conv = False
     except ValueError:
         create_new_conv = True
@@ -87,12 +83,14 @@ def start_or_continue_conversation(
         return team_name, last_message
 
     else:
-        return team_name, continue_conversation(team_name=team_name, message=task)
+        return team_name, continue_conversation(
+            user_id=user_id, conv_id=conv_id, message=task
+        )
 
 
-def continue_conversation(team_name: str, message: str) -> str:
+def continue_conversation(user_id: int, conv_id: int, message: str) -> str:
     message = message.strip()
-    initial_team = Team.get_team(team_name)
+    initial_team = Team.get_team(user_id=user_id, conv_id=conv_id)
     initial_team.update_clients_question_answer_list(message)
 
     initial_team.continue_chat(message=message)

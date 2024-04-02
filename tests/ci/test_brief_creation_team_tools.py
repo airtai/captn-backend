@@ -87,5 +87,5 @@ class TestTools:
                 team_response = TeamResponse.model_validate_json(response)
                 print(f"team_response: {team_response}")
             finally:
-                poped_team = Team.pop_team(team_name="google_ads_team_1_1")
+                poped_team = Team.pop_team(user_id=12345, conv_id=67890)
                 print(f"poped_team: {poped_team}")
