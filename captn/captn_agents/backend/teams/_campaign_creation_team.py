@@ -1,8 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from ..tools._campaign_creation_team_tools import (
-    add_create_ad_group_with_ad_and_keywords_to_agent,
-)
+from ..tools._campaign_creation_team_tools import create_campaign_creation_team_toolbox
 from ..tools._function_configs import (
     ask_client_for_permission_config,
     change_google_account_config,
@@ -109,13 +107,19 @@ sure it is understandable by non-experts.
         self._create_initial_message()
 
     def _add_tools(self) -> None:
+        self.toolbox = create_campaign_creation_team_toolbox(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+            clients_question_answer_list=self.clients_question_answer_list,
+        )
         for agent in self.members:
-            add_create_ad_group_with_ad_and_keywords_to_agent(
-                agent=agent,
-                user_id=self.user_id,
-                conv_id=self.conv_id,
-                clients_question_answer_list=self.clients_question_answer_list,
-            )
+            self.toolbox.add_to_agent(agent, agent)
+            # add_create_ad_group_with_ad_and_keywords_to_agent(
+            #     agent=agent,
+            #     user_id=self.user_id,
+            #     conv_id=self.conv_id,
+            #     clients_question_answer_list=self.clients_question_answer_list,
+            # )
 
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
