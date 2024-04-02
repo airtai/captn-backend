@@ -5,7 +5,11 @@ from typing import Iterator
 import pytest
 from autogen.cache import Cache
 
-from captn.captn_agents.backend.teams import BriefCreationTeam, Team
+from captn.captn_agents.backend.teams import (
+    BriefCreationTeam,
+    CampaignCreationTeam,
+    Team,
+)
 from captn.captn_agents.backend.tools._brief_creation_team_tools import (
     _get_brief_template,
 )
@@ -83,5 +87,5 @@ class TestBriefCreationTeam:
                 mock_get_brief_template.assert_called()
                 mock_delagate_task.assert_called_once()
         finally:
-            success = Team.pop_team(user_id=user_id, conv_id=conv_id)
-            assert success is not None
+            poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
+            assert isinstance(poped_team, CampaignCreationTeam)
