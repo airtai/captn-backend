@@ -35,7 +35,7 @@ jobs:
       runs-on: ubuntu-latest
       strategy:
         matrix:
-          pytest-marks: ["openai and (not brief_creation_team and not campaign_creation_team)", "openai and brief_creation_team", "openai and campaign_creation_team", "not openai"]
+          pytest-marks: ["not openai", "openai and (not brief_creation_team and not campaign_creation_team)", "brief_creation_team and openai", "campaign_creation_team and openai"]
         fail-fast: false
       services:
         postgres:
