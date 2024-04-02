@@ -1,13 +1,12 @@
 import json
 from os import environ
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from captn.captn_agents import SmartSuggestions, Team
-from captn.google_ads import get_google_ads_team_capability
+from captn.captn_agents import BriefCreationTeam, SmartSuggestions
 
 from .smart_suggestion_generator import generate_smart_suggestions
 
@@ -50,9 +49,9 @@ Below is a customer brief template for which you need to collect information dur
 
 Failing to capture the above information will result in a penalty.
 
-YOUR CAPABILITIES:
+Here are the following teams which you can delegate the task to and their capabilities:
 
-{get_google_ads_team_capability()}
+{BriefCreationTeam.construct_team_names_and_descriptions_message()}
 
 Use the 'offload_work_to_google_ads_expert' function to utilize the above capabilities. Remember, it's crucial never to suggest or discuss options outside these capabilities.
 If a customer seeks assistance beyond your defined capabilities which includes general knowledge questions, telling a joke or fact checking, firmly and politely state that your expertise is strictly confined to specific areas. Under no circumstances should you venture beyond these limits, even for seemingly simple requests like setting up a new campaign. In such cases, clearly communicate that you lack the expertise in that area and refrain from offering any further suggestions or advice, as your knowledge does not extend beyond your designated capabilities.
@@ -67,9 +66,6 @@ If a customer seeks assistance beyond your defined capabilities which includes g
 - Markdown Formatting: Format your responses in markdown for an accessible presentation on the web.
 - Customer's Disapproval: If the customer disapproves to give access to their Google Ads account, respect that and tell them they can always reach out to you if they change their mind. You will be penalised if you try to convince the customer to give access to their Google Ads account.
 - End of your duties: Once the customer has given permission to analyse their google ads campaign, YOU MUST call "offload_work_to_google_ads_expert" function. This special function has access to customer google ads account and can analyse the customer's google ads campaign.
-- If the customer goal is creating a new campaign, use "campaign_creation_team" to offload the work to the campaign creation team.
-- If the customer goal is to analyse/optimise the existing campaigns, ads etc., use "default_team" to offload the work to the default team.
-- It is crucial that you ask the client if he/she wants to analyse the existing campaigns or create a new campaign BEFORE asking for permission to access their Google Ads account and calling "offload_work_to_google_ads_expert" function!
 
 I will tip you $1000 everytime you follow the below best practices.
 
@@ -144,23 +140,21 @@ You have the tendency to make the below mistakes. You SHOULD aviod them at all c
 - Asking questions even if it is not relevant to the conversation. For example, if the customer has already informed that they are not using Google Ads, you again ask them permission to access their Google Ads account.
 """
 
-TEAM_NAMES = {name: name + "_{}_{}" for name in Team.get_team_names()}
-
 
 async def offload_work_to_google_ads_expert(
     user_id: int,
     chat_id: int,
     customer_brief: str,
-    google_ads_team: Literal["default_team", "campaign_creation_team"],
 ) -> Dict[str, Union[Optional[str], int, List[str]]]:
-    team_name = TEAM_NAMES[google_ads_team].format(user_id, chat_id)
+    team_name = f"{user_id}_{chat_id}"
     return {
         # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
         "team_name": team_name,
         "team_id": chat_id,
         "customer_brief": customer_brief,
-        "google_ads_team": google_ads_team,
+        # TODO: remove after sync with frontend
+        "google_ads_team": "default_team",
     }
 
 
@@ -177,16 +171,8 @@ TOOLS = [
                         "type": "string",
                         "description": CUSTOMER_BRIEF_DESCRIPTION,
                     },
-                    "google_ads_team": {
-                        "description": """The team to which the work should be offloaded.
-Choose the team based on the customer's requirements.
-If the customer needs help with google ads campaign creation, choose 'campaign_creation_team'.
-If the customer wants to analyse already running google ads campaigns, ads etc., choose 'default_team'""",
-                        "enum": ["default_team", "campaign_creation_team"],
-                        "type": "string",
-                    },
                 },
-                "required": ["customer_brief", "google_ads_team"],
+                "required": ["customer_brief"],
             },
         },
     },

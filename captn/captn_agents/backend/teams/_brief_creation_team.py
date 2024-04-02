@@ -96,6 +96,21 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             if cls != team_class
         }
 
+    @classmethod
+    def construct_team_names_and_descriptions_message(cls) -> str:
+        avaliable_team_names_and_their_descriptions = (
+            BriefCreationTeam._get_avaliable_team_names_and_their_descriptions()
+        )
+        # Create a string from dict
+        avaliable_team_names_and_their_descriptions_str = "\n".join(
+            [
+                f"{name} - {description}\n\n"
+                for name, description in avaliable_team_names_and_their_descriptions.items()
+            ]
+        )
+
+        return avaliable_team_names_and_their_descriptions_str
+
     @property
     def _task(self) -> str:
         return f"""You are a team in charge of creating customer brief which will be used by one of the teams which you will choose depending on the task.
@@ -108,23 +123,12 @@ Here is the current brief/information we have gathered:
 
     @property
     def _guidelines(self) -> str:
-        avaliable_team_names_and_their_descriptions = (
-            BriefCreationTeam._get_avaliable_team_names_and_their_descriptions()
-        )
-        # Create a string from dict
-        avaliable_team_names_and_their_descriptions_str = "\n".join(
-            [
-                f"{name}\n: {description}\n\n"
-                for name, description in avaliable_team_names_and_their_descriptions.items()
-            ]
-        )
-
         return f"""### Guidelines
 1. Do NOT repeat the content of the previous messages nor repeat your role.
 Write short and clear messages. Nobody likes to read long messages. Be concise and to the point.
 
 2. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
-{avaliable_team_names_and_their_descriptions_str}
+{self.construct_team_names_and_descriptions_message()}
 
 3. After you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
 
