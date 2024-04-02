@@ -9,9 +9,6 @@ from captn.captn_agents.backend.teams import (
     BriefCreationTeam,
     Team,
 )
-from captn.captn_agents.backend.tools._brief_creation_team_tools import (
-    _get_brief_template,
-)
 
 from .test_brief_creation_team_tools import BRIEF_CREATION_TEAM_RESPONSE
 
@@ -40,16 +37,20 @@ class TestBriefCreationTeam:
         conv_id = 234
         task = "I want to create a n new campaign. My website is: https://airt.ai"
 
+        team = BriefCreationTeam(task=task, user_id=user_id, conv_id=conv_id)
+
         try:
-            with unittest.mock.patch(
-                "captn.captn_agents.backend.tools._functions._reply_to_client_2"
-            ) as mock_reply_to_client, unittest.mock.patch(
-                "captn.captn_agents.backend.tools._functions._get_info_from_the_web_page"
-            ) as mock_get_info_from_the_web_page, unittest.mock.patch(
-                "captn.captn_agents.backend.tools._brief_creation_team_tools._delagate_task"
-            ) as mock_delagate_task, unittest.mock.patch(
-                "captn.captn_agents.backend.tools._brief_creation_team_tools._get_brief_template",
-                wraps=_get_brief_template,
+            with unittest.mock.patch.object(
+                team.toolbox.functions, "reply_to_client_2"
+            ) as mock_reply_to_client, unittest.mock.patch.object(
+                team.toolbox.functions, "get_info_from_the_web_page"
+            ) as mock_get_info_from_the_web_page, unittest.mock.patch.object(
+                team.toolbox.functions,
+                "delagate_task",
+            ) as mock_delagate_task, unittest.mock.patch.object(
+                team.toolbox.functions,
+                "get_brief_template",
+                wraps=team.toolbox.functions.get_brief_template,  # type: ignore[attr-defined]
             ) as mock_get_brief_template:
                 mock_reply_to_client.return_value = "I approve what ever you suggest. Please continue without asking me any more questions."
                 mock_get_info_from_the_web_page.return_value = (
@@ -77,7 +78,6 @@ class TestBriefCreationTeam:
     """
                 mock_delagate_task.return_value = BRIEF_CREATION_TEAM_RESPONSE
 
-                team = BriefCreationTeam(task=task, user_id=user_id, conv_id=conv_id)
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
                         team.initiate_chat(cache=cache)
