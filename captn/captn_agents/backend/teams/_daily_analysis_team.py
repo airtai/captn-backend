@@ -154,7 +154,7 @@ def get_daily_keywords_report(
         query=query,
     )
 
-    customer_results = ast.literal_eval(query_result)[customer_id]  # type: ignore
+    customer_results = ast.literal_eval(query_result)[customer_id]
 
     ad_group_keywords_dict: Dict[str, Dict[str, Keyword]] = defaultdict(dict)
     for customer_result in customer_results:
@@ -210,7 +210,7 @@ def get_ad_groups_report(
         customer_ids=[customer_id],
         query=query,
     )
-    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+    customer_result = ast.literal_eval(query_result)[customer_id]
 
     keywords_report = get_daily_keywords_report(user_id, conv_id, customer_id, date)
     ad_group_ads_report = get_daily_ad_group_ads_report(
@@ -257,7 +257,7 @@ def get_campaigns_report(
         customer_ids=[customer_id],
         query=query,
     )
-    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+    customer_result = ast.literal_eval(query_result)[customer_id]
 
     ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date)
     campaigns: Dict[str, Campaign] = {}
@@ -296,7 +296,7 @@ def get_daily_ad_group_ads_report(
         customer_ids=[customer_id],
         query=query,
     )
-    customer_result = ast.literal_eval(query_result)[customer_id]  # type: ignore
+    customer_result = ast.literal_eval(query_result)[customer_id]
 
     ad_group_ads_dict: Dict[str, Dict[str, AdGroupAd]] = defaultdict(dict)
     for ad_group_ad_result in customer_result:
@@ -383,7 +383,7 @@ def get_daily_report_for_customer(
     )
     currency = ast.literal_eval(query_result)[customer_id][0]["customer"][
         "currencyCode"
-    ]  # type: ignore
+    ]
     return DailyCustomerReports2(
         customer_id=customer_id, currency=currency, campaigns=compared_campaigns_report
     )
@@ -834,7 +834,7 @@ def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, An
         "list_accessible_customers": lambda: list_accessible_customers(
             user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
         ),
-        "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
+        "execute_query": lambda customer_ids=None, query=None: execute_query(
             user_id=user_id,
             conv_id=conv_id,
             customer_ids=string_to_list(customer_ids),
@@ -966,7 +966,7 @@ def _get_conv_id_and_uuid(user_id: int, email: str) -> Tuple[int, str]:
 
     conv_id = response.json()["chatId"]
     conv_uuid = response.json()["chatUUID"]
-    return conv_id, conv_uuid  # type: ignore
+    return conv_id, conv_uuid
 
 
 def _delete_chat_webhook(user_id: int, conv_id: int) -> None:

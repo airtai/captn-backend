@@ -112,12 +112,22 @@ class TestToolbox:
         toolbox = Toolbox()
 
         toolbox.add_function("this is description of the function f")(self.f)
-        f_info = FunctionInfo(self.f, "f", "this is description of the function f")
-        assert toolbox._function_infos == {"f": f_info}
+        assert set(toolbox._function_infos.keys()) == {"f"}
 
-        toolbox.add_function("this is description of the function")(self.g)
-        g_info = FunctionInfo(self.g, "g", "this is description of the function")
-        assert toolbox._function_infos == {"f": f_info, "g": g_info}
+        f_info = toolbox.get_function_info("f")
+        assert toolbox.functions.f == self.f  # type: ignore[attr-defined]
+        assert f_info.function._origin == self.f  # type: ignore[attr-defined]
+        assert f_info.name == "f"
+        assert f_info.description == "this is description of the function f"
+
+        toolbox.add_function("this is description of the function g")(self.g)
+        assert set(toolbox._function_infos.keys()) == {"f", "g"}
+
+        g_info = toolbox.get_function_info("g")
+        assert toolbox.functions.g == self.g  # type: ignore[attr-defined]
+        assert g_info.function._origin == self.g  # type: ignore[attr-defined]
+        assert g_info.name == "g"
+        assert g_info.description == "this is description of the function g"
 
     def test_add_function_with_custom_name(self) -> None:
         toolbox = Toolbox()
@@ -125,18 +135,22 @@ class TestToolbox:
         toolbox.add_function(
             "this is description of the function f", name="function_f"
         )(self.f)
-        f_info = FunctionInfo(
-            self.f, "function_f", "this is description of the function f"
-        )
-        assert toolbox._function_infos == {"function_f": f_info}
+        assert toolbox.functions.function_f == self.f  # type: ignore[attr-defined]
+
+        f_info = toolbox.get_function_info("function_f")
+        assert f_info.function._origin == self.f  # type: ignore[attr-defined]
+        assert f_info.name == "function_f"
+        assert f_info.description == "this is description of the function f"
 
         toolbox.add_function("this is description of the function", name="function_g")(
             self.g
         )
-        g_info = FunctionInfo(
-            self.g, "function_g", "this is description of the function"
-        )
-        assert toolbox._function_infos == {"function_f": f_info, "function_g": g_info}
+        assert toolbox.functions.function_g == self.g  # type: ignore[attr-defined]
+
+        g_info = toolbox.get_function_info("function_g")
+        assert g_info.function._origin == self.g  # type: ignore[attr-defined]
+        assert g_info.name == "function_g"
+        assert g_info.description == "this is description of the function"
 
     def test_add_function_with_same_name(self) -> None:
         toolbox = Toolbox()
@@ -144,10 +158,6 @@ class TestToolbox:
         toolbox.add_function(
             "this is description of the function f", name="function_f"
         )(self.f)
-        f_info = FunctionInfo(
-            self.f, "function_f", "this is description of the function f"
-        )
-        assert toolbox._function_infos == {"function_f": f_info}
 
         with pytest.raises(ValueError):
             toolbox.add_function(
@@ -158,19 +168,21 @@ class TestToolbox:
         toolbox = Toolbox()
 
         toolbox.add_function("this is description of the function f")(self.f)
-        f_info = FunctionInfo(self.f, "f", "this is description of the function f")
-        assert toolbox._function_infos == {"f": f_info}
 
         toolbox.add_function(
             "this is description of the function f", name="yet_another_f"
         )(self.f)
-        yet_another_f_info = FunctionInfo(
-            self.f, "yet_another_f", "this is description of the function f"
+
+        f_info = toolbox.get_function_info("f")
+        yet_another_f_info = toolbox.get_function_info("yet_another_f")
+        assert f_info.function._origin == yet_another_f_info.function._origin == self.f  # type: ignore[attr-defined]
+        assert f_info.name == "f"
+        assert yet_another_f_info.name == "yet_another_f"
+        assert (
+            f_info.description
+            == yet_another_f_info.description
+            == "this is description of the function f"
         )
-        assert toolbox._function_infos == {
-            "f": f_info,
-            "yet_another_f": yet_another_f_info,
-        }
 
     @pytest.fixture
     def agent_mocks(self) -> Dict[str, MagicMock]:
@@ -231,8 +243,12 @@ class TestToolbox:
         assert len(registered_functions) == 2
         assert "f" in registered_functions
         assert "g" in registered_functions
-        assert registered_functions["f"] == FunctionInfo(
-            self.f, "f", "this is description of the function f"
+
+        wrapped_f = registered_functions["f"].function
+        assert wrapped_f._origin == self.f  # type: ignore[attr-defined]
+        assert (
+            FunctionInfo(wrapped_f, "f", "this is description of the function f")
+            == registered_functions["f"]
         )
 
         agent.register_for_llm.assert_any_call(
@@ -241,11 +257,11 @@ class TestToolbox:
         register_for_llm.assert_any_call(
             name="f",
             description="this is description of the function f",
-            function=self.f,
+            function=wrapped_f,
         )
 
         user_proxy.register_for_execution.assert_any_call(name="f")
-        register_for_execution.assert_any_call(name="f", function=self.f)
+        register_for_execution.assert_any_call(name="f", function=wrapped_f)
 
         agent.register_for_llm.assert_any_call(
             name="g", description="this is description of the function g"

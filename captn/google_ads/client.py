@@ -42,7 +42,7 @@ def get_login_url(
     }
     response = requests.get(f"{BASE_URL}/login", params=params, timeout=60)
     retval: Dict[str, str] = response.json()
-    return retval  # type: ignore[no-any-return]
+    return retval
 
 
 def list_accessible_customers(

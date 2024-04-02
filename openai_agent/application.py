@@ -242,10 +242,10 @@ async def _get_openai_response(  # type: ignore
                     **function_args,
                 )
     else:
-        result: str = completion.choices[0].message.content  # type: ignore
+        result: str = completion.choices[0].message.content
         updated_message = message + [{"role": "assistant", "content": result}]
         background_tasks.add_task(generate_smart_suggestions, updated_message, chat_id)
-        return {"content": result}  # type: ignore
+        return {"content": result}
 
 
 class AzureOpenAIRequest(BaseModel):
@@ -263,4 +263,4 @@ async def chat(
     user_id = request.user_id
 
     result = await _get_openai_response(user_id, chat_id, message, background_tasks)
-    return result  # type: ignore
+    return result

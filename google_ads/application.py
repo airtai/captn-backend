@@ -46,7 +46,7 @@ oauth2_settings = {
 
 async def get_users() -> Any:
     wasp_db_url = await get_wasp_db_url()
-    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
+    async with get_db_connection(db_url=wasp_db_url) as db:
         users = await db.query_raw('SELECT * from "User"')
 
     return users
@@ -54,7 +54,7 @@ async def get_users() -> Any:
 
 async def get_user(user_id: Union[int, str]) -> Any:
     wasp_db_url = await get_wasp_db_url()
-    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
+    async with get_db_connection(db_url=wasp_db_url) as db:
         user = await db.query_first(
             f'SELECT * from "User" where id={user_id}'  # nosec: [B608]
         )
@@ -82,7 +82,7 @@ async def get_user_id_chat_uuid_from_chat_id(
     chat_id: Union[int, str],
 ) -> Tuple[int, str]:
     wasp_db_url = await get_wasp_db_url()
-    async with get_db_connection(db_url=wasp_db_url) as db:  # type: ignore[var-annotated]
+    async with get_db_connection(db_url=wasp_db_url) as db:
         chat = await db.query_first(
             f'SELECT * from "Chat" where id={chat_id}'  # nosec: [B608]
         )
@@ -95,7 +95,7 @@ async def get_user_id_chat_uuid_from_chat_id(
 
 async def is_authenticated_for_ads(user_id: int) -> bool:
     await get_user(user_id=user_id)
-    async with get_db_connection() as db:  # type: ignore[var-annotated]
+    async with get_db_connection() as db:
         data = await db.gauth.find_unique(where={"user_id": user_id})
 
     if not data:
@@ -161,7 +161,7 @@ async def login_callback(
 
     if userinfo_response.status_code == 200:
         user_info = userinfo_response.json()
-    async with get_db_connection() as db:  # type: ignore[var-annotated]
+    async with get_db_connection() as db:
         await db.gauth.upsert(
             where={"user_id": user["id"]},
             data={
@@ -188,7 +188,7 @@ async def login_callback(
 
 async def load_user_credentials(user_id: Union[int, str]) -> Any:
     await get_user(user_id=user_id)
-    async with get_db_connection() as db:  # type: ignore[var-annotated]
+    async with get_db_connection() as db:
         data = await db.gauth.find_unique_or_raise(where={"user_id": user_id})
 
     return data.creds
@@ -213,7 +213,7 @@ async def create_google_ads_client(
         client = GoogleAdsClient.load_from_dict(google_ads_credentials)
     except RefreshError:
         # Something is wrong with the credentials, delete them from the database so they can be re-generated
-        async with get_db_connection() as db:  # type: ignore[var-annotated]
+        async with get_db_connection() as db:
             await db.gauth.delete(where={"user_id": user_id})
 
         raise HTTPException(  # noqa
@@ -340,7 +340,7 @@ async def search(
 async def get_user_ids_and_emails() -> str:
     users = await get_users()
     id_email_dict = {user["id"]: user["email"] for user in users}
-    return json.dumps(id_email_dict)  # type: ignore
+    return json.dumps(id_email_dict)
 
 
 AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad", "ad_group_criterion"]
@@ -993,7 +993,7 @@ async def _remove_existing_create_new_ad_group_criterion(
     ad_group_criterion_copy = await _get_existing_ad_group_criterion(
         user_id=user_id,
         customer_id=ad_group_criterion_model.customer_id,
-        criterion_id=ad_group_criterion_model.criterion_id,  # type: ignore [arg-type]
+        criterion_id=ad_group_criterion_model.criterion_id,
     )
 
     ad_group_criterion_model.status = (
@@ -1157,7 +1157,7 @@ async def update_campaigns_negative_keywords(
     campaign_criterion_copy = await _get_existing_campaign_criterion(
         user_id=user_id,
         customer_id=campaign_criterion_model.customer_id,
-        criterion_id=campaign_criterion_model.criterion_id,  # type: ignore [arg-type]
+        criterion_id=campaign_criterion_model.criterion_id,
     )
 
     _copy_keyword_text_and_match_type(
@@ -1309,7 +1309,7 @@ async def create_geo_targeting_for_campaign(
         client=client,
         customer_id=model.customer_id,  # type: ignore
         campaign_id=model.campaign_id,  # type: ignore
-        location_ids=location_ids,  # type: ignore
+        location_ids=location_ids,
         negative=model.negative,
     )
 
