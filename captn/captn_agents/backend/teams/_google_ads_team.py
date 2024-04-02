@@ -578,7 +578,7 @@ def get_campaign_creation_team_shared_functions(
         "list_accessible_customers": lambda: list_accessible_customers(
             user_id=user_id, conv_id=conv_id
         ),
-        "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
+        "execute_query": lambda customer_ids=None, query=None: execute_query(
             user_id=user_id,
             conv_id=conv_id,
             customer_ids=string_to_list(customer_ids),

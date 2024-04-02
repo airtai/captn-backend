@@ -49,9 +49,9 @@ class Team:
             cls_typed: Type["Team"] = cls  # type: ignore[assignment]
             if name in cls_typed._team_registry:
                 raise ValueError(f"Team name '{name}' already exists")
-            if cls_typed in cls_typed._team_registry.values():  # type: ignore[comparison-overlap]
+            if cls_typed in cls_typed._team_registry.values():
                 raise ValueError(f"Team class '{cls_typed}' already exists")
-            cls_typed._team_registry[name] = cls_typed  # type: ignore[assignment]
+            cls_typed._team_registry[name] = cls_typed
             return cls_typed  # type: ignore[return-value]
 
         return _inner
