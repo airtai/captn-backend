@@ -667,22 +667,16 @@ sure it is understandable by non-experts.
         )
         roles: List[Dict[str, str]] = DailyAnalysisTeam._default_roles
 
-        name = Team.get_user_conv_team_name(
-            name_prefix=DailyAnalysisTeam._get_team_name_prefix(),
+        super().__init__(
             user_id=user_id,
             conv_id=conv_id,
-        )
-
-        super().__init__(
             roles=roles,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            name=name,
         )
-        self.conv_id = conv_id
         self.task = task
         self.llm_config = DailyAnalysisTeam._get_llm_config(
             seed=seed, temperature=temperature
@@ -696,10 +690,6 @@ sure it is understandable by non-experts.
         content = x.get("content")
 
         return content is not None and "terminate_groupchat" in content
-
-    @classmethod
-    def _get_team_name_prefix(cls) -> str:
-        return "daily_analysis_team"
 
     @property
     def _task(self) -> str:
@@ -1105,5 +1095,5 @@ Please propose the next steps and send the email to the client.
                 _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
             finally:
                 if daily_analysis_team:
-                    Team.pop_team(team_name=daily_analysis_team.name)
+                    Team.pop_team(user_id=user_id, conv_id=conv_id)
         print("Daily analysis completed.")

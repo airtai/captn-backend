@@ -83,5 +83,5 @@ class TestBriefCreationTeam:
                 mock_get_brief_template.assert_called()
                 mock_delagate_task.assert_called_once()
         finally:
-            success = Team.pop_team(team.name)
+            success = Team.pop_team(user_id=user_id, conv_id=conv_id)
             assert success is not None

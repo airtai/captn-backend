@@ -143,21 +143,15 @@ sure it is understandable by non-experts.
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
-        # name = GoogleAdsTeam._get_new_team_name()
-        name = Team.get_user_conv_team_name(
-            name_prefix=GoogleAdsTeam._get_team_name_prefix(),
+        super().__init__(
             user_id=user_id,
             conv_id=conv_id,
-        )
-
-        super().__init__(
             roles=roles,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            name=name,
             clients_question_answer_list=clients_question_answer_list,
         )
         self.conv_id = conv_id
@@ -174,10 +168,6 @@ sure it is understandable by non-experts.
         content = x.get("content")
 
         return content is not None and "terminate_groupchat" in content
-
-    @classmethod
-    def _get_team_name_prefix(cls) -> str:
-        return "google_ads_team"
 
     @property
     def _task(self) -> str:

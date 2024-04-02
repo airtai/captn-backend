@@ -65,8 +65,6 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        self.user_id = user_id
-        self.conv_id = conv_id
         self.task = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
@@ -80,20 +78,15 @@ sure it is understandable by non-experts.
         )
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
-        name = Team.get_user_conv_team_name(
-            name_prefix=CampaignCreationTeam._get_team_name_prefix(),
+        super().__init__(
             user_id=user_id,
             conv_id=conv_id,
-        )
-
-        super().__init__(
             roles=roles,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            name=name,
             clients_question_answer_list=clients_question_answer_list,
         )
 
@@ -125,10 +118,6 @@ sure it is understandable by non-experts.
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         return GoogleAdsTeam._is_termination_msg(x)
-
-    @classmethod
-    def _get_team_name_prefix(cls) -> str:
-        return "campaign_creation_team"
 
     @property
     def _task(self) -> str:
