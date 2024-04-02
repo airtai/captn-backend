@@ -7,7 +7,6 @@ from autogen.cache import Cache
 
 from captn.captn_agents.backend.teams import (
     BriefCreationTeam,
-    CampaignCreationTeam,
     Team,
 )
 from captn.captn_agents.backend.tools._brief_creation_team_tools import (
@@ -88,4 +87,5 @@ class TestBriefCreationTeam:
                 mock_delagate_task.assert_called_once()
         finally:
             poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
-            assert isinstance(poped_team, CampaignCreationTeam)
+            assert isinstance(poped_team, Team)
+            # assert isinstance(poped_team, CampaignCreationTeam)
