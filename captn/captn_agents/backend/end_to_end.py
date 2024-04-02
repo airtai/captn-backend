@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Optional, Tuple, Type
 
 from .teams import Team
 
@@ -52,11 +52,9 @@ def start_or_continue_conversation(
     root_dir: Path = Path(".") / "logs",
     *,
     task: str = "Hi!",
-    roles: Optional[List[Dict[str, str]]] = None,
     max_round: int = 20,
     seed: int = 42,
     temperature: float = 0.2,
-    human_input_mode: str = "ALWAYS",
     class_name: str = "initial_team",
 ) -> Tuple[str, str]:
     initial_team, team_name, create_new_conv = _get_initial_team(

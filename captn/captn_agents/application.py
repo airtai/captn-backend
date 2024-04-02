@@ -139,7 +139,6 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                         conv_id=request.conv_id,
                         task=message,
                         max_round=80,
-                        human_input_mode="NEVER",
                         class_name=class_name,
                     )
                     iostream.print(last_message)
@@ -175,8 +174,7 @@ def chat(request: CaptnAgentRequest) -> str:
             conv_id=request.conv_id,
             task=request.message,
             max_round=80,
-            human_input_mode="NEVER",
-            class_name=request.google_ads_team,
+            class_name="brief_creation_team",
         )
 
     except BadRequestError as e:

@@ -65,16 +65,14 @@ def test_chat_when_openai_bad_request_is_raised() -> None:
                     conv_id=-1,
                     task="This is my task",
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    class_name="brief_creation_team",
                 ),
                 unittest.mock.call(
                     user_id=-1,
                     conv_id=-1,
                     task=RETRY_MESSAGE,  # The second call is a retry message
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    class_name="brief_creation_team",
                 ),
             ]
         )
@@ -311,24 +309,21 @@ class TestConsoleIOWithWebsockets:
                     conv_id=1,
                     task=message,
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    class_name="brief_creation_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
                     conv_id=1,
                     task=message,
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    class_name="brief_creation_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
                     conv_id=1,
                     task=RETRY_MESSAGE,
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    class_name="brief_creation_team",
                 ),
             ]
         )

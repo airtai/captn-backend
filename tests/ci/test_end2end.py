@@ -12,6 +12,7 @@ from captn.captn_agents.backend.end_to_end import _get_initial_team
     ["default_team", "campaign_creation_team", "should raise"],
 )
 def test_get_initial_team(class_name: str) -> None:
+    Team._teams.clear()
     with TemporaryDirectory() as tmp_dir:
         kwargs = {
             "user_id": 123,
