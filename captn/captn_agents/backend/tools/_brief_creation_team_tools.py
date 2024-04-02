@@ -30,13 +30,14 @@ def _delagate_task(
     team_class: Type[Team] = Team.get_class_by_name(team_name)
 
     final_task = f"Here is the customer brief:\n{customers_brief}\n\nAdditional info from the web page:\n{summary_from_web_page}\n\nAnd the task is following:\n{task}"
+
+    # Remove the user_id-conv_id pair from the team so that the new team can be created
+    Team.pop_team(user_id=user_id, conv_id=conv_id)
     team = team_class(  # type: ignore
         task=final_task,
         user_id=user_id,
         conv_id=conv_id,
     )
-
-    # TODO: Update Team._teams with the new team for the user_id-conv_id pair
 
     team.initiate_chat()
     # the last message is TeamResponse in json encoded string

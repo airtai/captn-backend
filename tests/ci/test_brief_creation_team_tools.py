@@ -4,6 +4,7 @@ from typing import Any, Dict
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.teams._google_ads_team import GoogleAdsTeam
 from captn.captn_agents.backend.teams._team import Team
 from captn.captn_agents.backend.tools._brief_creation_team_tools import (
     Context,
@@ -88,4 +89,4 @@ class TestTools:
                 print(f"team_response: {team_response}")
             finally:
                 poped_team = Team.pop_team(user_id=12345, conv_id=67890)
-                print(f"poped_team: {poped_team}")
+                assert isinstance(poped_team, GoogleAdsTeam)
