@@ -47,6 +47,7 @@ class CaptnAgentRequest(BaseModel):
     message: str
     user_id: int
     conv_id: int
+    # TODO: remove google_ads_team from the request agter sync with the frontend
     google_ads_team: Literal[tuple(google_ads_team_names)] = "default_team"  # type: ignore[valid-type]
     all_messages: List[Dict[str, str]]
     agent_chat_history: Optional[str]
@@ -132,7 +133,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 return
             for i in range(num_of_retries):
                 try:
-                    class_name = request.google_ads_team
+                    class_name = "brief_creation_team"
                     _, last_message = start_or_continue_conversation(
                         user_id=request.user_id,
                         conv_id=request.conv_id,

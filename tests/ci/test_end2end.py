@@ -18,13 +18,10 @@ def test_get_initial_team(class_name: str) -> None:
             "conv_id": 456,
             "root_dir": Path(tmp_dir),
             "task": "do your magic",
-            "roles": None,
             "max_round": 80,
             "seed": 42,
             "temperature": 0.2,
-            "human_input_mode": "NEVER",
             "class_name": class_name,
-            "use_async": False,
         }
 
         if class_name == "should raise":
