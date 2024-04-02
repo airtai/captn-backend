@@ -118,6 +118,9 @@ class Toolbox:
     def add_to_agent(
         self, agent: ConversableAgent, user_proxy: Optional[UserProxyAgent] = None
     ) -> Dict[str, FunctionInfo]:
+        if "tools" not in agent.llm_config or agent.llm_config["tools"] is None:
+            agent.llm_config["tools"] = []
+
         # inject context into all the functions where needed
         retval = {
             name: self._inject_context(info) for name, info in self._functions.items()
@@ -125,6 +128,10 @@ class Toolbox:
 
         # register the functions with the agent and user_proxy if needed
         for info in retval.values():
+            print(f"Registering {info.name} with {agent.name}.", flush=True)  # type: ignore[notexisting]
+            print(f"{info.function=}, {type(info.function)}", flush=True)  # type: ignore[notexisting]
+            signature = inspect.signature(info.function)  # type: ignore[notexisting]
+            print(f"{signature=}", flush=True)  # type: ignore[notexisting]
             agent.register_for_llm(name=info.name, description=info.description)(
                 info.function
             )

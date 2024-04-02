@@ -47,15 +47,10 @@ class TeamResponse(BaseModel):
     terminate_groupchat: bool
 
 
-# @agent.register_for_llm(description=reply_to_client_2_desc)
-def reply_to_client_2(
-    message: Annotated[str, "Message for the client"],
-    completed: Annotated[
-        bool, "Has the team completed the task or are they waiting for additional info"
-    ],
-    smart_suggestions: Annotated[
-        Optional[Dict[str, Union[str, List[str]]]], smart_suggestions_description
-    ] = None,
+def _reply_to_client_2(
+    message: str,
+    completed: bool,
+    smart_suggestions: Optional[Dict[str, Union[str, List[str]]]] = None,
 ) -> str:
     if smart_suggestions:
         smart_suggestions_model = SmartSuggestions(**smart_suggestions)
@@ -72,6 +67,18 @@ def reply_to_client_2(
     )
 
     return return_msg.model_dump_json()
+
+
+def reply_to_client_2(
+    message: Annotated[str, "Message for the client"],
+    completed: Annotated[
+        bool, "Has the team completed the task or are they waiting for additional info"
+    ],
+    smart_suggestions: Annotated[
+        Optional[Dict[str, Union[str, List[str]]]], smart_suggestions_description
+    ] = None,
+) -> str:
+    return _reply_to_client_2(message, completed, smart_suggestions)
 
 
 YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
@@ -120,7 +127,7 @@ llm_config_gpt_3_5 = {
 }
 
 
-def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str:
+def _get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str:
     google_ads_url = "ads.google.com"
     if google_ads_url in url:
         return "FAILED: This function should NOT be used for scraping google ads!"
@@ -205,6 +212,25 @@ You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY inform
     user_proxy.initiate_chat(web_surfer, message=initial_message)
 
     return str(user_proxy.last_message()["content"])
+
+
+def get_info_from_the_web_page(
+    url: Annotated[str, "The url of the web page which needs to be summarized"],
+    task: Annotated[
+        str,
+        """Task which needs to be solved.
+This parameter should NOT mention that we are working on some Google Ads task.
+The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
+""",
+    ],
+    task_guidelines: Annotated[
+        str,
+        """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
+This parameter should NOT mention that we are working on some Google Ads task.
+""",
+    ],
+) -> str:
+    return _get_info_from_the_web_page(url, task, task_guidelines)
 
 
 def send_email(

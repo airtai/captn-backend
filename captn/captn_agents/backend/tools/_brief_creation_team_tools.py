@@ -5,6 +5,11 @@ from typing_extensions import Annotated
 
 from ..teams._team import Team
 from ..toolboxes import Toolbox
+from ._functions import (
+    get_info_from_the_web_page,
+    reply_to_client_2,
+    reply_to_client_2_description,
+)
 
 
 def _get_brief_template(
@@ -80,5 +85,14 @@ def create_brief_creation_team_toolbox(
             customers_brief=customers_brief,
             summary_from_web_page=summary_from_web_page,
         )
+
+    get_info_from_the_web_page_desc = """Retrieve wanted information from the web page.
+There is no need to test this function (by sending url: https://www.example.com).
+NEVER use this function for scraping Google Ads pages (e.g. https://ads.google.com/aw/campaigns?campaignId=1212121212)
+"""
+
+    toolbox.add_function(get_info_from_the_web_page_desc)(get_info_from_the_web_page)
+
+    toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
 
     return toolbox

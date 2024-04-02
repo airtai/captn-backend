@@ -3,10 +3,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from captn.captn_agents.backend.config import Config
 
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
-from ..tools._function_configs import (
-    get_info_from_the_web_page_config,
-    reply_to_client_2_config,
-)
 from ..tools._functions import get_info_from_the_web_page, reply_to_client_2
 from ._google_ads_team import GoogleAdsTeam
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
@@ -15,11 +11,6 @@ from ._team import Team
 
 @Team.register_team("brief_creation_team")
 class BriefCreationTeam(Team):
-    _functions: List[Dict[str, Any]] = [
-        get_info_from_the_web_page_config,
-        reply_to_client_2_config,
-    ]
-
     # The roles of the team members, like "admin", "manager", "analyst", etc.
     _default_roles = [
         {
@@ -42,6 +33,8 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         },
     ]
 
+    _functions: Optional[List[Dict[str, Any]]] = []
+
     def __init__(
         self,
         *,
@@ -58,7 +51,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self.task = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
-        function_map: Dict[str, Callable[[Any], Any]] = _get_function_map()
+        function_map: Dict[str, Callable[[Any], Any]] = {}
 
         roles: List[Dict[str, str]] = BriefCreationTeam._default_roles
 

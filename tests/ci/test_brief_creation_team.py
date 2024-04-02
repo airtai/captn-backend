@@ -1,5 +1,6 @@
 import unittest
 from tempfile import TemporaryDirectory
+from typing import Iterator
 
 import pytest
 from autogen.cache import Cache
@@ -13,6 +14,11 @@ from .test_brief_creation_team_tools import BRIEF_CREATION_TEAM_RESPONSE
 
 
 class TestBriefCreationTeam:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+        Team._teams.clear()
+        yield
+
     def test_get_avaliable_teams_and_their_descriptions(self) -> None:
         avaliable_teams_and_their_descriptions = (
             BriefCreationTeam._get_avaliable_team_names_and_their_descriptions()
@@ -32,9 +38,9 @@ class TestBriefCreationTeam:
 
         try:
             with unittest.mock.patch(
-                "captn.captn_agents.backend.teams._brief_creation_team.reply_to_client_2"
+                "captn.captn_agents.backend.tools._functions._reply_to_client_2"
             ) as mock_reply_to_client, unittest.mock.patch(
-                "captn.captn_agents.backend.teams._brief_creation_team.get_info_from_the_web_page"
+                "captn.captn_agents.backend.tools._functions._get_info_from_the_web_page"
             ) as mock_get_info_from_the_web_page, unittest.mock.patch(
                 "captn.captn_agents.backend.tools._brief_creation_team_tools._delagate_task"
             ) as mock_delagate_task, unittest.mock.patch(
