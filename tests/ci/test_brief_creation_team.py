@@ -88,4 +88,3 @@ class TestBriefCreationTeam:
         finally:
             poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
             assert isinstance(poped_team, Team)
-            # assert isinstance(poped_team, CampaignCreationTeam)
