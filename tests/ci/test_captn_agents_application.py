@@ -302,21 +302,21 @@ class TestConsoleIOWithWebsockets:
                     conv_id=1,
                     task=message,
                     max_round=80,
-                    class_name="brief_creation_team",
+                    class_name="default_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
                     conv_id=1,
                     task=message,
                     max_round=80,
-                    class_name="brief_creation_team",
+                    class_name="default_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
                     conv_id=1,
                     task=RETRY_MESSAGE,
                     max_round=80,
-                    class_name="brief_creation_team",
+                    class_name="default_team",
                 ),
             ]
         )

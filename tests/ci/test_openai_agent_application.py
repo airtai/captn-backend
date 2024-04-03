@@ -10,11 +10,11 @@ async def test_offload_work_to_google_ads_expert() -> None:
         chat_id=2,
         customer_brief="This is a test content",
     )
-    assert response["team_name"] == "1_2"
+    assert response["team_name"] == "brief_creation_team"
 
     response = await offload_work_to_google_ads_expert(
         user_id=1,
         chat_id=2,
         customer_brief="This is a test content",
     )
-    assert response["team_name"] == "1_2"
+    assert response["team_name"] == "brief_creation_team"

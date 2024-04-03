@@ -6,7 +6,11 @@ from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from captn.captn_agents import BriefCreationTeam, SmartSuggestions, Team
+from captn.captn_agents import (
+    BRIEF_CREATION_TEAM_NAME,
+    BriefCreationTeam,
+    SmartSuggestions,
+)
 
 from .smart_suggestion_generator import generate_smart_suggestions
 
@@ -146,16 +150,12 @@ async def offload_work_to_google_ads_expert(
     chat_id: int,
     customer_brief: str,
 ) -> Dict[str, Union[Optional[str], int]]:
-    # team_name = f"{user_id}_{chat_id}"
-    team_name = Team.construct_team_name(user_id=user_id, conv_id=chat_id)
     return {
         # "content": "I am presently treading the waters of your request. Kindly stay anchored, and I will promptly return to you once I have information to share.",
         "team_status": "inprogress",
-        "team_name": team_name,
+        "team_name": BRIEF_CREATION_TEAM_NAME,
         "team_id": chat_id,
         "customer_brief": customer_brief,
-        # TODO: remove after sync with frontend
-        "google_ads_team": "default_team",
     }
 
 

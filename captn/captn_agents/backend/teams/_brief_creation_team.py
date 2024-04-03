@@ -7,8 +7,10 @@ from ..tools._functions import get_info_from_the_web_page, reply_to_client_2
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
+BRIEF_CREATION_TEAM_NAME = "brief_creation_team"
 
-@Team.register_team("brief_creation_team")
+
+@Team.register_team(BRIEF_CREATION_TEAM_NAME)
 class BriefCreationTeam(Team):
     # The roles of the team members, like "admin", "manager", "analyst", etc.
     _default_roles = [

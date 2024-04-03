@@ -1,6 +1,6 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, HTTPException
@@ -13,10 +13,11 @@ from ..observability.websocket_utils import (
     WEBSOCKET_REQUESTS,
     WEBSOCKET_TOKENS,
 )
-from .backend import execute_daily_analysis, start_or_continue_conversation
+from .backend import Team, execute_daily_analysis, start_or_continue_conversation
 
 router = APIRouter()
 
+google_ads_team_names = Team.get_team_names()
 
 THREE_IN_A_ROW_EXCEPTIONS = Counter(
     "three_in_a_row_exceptions_total",
@@ -45,8 +46,7 @@ class CaptnAgentRequest(BaseModel):
     message: str
     user_id: int
     conv_id: int
-    # TODO: remove google_ads_team from the request agter sync with the frontend
-    google_ads_team: str = "default_team"
+    google_ads_team: Literal[tuple(google_ads_team_names)] = "default_team"  # type: ignore[valid-type]
     all_messages: List[Dict[str, str]]
     agent_chat_history: Optional[str]
     is_continue_daily_analysis: bool
@@ -121,13 +121,12 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             message = _get_message(request)
             for i in range(num_of_retries):
                 try:
-                    class_name = "brief_creation_team"
                     _, last_message = start_or_continue_conversation(
                         user_id=request.user_id,
                         conv_id=request.conv_id,
                         task=message,
                         max_round=80,
-                        class_name=class_name,
+                        class_name=request.google_ads_team,
                     )
                     iostream.print(last_message)
 
