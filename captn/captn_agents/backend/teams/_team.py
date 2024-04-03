@@ -43,28 +43,35 @@ class Team:
 
     _team_registry: Dict[str, Type["Team"]] = {}
 
+    _registred_team_name: Optional[str] = None
+
     @classmethod
     def register_team(cls, name: str) -> Callable[[T], T]:
-        def _inner(cls: T) -> T:
-            cls_typed: Type["Team"] = cls  # type: ignore[assignment]
+        def _inner(cls_inner: T) -> T:
+            cls_typed: Type["Team"] = cls_inner  # type: ignore[assignment]
             if name in cls_typed._team_registry:
                 raise ValueError(f"Team name '{name}' already exists")
             if cls_typed in cls_typed._team_registry.values():
                 raise ValueError(f"Team class '{cls_typed}' already exists")
             cls_typed._team_registry[name] = cls_typed
+            cls._registred_team_name = name
             return cls_typed  # type: ignore[return-value]
 
         return _inner
 
     @classmethod
-    def get_class_by_name(cls, name: str) -> Type["Team"]:
+    def get_registred_team_name(cls) -> Optional[str]:
+        return cls._registred_team_name
+
+    @classmethod
+    def get_class_by_registred_team_name(cls, name: str) -> Type["Team"]:
         if name in cls._team_registry:
             return Team._team_registry[name]
         else:
             raise ValueError(f"Unknown team name: '{name}'")
 
     @classmethod
-    def get_team_names(cls) -> List[str]:
+    def get_registred_team_names(cls) -> List[str]:
         return list(cls._team_registry.keys())
 
     @staticmethod
