@@ -2,7 +2,7 @@ import traceback
 from datetime import date
 from typing import Dict, List, Optional
 
-from autogen.io.websockets import IOStream, IOWebsockets
+from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, HTTPException
 from openai import APIStatusError, BadRequestError
 from prometheus_client import Counter
@@ -109,26 +109,16 @@ def _handle_exception(
 
 
 def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
-    with IOStream.set_default(iostream):
+    try:
         try:
-            try:
-                original_message = iostream.input()
-                if original_message == "ping":
-                    PING_REQUESTS.inc()
-                    iostream.print("pong")
-                    return
-                WEBSOCKET_REQUESTS.inc()
-                request = CaptnAgentRequest.model_validate_json(original_message)
-                message = _get_message(request)
-
-                # ToDo: fix this @rjambercic
-                WEBSOCKET_TOKENS.inc(len(message.split()))
-            except Exception as e:
-                INVALID_MESSAGE_IN_IOSTREAM.inc()
-                iostream.print(ON_FAILURE_MESSAGE)
-                print(f"Failed to read the message from the client: {e}")
-                traceback.print_stack()
+            original_message = iostream.input()
+            if original_message == "ping":
+                PING_REQUESTS.inc()
+                iostream.print("pong")
                 return
+            WEBSOCKET_REQUESTS.inc()
+            request = CaptnAgentRequest.model_validate_json(original_message)
+            message = _get_message(request)
             for i in range(num_of_retries):
                 try:
                     class_name = "brief_creation_team"
@@ -158,10 +148,43 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                         iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
                     )
 
+            # ToDo: fix this @rjambercic
+            WEBSOCKET_TOKENS.inc(len(message.split()))
         except Exception as e:
-            RANDOM_EXCEPTIONS.inc()
-            print(f"Agent conversation failed with an error: {e}")
+            INVALID_MESSAGE_IN_IOSTREAM.inc()
+            iostream.print(ON_FAILURE_MESSAGE)
+            print(f"Failed to read the message from the client: {e}")
             traceback.print_stack()
+            return
+        for i in range(num_of_retries):
+            try:
+                class_name = "brief_creation_team"
+                _, last_message = start_or_continue_conversation(
+                    user_id=request.user_id,
+                    conv_id=request.conv_id,
+                    task=message,
+                    max_round=80,
+                    class_name=class_name,
+                )
+                iostream.print(last_message)
+
+                return
+
+            except BadRequestError as e:
+                BAD_REQUEST_ERRORS.inc()
+                iostream.print(f"OpenAI classified the message as BadRequestError: {e}")
+                iostream.print(f"Retrying the request with message: {RETRY_MESSAGE}")
+                message = RETRY_MESSAGE
+
+            except Exception as e:
+                _handle_exception(
+                    iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
+                )
+
+    except Exception as e:
+        RANDOM_EXCEPTIONS.inc()
+        print(f"Agent conversation failed with an error: {e}")
+        traceback.print_stack()
 
 
 @router.post("/chat")

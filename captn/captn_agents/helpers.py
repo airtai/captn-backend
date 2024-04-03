@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from os import environ
-from typing import Any, Callable, Optional
+from typing import Any, AsyncGenerator, Callable, Optional
 
 from prisma import Prisma  # type: ignore[attr-defined]
 
@@ -31,11 +31,17 @@ def retry_context_manager(num_retries: int = 3) -> Callable[[Any], Any]:
 
 @retry_context_manager(num_retries=3)
 @asynccontextmanager
-async def get_db_connection(db_url: Optional[str] = None) -> Prisma:
+async def get_db_connection(
+    db_url: Optional[str] = None,
+) -> AsyncGenerator[Prisma, None]:
     if not db_url:
-        db_url = environ.get("DATABASE_URL")
-    if "connect_timeout" not in db_url:  # type: ignore
-        db_url += "?connect_timeout=60"  # type: ignore
+        db_url = environ.get("DATABASE_URL", None)
+        if not db_url:
+            raise ValueError(
+                "No database URL provided nor set as environment variable 'DATABASE_URL'"
+            )  # pragma: no cover
+    if "connect_timeout" not in db_url:
+        db_url += "?connect_timeout=60"
     db = Prisma(datasource={"url": db_url})
     await db.connect()
     try:

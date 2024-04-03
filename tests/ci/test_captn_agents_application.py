@@ -1,12 +1,11 @@
 import unittest
-from tempfile import TemporaryDirectory
+from datetime import datetime
 from typing import Callable, Dict
 
 import autogen
 import openai
 import pytest
-from autogen.cache import Cache
-from autogen.io.websockets import IOStream, IOWebsockets
+from autogen.io.websockets import IOWebsockets
 from httpx import Request, Response
 from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
@@ -110,60 +109,57 @@ class TestConsoleIOWithWebsockets:
             iostream: IOWebsockets, success_dict: Dict[str, bool] = success_dict
         ) -> None:
             try:
-                with IOStream.set_default(iostream):
-                    print(
-                        f" - on_connect(): Connected to client using IOWebsockets {iostream}",
-                        flush=True,
+                print(
+                    f" - on_connect(): Connected to client using IOWebsockets {iostream}",
+                    flush=True,
+                )
+
+                print(" - on_connect(): Receiving message from client.", flush=True)
+
+                initial_msg = iostream.input()
+
+                config = Config()
+
+                llm_config = {
+                    "config_list": config.config_list_gpt_3_5,
+                    "stream": True,
+                }
+
+                agent = autogen.ConversableAgent(
+                    name="chatbot",
+                    system_message="Complete a task given to you and reply TERMINATE when the task is done.",
+                    llm_config=llm_config,
+                )
+
+                # create a UserProxyAgent instance named "user_proxy"
+                user_proxy = autogen.UserProxyAgent(
+                    name="user_proxy",
+                    system_message="A proxy for the user.",
+                    is_termination_msg=lambda x: x.get("content", "")
+                    and x.get("content", "").rstrip().endswith("TERMINATE"),
+                    human_input_mode="NEVER",
+                    max_consecutive_auto_reply=10,
+                    code_execution_config=False,
+                )
+
+                @user_proxy.register_for_execution()  # type: ignore[misc]
+                @agent.register_for_llm(description="Weather forecats for a city")  # type: ignore[misc]
+                def weather_forecast(city: str) -> str:
+                    return (
+                        f"The weather forecast for {city} at {datetime.now()} is sunny."
                     )
 
-                    print(" - on_connect(): Receiving message from client.", flush=True)
+                print(
+                    f" - on_connect(): Initiating chat with agent {agent} using message '{initial_msg}'",
+                    flush=True,
+                )
+                user_proxy.initiate_chat(  # noqa: F704
+                    agent,
+                    message=initial_msg,
+                )
 
-                    initial_msg = iostream.input()
-
-                    config = Config()
-
-                    llm_config = {
-                        "config_list": config.config_list_gpt_3_5,
-                        "stream": True,
-                    }
-
-                    agent = autogen.ConversableAgent(
-                        name="chatbot",
-                        system_message="Complete a task given to you and reply TERMINATE when the task is done.",
-                        llm_config=llm_config,
-                    )
-
-                    # create a UserProxyAgent instance named "user_proxy"
-                    user_proxy = autogen.UserProxyAgent(
-                        name="user_proxy",
-                        system_message="A proxy for the user.",
-                        is_termination_msg=lambda x: x.get("content", "")
-                        and x.get("content", "").rstrip().endswith("TERMINATE"),
-                        human_input_mode="NEVER",
-                        max_consecutive_auto_reply=10,
-                        code_execution_config=False,
-                    )
-
-                    @user_proxy.register_for_execution()  # type: ignore[misc]
-                    @agent.register_for_llm(description="Weather forecats for a city")  # type: ignore[misc]
-                    def weather_forecast(city: str) -> str:
-                        return f"The weather forecast for {city} is sunny."
-
-                    # we will use a temporary directory as the cache path root to ensure fresh completion each time
-                    with TemporaryDirectory() as cache_path_root:
-                        with Cache.disk(cache_path_root=cache_path_root) as cache:
-                            print(
-                                f" - on_connect(): Initiating chat with agent {agent} using message '{initial_msg}'",
-                                flush=True,
-                            )
-                            user_proxy.initiate_chat(  # noqa: F704
-                                agent,
-                                message=initial_msg,
-                                cache=cache,
-                            )
-
-                    success_dict["success"] = True
-                    return
+                success_dict["success"] = True
+                return
             except Exception as e:
                 print(f" - on_connect(): Exception occurred: {e}", flush=True)
                 raise
@@ -189,9 +185,6 @@ class TestConsoleIOWithWebsockets:
                         if isinstance(message, bytes)
                         else message
                     )
-                    # drop the newline character
-                    if message.endswith("\n"):
-                        message = message[:-1]
 
                     print(message, end="", flush=True)
 
