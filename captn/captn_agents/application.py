@@ -119,6 +119,34 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             WEBSOCKET_REQUESTS.inc()
             request = CaptnAgentRequest.model_validate_json(original_message)
             message = _get_message(request)
+            for i in range(num_of_retries):
+                try:
+                    class_name = "brief_creation_team"
+                    _, last_message = start_or_continue_conversation(
+                        user_id=request.user_id,
+                        conv_id=request.conv_id,
+                        task=message,
+                        max_round=80,
+                        class_name=class_name,
+                    )
+                    iostream.print(last_message)
+
+                    return
+
+                except BadRequestError as e:
+                    BAD_REQUEST_ERRORS.inc()
+                    iostream.print(
+                        f"OpenAI classified the message as BadRequestError: {e}"
+                    )
+                    iostream.print(
+                        f"Retrying the request with message: {RETRY_MESSAGE}"
+                    )
+                    message = RETRY_MESSAGE
+
+                except Exception as e:
+                    _handle_exception(
+                        iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
+                    )
 
             # ToDo: fix this @rjambercic
             WEBSOCKET_TOKENS.inc(len(message.split()))
