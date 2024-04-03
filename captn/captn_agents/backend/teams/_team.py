@@ -58,10 +58,10 @@ class Team:
 
     @classmethod
     def get_class_by_name(cls, name: str) -> Type["Team"]:
-        try:
+        if name in cls._team_registry:
             return Team._team_registry[name]
-        except KeyError as e:
-            raise ValueError(f"Unknown team name: '{name}'") from e
+        else:
+            raise ValueError(f"Unknown team name: '{name}'")
 
     @classmethod
     def get_team_names(cls) -> List[str]:
