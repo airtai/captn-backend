@@ -1,6 +1,7 @@
 import unittest
 from typing import Any, Dict
 
+import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
@@ -16,6 +17,7 @@ BRIEF_CREATION_TEAM_RESPONSE = r"""{"message":"Here is the list of all customer 
 
 
 class TestTools:
+    @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.llm_config = {
             "config_list": Config().config_list_gpt_3_5,
