@@ -4,8 +4,8 @@ from .model import SmartSuggestions
 
 __all__ = (
     "BriefCreationTeam",
-    "router",
+    "REACT_APP_API_URL",
     "SmartSuggestions",
     "Team",
-    "REACT_APP_API_URL",
+    "router",
 )

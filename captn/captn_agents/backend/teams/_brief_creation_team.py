@@ -63,6 +63,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             seed=seed,
             temperature=temperature,
             clients_question_answer_list=clients_question_answer_list,
+            use_user_proxy=True,
         )
 
         config = Config()
@@ -82,7 +83,8 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             conv_id=self.conv_id,
         )
         for agent in self.members:
-            self.toolbox.add_to_agent(agent, agent)
+            if agent != self.user_proxy:
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:

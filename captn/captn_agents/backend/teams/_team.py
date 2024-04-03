@@ -113,6 +113,7 @@ class Team:
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
+        use_user_proxy: bool = False,
     ):
         self.user_id = user_id
         self.conv_id = conv_id
@@ -128,7 +129,10 @@ class Team:
         self.llm_config: Optional[Dict[str, Any]] = None
         self.human_input_mode = human_input_mode
         self.clients_question_answer_list = clients_question_answer_list
+        self.use_user_proxy = use_user_proxy
+
         self.name = Team._construct_team_name(user_id=user_id, conv_id=conv_id)
+        self.user_proxy: Optional[autogen.UserProxyAgent] = None
         Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
     @classmethod
@@ -184,6 +188,13 @@ class Team:
             self._create_member(role["Name"], role["Description"])
             for role in self.roles
         ]
+        if self.use_user_proxy:
+            self.user_proxy = self._create_member(
+                name="user_proxy",
+                description="You are a user proxy in the digital agency. You are responsible for executing the functions proposed by other members.",
+                is_user_proxy=True,
+            )
+            self.members.append(self.user_proxy)
         self._create_groupchat_and_manager()
 
     @staticmethod
@@ -214,7 +225,7 @@ Do NOT try to finish the task until other team members give their opinion.
             return autogen.UserProxyAgent(
                 human_input_mode=self.human_input_mode,
                 name=name,
-                llm_config=self.llm_config,
+                llm_config=False,
                 system_message=system_message,
                 is_termination_msg=self._is_termination_msg,
             )
