@@ -68,14 +68,14 @@ class Team:
         return list(cls._team_registry.keys())
 
     @staticmethod
-    def _construct_team_name(user_id: int, conv_id: int) -> str:
+    def construct_team_name(user_id: int, conv_id: int) -> str:
         name = f"{str(user_id)}_{str(conv_id)}"
 
         return name
 
     @staticmethod
     def _store_team(user_id: int, conv_id: int, team: "Team") -> None:
-        team_name = Team._construct_team_name(user_id, conv_id)
+        team_name = Team.construct_team_name(user_id, conv_id)
         if team_name in Team._teams:
             raise ValueError(f"Team name '{team_name}' already exists")
 
@@ -83,12 +83,12 @@ class Team:
 
     @staticmethod
     def get_team(user_id: int, conv_id: int) -> Optional["Team"]:
-        team_name = Team._construct_team_name(user_id, conv_id)
+        team_name = Team.construct_team_name(user_id, conv_id)
         return Team._teams[team_name] if team_name in Team._teams else None
 
     @staticmethod
     def pop_team(user_id: int, conv_id: int) -> Optional["Team"]:
-        team_name = Team._construct_team_name(user_id, conv_id)
+        team_name = Team.construct_team_name(user_id, conv_id)
         try:
             return Team._teams.pop(team_name)
         except KeyError:
@@ -131,7 +131,7 @@ class Team:
         self.clients_question_answer_list = clients_question_answer_list
         self.use_user_proxy = use_user_proxy
 
-        self.name = Team._construct_team_name(user_id=user_id, conv_id=conv_id)
+        self.name = Team.construct_team_name(user_id=user_id, conv_id=conv_id)
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
         Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
@@ -200,13 +200,8 @@ class Team:
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         content = x.get("content")
-        if content is None:
-            return False
 
-        content_xs = content.split()
-        return len(content_xs) > 0 and (
-            "TERMINATE" in content_xs[-1] or "PAUSE" in content_xs[-1]
-        )
+        return content is not None and "terminate_groupchat" in content
 
     def _create_member(
         self,

@@ -11,7 +11,6 @@ from ..tools._function_configs import (
     reply_to_client_2_config,
 )
 from ._google_ads_team import (
-    GoogleAdsTeam,
     get_campaign_creation_team_shared_functions,
 )
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
@@ -114,10 +113,6 @@ sure it is understandable by non-experts.
             #     conv_id=self.conv_id,
             #     clients_question_answer_list=self.clients_question_answer_list,
             # )
-
-    @staticmethod
-    def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
-        return GoogleAdsTeam._is_termination_msg(x)
 
     @property
     def _task(self) -> str:

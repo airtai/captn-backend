@@ -4,7 +4,6 @@ from captn.captn_agents.backend.config import Config
 
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
 from ..tools._functions import get_info_from_the_web_page, reply_to_client_2
-from ._google_ads_team import GoogleAdsTeam
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
@@ -85,10 +84,6 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         for agent in self.members:
             if agent != self.user_proxy:
                 self.toolbox.add_to_agent(agent, self.user_proxy)
-
-    @staticmethod
-    def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
-        return GoogleAdsTeam._is_termination_msg(x)
 
     @classmethod
     def _get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:

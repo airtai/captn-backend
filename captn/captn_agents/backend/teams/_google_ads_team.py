@@ -163,12 +163,6 @@ sure it is understandable by non-experts.
         self._create_members()
         self._create_initial_message()
 
-    @staticmethod
-    def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
-        content = x.get("content")
-
-        return content is not None and "terminate_groupchat" in content
-
     @property
     def _task(self) -> str:
         return f"""You are a Google Ads team in charge of running digital campaigns.

@@ -46,11 +46,11 @@ Do NOT try to finish the task until other team members give their opinion.
         assert (
             Team._is_termination_msg({"content": "This should return false"}) is False
         )
-        assert Team._is_termination_msg({"content": "Woohoo TERMINATE..."}) is True
+        assert (
+            Team._is_termination_msg({"content": "Woohoo terminate_groupchat..."})
+            is True
+        )
 
-        # TERMINATE must be a part of the last element in:
-        # content_xs = content.split()
-        # "TERMINATE" in content_xs[-1]
         assert Team._is_termination_msg({"content": "Woohoo TERMINATE ..."}) is False
 
     def test_update_clients_question_answer_list(self) -> None:
