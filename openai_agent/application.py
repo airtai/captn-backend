@@ -6,7 +6,8 @@ from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-from ..captn.captn_agents import BriefCreationTeam, SmartSuggestions, Team
+from captn.captn_agents import BriefCreationTeam, SmartSuggestions, Team
+
 from .smart_suggestion_generator import generate_smart_suggestions
 
 TEAM_EXCEPTION_MESSAGE = "Ahoy, mate! It seems our voyage hit an unexpected squall. Let's trim the sails and set a new course. Cast off once more by clicking the button below."
@@ -144,7 +145,7 @@ async def offload_work_to_google_ads_expert(
     user_id: int,
     chat_id: int,
     customer_brief: str,
-) -> Dict[str, Union[Optional[str], int, List[str]]]:
+) -> Dict[str, Union[Optional[str], int]]:
     # team_name = f"{user_id}_{chat_id}"
     team_name = Team.construct_team_name(user_id=user_id, conv_id=chat_id)
     return {
@@ -222,7 +223,7 @@ async def _get_openai_response(  # type: ignore
             # todo: enclose this in try catch block. Capture json.decoder.JSONDecodeError and retry the call
             function_args = json.loads(tool_call.function.arguments)
             if function_name == "offload_work_to_google_ads_expert":
-                return await function_to_call(
+                return await function_to_call(  # type: ignore[return-value]
                     user_id=user_id,
                     chat_id=chat_id,
                     **function_args,

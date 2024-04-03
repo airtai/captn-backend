@@ -117,9 +117,6 @@ class Toolbox:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 context = self.get_context()
                 new_kwargs = _args_kwargs_to_kwargs(f, args, kwargs)
-                print(
-                    f"Injecting context {context} into {f.__name__}: {args=}, {kwargs=} -> {new_kwargs=}"
-                )
                 return f(context=context, **new_kwargs)
 
             new_function = types.FunctionType(
@@ -161,8 +158,6 @@ class Toolbox:
                 agent.register_for_llm(name=info.name, description=info.description)(
                     info.function
                 )
-
-        print(f"add_to_agent(): {retval=}")
 
         return retval
 
