@@ -253,7 +253,7 @@ async def generate_smart_suggestions(
                 function_args = json.loads(tool_call.function.arguments)
                 if function_name == "_generate_next_steps_for_customer":
                     try:
-                        ret_val = await function_to_call(  # type: ignore
+                        ret_val = await function_to_call(
                             **function_args,
                         )
                     except Exception as e:

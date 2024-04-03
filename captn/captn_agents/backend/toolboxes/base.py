@@ -46,9 +46,16 @@ def _args_kwargs_to_kwargs(
 
 
 class Toolbox:
+    class Functions:
+        def __init__(self, toolbox: "Toolbox") -> None:
+            self._toolbox = toolbox
+
     def __init__(self) -> None:
-        self._functions: Dict[str, FunctionInfo] = {}
+        self._function_infos: Dict[str, FunctionInfo] = {}
         self._context: Optional[Any] = None
+
+        # used to access the functions in the toolbox
+        self.functions = Toolbox.Functions(self)
 
     def add_function(
         self, description: str, *, name: Optional[str] = None
@@ -58,19 +65,32 @@ class Toolbox:
         ) -> F:
             if name is None:
                 name = f.__name__
-            if name in self._functions:
+            if name in self._function_infos:
                 raise ValueError(f"Function with name {name} already added.")
-            self._functions[name] = FunctionInfo(f, name, description)
+
+            # this is done so we can easily mock values in tests
+            setattr(self.functions, name, f)
+
+            @functools.wraps(f)
+            def _wrapper(*args: Any, **kwargs: Any) -> Any:
+                my_f = getattr(self.functions, name)
+                return my_f(*args, **kwargs)
+
+            _wrapper._origin = f  # type: ignore[attr-defined]
+
+            info = FunctionInfo(_wrapper, name, description)
+
+            self._function_infos[name] = info
 
             return f
 
         return decorator
 
     def get_function_info(self, name: str) -> FunctionInfo:
-        return self._functions[name]
+        return self._function_infos[name]
 
     def get_function(self, name: str) -> Callable[..., Any]:
-        return self._functions[name].function
+        return self._function_infos[name].function
 
     def _inject_context(self, info: FunctionInfo) -> FunctionInfo:
         """Injects the context into the function if it has a context parameter.
@@ -97,9 +117,6 @@ class Toolbox:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 context = self.get_context()
                 new_kwargs = _args_kwargs_to_kwargs(f, args, kwargs)
-                print(
-                    f"Injecting context {context} into {f.__name__}: {args=}, {kwargs=} -> {new_kwargs=}"
-                )
                 return f(context=context, **new_kwargs)
 
             new_function = types.FunctionType(
@@ -118,9 +135,13 @@ class Toolbox:
     def add_to_agent(
         self, agent: ConversableAgent, user_proxy: Optional[UserProxyAgent] = None
     ) -> Dict[str, FunctionInfo]:
+        if "tools" not in agent.llm_config or agent.llm_config["tools"] is None:
+            agent.llm_config["tools"] = []
+
         # inject context into all the functions where needed
         retval = {
-            name: self._inject_context(info) for name, info in self._functions.items()
+            name: self._inject_context(info)
+            for name, info in self._function_infos.items()
         }
 
         # register the functions with the agent and user_proxy if needed
@@ -137,8 +158,6 @@ class Toolbox:
                 agent.register_for_llm(name=info.name, description=info.description)(
                     info.function
                 )
-
-        print(f"add_to_agent(): {retval=}")
 
         return retval
 

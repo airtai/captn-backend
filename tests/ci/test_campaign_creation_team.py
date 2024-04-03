@@ -98,11 +98,13 @@ class TestCampaignCreationTeam:
 
                 assert set(agent.function_map.keys()) == set(function_names)
         finally:
-            success = Team.pop_team(campaign_creation_team.name)
+            user_id, conv_id = campaign_creation_team.name.split("_")[-2:]
+            success = Team.pop_team(user_id=int(user_id), conv_id=int(conv_id))
             assert success is not None
 
     @pytest.mark.flaky
     @pytest.mark.openai
+    @pytest.mark.campaign_creation_team
     def test_end2end(self, setup_ad_group_with_ad_and_keywords: None) -> None:
         task = (
             (
@@ -184,5 +186,6 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                 mock_create_ad_group_ad.assert_called_once()
                 mock_create_ad_group_keyword.assert_called()
         finally:
-            success = Team.pop_team(campaign_creation_team.name)
+            user_id, conv_id = campaign_creation_team.name.split("_")[-2:]
+            success = Team.pop_team(user_id=int(user_id), conv_id=int(conv_id))
             assert success is not None

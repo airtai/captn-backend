@@ -24,7 +24,7 @@ APP_NAME = environ.get("APP_NAME", "fastapi-app")
 OTLP_GRPC_ENDPOINT = environ.get("OTLP_GRPC_ENDPOINT", "http://tempo:4317")
 
 
-@asynccontextmanager  # type: ignore
+@asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
     scheduler = BackgroundScheduler()
     scheduler.add_job(

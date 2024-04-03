@@ -49,40 +49,46 @@ class Team:
             cls_typed: Type["Team"] = cls  # type: ignore[assignment]
             if name in cls_typed._team_registry:
                 raise ValueError(f"Team name '{name}' already exists")
-            if cls_typed in cls_typed._team_registry.values():  # type: ignore[comparison-overlap]
+            if cls_typed in cls_typed._team_registry.values():
                 raise ValueError(f"Team class '{cls_typed}' already exists")
-            cls_typed._team_registry[name] = cls_typed  # type: ignore[assignment]
+            cls_typed._team_registry[name] = cls_typed
             return cls_typed  # type: ignore[return-value]
 
         return _inner
 
     @classmethod
     def get_class_by_name(cls, name: str) -> Type["Team"]:
-        try:
+        if name in cls._team_registry:
             return Team._team_registry[name]
-        except KeyError as e:
-            raise ValueError(f"Unknown team name: '{name}'") from e
+        else:
+            raise ValueError(f"Unknown team name: '{name}'")
 
     @classmethod
     def get_team_names(cls) -> List[str]:
         return list(cls._team_registry.keys())
 
     @staticmethod
-    def _store_team(team_name: str, team: "Team") -> None:
+    def construct_team_name(user_id: int, conv_id: int) -> str:
+        name = f"{str(user_id)}_{str(conv_id)}"
+
+        return name
+
+    @staticmethod
+    def _store_team(user_id: int, conv_id: int, team: "Team") -> None:
+        team_name = Team.construct_team_name(user_id, conv_id)
         if team_name in Team._teams:
             raise ValueError(f"Team name '{team_name}' already exists")
 
         Team._teams[team_name] = team
 
     @staticmethod
-    def get_team(team_name: str) -> "Team":
-        try:
-            return Team._teams[team_name]
-        except KeyError as e:
-            raise ValueError(f"Unknown team name: '{team_name}'") from e
+    def get_team(user_id: int, conv_id: int) -> Optional["Team"]:
+        team_name = Team.construct_team_name(user_id, conv_id)
+        return Team._teams[team_name] if team_name in Team._teams else None
 
     @staticmethod
-    def pop_team(team_name: str) -> Optional["Team"]:
+    def pop_team(user_id: int, conv_id: int) -> Optional["Team"]:
+        team_name = Team.construct_team_name(user_id, conv_id)
         try:
             return Team._teams.pop(team_name)
         except KeyError:
@@ -97,8 +103,9 @@ class Team:
 
     def __init__(
         self,
+        user_id: int,
+        conv_id: int,
         roles: List[Dict[str, str]],
-        name: str,
         function_map: Optional[Dict[str, Callable[[Any], Any]]] = None,
         work_dir: str = "my_default_workdir",
         max_round: int = 80,
@@ -106,7 +113,10 @@ class Team:
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
+        use_user_proxy: bool = False,
     ):
+        self.user_id = user_id
+        self.conv_id = conv_id
         self.roles = roles
         self.initial_message: str
         self.name: str
@@ -117,35 +127,29 @@ class Team:
         self.function_map = function_map
         self.work_dir = work_dir
         self.llm_config: Optional[Dict[str, Any]] = None
-        self.name = name
         self.human_input_mode = human_input_mode
         self.clients_question_answer_list = clients_question_answer_list
-        Team._store_team(self.name, self)
+        self.use_user_proxy = use_user_proxy
 
-    @classmethod
-    def _get_new_team_name(cls) -> str:
-        name_prefix = cls._get_team_name_prefix()
-        name = f"{name_prefix}_{cls._team_name_counter}"
-        cls._team_name_counter = cls._team_name_counter + 1
-
-        return name
-
-    @classmethod
-    def _get_team_name_prefix(cls) -> str:
-        raise NotImplementedError()
+        self.name = Team.construct_team_name(user_id=user_id, conv_id=conv_id)
+        self.user_proxy: Optional[autogen.UserProxyAgent] = None
+        Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
     @classmethod
     def _get_llm_config(
-        cls, seed: int = 42, temperature: float = 0.2
+        cls,
+        seed: int = 42,
+        temperature: float = 0.2,
+        config_list: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
         tools = (
             [{"type": "function", "function": f} for f in cls._functions]
             if cls._functions
             else None
         )
-        config = Config()
+        config_list = Config().config_list_gpt_4 if config_list is None else config_list
         llm_config = {
-            "config_list": config.config_list_gpt_4,
+            "config_list": config_list,
             "seed": seed,
             "temperature": temperature,
             "tools": tools,
@@ -184,18 +188,20 @@ class Team:
             self._create_member(role["Name"], role["Description"])
             for role in self.roles
         ]
+        if self.use_user_proxy:
+            self.user_proxy = self._create_member(
+                name="user_proxy",
+                description="You are a user proxy in the digital agency. You are responsible for executing the functions proposed by other members.",
+                is_user_proxy=True,
+            )
+            self.members.append(self.user_proxy)
         self._create_groupchat_and_manager()
 
     @staticmethod
     def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         content = x.get("content")
-        if content is None:
-            return False
 
-        content_xs = content.split()
-        return len(content_xs) > 0 and (
-            "TERMINATE" in content_xs[-1] or "PAUSE" in content_xs[-1]
-        )
+        return content is not None and "terminate_groupchat" in content
 
     def _create_member(
         self,
@@ -214,7 +220,7 @@ Do NOT try to finish the task until other team members give their opinion.
             return autogen.UserProxyAgent(
                 human_input_mode=self.human_input_mode,
                 name=name,
-                llm_config=self.llm_config,
+                llm_config=False,
                 system_message=system_message,
                 is_termination_msg=self._is_termination_msg,
             )
@@ -299,6 +305,14 @@ You can leverage access to the following resources:
 
 {self._final_section}
 """
+
+    @classmethod
+    def get_capabilities(cls) -> str:
+        raise NotImplementedError()
+
+    @classmethod
+    def get_brief_template(cls) -> str:
+        raise NotImplementedError()
 
     def initiate_chat(self, **kwargs: Any) -> None:
         self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)

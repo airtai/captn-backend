@@ -1,6 +1,6 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Optional
 
 from autogen.io.websockets import IOStream, IOWebsockets
 from fastapi import APIRouter, HTTPException
@@ -13,11 +13,9 @@ from ..observability.websocket_utils import (
     WEBSOCKET_REQUESTS,
     WEBSOCKET_TOKENS,
 )
-from .backend import Team, execute_daily_analysis, start_or_continue_conversation
+from .backend import execute_daily_analysis, start_or_continue_conversation
 
 router = APIRouter()
-
-google_ads_team_names = Team.get_team_names()
 
 
 THREE_IN_A_ROW_EXCEPTIONS = Counter(
@@ -47,7 +45,8 @@ class CaptnAgentRequest(BaseModel):
     message: str
     user_id: int
     conv_id: int
-    google_ads_team: Literal[tuple(google_ads_team_names)] = "default_team"  # type: ignore[valid-type]
+    # TODO: remove google_ads_team from the request agter sync with the frontend
+    google_ads_team: str = "default_team"
     all_messages: List[Dict[str, str]]
     agent_chat_history: Optional[str]
     is_continue_daily_analysis: bool
@@ -132,13 +131,12 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                 return
             for i in range(num_of_retries):
                 try:
-                    class_name = request.google_ads_team
+                    class_name = "brief_creation_team"
                     _, last_message = start_or_continue_conversation(
                         user_id=request.user_id,
                         conv_id=request.conv_id,
                         task=message,
                         max_round=80,
-                        human_input_mode="NEVER",
                         class_name=class_name,
                     )
                     iostream.print(last_message)
@@ -174,8 +172,7 @@ def chat(request: CaptnAgentRequest) -> str:
             conv_id=request.conv_id,
             task=request.message,
             max_round=80,
-            human_input_mode="NEVER",
-            class_name=request.google_ads_team,
+            class_name="brief_creation_team",
         )
 
     except BadRequestError as e:
