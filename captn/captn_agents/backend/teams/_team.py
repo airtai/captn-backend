@@ -82,12 +82,9 @@ class Team:
         Team._teams[team_name] = team
 
     @staticmethod
-    def get_team(user_id: int, conv_id: int) -> "Team":
+    def get_team(user_id: int, conv_id: int) -> Optional["Team"]:
         team_name = Team._construct_team_name(user_id, conv_id)
-        try:
-            return Team._teams[team_name]
-        except KeyError as e:
-            raise ValueError(f"Unknown team name: '{team_name}'") from e
+        return Team._teams[team_name] if team_name in Team._teams else None
 
     @staticmethod
     def pop_team(user_id: int, conv_id: int) -> Optional["Team"]:

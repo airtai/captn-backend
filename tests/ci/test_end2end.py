@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from captn.captn_agents.backend import Team
-from captn.captn_agents.backend.end_to_end import _get_initial_team
+from captn.captn_agents.backend.end_to_end import _get_team
 
 
 @pytest.mark.parametrize(
@@ -27,8 +27,8 @@ def test_get_initial_team(class_name: str) -> None:
 
         if class_name == "should raise":
             with pytest.raises(ValueError, match="Unknown team name"):
-                _get_initial_team(**kwargs)  # type: ignore[arg-type]
+                _get_team(**kwargs)  # type: ignore[arg-type]
         else:
-            initial_team, team_name, _ = _get_initial_team(**kwargs)  # type: ignore[arg-type]
+            initial_team, _ = _get_team(**kwargs)  # type: ignore[arg-type]
 
             assert isinstance(initial_team, Team)
