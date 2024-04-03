@@ -89,6 +89,7 @@ services:
       - ./etc/grafana/:/etc/grafana/provisioning/datasources
       - ./etc/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./etc/dashboards:/etc/grafana/dashboards
+      - ./etc/grafana.ini:/etc/grafana/grafana.ini
       - ./grafana_data:/var/lib/grafana
     depends_on:
       - loki

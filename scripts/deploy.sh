@@ -48,6 +48,7 @@ $ssh_command "docker container prune -f || echo 'No stopped containers to delete
 
 echo "INFO: SCPing docker-compose.yaml"
 scp -i key.pem ./docker-compose.yaml azureuser@$DOMAIN:/home/azureuser/docker-compose.yaml
+envsubst '${INFOBIP_API_KEY}' < ./etc/grafana.ini > tmp.ini && mv tmp.ini ./etc/grafana.ini
 scp -i key.pem -r ./etc azureuser@$DOMAIN:/home/azureuser
 
 echo "INFO: pulling docker image"
