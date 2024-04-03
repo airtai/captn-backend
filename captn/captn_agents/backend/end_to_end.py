@@ -18,7 +18,7 @@ def _get_team(
     max_round: int,
     seed: int,
     temperature: float,
-    class_name: str,
+    registred_team_name: str,
 ) -> Tuple[Team, bool]:
     working_dir: Path = root_dir / f"{user_id=}" / f"{conv_id=}"
     working_dir.mkdir(parents=True, exist_ok=True)
@@ -28,7 +28,9 @@ def _get_team(
     if team is not None:
         return team, False
     else:
-        team_class: Type[Team] = Team.get_class_by_name(class_name)
+        team_class: Type[Team] = Team.get_class_by_registred_team_name(
+            registred_team_name
+        )
         team = team_class(  # type: ignore
             user_id=user_id,
             conv_id=conv_id,
@@ -50,7 +52,7 @@ def start_or_continue_conversation(
     max_round: int = 20,
     seed: int = 42,
     temperature: float = 0.2,
-    class_name: str = "initial_team",
+    registred_team_name: str = "initial_team",
 ) -> Tuple[str, str]:
     team, create_new_conv = _get_team(
         user_id=user_id,
@@ -60,7 +62,7 @@ def start_or_continue_conversation(
         max_round=max_round,
         seed=seed,
         temperature=temperature,
-        class_name=class_name,
+        registred_team_name=registred_team_name,
     )
 
     team_name = team.name

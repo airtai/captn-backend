@@ -89,6 +89,6 @@ class TestTeamRegistry:
         assert "my name" in Team._team_registry
         assert Team._team_registry["my name"] == MyTeam
 
-        factory = Team.get_class_by_name("my name")
+        factory = Team.get_class_by_registred_team_name("my name")
 
         assert factory == MyTeam

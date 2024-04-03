@@ -15,7 +15,7 @@ from ._functions import (
 def _get_brief_template(
     team_name: str,
 ) -> str:
-    team_class: Type[Team] = Team.get_class_by_name(team_name)
+    team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
     return team_class.get_brief_template()
 
 
@@ -42,7 +42,7 @@ def create_brief_creation_team_toolbox(
     def get_brief_template(
         team_name: Annotated[str, "The name of the team"],
     ) -> str:
-        team_class: Type[Team] = Team.get_class_by_name(team_name)
+        team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
         return team_class.get_brief_template()
 
     @toolbox.add_function("Delagate the task to the selected team")
@@ -56,7 +56,7 @@ def create_brief_creation_team_toolbox(
         user_id = context.user_id
         conv_id = context.conv_id
 
-        team_class: Type[Team] = Team.get_class_by_name(team_name)
+        team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
 
         final_task = f"Here is the customer brief:\n{customers_brief}\n\nAdditional info from the web page:\n{summary_from_web_page}\n\nAnd the task is following:\n{task}"
 

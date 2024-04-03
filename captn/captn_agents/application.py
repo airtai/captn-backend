@@ -1,6 +1,6 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional, TypeVar
 
 from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, HTTPException
@@ -13,10 +13,12 @@ from ..observability.websocket_utils import (
     WEBSOCKET_REQUESTS,
     WEBSOCKET_TOKENS,
 )
-from .backend import execute_daily_analysis, start_or_continue_conversation
+from .backend import Team, execute_daily_analysis, start_or_continue_conversation
 
 router = APIRouter()
 
+google_ads_team_names = Team.get_registred_team_names()
+TeamNames = TypeVar("TeamNames", bound=Literal[tuple(google_ads_team_names)])  # type: ignore[misc]
 
 THREE_IN_A_ROW_EXCEPTIONS = Counter(
     "three_in_a_row_exceptions_total",
@@ -45,8 +47,7 @@ class CaptnAgentRequest(BaseModel):
     message: str
     user_id: int
     conv_id: int
-    # TODO: remove google_ads_team from the request agter sync with the frontend
-    google_ads_team: str = "default_team"
+    google_ads_team: TeamNames = "default_team"  # type: ignore[valid-type]
     all_messages: List[Dict[str, str]]
     agent_chat_history: Optional[str]
     is_continue_daily_analysis: bool
@@ -121,13 +122,13 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             message = _get_message(request)
             for i in range(num_of_retries):
                 try:
-                    class_name = "brief_creation_team"
+                    registred_team_name = request.google_ads_team
                     _, last_message = start_or_continue_conversation(
                         user_id=request.user_id,
                         conv_id=request.conv_id,
                         task=message,
                         max_round=80,
-                        class_name=class_name,
+                        registred_team_name=registred_team_name,
                     )
                     iostream.print(last_message)
 
@@ -156,63 +157,11 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
             print(f"Failed to read the message from the client: {e}")
             traceback.print_stack()
             return
-        for i in range(num_of_retries):
-            try:
-                class_name = "brief_creation_team"
-                _, last_message = start_or_continue_conversation(
-                    user_id=request.user_id,
-                    conv_id=request.conv_id,
-                    task=message,
-                    max_round=80,
-                    class_name=class_name,
-                )
-                iostream.print(last_message)
-
-                return
-
-            except BadRequestError as e:
-                BAD_REQUEST_ERRORS.inc()
-                iostream.print(f"OpenAI classified the message as BadRequestError: {e}")
-                iostream.print(f"Retrying the request with message: {RETRY_MESSAGE}")
-                message = RETRY_MESSAGE
-
-            except Exception as e:
-                _handle_exception(
-                    iostream=iostream, num_of_retries=num_of_retries, e=e, retry=i
-                )
 
     except Exception as e:
         RANDOM_EXCEPTIONS.inc()
         print(f"Agent conversation failed with an error: {e}")
         traceback.print_stack()
-
-
-@router.post("/chat")
-def chat(request: CaptnAgentRequest) -> str:
-    try:
-        team_name, last_message = start_or_continue_conversation(
-            user_id=request.user_id,
-            conv_id=request.conv_id,
-            task=request.message,
-            max_round=80,
-            class_name="brief_creation_team",
-        )
-
-    except BadRequestError as e:
-        # retry the request once
-        if request.retry:
-            request.retry = False
-            request.message = RETRY_MESSAGE
-            print(f"Retrying the request with message: {RETRY_MESSAGE}, error: {e}")
-            return chat(request)
-        raise e
-
-    except Exception as e:
-        # TODO: error logging
-        print(f"captn_agents endpoint /chat failed with error: {e}")
-        raise e
-
-    return last_message
 
 
 @router.get("/daily-analysis")
@@ -229,50 +178,3 @@ def daily_analysis(request: DailyAnalysisRequest) -> str:
         send_only_to_emails=request.send_only_to_emails, date=request.date
     )
     return "Daily analysis has been sent to the specified emails"
-
-
-if __name__ == "__main__":
-    request = CaptnAgentRequest(
-        message="What are the metods for campaign optimization",
-        user_id=3,
-        conv_id=5,
-        all_messages=[
-            {
-                "role": "assistant",
-                "content": "Hi, I am your assistant. How can I help you today?",
-            },
-            {
-                "role": "user",
-                "content": "I want to Remove 'Free' keyword because it is not performing well",
-            },
-        ],
-        agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
-        is_continue_daily_analysis=False,
-    )
-
-    last_message = chat(request=request)
-    print("*" * 100)
-    print(f"User will receive the following message:\n{last_message}")
-    print("*" * 100)
-
-    request = CaptnAgentRequest(
-        message="I have logged in",
-        user_id=3,
-        conv_id=5,
-        all_messages=[
-            {
-                "role": "assistant",
-                "content": "Hi, I am your assistant. How can I help you today?",
-            },
-            {
-                "role": "user",
-                "content": "I want to Remove 'Free' keyword because it is not performing well",
-            },
-        ],
-        agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
-        is_continue_daily_analysis=False,
-    )
-    last_message = chat(request=request)
-    print("*" * 100)
-    print(f"User will receive the following message:\n{last_message}")
-    print("*" * 100)
