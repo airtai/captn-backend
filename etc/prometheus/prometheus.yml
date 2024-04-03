@@ -34,3 +34,8 @@ scrape_configs:
 
     static_configs:
       - targets: ['fastapi-app:9000']
+
+  - job_name: 'wasp-node'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['$WASP_SERVER_URL']

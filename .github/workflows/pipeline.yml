@@ -138,6 +138,7 @@ jobs:
 
               DOMAIN: ${{ github.ref_name == 'main' && vars.PROD_DOMAIN || vars.STAGING_DOMAIN }}
               REDIRECT_DOMAIN: ${{ github.ref_name == 'main' && vars.PROD_REDIRECT_DOMAIN || vars.STAGING_REDIRECT_DOMAIN }}
+              WASP_SERVER_URL: ${{ github.ref_name == 'main' && vars.PROD_WASP_SERVER_URL || vars.STAGING_WASP_SERVER_URL }}
               CLIENT_SECRET: ${{ github.ref_name == 'main' && secrets.PROD_CLIENT_SECRET || secrets.STAGING_CLIENT_SECRET }}
               DATABASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_DATABASE_URL || secrets.STAGING_DATABASE_URL }}
               REACT_APP_API_URL: ${{ github.ref_name == 'main' && secrets.PROD_REACT_APP_API_URL || secrets.STAGING_REACT_APP_API_URL }}
