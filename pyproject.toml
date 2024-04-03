@@ -12,7 +12,7 @@ authors = [
 
 keywords = ["captn", "autogen"]
 
-requires-python = ">=3.8"
+requires-python = ">=3.11,<3.12"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -21,9 +21,6 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Operating System :: OS Independent",
     "Topic :: Internet",
@@ -133,7 +130,7 @@ exclude = [
 
 [tool.mypy]
 strict = true
-python_version = "3.8"
+python_version = "3.11"
 ignore_missing_imports = true
 install_types = true
 non_interactive = true
@@ -165,13 +162,13 @@ known_first_party = ["captn"]
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py311']
 include = '\.pyi?$'
 
 [tool.ruff]
 fix = true
 line-length = 88
-target-version = "py38"
+target-version = "py311"
 include = ["captn/**/*.py", "google_ads/**/*.py", "openai_agent/**/*.py", "tests/**/*.py", "application.py/**/*.py", "pyproject.toml"]
 exclude = []
 
