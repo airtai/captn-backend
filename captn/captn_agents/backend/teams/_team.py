@@ -43,7 +43,7 @@ class Team:
 
     _team_registry: Dict[str, Type["Team"]] = {}
 
-    _registred_team_name: Optional[str] = None
+    _inverse_team_registry: Dict[Type["Team"], str] = {}
 
     @classmethod
     def register_team(cls, name: str) -> Callable[[T], T]:
@@ -54,14 +54,16 @@ class Team:
             if cls_typed in cls_typed._team_registry.values():
                 raise ValueError(f"Team class '{cls_typed}' already exists")
             cls_typed._team_registry[name] = cls_typed
-            cls._registred_team_name = name
+            cls_typed._inverse_team_registry[cls_typed] = name
             return cls_typed  # type: ignore[return-value]
 
         return _inner
 
     @classmethod
-    def get_registred_team_name(cls) -> Optional[str]:
-        return cls._registred_team_name
+    def get_registred_team_name(cls) -> str:
+        if cls not in cls._inverse_team_registry:
+            raise ValueError(f"Team class '{cls}' is not registred")
+        return cls._inverse_team_registry[cls]
 
     @classmethod
     def get_class_by_registred_team_name(cls, name: str) -> Type["Team"]:

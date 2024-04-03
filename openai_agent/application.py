@@ -154,8 +154,6 @@ async def offload_work_to_google_ads_expert(
         "team_name": team_name,
         "team_id": chat_id,
         "customer_brief": customer_brief,
-        # TODO: remove after sync with frontend
-        "google_ads_team": "default_team",
     }
 
 

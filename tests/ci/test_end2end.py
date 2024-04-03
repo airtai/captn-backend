@@ -8,10 +8,10 @@ from captn.captn_agents.backend.end_to_end import _get_team
 
 
 @pytest.mark.parametrize(
-    "class_name",
+    "registred_team_name",
     ["default_team", "campaign_creation_team", "should raise"],
 )
-def test_get_initial_team(class_name: str) -> None:
+def test_get_initial_team(registred_team_name: str) -> None:
     Team._teams.clear()
     with TemporaryDirectory() as tmp_dir:
         kwargs = {
@@ -22,10 +22,10 @@ def test_get_initial_team(class_name: str) -> None:
             "max_round": 80,
             "seed": 42,
             "temperature": 0.2,
-            "class_name": class_name,
+            "registred_team_name": registred_team_name,
         }
 
-        if class_name == "should raise":
+        if registred_team_name == "should raise":
             with pytest.raises(ValueError, match="Unknown team name"):
                 _get_team(**kwargs)  # type: ignore[arg-type]
         else:
