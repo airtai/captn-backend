@@ -520,9 +520,9 @@ but if it is important to the client, you can give advice on how to do it manual
         return """Google Ads team capabilities:
 This team has a wide range of capabilities, including the ability to:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
-- create/update/remove campaign, ad group, ad, keyword, location targeting
+- create ad group, ad, keyword
+- update/remove campaign, ad group, ad, keyword, location targeting
 
-The only problem is that the team is very slow. So if you have a specific task which another team can do faster, you should ask them to do it.
 Do NOT use this team if the client wants to setup a new campaign!
 """
 

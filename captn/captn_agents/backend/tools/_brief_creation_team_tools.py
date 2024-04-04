@@ -34,7 +34,10 @@ def create_brief_creation_team_toolbox(
         "Get the TEMPLATE for the customer brief you will need to create"
     )
     def get_brief_template(
-        team_name: Annotated[str, "The name of the team"],
+        team_name: Annotated[
+            str,
+            "The name of the team which will be responsible for the task. Make sure to select the right team for the task!",
+        ],
     ) -> str:
         team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
         return team_class.get_brief_template()
