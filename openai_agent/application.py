@@ -24,16 +24,38 @@ aclient = AsyncAzureOpenAI(
 CUSTOMER_BRIEF_DESCRIPTION = """
 A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
 
-Business:
-Goal:
+Goals:
 Current Situation:
 Website:
-Digital Marketing Objectives:
 Next Steps:
 Any Other Information Related to Customer Brief:
 Please extract and represent relevant details from the conversation under these headings
 
-Note: If the customer has provided an url to their website, 'Next Steps:' should start with "First step is to get the summary of the Website."
+Note:
+- If the customer has provided an url to their website, 'Next Steps:' should start with "First step is to get the summary of the Website."
+- The customer might have multiple goals, you need to list all the goals under 'Goals:' heading.
+- Do not leave any heading empty. Use the information shared by the customer to fill in the details under each heading.
+"""
+
+CONVERSATION_NAME_DESCRIPTION = """
+Generate a short, clear name for the conversation based on the customer's business type and goal from their brief. The name should be 1-3 words long and up to 25 characters. This name will help identify the conversation easily in the future.
+
+Examples:
+- Tech Startup increasing user base: "Grow User Base"
+- Beauty brand boosting social media presence: "Social Media Boost"
+- Fashion brand increasing online sales and increase brand awareness: "Online Sales & Awareness"
+- Coffee Shop that wants to increase brand awareness and drive website traffic: "Brand & Traffic"
+- Book Shop promoting new arrivals: "New Books Promo"
+- Retail Shop driving seasonal sales: "Seasonal Sales"
+
+Note:
+- I will tip you $1000 everytime you generate a conversation name that is 1-3 words long and up to 25 characters.
+- Your conversation name MUST be pertinent to digital marketing and avoids generic titles such as "Triple Goal Boost."
+- If the customer has more than 2 goals, then come up with a name that is relevant to all the goals. Refer to examples below but do not copy them as it is.
+    - An e-commerce store that wants to Boost sales, Increase brand awareness, Drive website traffic, Promote a product or service: "Digital Growth Blitz"
+    - A restaurant that wants to Increase brand awareness, Drive website traffic, Promote a product or service: "Restaurant Marketing"
+    - A beauty brand that wants to Increase brand awareness, Drive website traffic and Promote a product or service: "Beauty Brand Growth"
+    - A Fashion Boutique that wants to Increase brand awareness, Drive website traffic and Promote a product or service: "Fashion Boutique Growth"
 """
 
 
@@ -87,7 +109,7 @@ Below are few example conversations which you can use as a reference. You can ta
 
 #### Example 1 ####
 Captn AI: Welcome aboard! I'm Captn, your digital marketing companion. Think of me as your expert sailor, ready to ensure your Google Ads journey is smooth sailing. Before we set sail, could you steer our course by sharing the business goal you'd like to improve?
-Customer: I want to Increase brand awareness
+Customer: Let's proceed with the following choice:\n- Increase brand awareness
 Captn AI: Increasing brand awareness is a stellar goal. Next, can you tell me if you currently have a website where your customers can learn more about your business?
 Customer: Yes, I have a website.
 Captn AI: Could you please share the link to your website?
@@ -101,7 +123,7 @@ Customer: Yes, you have my permission.
 
 #### Example 2 ####
 Captn AI: Welcome aboard! I'm Captn, your digital marketing companion. Think of me as your expert sailor, ready to ensure your Google Ads journey is smooth sailing. Before we set sail, could you steer our course by sharing the business goal you'd like to improve?
-Customer: I want to Increase brand awareness and drive website traffic
+Customer: Let's proceed with the following choices:\n- Increase brand awareness\n- Drive website traffic"
 Captn AI: Increasing brand awareness and driving website traffic are stellar goals. Next, can you tell me if you currently have a website where your customers can learn more about your business?
 Customer: No, I don't have a website.
 Captn AI: Going without a website is like starting a voyage without a compass; crucial for navigating the digital realm. While I can't build one, having a site significantly boosts sales potential. Consider creating a website and inform me once it's live, and I'll assist with Google Ads for marketing goals.
@@ -110,8 +132,8 @@ Captn AI: Fair winds on your website-creation journey! Feel free to hail me when
 
 #### Example 3 ####
 Captn AI: Welcome aboard! I'm Captn, your digital marketing companion. Think of me as your expert sailor, ready to ensure your Google Ads journey is smooth sailing. Before we set sail, could you steer our course by sharing the business goal you'd like to improve?
-Customer: I want to Increase brand awareness and Boost sales
-Captn AI: Increasing brand awareness and boosting sales are stellar goals. Next, can you tell me if you currently have a website where your customers can learn more about your business?
+Customer: Let's proceed with the following choices:\n- Boost sales\n- Increase brand awareness\n- Drive website traffic\n- Promote a product or service"
+Captn AI: Boosting sales, increasing brand awareness, driving website traffic, and promoting a product or service are all solid business goals. Next, can you tell me if you currently have a website where your customers can learn more about your business?
 Customer: Yes, I have a website.
 Captn AI: Could you please share the link to your website?
 Customer: Sure, here is the link to my website.
@@ -145,6 +167,7 @@ async def offload_work_to_google_ads_expert(
     user_id: int,
     chat_id: int,
     customer_brief: str,
+    conversation_name: str,
 ) -> Dict[str, Union[Optional[str], int]]:
     # team_name = f"{user_id}_{chat_id}"
     team_name = BriefCreationTeam.get_registred_team_name()
@@ -154,6 +177,7 @@ async def offload_work_to_google_ads_expert(
         "team_name": team_name,
         "team_id": chat_id,
         "customer_brief": customer_brief,
+        "conversation_name": conversation_name,
     }
 
 
@@ -170,8 +194,12 @@ TOOLS = [
                         "type": "string",
                         "description": CUSTOMER_BRIEF_DESCRIPTION,
                     },
+                    "conversation_name": {
+                        "type": "string",
+                        "description": CONVERSATION_NAME_DESCRIPTION,
+                    },
                 },
-                "required": ["customer_brief"],
+                "required": ["customer_brief", "conversation_name"],
             },
         },
     },
@@ -246,6 +274,7 @@ async def chat(
     message = request.message
     chat_id = request.chat_id
     user_id = request.user_id
-
+    print("*" * 100)
+    print(message)
     result = await _get_openai_response(user_id, chat_id, message, background_tasks)
     return result
