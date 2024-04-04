@@ -14,7 +14,11 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
+    _create_ad_group,
+    _create_ad_group_ad,
+    _create_ad_group_keyword,
 )
+from captn.google_ads.client import ALREADY_AUTHENTICATED
 
 
 class TestCampaignCreationTeam:
@@ -106,6 +110,18 @@ class TestCampaignCreationTeam:
     @pytest.mark.openai
     @pytest.mark.campaign_creation_team
     def test_end2end(self, setup_ad_group_with_ad_and_keywords: None) -> None:
+        def ask_client_for_permission_mock(*args, **kwargs) -> str:
+            customer_to_update = "We propose changes for the following customer: 'airt technologies d.o.o' (ID: 1111)"
+            assert "resource_details" in kwargs, f"{kwargs.keys()=}"
+            assert "proposed_changes" in kwargs, f"{kwargs.keys()=}"
+            message = f"{customer_to_update}\n\n{kwargs['resource_details']}\n\n{kwargs['proposed_changes']}"
+
+            clients_answer = "yes"
+            # In real ask_client_for_permission, we would append (message, None)
+            # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
+            kwargs["clients_question_answer_list"].append((message, clients_answer))
+            return clients_answer
+
         task = """Here is the customer brief:
 Business: airt.ai
 Goal: The goal of the Google Ads campaign is to increase brand awareness and boost sales for airt.ai.
@@ -137,16 +153,20 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                     "captn.captn_agents.backend.teams._google_ads_team.list_accessible_customers",
                 ) as mock_list_accessible_customers,
                 unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission"
+                    "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission",
+                    wraps=ask_client_for_permission_mock,
                 ) as mock_ask_client_for_permission,
                 unittest.mock.patch(
-                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group"
+                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group",
+                    wraps=_create_ad_group,
                 ) as mock_create_ad_group,
                 unittest.mock.patch(
-                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_ad"
+                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_ad",
+                    wraps=_create_ad_group_ad,
                 ) as mock_create_ad_group_ad,
                 unittest.mock.patch(
-                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword"
+                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword",
+                    wraps=_create_ad_group_keyword,
                 ) as mock_create_ad_group_keyword,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page"
@@ -157,22 +177,14 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 unittest.mock.patch(
                     "captn.captn_agents.backend.teams._google_ads_team.create_campaign"
                 ) as mock_create_campaign,
+                unittest.mock.patch(
+                    "captn.google_ads.client.get_login_url"
+                ) as mock_get_login_url,
+                unittest.mock.patch(
+                    "captn.google_ads.client.requests.get"
+                ) as mock_requests_get,
             ):
                 mock_list_accessible_customers.return_value = ["1111"]
-                mock_ask_client_for_permission.return_value = "yes"
-                mock_create_ad_group.return_value = (
-                    "Created customers/1212/adGroups/3434."
-                )
-                mock_create_ad_group_ad.return_value = (
-                    "Created customers/1212/adGroupAds/3434~5656."
-                )
-                # create 20 keywords
-                side_effect = [
-                    f"Created customers/1212/adGroupCriteria/3434~{i}."
-                    for i in range(20)
-                ]
-                mock_create_ad_group_keyword.side_effect = side_effect
-
                 mock_get_info_from_the_web_page.return_value = """SUMMARY:
 
 Page content: The website is for a company called "airt" that offers an AI-powered framework for streaming app development. They provide a FastStream framework for creating, testing, and managing microservices for streaming data. They also have tools like Monotonic Neural Networks and Material for nbdev. The company focuses on driving impact with deep learning and incorporates a GPT-based model for predicting future events to be streamed. They have a community section and offer various products and tools. The website provides information about the company, news, and contact details.
@@ -201,13 +213,23 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                     "Campaign with id 1212 has already been created."
                 )
 
+                mock_get_login_url.return_value = {"login_url": ALREADY_AUTHENTICATED}
+                mock_requests_get.return_value.ok = True
+                mock_requests_get.return_value.json.return_value = "Resource created!"
+
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
                         campaign_creation_team.initiate_chat(cache=cache)
 
+                mock_ask_client_for_permission.assert_called()
                 mock_create_ad_group.assert_called()
                 mock_create_ad_group_ad.assert_called()
                 mock_create_ad_group_keyword.assert_called()
+                assert len(campaign_creation_team.clients_question_answer_list) > 0
+                assert (
+                    len(campaign_creation_team.clients_question_answer_list)
+                    == mock_ask_client_for_permission.call_count
+                )
         finally:
             user_id, conv_id = campaign_creation_team.name.split("_")[-2:]
             success = Team.pop_team(user_id=int(user_id), conv_id=int(conv_id))
