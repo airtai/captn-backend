@@ -332,7 +332,8 @@ This team is the BEST choice for creating NEW Google Ads campaigns and everythin
 - Create new ad
 - Create new keywords
 
-The main benefit of this team is that they get the job very QUICKLY!
+The main benefit of this team is that they can create a new campaign from scratch QUICKLY.
+But if you want to optimize an existing campaign or make some changes this is NOT the right team for you.
 """
 
     @classmethod

@@ -109,8 +109,8 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
 
     @property
     def _task(self) -> str:
-        return f"""You are a team in charge of creating customer brief which will be used by one of the teams which you will choose depending on the task.
-Create a detailed brief based on the task provided by the client. The brief should be clear and concise and should contain all the necessary information for the chosen team to complete the task.
+        return f"""You are a team in charge of choosing the appropriate team for the task and creating a brief for the chosen team.
+The brief should be clear and concise and should contain all the necessary information for the chosen team to complete the task.
 Brief creation is your ONLY task. You are NOT responsible for the following steps after the brief is created.
 
 Here is the current customers brief/information we have gathered for you as a starting point:
@@ -123,14 +123,20 @@ Here is the current customers brief/information we have gathered for you as a st
 1. Do NOT repeat the content of the previous messages nor repeat your role.
 Write short and clear messages. Nobody likes to read long messages. Be concise and to the point.
 
-2. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
-{self.construct_team_names_and_descriptions_message()}
 
-3. The MOST important part of your task is to choose the appropriate team for the task. Be 100% sure that you have chosen the right team before you proceed with the next steps.
-Check with the client if you are unsure which team to choose. The client will provide you with the necessary information to determine which team is the most appropriate for the task.
-If you didn't get explicit instructions, ALWAYS ask the client for more information e.g.: "Do you want to create a new campaign or optimize an existing one?"
-and then choose the appropriate team based on the client's answer.
+2. The MOST important part of your task is to choose the appropriate team for the task. Be 100% sure that you have chosen the right team before you proceed with the next steps.
+ALWAYS ask the client for more information e.g.
+message:"Do you want to create a new campaign or optimize an existing one?"
+"smart_suggestions": {{
+    'suggestions': ['Create new campaign', 'Optimize existing campaign'],
+    'type': 'oneOf'
+}}
+
+and depending on the clients answer, choose the appropriate team.
 If you fail to choose the appropriate team, you will be penalized!
+
+3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
+{self.construct_team_names_and_descriptions_message()}
 
 4. AFTER you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
 
@@ -196,7 +202,7 @@ All team members have access to the following command:
 2. {GET_INFO_FROM_THE_WEB_COMMAND}
 
 3. 'get_brief_template': Get the TEMPLATE for the customer brief you will need to create. params: (team_name: string)
-Use this command ONLY one time after you have chosen the team.
+Use this command ONLY after you have asked the client if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task!
 
 4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
 summary_from_web_page contains the summary retrieved from the clients web page by using the 'get_info_from_the_web_page' command.
