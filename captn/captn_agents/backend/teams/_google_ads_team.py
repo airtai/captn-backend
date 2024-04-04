@@ -47,6 +47,7 @@ from ..tools._functions import (
     get_info_from_the_web_page,
     reply_to_client_2,
 )
+from ._shared_prompts import MODIFICATION_FUNCTIONS_INSTRUCTIONS
 from ._team import Team
 
 __all__ = ("GoogleAdsTeam",)
@@ -327,7 +328,7 @@ being a question, where you ask the client for the following things that you sho
 
     @property
     def _commands(self) -> str:
-        return """## Commands
+        return f"""## Commands
 Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
@@ -340,15 +341,15 @@ e.g. "We need to ask client for the approval" should be changed to "Do you appro
 It is VERY important that you use the 'smart_suggestions' parameter!
 Use it so the client can easily choose between multiple options and make a quick reply by clicking on the suggestion.
 e.g.:
-"smart_suggestions": {
+"smart_suggestions": {{
     'suggestions': ['Please make some headlines suggestions', 'Please make some descriptions suggestions'],
     'type': 'manyOf'
-}
+}}
 
-'smart_suggestions': {
+'smart_suggestions': {{
     'suggestions': ['Please review and refine keywords', 'Please optimize another aspect of the campaign'],
     'type': 'oneOf'
-}
+}}
 
 Also, use smart_suggestions' to suggest multiple options of what can be done:
 If the 'message' parameter already contains a list of suggestions, you should use it!
@@ -360,10 +361,10 @@ Do NOT suggest changing multiple things as one suggestion. e.g.: ["Add all keywo
 EACH change should be a separate suggestion. e.g.: ["Add keyword x", "Add keyword y", ...]
 
 Here is an example of the smart_suggestions parameter:
-"smart_suggestions": {
+"smart_suggestions": {{
     "suggestions":["Add keyword x", "Add keyword y", ...],
     "type":"manyOf"
-}
+}}
 
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 params: (customer_id: str, resource_details: str, proposed_changes: str)
@@ -387,10 +388,7 @@ If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRU
 Unless told differently, do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!
 
 
-The following commands make permanent changes. In all of them you must use the following two parameters:
-- clients_approval_message: With this message, the client confirms that he is aware of the changes you will make
-(if the message is not detailed enough, we are threatened with a lawsuit)
-- modification_question: This parameter MUST be the same string as the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function!
+{MODIFICATION_FUNCTIONS_INSTRUCTIONS}
 
 You can get these parameters from the client ONLY by using the 'ask_client_for_permission' command!!!
 So before you execyte create/update/remove functions, you MUST ask the client for the permission by using the 'ask_client_for_permission' command! Otherwise you will be penalized!
@@ -515,7 +513,7 @@ Commands starting with 'update' can only be used for updating and commands start
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
 For the actions which we do not support currently, tell the client that you currently do NOT support the wanted action,
 but if it is important to the client, you can give advice on how to do it manually within the Google Ads UI.
-"""
+"""  # nosec: [B608]
 
     @classmethod
     def get_capabilities(cls) -> str:
@@ -525,6 +523,7 @@ This team has a wide range of capabilities, including the ability to:
 - create/update/remove campaign, ad group, ad, keyword, location targeting
 
 The only problem is that the team is very slow. So if you have a specific task which another team can do faster, you should ask them to do it.
+Do NOT use this team if the client wants to setup a new campaign!
 """
 
     @classmethod

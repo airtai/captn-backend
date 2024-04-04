@@ -63,12 +63,14 @@ class TestTools:
 
         self.toolbox.add_to_agent(agent, agent)
 
-        # patch Team.initiate_chat and get_last_message
-        with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._team.Team.initiate_chat"
-        ) as mock_initiate_chat, unittest.mock.patch(
-            "captn.captn_agents.backend.teams._team.Team.get_last_message"
-        ) as mock_get_last_message:
+        with (
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._team.Team.initiate_chat"
+            ) as mock_initiate_chat,
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._team.Team.get_last_message"
+            ) as mock_get_last_message,
+        ):
             mock_initiate_chat.return_value = None
             mock_get_last_message.return_value = BRIEF_CREATION_TEAM_RESPONSE
 

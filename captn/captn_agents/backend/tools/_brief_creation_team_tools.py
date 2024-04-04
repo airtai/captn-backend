@@ -1,6 +1,6 @@
+from dataclasses import dataclass
 from typing import Type
 
-from pydantic import BaseModel
 from typing_extensions import Annotated
 
 from ..teams._team import Team
@@ -12,14 +12,8 @@ from ._functions import (
 )
 
 
-def _get_brief_template(
-    team_name: str,
-) -> str:
-    team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
-    return team_class.get_brief_template()
-
-
-class Context(BaseModel):
+@dataclass
+class Context:
     user_id: int
     conv_id: int
 

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from annotated_types import Len
@@ -195,7 +196,8 @@ def _create_ad_group_keywords(
     return response
 
 
-class Context(BaseModel):
+@dataclass
+class Context:
     user_id: int
     conv_id: int
     clients_question_answer_list: List[Tuple[str, Optional[str]]]

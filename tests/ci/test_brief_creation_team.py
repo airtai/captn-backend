@@ -40,18 +40,23 @@ class TestBriefCreationTeam:
         team = BriefCreationTeam(task=task, user_id=user_id, conv_id=conv_id)
 
         try:
-            with unittest.mock.patch.object(
-                team.toolbox.functions, "reply_to_client_2"
-            ) as mock_reply_to_client, unittest.mock.patch.object(
-                team.toolbox.functions, "get_info_from_the_web_page"
-            ) as mock_get_info_from_the_web_page, unittest.mock.patch.object(
-                team.toolbox.functions,
-                "delagate_task",
-            ) as mock_delagate_task, unittest.mock.patch.object(
-                team.toolbox.functions,
-                "get_brief_template",
-                wraps=team.toolbox.functions.get_brief_template,  # type: ignore[attr-defined]
-            ) as mock_get_brief_template:
+            with (
+                unittest.mock.patch.object(
+                    team.toolbox.functions, "reply_to_client_2"
+                ) as mock_reply_to_client,
+                unittest.mock.patch.object(
+                    team.toolbox.functions, "get_info_from_the_web_page"
+                ) as mock_get_info_from_the_web_page,
+                unittest.mock.patch.object(
+                    team.toolbox.functions,
+                    "delagate_task",
+                ) as mock_delagate_task,
+                unittest.mock.patch.object(
+                    team.toolbox.functions,
+                    "get_brief_template",
+                    wraps=team.toolbox.functions.get_brief_template,  # type: ignore[attr-defined]
+                ) as mock_get_brief_template,
+            ):
                 mock_reply_to_client.return_value = "I approve what ever you suggest. Please continue without asking me any more questions."
                 mock_get_info_from_the_web_page.return_value = (
                     mock_get_info_from_the_web_page.return_value

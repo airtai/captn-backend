@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from captn.captn_agents.backend.config import Config
 
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
-from ..tools._functions import get_info_from_the_web_page, reply_to_client_2
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
@@ -190,16 +189,3 @@ Use this command ONLY one time after you have chosen the team.
 4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
 summary_from_web_page contains the summary retrieved from the clients web page by using the 'get_info_from_the_web_page' command.
 """
-
-
-def _get_function_map() -> Dict[str, Any]:
-    function_map = {
-        "reply_to_client": reply_to_client_2,
-        "get_info_from_the_web_page": lambda url,
-        task,
-        task_guidelines: get_info_from_the_web_page(
-            url=url, task=task, task_guidelines=task_guidelines
-        ),
-    }
-
-    return function_map
