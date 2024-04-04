@@ -274,7 +274,6 @@ async def chat(
     message = request.message
     chat_id = request.chat_id
     user_id = request.user_id
-    print("*" * 100)
-    print(message)
+
     result = await _get_openai_response(user_id, chat_id, message, background_tasks)
     return result
