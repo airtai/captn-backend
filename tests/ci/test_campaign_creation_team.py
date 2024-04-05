@@ -1,6 +1,7 @@
 import unittest
 from tempfile import TemporaryDirectory
 from typing import Iterator, Optional
+from unittest.mock import MagicMock
 
 import pytest
 from autogen.cache import Cache
@@ -14,7 +15,11 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
+    _create_ad_group,
+    _create_ad_group_ad,
+    _create_ad_group_keyword,
 )
+from captn.google_ads.client import ALREADY_AUTHENTICATED
 
 
 class TestCampaignCreationTeam:
@@ -144,59 +149,7 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 task=task,
             )
 
-            with (
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.list_accessible_customers",
-                ) as mock_list_accessible_customers,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission",
-                    # wraps=ask_client_for_permission_mock,
-                ) as mock_ask_client_for_permission,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group",
-                    # wraps=_create_ad_group,
-                ) as mock_create_ad_group,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_ad",
-                    # wraps=_create_ad_group_ad,
-                ) as mock_create_ad_group_ad,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword",
-                    # wraps=_create_ad_group_keyword,
-                ) as mock_create_ad_group_keyword,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page"
-                ) as mock_get_info_from_the_web_page,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.execute_query"
-                ) as mock_execute_query,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.create_campaign"
-                ) as mock_create_campaign,
-                # unittest.mock.patch(
-                #     "captn.google_ads.client.get_login_url"
-                # ) as mock_get_login_url,
-                # unittest.mock.patch(
-                #     "captn.google_ads.client.requests.get"
-                # ) as mock_requests_get,
-            ):
-                mock_list_accessible_customers.return_value = ["1111"]
-                ### Delet aftter fixing gha
-                mock_ask_client_for_permission.return_value = "yes"
-                mock_create_ad_group.return_value = (
-                    "Created customers/1212/adGroups/3434."
-                )
-                mock_create_ad_group_ad.return_value = (
-                    "Created customers/1212/adGroupAds/3434~5656."
-                )
-                # create 20 keywords
-                side_effect = [
-                    f"Created customers/1212/adGroupCriteria/3434~{i}."
-                    for i in range(20)
-                ]
-                mock_create_ad_group_keyword.side_effect = side_effect
-                ### Delet aftter fixing gha
-                mock_get_info_from_the_web_page.return_value = """SUMMARY:
+            get_info_from_the_web_page_return_value = """SUMMARY:
 
 Page content: The website is for a company called "airt" that offers an AI-powered framework for streaming app development. They provide a FastStream framework for creating, testing, and managing microservices for streaming data. They also have tools like Monotonic Neural Networks and Material for nbdev. The company focuses on driving impact with deep learning and incorporates a GPT-based model for predicting future events to be streamed. They have a community section and offer various products and tools. The website provides information about the company, news, and contact details.
 
@@ -217,16 +170,99 @@ Descriptions (MAX 90 char each): AI-powered framework for streaming app developm
 
 Use these information to SUGGEST the next steps to the client, but do NOT make any permanent changes without the client's approval!
 """
-                mock_execute_query.return_value = (
-                    "This method isn't implemented yet. So do NOT use it."
-                )
-                mock_create_campaign.return_value = (
-                    "Campaign with id 1212 has already been created."
-                )
+
+            with (
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._google_ads_team.list_accessible_customers",
+                    return_value=["1111"],
+                ),  # as mock_list_accessible_customers,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission",
+                    wraps=ask_client_for_permission_mock,
+                ) as mock_ask_client_for_permission,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group",
+                    wraps=_create_ad_group,
+                ) as mock_create_ad_group,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_ad",
+                    wraps=_create_ad_group_ad,
+                ) as mock_create_ad_group_ad,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword",
+                    wraps=_create_ad_group_keyword,
+                ) as mock_create_ad_group_keyword,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page",
+                    return_value=get_info_from_the_web_page_return_value,
+                ),  # as mock_get_info_from_the_web_page,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._google_ads_team.execute_query",
+                    return_value=(
+                        "This method isn't implemented yet. So do NOT use it."
+                    ),
+                ),  # as mock_execute_query,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._google_ads_team.create_campaign",
+                    return_value="Campaign with id 1212 has already been created.",
+                ),  # as mock_create_campaign,
+                unittest.mock.patch(
+                    "captn.google_ads.client.get_login_url",
+                    return_value={"login_url": ALREADY_AUTHENTICATED},
+                ),  # as mock_get_login_url,
+                unittest.mock.patch(
+                    "captn.google_ads.client.requests.get",
+                    return_value=MagicMock(),
+                ) as mock_requests_get,
+            ):
+                mock_requests_get.return_value.ok = True
+                mock_requests_get.return_value.json.return_value = "Resource created!"
+
+                ### Delet aftter fixing gha
+                # mock_ask_client_for_permission.return_value = "yes"
+                # mock_create_ad_group.return_value = (
+                #     "Created customers/1212/adGroups/3434."
+                # )
+                # mock_create_ad_group_ad.return_value = (
+                #     "Created customers/1212/adGroupAds/3434~5656."
+                # )
+                # # create 20 keywords
+                # side_effect = [
+                #     f"Created customers/1212/adGroupCriteria/3434~{i}."
+                #     for i in range(20)
+                # ]
+                # mock_create_ad_group_keyword.side_effect = side_effect
+                ### Delet aftter fixing gha
+                #                 mock_get_info_from_the_web_page.return_value = """SUMMARY:
+
+                # Page content: The website is for a company called "airt" that offers an AI-powered framework for streaming app development. They provide a FastStream framework for creating, testing, and managing microservices for streaming data. They also have tools like Monotonic Neural Networks and Material for nbdev. The company focuses on driving impact with deep learning and incorporates a GPT-based model for predicting future events to be streamed. They have a community section and offer various products and tools. The website provides information about the company, news, and contact details.
+
+                # Relevant links:
+                # - FastStream framework: https://faststream.airt.ai
+                # - Monotonic Neural Networks: https://monotonic.airt.ai
+                # - Material for nbdev: https://nbdev-mkdocs.airt.ai
+                # - News: /news
+                # - About Us: /about-us
+                # - Company information: /company-information
+                # - Contact Us: /contact-us
+
+                # Keywords: airt, AI-powered framework, streaming app development, FastStream framework, microservices, Monotonic Neural Networks, Material for nbdev, deep learning, GPT-based model
+
+                # Headlines (MAX 30 char each): airt, AI-powered framework, FastStream, microservices, Monotonic Neural Networks, deep learning, GPT-based model, community, news, contact
+
+                # Descriptions (MAX 90 char each): AI-powered framework for streaming app development, Create, test, and manage microservices for streaming data, Driving impact with deep learning, GPT-based model for predicting future events, Explore news and contact information
+
+                # Use these information to SUGGEST the next steps to the client, but do NOT make any permanent changes without the client's approval!
+                # """
+                # mock_execute_query.return_value = (
+                #     "This method isn't implemented yet. So do NOT use it."
+                # )
+                # mock_create_campaign.return_value = (
+                #     "Campaign with id 1212 has already been created."
+                # )
 
                 # mock_get_login_url.return_value = {"login_url": ALREADY_AUTHENTICATED}
-                # mock_requests_get.return_value.ok = True
-                # mock_requests_get.return_value.json.return_value = "Resource created!"
+                # mock_requests_get.return_value = MagicMock()
 
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
