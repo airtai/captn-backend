@@ -162,7 +162,7 @@ Use it only to retrieve the information about the currency and already existing 
 34. Ad rules:
 - MINIMUM 3 and MAXIMUM 15 headlines.
 - MINIMUM 2 and MAXIMUM 4 descriptions.
-It is recomended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
+It is recommended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
 36. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
 37. Use the 'get_info_from_the_web_page' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
 e.g. if you know the final_url, you can use this command to get the summary of the web page and find the relevant information for ad group (and its ad and keywords).
@@ -265,7 +265,7 @@ All team members have access to the following command:
 
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 params: (customer_id: str, resource_details: str, proposed_changes: str)
-'proposed_changes' parameter must contain info about each field which you want to modify and it MUST refernce it by the EXACT name as the one you are going to use in the modification method.
+'proposed_changes' parameter must contain info about each field which you want to modify and it MUST reference it by the EXACT name as the one you are going to use in the modification method.
 
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 

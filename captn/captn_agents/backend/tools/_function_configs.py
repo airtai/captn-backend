@@ -524,7 +524,7 @@ reply_to_client_2_config = {
             "message": {
                 "type": "string",
                 "description": """Message for the client.
-Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!""",
+Make sure you add all the information which the client needs to know, because the client does NOT see the internal team messages!""",
             },
             "completed": {
                 "type": "boolean",
@@ -553,7 +553,7 @@ At the end of the message, inform the client that the modifications will be made
             },
             "resource_details": {
                 "type": "string",
-                "description": """Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
+                "description": """Make sure you add all the information which the client needs to know, because the client does NOT see the internal team messages!
 You MUST also describe to the client the current situation for that resource.
 If you want to modify the Ad Copy, you MUST provide the current Ad Copy details, e.g:
 The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are 'h1', 'h2' and 'h3'. The descriptions are 'd1' and 'd2'.
@@ -571,7 +571,7 @@ Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '20
 
 e.g. for AdGroupAd:
 'final_url' will be set to 'https://my-web-page.com'
-Hedlines will be extended wit a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
+Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
 
 Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.""",
             },
@@ -684,7 +684,7 @@ create_keyword_for_ad_group_config = {
 create_geo_targeting_for_campaign_config = {
     "name": "create_geo_targeting_for_campaign",
     "description": f"""Creates geographical targeting on the campaign level.
-When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of avaliable locations and their IDs.
+When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of available locations and their IDs.
 Once the client approves the locations, you can use the 'location_ids' parameter to create the geo targeting for the campaign.
 location_ids and location_names parameters are mutually exclusive and they can NOT be set to None at the same time.
 {MODIFICATION_WARNING}""",
@@ -739,7 +739,7 @@ Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'
             "modification_question": properties_config["modification_question"],
             "parent_id": {
                 "type": "string",
-                "description": """Id of the parent resorce, campaign and ad group do not have parent,
+                "description": """Id of the parent resource, campaign and ad group do not have parent,
 ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaign_id""",
             },
         },

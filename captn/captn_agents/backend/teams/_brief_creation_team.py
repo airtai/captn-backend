@@ -157,7 +157,7 @@ Guidelines SUMMARY:
 - Get the brief template
 - Get information from the web page (do NOT forget this step, it is the MOST IMPORTANT step!)
 - Create a detailed brief
-- Delagate the task to the chosen team. Use this command ONLY after you have choosed the team, retrieved the information from the web page and created the brief.
+- Delegate the task to the chosen team. Use this command ONLY after you have chosen the team, retrieved the information from the web page and created the brief.
 
 
 ## Additional Guidelines
@@ -203,7 +203,7 @@ All team members have access to the following command:
 3. 'get_brief_template': Get the TEMPLATE for the customer brief you will need to create. params: (team_name: string)
 Use this command ONLY after you have asked the client if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task!
 
-4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
+4. 'delagate_task': Delegate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
 summary_from_web_page contains the summary retrieved from the clients web page by using the 'get_info_from_the_web_page' command.
 
 5. NEVER ask the client questions like "Please provide the following information for the customer brief:..."

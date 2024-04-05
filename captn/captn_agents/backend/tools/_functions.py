@@ -152,7 +152,7 @@ You MUST use these capabilities when you receive a task for a specific category/
 Examples:
 "Click the 'TVs' result" - This way you will navigate to the TVs section of the page and you will find more information about TVs.
 "Click 'Electronics' link" - This way you will navigate to the Electronics section of the page and you will find more information about Electronics.
-"Cick the 'Next' button"
+"Click the 'Next' button"
 
 - Do NOT try to click all the links on the page, but only the ones which are RELEVANT for the task! Web pages can be very long and you will be penalized if spend too much time on this task!
 - Your final goal is to summarize the findings for the given task. The summary must be in English!
@@ -195,7 +195,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
 
 Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
-You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
+You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
 """
     user_proxy = autogen.AssistantAgent(
         "user_proxy",

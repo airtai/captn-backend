@@ -42,7 +42,7 @@ def create_brief_creation_team_toolbox(
         team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
         return team_class.get_brief_template()
 
-    @toolbox.add_function("Delagate the task to the selected team")
+    @toolbox.add_function("Delegate the task to the selected team")
     def delagate_task(
         team_name: Annotated[str, "The name of the team"],
         task: Annotated[str, "The task to be delagated"],

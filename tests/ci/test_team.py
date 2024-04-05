@@ -24,7 +24,7 @@ class TestTeam:
 
         system_message = """You are qa_gpt, Description1
 
-Your task is to chat with other team mambers and try to solve the given task.
+Your task is to chat with other team members and try to solve the given task.
 Do NOT try to finish the task until other team members give their opinion.
 """
         assert member.system_message == system_message

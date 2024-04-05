@@ -54,7 +54,7 @@ class TestTools:
         llm_config = agent.llm_config
         name_desc_dict = {
             "get_brief_template": "Get the TEMPLATE for the customer brief you will need to create",
-            "delagate_task": "Delagate the task to the selected team",
+            "delagate_task": "Delegate the task to the selected team",
         }
         _check_llm_config(llm_config, name_desc_dict)
 
