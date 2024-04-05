@@ -2,8 +2,8 @@ import json
 from os import environ
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import requests
 from pydantic import BaseModel
+from requests import get as requests_get
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
@@ -40,7 +40,7 @@ def get_login_url(
         "conv_id": conv_id,
         "force_new_login": force_new_login,
     }
-    response = requests.get(f"{BASE_URL}/login", params=params, timeout=60)
+    response = requests_get(f"{BASE_URL}/login", params=params, timeout=60)
     retval: Dict[str, str] = response.json()
     return retval
 
@@ -56,7 +56,7 @@ def list_accessible_customers(
         "user_id": user_id,
         "get_only_non_manager_accounts": get_only_non_manager_accounts,
     }
-    response = requests.get(
+    response = requests_get(
         f"{BASE_URL}/list-accessible-customers", params=params, timeout=60
     )
     if not response.ok:
@@ -100,7 +100,7 @@ def execute_query(
     if query:
         params["query"] = query
 
-    response = requests.get(f"{BASE_URL}/search", params=params, timeout=60)
+    response = requests_get(f"{BASE_URL}/search", params=params, timeout=60)
     if not response.ok:
         if AUTHENTICATION_ERROR in response.text:
             content = AUTHENTICATION_ERROR
@@ -123,7 +123,7 @@ def execute_query(
 
 
 def get_user_ids_and_emails() -> str:
-    response = requests.get(f"{BASE_URL}/get-user-ids-and-emails", timeout=60)
+    response = requests_get(f"{BASE_URL}/get-user-ids-and-emails", timeout=60)
     if not response.ok:
         raise ValueError(response.content)
     return response.json()  # type: ignore[no-any-return]
@@ -141,10 +141,10 @@ NOT_APPROVED = (
 
 
 FIELDS_ARE_NOT_MENTIONED_ERROR_MSG = (
-    "The client must be informed abot ALL the changes that are going to be made!"
+    "The client must be informed about ALL the changes that are going to be made!"
     "If you have already asked client for the permission regarding the changes, you MUST apologize to him and ask for the permission again by using the 'ask_client_for_permission' but this time you must include all the changes that are going to be made (mentioned below)."
     "e.g. 'We apologize for bothering you again. I have made a mistake and I forgot to mention some of the changes that are going to be made. I have to ask you again for the permission. The changes that are going to be made are the following: ...'"
-    "The following fields were NOT mentioned in the approval question for the client. Please inform the client about the modifications of the following fields (use the EXACT names as the ones listed bellow e.g. if a field is called 'super_cool_field', you MUST reference it as 'super_cool_field'!):\n"
+    "The following fields were NOT mentioned in the approval question for the client. Please inform the client about the modifications of the following fields (use the EXACT names as the ones listed below e.g. if a field is called 'super_cool_field', you MUST reference it as 'super_cool_field'!):\n"
 )
 
 IGNORE_FIELDS = [
@@ -239,7 +239,7 @@ def google_ads_create_update(
     params: Dict[str, Any] = ad.model_dump()
     params["user_id"] = user_id
 
-    response = requests.get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
+    response = requests_get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
     if not response.ok:
         raise ValueError(response.content)
 

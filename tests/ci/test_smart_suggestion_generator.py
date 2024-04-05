@@ -41,12 +41,15 @@ message = [
 
 @pytest.mark.asyncio
 async def test_openai_function_calling() -> None:
-    with unittest.mock.patch(
-        "openai_agent.smart_suggestion_generator.aclient.chat.completions.create",
-        side_effect=mock_chat_completion,
-    ) as mock_create, unittest.mock.patch(
-        "openai_agent.smart_suggestion_generator._send_to_client"
-    ) as mock_send_to_client:
+    with (
+        unittest.mock.patch(
+            "openai_agent.smart_suggestion_generator.aclient.chat.completions.create",
+            side_effect=mock_chat_completion,
+        ) as mock_create,
+        unittest.mock.patch(
+            "openai_agent.smart_suggestion_generator._send_to_client"
+        ) as mock_send_to_client,
+    ):
         await generate_smart_suggestions(message=message, chat_id=1)
 
         assert mock_create.call_count == 1

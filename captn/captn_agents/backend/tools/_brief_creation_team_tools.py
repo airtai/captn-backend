@@ -1,6 +1,6 @@
+from dataclasses import dataclass
 from typing import Type
 
-from pydantic import BaseModel
 from typing_extensions import Annotated
 
 from ..teams._team import Team
@@ -12,14 +12,8 @@ from ._functions import (
 )
 
 
-def _get_brief_template(
-    team_name: str,
-) -> str:
-    team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
-    return team_class.get_brief_template()
-
-
-class Context(BaseModel):
+@dataclass
+class Context:
     user_id: int
     conv_id: int
 
@@ -40,12 +34,15 @@ def create_brief_creation_team_toolbox(
         "Get the TEMPLATE for the customer brief you will need to create"
     )
     def get_brief_template(
-        team_name: Annotated[str, "The name of the team"],
+        team_name: Annotated[
+            str,
+            "The name of the team which will be responsible for the task. Make sure to select the right team for the task!",
+        ],
     ) -> str:
         team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
         return team_class.get_brief_template()
 
-    @toolbox.add_function("Delagate the task to the selected team")
+    @toolbox.add_function("Delegate the task to the selected team")
     def delagate_task(
         team_name: Annotated[str, "The name of the team"],
         task: Annotated[str, "The task to be delagated"],

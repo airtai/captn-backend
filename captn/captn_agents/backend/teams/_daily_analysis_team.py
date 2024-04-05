@@ -611,7 +611,7 @@ class DailyAnalysisTeam(Team):
     ]
 
     _shared_system_message = (
-        "You have a strong SQL knowladge (and very experienced with PostgresSQL)."
+        "You have a strong SQL knowledge (and very experienced with postgresql)."
         "When sending an email, include all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help the client to understand the problem and make decisions."
         "When analysing, start with simple queries and use more complex ones only if needed"
     )
@@ -702,7 +702,7 @@ If the user isn't logged in, we will NOT be able to access the Google Ads API.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
 6. DO NOT USE execute_query command for retrieving Google Ads metrics! Otherwise you will be penalized!
-7. Use the 'execute_query' command for finding the necessary informations about the campaigns, ad groups, ads, keywords etc.
+7. Use the 'execute_query' command for finding the necessary information about the campaigns, ad groups, ads, keywords etc.
 Do NOT use 'execute_query' command for retrieving Google Ads metrics (impressions, clicks, conversions, cost_micros etc.)!
 
 7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
@@ -752,7 +752,7 @@ but the client does NOT need to know all the Google Ads details that you have re
 20. Ad rules:
 - MINIMUM 3 and MAXIMUM 15 headlines.
 - MINIMUM 2 and MAXIMUM 4 descriptions.
-It is recomended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
+It is recommended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
 21. Use the 'get_info_from_the_web_page' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
 e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for SUGGESTING keywords, headlines, descriptions etc.
 You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
@@ -1008,7 +1008,7 @@ def execute_daily_analysis(
                     # )
                     # Do not proceed with Google Ads analysis for non authenticated users
                     print(
-                        f"Skiiping user_id: {user_id} - email {email} beacuse he hasn't logged in yet."
+                        f"Skipping user_id: {user_id} - email {email} because he hasn't logged in yet."
                     )
                     _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
                     continue

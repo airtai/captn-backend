@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from captn.captn_agents.backend.config import Config
 
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
-from ..tools._functions import get_info_from_the_web_page, reply_to_client_2
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
@@ -13,9 +12,9 @@ class BriefCreationTeam(Team):
     # The roles of the team members, like "admin", "manager", "analyst", etc.
     _default_roles = [
         {
-            "Name": "Copywriter",
-            "Description": """You are a Copywriter in the digital agency.
-Never introduce yourself when writing messages. E.g. do not write 'As a copywriter'""",
+            "Name": "Digitial_marketing_strategist",
+            "Description": """You are a Strategist in a digital agency.
+Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
         },
         {
             "Name": "Account_manager",
@@ -110,11 +109,11 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
 
     @property
     def _task(self) -> str:
-        return f"""You are a team in charge of creating customer brief which will be used by one of the teams which you will choose depending on the task.
-Create a detailed brief based on the task provided by the client. The brief should be clear and concise and should contain all the necessary information for the chosen team to complete the task.
+        return f"""You are a team in charge of choosing the appropriate team for the task and creating a brief for the chosen team.
+The brief should be clear and concise and should contain all the necessary information for the chosen team to complete the task.
 Brief creation is your ONLY task. You are NOT responsible for the following steps after the brief is created.
 
-Here is the current brief/information we have gathered:
+Here is the current customers brief/information we have gathered for you as a starting point:
 {self.task}
 """
 
@@ -124,28 +123,41 @@ Here is the current brief/information we have gathered:
 1. Do NOT repeat the content of the previous messages nor repeat your role.
 Write short and clear messages. Nobody likes to read long messages. Be concise and to the point.
 
-2. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
+
+2. The MOST important part of your task is to choose the appropriate team for the task.
+ALWAYS ask the client for more information. Here is the FIRST (and probably the only) question you should ask the client:
+message:"Do you want to create a new campaign or optimize an existing one?"
+"smart_suggestions": {{
+    'suggestions': ['Create new campaign', 'Optimize existing campaign'],
+    'type': 'oneOf'
+}}
+
+and depending on the clients answer, choose the appropriate team.
+If you fail to choose the appropriate team, you will be penalized!
+
+3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
 {self.construct_team_names_and_descriptions_message()}
 
-3. After you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
+4. AFTER the client has told you if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task,
+use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
 
-4. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
+5. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
 It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
 If the client has provided a link to the web page and you do not try to gather information from the web page, you will be penalized!
 If you are unable to retrieve the information, use the 'reply_to_client' command to ask the client for the information which you need.
 
-5. When you have gathered all the information, create a detailed brief.
+6. When you have gathered all the information, create a detailed brief.
 Team members should discuss and agree on the content of the brief before sending it to the chosen team.
 
-6. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
+7. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan
-- Choose the appropriate team
+- Choose the appropriate team depending on the clients answer
 - Get the brief template
 - Get information from the web page (do NOT forget this step, it is the MOST IMPORTANT step!)
 - Create a detailed brief
-- Delagate the task to the chosen team. Use this command ONLY after you have retrieved the information from the web page and created the brief.
+- Delegate the task to the chosen team. Use this command ONLY after you have chosen the team, retrieved the information from the web page and created the brief.
 
 
 ## Additional Guidelines
@@ -154,9 +166,9 @@ Do NOT use smart suggestions for open ended questions or questions which require
 
 smart suggestions examples:
 
-When you ask the client for some suggestions (e.g. which headline should be added), you should also generate smart suggestions like:
+When you ask the client for some suggestions (e.g. at the beginning when you need to choose the right team), you should also generate smart suggestions like:
 "smart_suggestions": {{
-    "suggestions":["Create Google Ads campaign", "increase trafic"],
+    "suggestions":["Create NEW Google Ads campaign", "Optimize EXISTING Google Ads campaign"],
     "type":"manyOf"
 }}
 
@@ -169,7 +181,11 @@ If you know what to do, just do it and do NOT use reply_to_client for informing 
 
 3. There is only 'reply_to_client' command, account_manager_reply_to_client or copywriter_reply_to_client commands do NOT exist.
 
-3. NEVER tell the client which command you are using, he/she does not need to know that. Just ask the question or provide the information.
+4. NEVER tell the client which command you are using, he/she does not need to know that. Just ask the question or provide the information.
+Do NOT tell the client that your job is to create a brief. The client does not need to know that!
+
+5. Ensure that your responses are formatted using markdown syntax (except for the HTML anchor tags),
+as they will be featured on a webpage to ensure a user-friendly presentation.
 """
 
     @property
@@ -185,21 +201,12 @@ All team members have access to the following command:
 2. {GET_INFO_FROM_THE_WEB_COMMAND}
 
 3. 'get_brief_template': Get the TEMPLATE for the customer brief you will need to create. params: (team_name: string)
-Use this command ONLY one time after you have chosen the team.
+Use this command ONLY after you have asked the client if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task!
 
-4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
+4. 'delagate_task': Delegate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
 summary_from_web_page contains the summary retrieved from the clients web page by using the 'get_info_from_the_web_page' command.
+
+5. NEVER ask the client questions like "Please provide the following information for the customer brief:..."
+It is your job to gather the information and create the brief. The client does not need to know that you are creating a brief.
+If you need additional information, use the 'reply_to_client' command and ask the client for the information you need, but ask him one question at a time.
 """
-
-
-def _get_function_map() -> Dict[str, Any]:
-    function_map = {
-        "reply_to_client": reply_to_client_2,
-        "get_info_from_the_web_page": lambda url,
-        task,
-        task_guidelines: get_info_from_the_web_page(
-            url=url, task=task, task_guidelines=task_guidelines
-        ),
-    }
-
-    return function_map

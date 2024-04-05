@@ -47,6 +47,7 @@ from ..tools._functions import (
     get_info_from_the_web_page,
     reply_to_client_2,
 )
+from ._shared_prompts import MODIFICATION_FUNCTIONS_INSTRUCTIONS
 from ._team import Team
 
 __all__ = ("GoogleAdsTeam",)
@@ -79,7 +80,7 @@ class GoogleAdsTeam(Team):
     ]
 
     _shared_system_message = (
-        "You have a strong SQL knowladge (and very experienced with PostgresSQL)."
+        "You have a strong SQL knowledge (and very experienced with postgresql)."
         "If the client does not explicitly tell you which updates to make, you must double check with him before you make any changes!"
         "When replying to the client, give him a report of the information you retrieved / changes that you have made."
         "Send him all the findings you have and do NOT try to summarize the finding (too much info is better then too little), it will help him understand the problem and make decisions."
@@ -188,7 +189,7 @@ Do NOT use smart suggestions when forwarding the login url to the client!
 4. Account_manager is responsible for coordinating all the team members and making sure the task is completed on time.
 5. Please be concise and clear in your messages. As agents implemented by LLM, save context by making your answers as short as possible.
 Don't repeat your self and others and do not use any filler words.
-6. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the necessary informations.
+6. Before asking for additional information about the Ad campaigns try using 'execute_query' command for finding the necessary information.
 7. Do not give advice on campaign improvement before you fetch all the important information about it by using 'execute_query' command.
 8. Do NOT use 'reply_to_client' command for asking the questions on how to Google Ads API nor for asking the client for the permission to make the changes (use 'ask_client_for_permission' command instead).
 Your team is in charge of using the Google Ads API and no one else does NOT know how to use it.
@@ -224,7 +225,7 @@ for the permission! You must tell the client exactly what changes you will make 
 25. If the client does not explicitly tell you which updates to make, you must double check with him
 before you make any changes! e.g. if you receive "optimize campaigns" task, you should analyse what can be done
 and suggest it to the client. If the client approves your suggestion, only then you can perform the updates.
-Also, when you propose suggestion, you need to explain why you want to make these changes (and give the client the a brief report about the information you retreived)
+Also, when you propose suggestion, you need to explain why you want to make these changes (and give the client the a brief report about the information you retrieved)
 26. Do not try to retrieve too much information at once for the clients task, instead of that,
 ask the client subquestions and give him the report of the current work and things you have learned about
 his Google Ads data
@@ -242,7 +243,7 @@ but the client does NOT need to know all the Google Ads details that you have re
 34. Ad rules:
 - MINIMUM 3 and MAXIMUM 15 headlines.
 - MINIMUM 2 and MAXIMUM 4 descriptions.
-It is recomended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
+It is recommended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
 35.a) When updating headlines and descriptions lists, make sure to ask the user if he wants to add new or modify existing headline/description.
 35.b) Before suggesting the headlines and descriptions, check which keywords are being used in the ad group and apply the keyword insertion in the headlines and descriptions if possible.
 Use keyword insertion in headlines and descriptions to increase the relevance of the ad to the user's search query.
@@ -252,11 +253,11 @@ When using keyword insertion, explain to the client why it is important to use i
 Use keyword insertion when ever it is possible and it makes sense!
 36. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
 37. Use the 'get_info_from_the_web_page' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
-e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for SUGGESTING (NEVER modify without permision!) keywords, headlines, descriptions etc.
+e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for SUGGESTING (NEVER modify without permission!) keywords, headlines, descriptions etc.
 You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
 and try get_info_from_the_web_page. Only if 'get_info_from_the_web_page' command does not provide you with enough information (or it fails), ask the client for the additional information about his business/web page etc.
 38. If you want to create a new Ad Copy, ask the client ONLY for the final_url and use the 'get_info_from_the_web_page' command to get the summary of the web page.
-Once you have the summary, you can use it for SUGGESTING (NEVER modify without permision!) headlines and descriptions.
+Once you have the summary, you can use it for SUGGESTING (NEVER modify without permission!) headlines and descriptions.
 The final_url MUST be provided by the client, do randomly choose it yourself!
 39. Use 'get_info_from_the_web_page' when you want to retrieve the information about some product, category etc. from the clients web page.
 e.g. if you want to retrieve the information about the TVs and you already know the url of the TVs section, you can use this command to get the summary of that web page section.
@@ -327,7 +328,7 @@ being a question, where you ask the client for the following things that you sho
 
     @property
     def _commands(self) -> str:
-        return """## Commands
+        return f"""## Commands
 Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
@@ -340,15 +341,15 @@ e.g. "We need to ask client for the approval" should be changed to "Do you appro
 It is VERY important that you use the 'smart_suggestions' parameter!
 Use it so the client can easily choose between multiple options and make a quick reply by clicking on the suggestion.
 e.g.:
-"smart_suggestions": {
+"smart_suggestions": {{
     'suggestions': ['Please make some headlines suggestions', 'Please make some descriptions suggestions'],
     'type': 'manyOf'
-}
+}}
 
-'smart_suggestions': {
+'smart_suggestions': {{
     'suggestions': ['Please review and refine keywords', 'Please optimize another aspect of the campaign'],
     'type': 'oneOf'
-}
+}}
 
 Also, use smart_suggestions' to suggest multiple options of what can be done:
 If the 'message' parameter already contains a list of suggestions, you should use it!
@@ -360,14 +361,14 @@ Do NOT suggest changing multiple things as one suggestion. e.g.: ["Add all keywo
 EACH change should be a separate suggestion. e.g.: ["Add keyword x", "Add keyword y", ...]
 
 Here is an example of the smart_suggestions parameter:
-"smart_suggestions": {
+"smart_suggestions": {{
     "suggestions":["Add keyword x", "Add keyword y", ...],
     "type":"manyOf"
-}
+}}
 
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 params: (customer_id: str, resource_details: str, proposed_changes: str)
-'proposed_changes' parameter must contain info about each field which you want to modify and it MUST refernce it by the EXACT name as the one you are going to use in the modification method. e.g.:
+'proposed_changes' parameter must contain info about each field which you want to modify and it MUST reference it by the EXACT name as the one you are going to use in the modification method. e.g.:
 if you want to update/set "budget_amount_micros" you must mention "budget_amount_micros" in this parameter.
 same thing for "final_url", you must mention "final_url" in this parameter, if you mention "final url" or "final-url" it will NOT be accepted!
 
@@ -387,10 +388,7 @@ If you want to get negative keywords, use "WHERE campaign_criterion.negative=TRU
 Unless told differently, do NOT retrieve information about the REMOVED resources (campaigns, ad groups, ads...)!
 
 
-The following commands make permanent changes. In all of them you must use the following two parameters:
-- clients_approval_message: With this message, the client confirms that he is aware of the changes you will make
-(if the message is not detailed enough, we are threatened with a lawsuit)
-- modification_question: This parameter MUST be the same string as the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function!
+{MODIFICATION_FUNCTIONS_INSTRUCTIONS}
 
 You can get these parameters from the client ONLY by using the 'ask_client_for_permission' command!!!
 So before you execyte create/update/remove functions, you MUST ask the client for the permission by using the 'ask_client_for_permission' command! Otherwise you will be penalized!
@@ -486,7 +484,7 @@ Otherwise, incorrect budget will be set for the campaign!
 15. 'create_geo_targeting_for_campaign': Creates geographical targeting on the campaign level, params: (customer_id: string,
 campaign_id: string, clients_approval_message: string, modification_question: str, negative: Optional[boolean],
 location_names: Optional[List[str]], location_ids: Optional[List[str]])
-When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of avaliable locations and their IDs.
+When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of available locations and their IDs.
 Do NOT improvise with the location names, use the names which the client provided! If you know the clients business location, you can ask him if he wants to target that location, but do NOT execute 'create_geo_targeting_for_campaign' without checking with the client first!
 Once the client approves the locations, you can use the 'location_ids' parameter to create the geo targeting for the campaign.
 
@@ -515,16 +513,18 @@ Commands starting with 'update' can only be used for updating and commands start
 a new item. Do NOT try to use 'create' for updating or 'update' for creating a new item.
 For the actions which we do not support currently, tell the client that you currently do NOT support the wanted action,
 but if it is important to the client, you can give advice on how to do it manually within the Google Ads UI.
-"""
+"""  # nosec: [B608]
 
     @classmethod
     def get_capabilities(cls) -> str:
         return """Google Ads team capabilities:
 This team has a wide range of capabilities, including the ability to:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
-- create/update/remove campaign, ad group, ad, keyword, location targeting
+- create ad group, ad, keyword
+- update/remove campaign, ad group, ad, keyword, location targeting
 
-The only problem is that the team is very slow. So if you have a specific task which another team can do faster, you should ask them to do it.
+Use this team to optimize EXISTING campaigns, ad groups, ads, and keywords.
+Do NOT use this team if the client wants to setup a new campaign!
 """
 
     @classmethod
