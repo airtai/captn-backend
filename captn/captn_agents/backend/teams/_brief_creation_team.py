@@ -12,9 +12,9 @@ class BriefCreationTeam(Team):
     # The roles of the team members, like "admin", "manager", "analyst", etc.
     _default_roles = [
         {
-            "Name": "Copywriter",
-            "Description": """You are a Copywriter in the digital agency.
-Never introduce yourself when writing messages. E.g. do not write 'As a copywriter'""",
+            "Name": "Digitial_marketing_strategist",
+            "Description": """You are a Strategist in a digital agency.
+Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
         },
         {
             "Name": "Account_manager",
@@ -125,7 +125,7 @@ Write short and clear messages. Nobody likes to read long messages. Be concise a
 
 
 2. The MOST important part of your task is to choose the appropriate team for the task.
-ALWAYS ask the client for more information. Here is the FIRST (ad probably the only) question you should ask the client:
+ALWAYS ask the client for more information. Here is the FIRST (and probably the only) question you should ask the client:
 message:"Do you want to create a new campaign or optimize an existing one?"
 "smart_suggestions": {{
     'suggestions': ['Create new campaign', 'Optimize existing campaign'],
