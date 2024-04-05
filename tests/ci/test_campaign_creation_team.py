@@ -14,9 +14,6 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
-    _create_ad_group,
-    _create_ad_group_ad,
-    _create_ad_group_keyword,
 )
 
 
@@ -153,19 +150,19 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 ) as mock_list_accessible_customers,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission",
-                    wraps=ask_client_for_permission_mock,
+                    # wraps=ask_client_for_permission_mock,
                 ) as mock_ask_client_for_permission,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group",
-                    wraps=_create_ad_group,
+                    # wraps=_create_ad_group,
                 ) as mock_create_ad_group,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_ad",
-                    wraps=_create_ad_group_ad,
+                    # wraps=_create_ad_group_ad,
                 ) as mock_create_ad_group_ad,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword",
-                    wraps=_create_ad_group_keyword,
+                    # wraps=_create_ad_group_keyword,
                 ) as mock_create_ad_group_keyword,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page"
@@ -185,19 +182,19 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
             ):
                 mock_list_accessible_customers.return_value = ["1111"]
                 ### Delet aftter fixing gha
-                # mock_ask_client_for_permission.return_value = "yes"
-                # mock_create_ad_group.return_value = (
-                #     "Created customers/1212/adGroups/3434."
-                # )
-                # mock_create_ad_group_ad.return_value = (
-                #     "Created customers/1212/adGroupAds/3434~5656."
-                # )
-                # # create 20 keywords
-                # side_effect = [
-                #     f"Created customers/1212/adGroupCriteria/3434~{i}."
-                #     for i in range(20)
-                # ]
-                # mock_create_ad_group_keyword.side_effect = side_effect
+                mock_ask_client_for_permission.return_value = "yes"
+                mock_create_ad_group.return_value = (
+                    "Created customers/1212/adGroups/3434."
+                )
+                mock_create_ad_group_ad.return_value = (
+                    "Created customers/1212/adGroupAds/3434~5656."
+                )
+                # create 20 keywords
+                side_effect = [
+                    f"Created customers/1212/adGroupCriteria/3434~{i}."
+                    for i in range(20)
+                ]
+                mock_create_ad_group_keyword.side_effect = side_effect
                 ### Delet aftter fixing gha
                 mock_get_info_from_the_web_page.return_value = """SUMMARY:
 
