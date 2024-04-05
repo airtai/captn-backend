@@ -2,8 +2,8 @@ import json
 from os import environ
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import requests
 from pydantic import BaseModel
+from requests import get as requests_get
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
@@ -40,7 +40,7 @@ def get_login_url(
         "conv_id": conv_id,
         "force_new_login": force_new_login,
     }
-    response = requests.get(f"{BASE_URL}/login", params=params, timeout=60)
+    response = requests_get(f"{BASE_URL}/login", params=params, timeout=60)
     retval: Dict[str, str] = response.json()
     return retval
 
@@ -56,7 +56,7 @@ def list_accessible_customers(
         "user_id": user_id,
         "get_only_non_manager_accounts": get_only_non_manager_accounts,
     }
-    response = requests.get(
+    response = requests_get(
         f"{BASE_URL}/list-accessible-customers", params=params, timeout=60
     )
     if not response.ok:
@@ -100,7 +100,7 @@ def execute_query(
     if query:
         params["query"] = query
 
-    response = requests.get(f"{BASE_URL}/search", params=params, timeout=60)
+    response = requests_get(f"{BASE_URL}/search", params=params, timeout=60)
     if not response.ok:
         if AUTHENTICATION_ERROR in response.text:
             content = AUTHENTICATION_ERROR
@@ -123,7 +123,7 @@ def execute_query(
 
 
 def get_user_ids_and_emails() -> str:
-    response = requests.get(f"{BASE_URL}/get-user-ids-and-emails", timeout=60)
+    response = requests_get(f"{BASE_URL}/get-user-ids-and-emails", timeout=60)
     if not response.ok:
         raise ValueError(response.content)
     return response.json()  # type: ignore[no-any-return]
@@ -239,7 +239,7 @@ def google_ads_create_update(
     params: Dict[str, Any] = ad.model_dump()
     params["user_id"] = user_id
 
-    response = requests.get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
+    response = requests_get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
     if not response.ok:
         raise ValueError(response.content)
 

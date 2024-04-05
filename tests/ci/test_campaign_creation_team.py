@@ -211,7 +211,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                     return_value={"login_url": ALREADY_AUTHENTICATED},
                 ),  # as mock_get_login_url,
                 unittest.mock.patch(
-                    "captn.google_ads.client.requests.get",
+                    "captn.google_ads.client.requests_get",
                     return_value=MagicMock(),
                 ) as mock_requests_get,
             ):
