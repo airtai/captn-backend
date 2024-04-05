@@ -15,7 +15,7 @@ def test_execute_query_when_authentication_error_occurs_raises_value_error() -> 
         "captn.google_ads.client.get_login_url",
     ) as mock_get_login_url:
         with unittest.mock.patch(
-            "requests.get",
+            "requests_get",
         ) as mock_requests_get:
             mock_get_login_url.return_value = {"login_url": ALREADY_AUTHENTICATED}
 
