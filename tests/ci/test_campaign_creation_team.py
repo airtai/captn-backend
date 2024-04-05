@@ -15,6 +15,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
 )
+from captn.google_ads.client import ALREADY_AUTHENTICATED
 
 # _create_ad_group,
 # _create_ad_group_ad,
@@ -177,9 +178,9 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 unittest.mock.patch(
                     "captn.captn_agents.backend.teams._google_ads_team.create_campaign"
                 ) as mock_create_campaign,
-                # unittest.mock.patch(
-                #     "captn.google_ads.client.get_login_url"
-                # ) as mock_get_login_url,
+                unittest.mock.patch(
+                    "captn.google_ads.client.get_login_url"
+                ) as mock_get_login_url,
                 # unittest.mock.patch(
                 #     "captn.google_ads.client.requests.get"
                 # ) as mock_requests_get,
@@ -228,7 +229,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                     "Campaign with id 1212 has already been created."
                 )
 
-                # mock_get_login_url.return_value = {"login_url": ALREADY_AUTHENTICATED}
+                mock_get_login_url.return_value = {"login_url": ALREADY_AUTHENTICATED}
                 # mock_requests_get.return_value.ok = True
                 # mock_requests_get.return_value.json.return_value = "Resource created!"
 
