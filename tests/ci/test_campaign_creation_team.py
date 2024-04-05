@@ -14,12 +14,11 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
+    _create_ad_group,
+    _create_ad_group_ad,
+    _create_ad_group_keyword,
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
-
-# _create_ad_group,
-# _create_ad_group_ad,
-# _create_ad_group_keyword,
 
 
 class TestCampaignCreationTeam:
@@ -159,15 +158,15 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 ) as mock_ask_client_for_permission,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group",
-                    # wraps=_create_ad_group,
+                    wraps=_create_ad_group,
                 ) as mock_create_ad_group,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_ad",
-                    # wraps=_create_ad_group_ad,
+                    wraps=_create_ad_group_ad,
                 ) as mock_create_ad_group_ad,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword",
-                    # wraps=_create_ad_group_keyword,
+                    wraps=_create_ad_group_keyword,
                 ) as mock_create_ad_group_keyword,
                 unittest.mock.patch(
                     "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page"
@@ -181,25 +180,25 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 unittest.mock.patch(
                     "captn.google_ads.client.get_login_url"
                 ) as mock_get_login_url,
-                # unittest.mock.patch(
-                #     "captn.google_ads.client.requests.get"
-                # ) as mock_requests_get,
+                unittest.mock.patch(
+                    "captn.google_ads.client.requests_lib.get"
+                ) as mock_requests_get,
             ):
                 mock_list_accessible_customers.return_value = ["1111"]
                 ### Delet aftter fixing gha
-                mock_ask_client_for_permission.return_value = "yes"
-                mock_create_ad_group.return_value = (
-                    "Created customers/1212/adGroups/3434."
-                )
-                mock_create_ad_group_ad.return_value = (
-                    "Created customers/1212/adGroupAds/3434~5656."
-                )
-                # create 20 keywords
-                side_effect = [
-                    f"Created customers/1212/adGroupCriteria/3434~{i}."
-                    for i in range(20)
-                ]
-                mock_create_ad_group_keyword.side_effect = side_effect
+                # mock_ask_client_for_permission.return_value = "yes"
+                # mock_create_ad_group.return_value = (
+                #     "Created customers/1212/adGroups/3434."
+                # )
+                # mock_create_ad_group_ad.return_value = (
+                #     "Created customers/1212/adGroupAds/3434~5656."
+                # )
+                # # create 20 keywords
+                # side_effect = [
+                #     f"Created customers/1212/adGroupCriteria/3434~{i}."
+                #     for i in range(20)
+                # ]
+                # mock_create_ad_group_keyword.side_effect = side_effect
                 ### Delet aftter fixing gha
                 mock_get_info_from_the_web_page.return_value = """SUMMARY:
 
@@ -230,8 +229,8 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                 )
 
                 mock_get_login_url.return_value = {"login_url": ALREADY_AUTHENTICATED}
-                # mock_requests_get.return_value.ok = True
-                # mock_requests_get.return_value.json.return_value = "Resource created!"
+                mock_requests_get.return_value.ok = True
+                mock_requests_get.return_value.json.return_value = "Resource created!"
 
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
