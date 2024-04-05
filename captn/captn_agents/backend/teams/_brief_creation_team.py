@@ -124,8 +124,8 @@ Here is the current customers brief/information we have gathered for you as a st
 Write short and clear messages. Nobody likes to read long messages. Be concise and to the point.
 
 
-2. The MOST important part of your task is to choose the appropriate team for the task. Be 100% sure that you have chosen the right team before you proceed with the next steps.
-ALWAYS ask the client for more information e.g.
+2. The MOST important part of your task is to choose the appropriate team for the task.
+ALWAYS ask the client for more information. Here is the FIRST (ad probably the only) question you should ask the client:
 message:"Do you want to create a new campaign or optimize an existing one?"
 "smart_suggestions": {{
     'suggestions': ['Create new campaign', 'Optimize existing campaign'],
@@ -138,7 +138,8 @@ If you fail to choose the appropriate team, you will be penalized!
 3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
 {self.construct_team_names_and_descriptions_message()}
 
-4. AFTER you have chosen the team, use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
+4. AFTER the client has told you if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task,
+use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
 
 5. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
 It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
@@ -185,8 +186,6 @@ Do NOT tell the client that your job is to create a brief. The client does not n
 
 5. Ensure that your responses are formatted using markdown syntax (except for the HTML anchor tags),
 as they will be featured on a webpage to ensure a user-friendly presentation.
-
-6. You MUST check with the client if he wants to create a new campaign or optimize an existing one BEFORE delegating the task to the chosen team.
 """
 
     @property
@@ -206,4 +205,8 @@ Use this command ONLY after you have asked the client if he wants to create a ne
 
 4. 'delagate_task': Delagate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
 summary_from_web_page contains the summary retrieved from the clients web page by using the 'get_info_from_the_web_page' command.
+
+5. NEVER ask the client questions like "Please provide the following information for the customer brief:..."
+It is your job to gather the information and create the brief. The client does not need to know that you are creating a brief.
+If you need additional information, use the 'reply_to_client' command and ask the client for the information you need, but ask him one question at a time.
 """

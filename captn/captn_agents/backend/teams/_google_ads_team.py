@@ -523,7 +523,7 @@ This team has a wide range of capabilities, including the ability to:
 - create ad group, ad, keyword
 - update/remove campaign, ad group, ad, keyword, location targeting
 
-Use this team to optimize existing campaigns, ad groups, ads, and keywords.
+Use this team to optimize EXISTING campaigns, ad groups, ads, and keywords.
 Do NOT use this team if the client wants to setup a new campaign!
 """
 
