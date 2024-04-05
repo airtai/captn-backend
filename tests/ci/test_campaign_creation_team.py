@@ -177,9 +177,9 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 unittest.mock.patch(
                     "captn.google_ads.client.get_login_url"
                 ) as mock_get_login_url,
-                unittest.mock.patch(
-                    "captn.google_ads.client.requests.get"
-                ) as mock_requests_get,
+                # unittest.mock.patch(
+                #     "captn.google_ads.client.requests.get"
+                # ) as mock_requests_get,
             ):
                 mock_list_accessible_customers.return_value = ["1111"]
 
@@ -226,8 +226,8 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                 )
 
                 mock_get_login_url.return_value = {"login_url": ALREADY_AUTHENTICATED}
-                mock_requests_get.return_value.ok = True
-                mock_requests_get.return_value.json.return_value = "Resource created!"
+                # mock_requests_get.return_value.ok = True
+                # mock_requests_get.return_value.json.return_value = "Resource created!"
 
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
