@@ -993,9 +993,9 @@ def execute_daily_analysis(
                 print(f"Skipping user_id: {user_id} - email {email}")
                 continue
 
+            conv_id, conv_uuid = _get_conv_id_and_uuid(user_id=user_id, email=email)
+            daily_analysis_team = None
             try:
-                daily_analysis_team = None
-                conv_id, conv_uuid = _get_conv_id_and_uuid(user_id=user_id, email=email)
                 login_url_response = get_login_url(
                     user_id=user_id, conv_id=conv_id
                 ).get("login_url")
