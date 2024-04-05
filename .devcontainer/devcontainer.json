@@ -8,7 +8,8 @@
     "remoteEnv": {
         "AZURE_OPENAI_API_KEY": "${localEnv:AZURE_OPENAI_API_KEY}",
         "DEVELOPER_TOKEN": "${localEnv:DEVELOPER_TOKEN}",
-        "INFOBIP_API_KEY": "${localEnv:INFOBIP_API_KEY}"
+        "INFOBIP_API_KEY": "${localEnv:INFOBIP_API_KEY}",
+        "GOOGLE_ADS_CLIENT_SECRET": "${localEnv:GOOGLE_ADS_CLIENT_SECRET}"
     },
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
@@ -20,7 +21,7 @@
             "userGid": "1000"
             // "upgradePackages": "true"
         },
-        "ghcr.io/devcontainers/features/python:1": {},
+        // "ghcr.io/devcontainers/features/python:1": {},
         "ghcr.io/devcontainers/features/node:1": "none",
         "ghcr.io/devcontainers/features/git:1": {
             "version": "latest",
