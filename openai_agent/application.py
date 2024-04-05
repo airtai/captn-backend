@@ -38,7 +38,7 @@ Note:
 """
 
 CONVERSATION_NAME_DESCRIPTION = """
-Generate a short, clear name for the conversation based on the customer's business type and goal from their brief. The name should be 1-3 words long and up to 25 characters. This name will help identify the conversation easily in the future.
+Generate a short, clear name for the conversation based on the customer's business goals from their brief. The name should be 1-3 words long and up to 25 characters. This name will help identify the conversation easily in the future.
 
 Examples:
 - Tech Startup increasing user base: "Grow User Base"
