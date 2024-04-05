@@ -13,6 +13,16 @@ repos:
         exclude: 'docs/mkdocs.yml'
     -   id: check-added-large-files
 
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+    -   id: codespell
+        args: []#[--ignore-words=.codespell-whitelist.txt]
+        exclude: |
+            (?x)^(
+                docs/overrides/home.html
+            )$
+
 -   repo: local
     hooks:
     -   id: lint

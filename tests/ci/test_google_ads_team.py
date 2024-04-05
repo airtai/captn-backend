@@ -83,11 +83,14 @@ class TestGoogleAdsTeam:
         micros_var_name: str,
         **kwargs: Any,
     ) -> None:
-        with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._google_ads_team.get_customer_currency"
-        ) as mock_get_customer_currency, unittest.mock.patch(
-            "captn.captn_agents.backend.teams._google_ads_team.google_ads_create_update"
-        ) as mock_google_ads_create_update:
+        with (
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._google_ads_team.get_customer_currency"
+            ) as mock_get_customer_currency,
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._google_ads_team.google_ads_create_update"
+            ) as mock_google_ads_create_update,
+        ):
             mock_get_customer_currency.return_value = "EUR"
             mock_google_ads_create_update.return_value = "Great success!"
 

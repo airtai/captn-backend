@@ -9,7 +9,7 @@ from ..config import Config
 _completions_create_original = autogen.oai.client.OpenAIClient.create
 
 
-# WORKAROUND for consistent 500 eror code when using openai functions
+# WORKAROUND for consistent 500 error code when using openai functions
 @patch  # type: ignore
 def create(
     self: autogen.oai.client.OpenAIClient,
@@ -62,7 +62,7 @@ class Team:
     @classmethod
     def get_registred_team_name(cls) -> str:
         if cls not in cls._inverse_team_registry:
-            raise ValueError(f"Team class '{cls}' is not registred")
+            raise ValueError(f"Team class '{cls}' is not registered")
         return cls._inverse_team_registry[cls]
 
     @classmethod
@@ -221,7 +221,7 @@ class Team:
         name = name.lower().replace(" ", "_")
         system_message = f"""You are {name}, {description}
 
-Your task is to chat with other team mambers and try to solve the given task.
+Your task is to chat with other team members and try to solve the given task.
 Do NOT try to finish the task until other team members give their opinion.
 """
 
@@ -264,10 +264,8 @@ Play to your strengths as an LLM and pursue simple strategies with no legal comp
     def _constraints(self) -> str:
         return """## Constraints
 You operate within the following constraints:
-1. ~4000 word limit for short term memory. Your short term memory is short, so immediately save important information to files.
-2. If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.
-3. You can ask and answer questions from other team members or suggest function listed below e.g. command_name
-4. The context size is limited so try to be as concise in discussinos as possible. Do not reapeat yourself or others
+1. If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.
+2. The context size is limited so try to be as concise in discussinos as possible. Do NOT repeat yourself or others.
 """
 
     @property
@@ -278,9 +276,7 @@ You operate within the following constraints:
     def _resources(self) -> str:
         return """## Resources
 You can leverage access to the following resources:
-1. Long Term memory management.
-2. File output.
-3. Command execution
+1. Command execution
 """
 
     @property

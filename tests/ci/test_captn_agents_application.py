@@ -276,21 +276,29 @@ class TestConsoleIOWithWebsockets:
             )
 
             with ws_connect(uri) as websocket:
-                with unittest.mock.patch(
-                    "captn.captn_agents.application.start_or_continue_conversation"
-                ) as mock_start_or_continue_conversation, unittest.mock.patch(
-                    "captn.captn_agents.application.OPENAI_API_STATUS_ERROR"
-                ) as mock_openai_api_status_error, unittest.mock.patch(
-                    "captn.captn_agents.application.THREE_IN_A_ROW_EXCEPTIONS"
-                ) as mock_three_in_a_row_exceptions, unittest.mock.patch(
-                    "captn.captn_agents.application.BAD_REQUEST_ERRORS"
-                ) as mock_bad_request_errors, unittest.mock.patch(
-                    "captn.captn_agents.application.REGULAR_EXCEPTIONS"
-                ) as mock_regular_exceptions, unittest.mock.patch(
-                    "captn.captn_agents.application.INVALID_MESSAGE_IN_IOSTREAM"
-                ) as mock_invalid_message_in_iostream, unittest.mock.patch(
-                    "captn.captn_agents.application.RANDOM_EXCEPTIONS"
-                ) as mock_random_exceptions:
+                with (
+                    unittest.mock.patch(
+                        "captn.captn_agents.application.start_or_continue_conversation"
+                    ) as mock_start_or_continue_conversation,
+                    unittest.mock.patch(
+                        "captn.captn_agents.application.OPENAI_API_STATUS_ERROR"
+                    ) as mock_openai_api_status_error,
+                    unittest.mock.patch(
+                        "captn.captn_agents.application.THREE_IN_A_ROW_EXCEPTIONS"
+                    ) as mock_three_in_a_row_exceptions,
+                    unittest.mock.patch(
+                        "captn.captn_agents.application.BAD_REQUEST_ERRORS"
+                    ) as mock_bad_request_errors,
+                    unittest.mock.patch(
+                        "captn.captn_agents.application.REGULAR_EXCEPTIONS"
+                    ) as mock_regular_exceptions,
+                    unittest.mock.patch(
+                        "captn.captn_agents.application.INVALID_MESSAGE_IN_IOSTREAM"
+                    ) as mock_invalid_message_in_iostream,
+                    unittest.mock.patch(
+                        "captn.captn_agents.application.RANDOM_EXCEPTIONS"
+                    ) as mock_random_exceptions,
+                ):
                     b_r_error_message = "The operation was timeout."
                     b_r_request = Request(
                         method="POST",

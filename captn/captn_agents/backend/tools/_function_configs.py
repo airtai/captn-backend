@@ -4,123 +4,31 @@ from ._functions import (
     smart_suggestions_description,
 )
 
-# TODO: complete this
-__all__ = ("ask_for_additional_info_config",)
+__all__ = (
+    "ask_client_for_permission_config",
+    "change_google_account_config",
+    "create_ad_copy_headline_or_description_config",
+    "create_ad_group_ad_config",
+    "create_ad_group_config",
+    "create_campaign_config",
+    "create_geo_targeting_for_campaign_config",
+    "create_keyword_for_ad_group_config",
+    "create_negative_keyword_for_campaign_config",
+    "execute_query_config",
+    "get_info_from_the_web_page_config",
+    "list_accessible_customers_config",
+    "remove_ad_copy_headline_or_description_config",
+    "remove_google_ads_resource_config",
+    "reply_to_client_2_config",
+    "send_email_config",
+    "update_ad_copy_config",
+    "update_ad_group_ad_config",
+    "update_ad_group_config",
+    "update_ad_group_criterion_config",
+    "update_campaign_config",
+    "update_campaigns_negative_keywords_config",
+)
 
-ask_for_additional_info_config = {
-    "name": "ask_for_additional_info",
-    "description": "Ask your supervisor (a person outside of your team) for additional information",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "question": {
-                "type": "string",
-                "description": "Question for the supervisor",
-            },
-        },
-        "required": ["question"],
-    },
-}
-
-list_files_config = {
-    "name": "list_files",
-    "description": "List all the files in the directory",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "directory_path": {
-                "type": "string",
-                "description": "The path to the directory",
-            },
-        },
-        "required": ["directory_path"],
-    },
-}
-
-write_to_file_config = {
-    "name": "write_to_file",
-    "description": "Writes the content into a file",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "filename": {
-                "type": "string",
-                "description": "The name of the file",
-            },
-            "content": {
-                "type": "string",
-                "description": "The content which neeeds to be written into the file",
-            },
-        },
-        "required": ["filename", "content"],
-    },
-}
-
-read_file_config = {
-    "name": "read_file",
-    "description": "Reads the content of the file",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "filename": {
-                "type": "string",
-                "description": "The name of the file",
-            },
-        },
-        "required": ["filename"],
-    },
-}
-
-
-execute_command_config = {
-    "name": "execute_command",
-    "description": "Command which needs to be executed",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "command": {
-                "type": "string",
-                "description": "Command which needs to be executed e.g. '['pytest']'",
-            },
-        },
-        "required": ["command"],
-    },
-}
-
-
-create_team_config = {
-    "name": "create_team",
-    "description": "Create an ad-hoc team to solve the problem",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "json_as_a_string": {
-                "type": "string",
-                "description": "a JSON-encoded string with all parameters",
-            },
-        },
-        "required": ["json_as_a_string"],
-    },
-}
-
-answer_to_team_lead_question_config = {
-    "name": "answer_to_team_lead_question",
-    "description": "Answer to the team leaders question",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "answer": {
-                "type": "string",
-                "description": "The answer to the team leaders question",
-            },
-            "team_name": {
-                "type": "string",
-                "description": "Name of the team which asked the question",
-            },
-        },
-        "required": ["answer", "team_name"],
-    },
-}
 
 change_google_account_config = {
     "name": "change_google_account",
@@ -159,70 +67,6 @@ Unless told differently, do NOT retrieve information about the REMOVED resources
 NEVER try to retrieve field "ad_group_ad.ad.strength" because field "strength" does NOT exist!""",
             },
         },
-    },
-}
-
-create_google_ads_team_config = {
-    "name": "create_google_ads_team",
-    "description": "Create Google Ads team for solving the task",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "task": {
-                "type": "string",
-                "description": "A task which needs to be solved",
-            },
-        },
-        "required": ["task"],
-    },
-}
-
-calculate_credit_config = {
-    "name": "calculate_credit",
-    "description": "Calculate the credit",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "credit_duration": {
-                "type": "string",
-                "description": "Loan repayment term",
-            },
-            "amount_euro": {
-                "type": "string",
-                "description": "Total loan amount in euros",
-            },
-        },
-        "required": ["credit_duration", "amount_euro"],
-    },
-}
-
-create_banking_credit_calculation_team_config = {
-    "name": "create_banking_credit_calculation_team",
-    "description": "Create banking team dedicated for the credit calculation",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "task": {
-                "type": "string",
-                "description": "A task which needs to be solved",
-            },
-        },
-        "required": ["task"],
-    },
-}
-
-reply_to_client_config = {
-    "name": "reply_to_client",
-    "description": "Respond to the client (answer to his task or question for additional information)",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "message": {
-                "type": "string",
-                "description": "Message for the client",
-            },
-        },
-        "required": ["message"],
     },
 }
 
@@ -680,7 +524,7 @@ reply_to_client_2_config = {
             "message": {
                 "type": "string",
                 "description": """Message for the client.
-Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!""",
+Make sure you add all the information which the client needs to know, because the client does NOT see the internal team messages!""",
             },
             "completed": {
                 "type": "boolean",
@@ -709,7 +553,7 @@ At the end of the message, inform the client that the modifications will be made
             },
             "resource_details": {
                 "type": "string",
-                "description": """Make sure you add all the information which the client needs to know, beacuse the client does NOT see the internal team messages!
+                "description": """Make sure you add all the information which the client needs to know, because the client does NOT see the internal team messages!
 You MUST also describe to the client the current situation for that resource.
 If you want to modify the Ad Copy, you MUST provide the current Ad Copy details, e.g:
 The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are 'h1', 'h2' and 'h3'. The descriptions are 'd1' and 'd2'.
@@ -727,7 +571,7 @@ Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '20
 
 e.g. for AdGroupAd:
 'final_url' will be set to 'https://my-web-page.com'
-Hedlines will be extended wit a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
+Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
 
 Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.""",
             },
@@ -840,7 +684,7 @@ create_keyword_for_ad_group_config = {
 create_geo_targeting_for_campaign_config = {
     "name": "create_geo_targeting_for_campaign",
     "description": f"""Creates geographical targeting on the campaign level.
-When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of avaliable locations and their IDs.
+When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of available locations and their IDs.
 Once the client approves the locations, you can use the 'location_ids' parameter to create the geo targeting for the campaign.
 location_ids and location_names parameters are mutually exclusive and they can NOT be set to None at the same time.
 {MODIFICATION_WARNING}""",
@@ -895,7 +739,7 @@ Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'
             "modification_question": properties_config["modification_question"],
             "parent_id": {
                 "type": "string",
-                "description": """Id of the parent resorce, campaign and ad group do not have parent,
+                "description": """Id of the parent resource, campaign and ad group do not have parent,
 ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaign_id""",
             },
         },

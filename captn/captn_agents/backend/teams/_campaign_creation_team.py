@@ -13,7 +13,11 @@ from ..tools._function_configs import (
 from ._google_ads_team import (
     get_campaign_creation_team_shared_functions,
 )
-from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
+from ._shared_prompts import (
+    GET_INFO_FROM_THE_WEB_COMMAND,
+    MODIFICATION_FUNCTIONS_INSTRUCTIONS,
+    REPLY_TO_CLIENT_COMMAND,
+)
 from ._team import Team
 
 __all__ = ("CampaignCreationTeam",)
@@ -123,14 +127,15 @@ The client has sent you the task to create a digital campaign for them. And this
     @property
     def _guidelines(self) -> str:
         return """## Guidelines
+0. Never repeat yourself or previous messages.
 1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
 TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
-reasoning behind it, and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION. The TEAM MEMBER
+reasoning behind it (as short as possible), and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION (also as short as possible). The TEAM MEMBER
 proposing the ORIGINAL SOLUTION should take those considerations into account and adjust the SOLUTION accordingly.
 Once the solution is modified, the team should REPEAT the process until the team reaches a CONSENSUS. The team should
 then move on to the next step. If the team is unable to reach a consensus, the account manager should make the final
 call. If you need additional information, use the 'reply_to_client' command to ask the client for it.
-Also, if a Website is provided in the client brief, use the 'get_info_from_the_web_page' command to get the summary of the web page.
+Also, if a Website is provided, you can use the 'get_info_from_the_web_page' command to get the summary of the web page.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
 3. If you receive a login url, forward it to the client by using the 'reply_to_client' function.
 Do NOT use smart suggestions when forwarding the login url to the client!
@@ -157,10 +162,10 @@ Use it only to retrieve the information about the currency and already existing 
 34. Ad rules:
 - MINIMUM 3 and MAXIMUM 15 headlines.
 - MINIMUM 2 and MAXIMUM 4 descriptions.
-It is recomended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
+It is recommended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
 36. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
 37. Use the 'get_info_from_the_web_page' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
-e.g. if you know the final_url, you can use this command to get the summary of the web page and use it for SUGGESTING (NEVER modify without permision!) keywords, headlines, descriptions etc.
+e.g. if you know the final_url, you can use this command to get the summary of the web page and find the relevant information for ad group (and its ad and keywords).
 You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
 and try get_info_from_the_web_page. Only if 'get_info_from_the_web_page' command does not provide you with enough information (or it fails), ask the client for the additional information about his business/web page etc.
 40. Before setting any kind of budget, check the default currency from the customer table and convert the budget to that currency.
@@ -172,6 +177,8 @@ Here is a list of things which you CAN do:
 - retrieve the information about your campaigns, ad groups, ads, keywords etc.
 - create campaigns
 - Create Ad Group, Ad and keywords by using the following command create_ad_group_with_ad_and_keywords
+You can NOT do anything else, so do not suggest changes which you can NOT perform.
+- e.g. you can NOT set Google ads targeting, negative keywords, ad extensions etc.
 
 here is an example of how to use the create_ad_group_with_ad_and_keywords command:
 ad_group_with_ad_and_keywords must be a json with the following structure:
@@ -239,8 +246,11 @@ The first and the MOST IMPORTANT thing is that you can NOT make any permanent ch
 Make sure that you explicitly tell the client which changes you want, which resource and attribute will be affected and wait for the permission!
 
 This is a template which you should follow when you are asked to optimize campaigns:
-- The FIRST step should ALWAYS be retrieving the information about clients business by using 'get_info_from_the_web_page' command. If the client provides you some url, use this command to get the summary of the web page.
+If you did not receive the summary of the clients web page, the FIRST step should do is to retrieve the information about clients business by using 'get_info_from_the_web_page' command.
 - The SECOND step is recommending and creating a new campaign
+- The THIRD step is recommending and creating new ad group with ad and keywords (create only ONE ad group with ad and keywords)
+- Once you have created the campaign, ad group, ad and keywords. Write a detailed summary about the campaign which you have created and tell the client that you have finished the task.
+- If the client wants to make some changes/updates, tell him to create a new chat by clicking on the "New chat" and to ask for the changes/updates there.
 """
 
     @property
@@ -255,7 +265,7 @@ All team members have access to the following command:
 
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 params: (customer_id: str, resource_details: str, proposed_changes: str)
-'proposed_changes' parameter must contain info about each field which you want to modify and it MUST refernce it by the EXACT name as the one you are going to use in the modification method.
+'proposed_changes' parameter must contain info about each field which you want to modify and it MUST reference it by the EXACT name as the one you are going to use in the modification method.
 
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
@@ -269,6 +279,7 @@ Example of customer_ids parameter: ["12", "44", "111"]
 6. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
 Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
 
+{MODIFICATION_FUNCTIONS_INSTRUCTIONS}
 7. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
 clients_approval_message: string, modification_question: str)
@@ -314,20 +325,21 @@ When asking the client for the approval, you must explicitly tell him which fina
     @classmethod
     def get_capabilities(cls) -> str:
         return """Campaign Creation Team capabilities:
-This team is perfect for creating Google Ads campaigns and everything that comes with it.
+This team is the BEST choice for creating NEW Google Ads campaigns and everything that comes with it.
 - Get the information about the client's Google Ads account (campaigns, ad groups, ads, keywords etc.)
 - Create new campaign
-- Create new ad groups
-- Create new ads
+- Create new ad group
+- Create new ad
 - Create new keywords
 
-The main benefit of this team is that they get the job very QUICKLY!
+The main benefit of this team is that they can create a new campaign from scratch QUICKLY.
+But if you want to optimize an existing campaign or make some changes this is NOT the right team for you.
 """
 
     @classmethod
     def get_brief_template(cls) -> str:
         return """Here is a template for the customer brief:
-A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
+A structured customer brief, adhering to industry standards for a digital marketing campaign. You must fill in the following details based on the client's requirements:
 
 Business:
 Goal:
@@ -336,6 +348,13 @@ Website:
 Digital Marketing Objectives:
 Next Steps:
 Any Other Information Related to Customer Brief:
+Budget: (recommended 3eur per day)
+
+
+Not needed info:
+- duration of the campaign
+- target audience
+- conversion tracking
 
 Please extract and represent relevant details from the conversation under these headings
 """
