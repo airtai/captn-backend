@@ -15,3 +15,5 @@ tmp*
 
 
 *_data/
+
+client_secret.json
