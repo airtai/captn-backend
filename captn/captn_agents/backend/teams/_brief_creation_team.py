@@ -152,11 +152,11 @@ Team members should discuss and agree on the content of the brief before sending
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan
-- Choose the appropriate team
+- Choose the appropriate team depending on the clients answer
 - Get the brief template
 - Get information from the web page (do NOT forget this step, it is the MOST IMPORTANT step!)
 - Create a detailed brief
-- Delagate the task to the chosen team. Use this command ONLY after you have retrieved the information from the web page and created the brief.
+- Delagate the task to the chosen team. Use this command ONLY after you have choosed the team, retrieved the information from the web page and created the brief.
 
 
 ## Additional Guidelines

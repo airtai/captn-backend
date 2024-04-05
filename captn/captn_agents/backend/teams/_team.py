@@ -264,10 +264,8 @@ Play to your strengths as an LLM and pursue simple strategies with no legal comp
     def _constraints(self) -> str:
         return """## Constraints
 You operate within the following constraints:
-1. ~4000 word limit for short term memory. Your short term memory is short, so immediately save important information to files.
-2. If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.
-3. You can ask and answer questions from other team members or suggest function listed below e.g. command_name
-4. The context size is limited so try to be as concise in discussinos as possible. Do not reapeat yourself or others
+1. If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.
+2. The context size is limited so try to be as concise in discussinos as possible. Do NOT reapeat yourself or others.
 """
 
     @property
@@ -278,9 +276,7 @@ You operate within the following constraints:
     def _resources(self) -> str:
         return """## Resources
 You can leverage access to the following resources:
-1. Long Term memory management.
-2. File output.
-3. Command execution
+1. Command execution
 """
 
     @property
