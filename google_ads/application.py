@@ -243,7 +243,7 @@ async def _check_if_customer_id_is_manager_or_exception_is_raised(
                 return False
     except Exception as e:
         print(
-            f"Skiping the following customer_id: {customer_id}, user_id: {user_id} because of the exception:\n{e}"
+            f"Skipping the following customer_id: {customer_id}, user_id: {user_id} because of the exception:\n{e}"
         )
     return True
 

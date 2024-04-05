@@ -16,5 +16,5 @@ tmp*
 
 *_data/
 
-# Google OAuth client secret
+# Google Ads client secret
 client_secret.json
