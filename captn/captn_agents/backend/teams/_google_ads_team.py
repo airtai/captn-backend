@@ -143,21 +143,15 @@ sure it is understandable by non-experts.
         )
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
-        # name = GoogleAdsTeam._get_new_team_name()
-        name = Team.get_user_conv_team_name(
-            name_prefix=GoogleAdsTeam._get_team_name_prefix(),
+        super().__init__(
             user_id=user_id,
             conv_id=conv_id,
-        )
-
-        super().__init__(
             roles=roles,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            name=name,
             clients_question_answer_list=clients_question_answer_list,
         )
         self.conv_id = conv_id
@@ -168,16 +162,6 @@ sure it is understandable by non-experts.
 
         self._create_members()
         self._create_initial_message()
-
-    @staticmethod
-    def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
-        content = x.get("content")
-
-        return content is not None and "terminate_groupchat" in content
-
-    @classmethod
-    def _get_team_name_prefix(cls) -> str:
-        return "google_ads_team"
 
     @property
     def _task(self) -> str:
@@ -533,6 +517,32 @@ For the actions which we do not support currently, tell the client that you curr
 but if it is important to the client, you can give advice on how to do it manually within the Google Ads UI.
 """
 
+    @classmethod
+    def get_capabilities(cls) -> str:
+        return """Google Ads team capabilities:
+This team has a wide range of capabilities, including the ability to:
+- retrieve the information about your campaigns, ad groups, ads, keywords etc.
+- create/update/remove campaign, ad group, ad, keyword, location targeting
+
+The only problem is that the team is very slow. So if you have a specific task which another team can do faster, you should ask them to do it.
+"""
+
+    @classmethod
+    def get_brief_template(cls) -> str:
+        return """Here is a template for the customer brief:
+A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
+
+Business:
+Goal:
+Current Situation:
+Website:
+Digital Marketing Objectives:
+Next Steps:
+Any Other Information Related to Customer Brief:
+
+Please extract and represent relevant details from the conversation under these headings
+"""
+
 
 def string_to_list(
     customer_ids: Optional[Union[List[str], str]],
@@ -562,7 +572,7 @@ def get_campaign_creation_team_shared_functions(
         "list_accessible_customers": lambda: list_accessible_customers(
             user_id=user_id, conv_id=conv_id
         ),
-        "execute_query": lambda customer_ids=None, query=None: execute_query(  # type: ignore
+        "execute_query": lambda customer_ids=None, query=None: execute_query(
             user_id=user_id,
             conv_id=conv_id,
             customer_ids=string_to_list(customer_ids),
@@ -1148,15 +1158,3 @@ def _get_update_ad_copy(
         )
 
     return _update_ad_copy
-
-
-def answer_the_question(answer: str, team_name: str) -> str:
-    answer = answer.strip()
-    google_ads_team: GoogleAdsTeam = Team.get_team(team_name)  # type: ignore
-    google_ads_team.update_clients_question_answer_list(answer)
-
-    google_ads_team.continue_chat(message=answer)
-
-    last_message = google_ads_team.get_last_message()
-
-    return last_message

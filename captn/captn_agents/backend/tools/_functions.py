@@ -47,7 +47,6 @@ class TeamResponse(BaseModel):
     terminate_groupchat: bool
 
 
-# @agent.register_for_llm(description=reply_to_client_2_desc)
 def reply_to_client_2(
     message: Annotated[str, "Message for the client"],
     completed: Annotated[
@@ -120,7 +119,22 @@ llm_config_gpt_3_5 = {
 }
 
 
-def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str:
+def get_info_from_the_web_page(
+    url: Annotated[str, "The url of the web page which needs to be summarized"],
+    task: Annotated[
+        str,
+        """Task which needs to be solved.
+This parameter should NOT mention that we are working on some Google Ads task.
+The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
+""",
+    ],
+    task_guidelines: Annotated[
+        str,
+        """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
+This parameter should NOT mention that we are working on some Google Ads task.
+""",
+    ],
+) -> str:
     google_ads_url = "ads.google.com"
     if google_ads_url in url:
         return "FAILED: This function should NOT be used for scraping google ads!"

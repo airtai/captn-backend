@@ -1,12 +1,11 @@
 import unittest
-from tempfile import TemporaryDirectory
+from datetime import datetime
 from typing import Callable, Dict
 
 import autogen
 import openai
 import pytest
-from autogen.cache import Cache
-from autogen.io.websockets import IOStream, IOWebsockets
+from autogen.io.websockets import IOWebsockets
 from httpx import Request, Response
 from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
@@ -16,68 +15,10 @@ from captn.captn_agents.application import (
     RETRY_MESSAGE,
     CaptnAgentRequest,
     _get_message,
-    chat,
     on_connect,
 )
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._functions import TeamResponse
-
-
-def test_chat_when_openai_bad_request_is_raised() -> None:
-    with unittest.mock.patch(
-        "captn.captn_agents.application.start_or_continue_conversation"
-    ) as mock_start_or_continue_conversation:
-        error_message = "Bad Request"
-        request = Request(
-            method="POST",
-            url="",
-        )
-        response = Response(status_code=400, request=request)
-        mock_start_or_continue_conversation.side_effect = BadRequestError(
-            message=error_message, response=response, body=None
-        )
-
-        captn_request = CaptnAgentRequest(
-            message="This is my task",
-            user_id=-1,
-            conv_id=-1,
-            all_messages=[
-                {
-                    "role": "assistant",
-                    "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
-                },
-                {
-                    "role": "user",
-                    "content": "I want to Remove 'Free' keyword because it is not performing well",
-                },
-            ],
-            agent_chat_history='[{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]',
-            is_continue_daily_analysis=False,
-        )
-        with pytest.raises(BadRequestError):
-            chat(request=captn_request)
-
-        assert mock_start_or_continue_conversation.call_count == 2
-        mock_start_or_continue_conversation.assert_has_calls(
-            [
-                unittest.mock.call(
-                    user_id=-1,
-                    conv_id=-1,
-                    task="This is my task",
-                    max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
-                ),
-                unittest.mock.call(
-                    user_id=-1,
-                    conv_id=-1,
-                    task=RETRY_MESSAGE,  # The second call is a retry message
-                    max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
-                ),
-            ]
-        )
 
 
 class TestConsoleIOWithWebsockets:
@@ -112,60 +53,57 @@ class TestConsoleIOWithWebsockets:
             iostream: IOWebsockets, success_dict: Dict[str, bool] = success_dict
         ) -> None:
             try:
-                with IOStream.set_default(iostream):
-                    print(
-                        f" - on_connect(): Connected to client using IOWebsockets {iostream}",
-                        flush=True,
+                print(
+                    f" - on_connect(): Connected to client using IOWebsockets {iostream}",
+                    flush=True,
+                )
+
+                print(" - on_connect(): Receiving message from client.", flush=True)
+
+                initial_msg = iostream.input()
+
+                config = Config()
+
+                llm_config = {
+                    "config_list": config.config_list_gpt_3_5,
+                    "stream": True,
+                }
+
+                agent = autogen.ConversableAgent(
+                    name="chatbot",
+                    system_message="Complete a task given to you and reply TERMINATE when the task is done.",
+                    llm_config=llm_config,
+                )
+
+                # create a UserProxyAgent instance named "user_proxy"
+                user_proxy = autogen.UserProxyAgent(
+                    name="user_proxy",
+                    system_message="A proxy for the user.",
+                    is_termination_msg=lambda x: x.get("content", "")
+                    and x.get("content", "").rstrip().endswith("TERMINATE"),
+                    human_input_mode="NEVER",
+                    max_consecutive_auto_reply=10,
+                    code_execution_config=False,
+                )
+
+                @user_proxy.register_for_execution()  # type: ignore[misc]
+                @agent.register_for_llm(description="Weather forecats for a city")  # type: ignore[misc]
+                def weather_forecast(city: str) -> str:
+                    return (
+                        f"The weather forecast for {city} at {datetime.now()} is sunny."
                     )
 
-                    print(" - on_connect(): Receiving message from client.", flush=True)
+                print(
+                    f" - on_connect(): Initiating chat with agent {agent} using message '{initial_msg}'",
+                    flush=True,
+                )
+                user_proxy.initiate_chat(  # noqa: F704
+                    agent,
+                    message=initial_msg,
+                )
 
-                    initial_msg = iostream.input()
-
-                    config = Config()
-
-                    llm_config = {
-                        "config_list": config.config_list_gpt_3_5,
-                        "stream": True,
-                    }
-
-                    agent = autogen.ConversableAgent(
-                        name="chatbot",
-                        system_message="Complete a task given to you and reply TERMINATE when the task is done.",
-                        llm_config=llm_config,
-                    )
-
-                    # create a UserProxyAgent instance named "user_proxy"
-                    user_proxy = autogen.UserProxyAgent(
-                        name="user_proxy",
-                        system_message="A proxy for the user.",
-                        is_termination_msg=lambda x: x.get("content", "")
-                        and x.get("content", "").rstrip().endswith("TERMINATE"),
-                        human_input_mode="NEVER",
-                        max_consecutive_auto_reply=10,
-                        code_execution_config=False,
-                    )
-
-                    @user_proxy.register_for_execution()  # type: ignore[misc]
-                    @agent.register_for_llm(description="Weather forecats for a city")  # type: ignore[misc]
-                    def weather_forecast(city: str) -> str:
-                        return f"The weather forecast for {city} is sunny."
-
-                    # we will use a temporary directory as the cache path root to ensure fresh completion each time
-                    with TemporaryDirectory() as cache_path_root:
-                        with Cache.disk(cache_path_root=cache_path_root) as cache:
-                            print(
-                                f" - on_connect(): Initiating chat with agent {agent} using message '{initial_msg}'",
-                                flush=True,
-                            )
-                            user_proxy.initiate_chat(  # noqa: F704
-                                agent,
-                                message=initial_msg,
-                                cache=cache,
-                            )
-
-                    success_dict["success"] = True
-                    return
+                success_dict["success"] = True
+                return
             except Exception as e:
                 print(f" - on_connect(): Exception occurred: {e}", flush=True)
                 raise
@@ -191,9 +129,6 @@ class TestConsoleIOWithWebsockets:
                         if isinstance(message, bytes)
                         else message
                     )
-                    # drop the newline character
-                    if message.endswith("\n"):
-                        message = message[:-1]
 
                     print(message, end="", flush=True)
 
@@ -311,24 +246,21 @@ class TestConsoleIOWithWebsockets:
                     conv_id=1,
                     task=message,
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    registred_team_name="default_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
                     conv_id=1,
                     task=message,
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    registred_team_name="default_team",
                 ),
                 unittest.mock.call(
                     user_id=1,
                     conv_id=1,
                     task=RETRY_MESSAGE,
                     max_round=80,
-                    human_input_mode="NEVER",
-                    class_name="default_team",
+                    registred_team_name="default_team",
                 ),
             ]
         )

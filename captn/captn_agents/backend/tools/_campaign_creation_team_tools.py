@@ -191,7 +191,7 @@ def _create_ad_group_keywords(
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
-        response += f"Keyword: {keyword_response}\n"  # type: ignore
+        response += f"Keyword: {keyword_response}\n"
     return response
 
 
