@@ -11,21 +11,11 @@ from ...model import SmartSuggestions
 from ..config import Config
 
 __all__ = (
-    "ask_for_additional_info",
-    "reply_to_client",
     "reply_to_client_2",
     "ask_client_for_permission",
     "get_info_from_the_web_page",
     "send_email",
 )
-
-
-def ask_for_additional_info(question: str) -> str:
-    return f"QUESTION FROM ANOTHER TEAM:\n{question}\nPAUSE"
-
-
-def reply_to_client(message: str) -> str:
-    return f"{message}\nPAUSE"
 
 
 reply_to_client_2_description = """Respond to the client (answer to his task or question for additional information).
