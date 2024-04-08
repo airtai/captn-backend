@@ -1,3 +1,4 @@
+import copy
 import json
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
@@ -29,6 +30,7 @@ def create(
     )
     print(f"Tokens per request: {tokens_per_request}")
 
+    # print(f"Request: {params['messages']}")
     return _completions_create_original(self, params=params)
 
 
@@ -123,6 +125,7 @@ class Team:
         human_input_mode: str = "NEVER",
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
         use_user_proxy: bool = False,
+        speaker_selection_method: Optional[str] = "auto",
     ):
         self.user_id = user_id
         self.conv_id = conv_id
@@ -142,6 +145,7 @@ class Team:
 
         self.name = Team.construct_team_name(user_id=user_id, conv_id=conv_id)
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
+        self.speaker_selection_method = speaker_selection_method
         Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
     @classmethod
@@ -184,7 +188,11 @@ class Team:
         manager_llm_config.pop("tools", None)
 
         self.groupchat = autogen.GroupChat(
-            agents=self.members, messages=[], max_round=self.max_round
+            agents=self.members,
+            messages=[],
+            max_round=self.max_round,
+            speaker_selection_method=self.speaker_selection_method,
+            allow_repeat_speaker=False,
         )
         self.manager = autogen.GroupChatManager(
             groupchat=self.groupchat,
@@ -230,17 +238,17 @@ Do NOT try to finish the task until other team members give their opinion.
                 human_input_mode=self.human_input_mode,
                 name=name,
                 llm_config=False,
-                system_message=system_message,
+                # system_message=system_message,
                 is_termination_msg=self._is_termination_msg,
             )
 
         return autogen.AssistantAgent(
             name=name,
-            llm_config=self.llm_config,
+            llm_config=copy.deepcopy(self.llm_config),
             system_message=system_message,
             is_termination_msg=self._is_termination_msg,
             code_execution_config={"work_dir": self.work_dir},
-            function_map=self.function_map,
+            function_map=copy.deepcopy(self.function_map),
         )
 
     @property
