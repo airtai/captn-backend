@@ -32,7 +32,12 @@ async def test_retry_context_manager() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_db_connection_retry() -> None:
+async def test_get_db_connection_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgres://user:pass@localhost:5432/db",  # pragma: allowlist secret
+    )
+
     with unittest.mock.patch(
         "captn.captn_agents.helpers.Prisma",
     ) as mock_prisma:

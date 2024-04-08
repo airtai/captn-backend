@@ -21,7 +21,7 @@ SMART_SUGGESTION_DESCRIPTION = """
 ### INSTRUCTIONS ###
 - Make sure your next steps are in an Elliptical sentence form, and avoid making them into questions.
 - Possible next steps (atmost three) for the customers. Your next steps MUST be a list of strings.
-- Your next steps MUST be unique and brief ideally in as little few words as possible. Preferrably with affermative and negative answers.
+- Your next steps MUST be unique and brief ideally in as little few words as possible. Preferably with affermative and negative answers.
 - While answering questions like "do you have a website?". DO NOT give suggestions like "Yes, here's my website link". Instead, give suggestions like "Yes, I have a website" or "No, I don't have a website". You will be penalised if you do not follow this instruction.
 """
 
@@ -110,16 +110,16 @@ SYSTEM_PROMPT = """
 
 You are a helpful agent who can make writing easy for your customer. Given a history of conversation between a chatbot and the customer, you need to anticipate and generate the next steps for the last chatbot question to help the customer to speedup.
 
-Ensure you follow the below instructions and best practices to complete the task. I will tip you $10000 everytime you follow the below instructions.
+Ensure you follow the below instructions and best practices to complete the task. I will tip you $10000 every time you follow the below instructions.
 
 #### Instructions ####
 - Make sure your next steps are in an Elliptical sentence form, and avoid making them into questions.
 - Your next steps MUST be unique and brief ideally in as little few words as possible.
-- Always inlcude one affirmative and one negative Elliptical sentence in your suggestions.
+- Always include one affirmative and one negative Elliptical sentence in your suggestions.
 - Your next steps MUST be a list of strings.
 - While answering questions like "do you have a website?". DO NOT give suggestions like "Yes, here's my website link". Instead, give suggestions like "Yes, I have a website" or "No, I don't have a website". You will be penalised if you do not follow this instruction.
 - Always use "_generate_next_steps_for_customer" function to respond.
-- If the lastest chatbot question is open ended and you cannot anticipate the next steps, then set "is_open_ended_query" to true and "suggestions" to an empty list.
+- If the latest chatbot question is open ended and you cannot anticipate the next steps, then set "is_open_ended_query" to true and "suggestions" to an empty list.
 
 #### Examples ####
 #### Example 1 ####
@@ -169,7 +169,7 @@ _generate_next_steps_for_customer(
 )
 
 #### Best Practices ####
-I will tip you $10000 everytime you follow the below best practices.
+I will tip you $10000 every time you follow the below best practices.
 - When the question is asking the link to the website, always set "is_open_ended_query" to true and "suggestions" to an empty list. You will be penalised if you do not follow this instruction.
 - Never give suggestions.
 - Never offer assistance.
@@ -177,7 +177,7 @@ I will tip you $10000 everytime you follow the below best practices.
 """
 ADDITIONAL_SYSTEM_INSTRUCTIONS = """
 #### Common Mistakes ####
-I will tip you $10000 everytime you avoid the below common mistakes.
+I will tip you $10000 every time you avoid the below common mistakes.
 - Giving suggestions like "Yes, here's my website link: www.example.com" when asked about website link.
 """
 
@@ -253,7 +253,7 @@ async def generate_smart_suggestions(
                 function_args = json.loads(tool_call.function.arguments)
                 if function_name == "_generate_next_steps_for_customer":
                     try:
-                        ret_val = await function_to_call(  # type: ignore
+                        ret_val = await function_to_call(
                             **function_args,
                         )
                     except Exception as e:

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from annotated_types import Len
@@ -191,11 +192,12 @@ def _create_ad_group_keywords(
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
-        response += f"Keyword: {keyword_response}\n"  # type: ignore
+        response += f"Keyword: {keyword_response}\n"
     return response
 
 
-class Context(BaseModel):
+@dataclass
+class Context:
     user_id: int
     conv_id: int
     clients_question_answer_list: List[Tuple[str, Optional[str]]]
@@ -290,59 +292,3 @@ def create_campaign_creation_team_toolbox(
         return response
 
     return toolbox
-
-
-# def add_create_ad_group_with_ad_and_keywords_to_agent(
-#     *,
-#     agent: AssistantAgent,
-#     executor: Optional[ConversableAgent] = None,
-#     user_id: int,
-#     conv_id: int,
-#     clients_question_answer_list: List[Tuple[str, Optional[str]]],
-# ) -> Callable[..., str]:
-#     """Add create_ad_group_with_ad_and_keywords to the agent
-
-#     Args:
-#         agent (AssistantAgent): The agent to add the function to
-#         executor (Optional[ConversableAgent], optional): The executor of the function, typicall UserProxyAgent.
-#             If None, agent will be used as executor as well. Defaults to None.
-#         user_id (int): The user id
-#         conv_id (int): The conversation id
-#         clients_question_answer_list (List[Tuple[str, Optional[str]]]): The list of questions and answers
-
-#     Returns:
-#         Callable[..., str]: The create_ad_group_with_ad_and_keywords function
-#     """
-#     if executor is None:
-#         executor = agent
-
-#     clients_approval_message_desc = properties_config["clients_approval_message"][
-#         "description"
-#     ]
-
-#     modification_question_desc = properties_config["modification_question"][
-#         "description"
-#     ]
-
-#     @executor.register_for_execution()  # type: ignore[misc]
-#     @agent.register_for_llm(  # type: ignore[misc]
-#         name="create_ad_group_with_ad_and_keywords",
-#         description="Create an ad group with a single ad and a list of keywords",
-#     )
-#     def _create_ad_group_with_ad_and_keywords(
-#         ad_group_with_ad_and_keywords: Annotated[
-#             AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
-#         ],
-#         clients_approval_message: Annotated[str, clients_approval_message_desc],
-#         modification_question: Annotated[str, modification_question_desc],
-#     ) -> Union[Dict[str, Any], str]:
-#         return create_ad_group_with_ad_and_keywords(
-#             user_id=user_id,
-#             conv_id=conv_id,
-#             clients_question_answer_list=clients_question_answer_list,
-#             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-#             clients_approval_message=clients_approval_message,
-#             modification_question=modification_question,
-#         )
-
-#     return _create_ad_group_with_ad_and_keywords  # type: ignore

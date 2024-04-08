@@ -11,21 +11,11 @@ from ...model import SmartSuggestions
 from ..config import Config
 
 __all__ = (
-    "ask_for_additional_info",
-    "reply_to_client",
     "reply_to_client_2",
     "ask_client_for_permission",
     "get_info_from_the_web_page",
     "send_email",
 )
-
-
-def ask_for_additional_info(question: str) -> str:
-    return f"QUESTION FROM ANOTHER TEAM:\n{question}\nPAUSE"
-
-
-def reply_to_client(message: str) -> str:
-    return f"{message}\nPAUSE"
 
 
 reply_to_client_2_description = """Respond to the client (answer to his task or question for additional information).
@@ -47,7 +37,6 @@ class TeamResponse(BaseModel):
     terminate_groupchat: bool
 
 
-# @agent.register_for_llm(description=reply_to_client_2_desc)
 def reply_to_client_2(
     message: Annotated[str, "Message for the client"],
     completed: Annotated[
@@ -98,7 +87,7 @@ def ask_client_for_permission(
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
     message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
 
-    clients_question_answer_list.append((proposed_changes, None))
+    clients_question_answer_list.append((message, None))
 
     return reply_to_client_2(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
@@ -120,7 +109,22 @@ llm_config_gpt_3_5 = {
 }
 
 
-def get_info_from_the_web_page(url: str, task: str, task_guidelines: str) -> str:
+def get_info_from_the_web_page(
+    url: Annotated[str, "The url of the web page which needs to be summarized"],
+    task: Annotated[
+        str,
+        """Task which needs to be solved.
+This parameter should NOT mention that we are working on some Google Ads task.
+The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
+""",
+    ],
+    task_guidelines: Annotated[
+        str,
+        """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
+This parameter should NOT mention that we are working on some Google Ads task.
+""",
+    ],
+) -> str:
     google_ads_url = "ads.google.com"
     if google_ads_url in url:
         return "FAILED: This function should NOT be used for scraping google ads!"
@@ -148,7 +152,7 @@ You MUST use these capabilities when you receive a task for a specific category/
 Examples:
 "Click the 'TVs' result" - This way you will navigate to the TVs section of the page and you will find more information about TVs.
 "Click 'Electronics' link" - This way you will navigate to the Electronics section of the page and you will find more information about Electronics.
-"Cick the 'Next' button"
+"Click the 'Next' button"
 
 - Do NOT try to click all the links on the page, but only the ones which are RELEVANT for the task! Web pages can be very long and you will be penalized if spend too much time on this task!
 - Your final goal is to summarize the findings for the given task. The summary must be in English!
@@ -191,7 +195,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
 
 Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
-You shold respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
+You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
 """
     user_proxy = autogen.AssistantAgent(
         "user_proxy",

@@ -1,4 +1,5 @@
 import unittest
+from typing import List, Optional, Tuple
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
@@ -131,3 +132,18 @@ Keyword: {side_effect[3]}
 
             assert mock_google_ads_create_update.call_count == 4
             assert response == expected_response, response
+
+
+class TestContext:
+    def test_context_objects_are_not_coppies(self):
+        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        context = Context(
+            user_id=12345,
+            conv_id=67890,
+            clients_question_answer_list=clients_question_answer_list,
+        )
+        clients_question_answer_list.append(("question", "answer"))
+
+        actual = context.clients_question_answer_list
+        expected = [("question", "answer")]
+        assert actual == expected, actual
