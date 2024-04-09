@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Annotated
 
@@ -7,9 +7,20 @@ from ....google_ads.client import get_login_url
 from ....google_ads.client import (
     list_accessible_customers as list_accessible_customers_client,
 )
-from ._functions import Context
+from ..toolboxes import Toolbox
+from ._functions import (
+    Context,
+    ask_client_for_permission,
+    ask_client_for_permission_description,
+    ask_client_for_permission_with_context,
+    get_info_from_the_web_page,
+    get_info_from_the_web_page_description,
+    reply_to_client_2,
+    reply_to_client_2_description,
+)
 
 __all__ = (
+    "add_shared_functions",
     "change_google_account",
     "change_google_account_description",
     "execute_query",
@@ -56,3 +67,38 @@ def execute_query(
     return execute_query_client(
         user_id=user_id, conv_id=conv_id, customer_ids=customer_ids, query=query
     )
+
+
+def add_shared_functions(toolbox: Toolbox) -> None:
+    toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
+    toolbox.add_function(
+        description=ask_client_for_permission_description,
+        name=ask_client_for_permission.__name__,
+    )(ask_client_for_permission_with_context)
+    toolbox.add_function(get_info_from_the_web_page_description)(
+        get_info_from_the_web_page
+    )
+    toolbox.add_function(change_google_account_description)(change_google_account)
+    toolbox.add_function(list_accessible_customers_description)(
+        list_accessible_customers
+    )
+    toolbox.add_function(execute_query_description)(execute_query)
+
+
+def create_google_ads_team_toolbox(
+    user_id: int,
+    conv_id: int,
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+) -> Toolbox:
+    toolbox = Toolbox()
+
+    context = Context(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+    )
+    toolbox.set_context(context)
+
+    add_shared_functions(toolbox)
+
+    return toolbox

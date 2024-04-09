@@ -15,13 +15,9 @@ from google_ads.model import (
 
 from ....google_ads.client import (
     execute_query,
-    get_login_url,
     google_ads_create_update,
-    list_accessible_customers,
 )
 from ..tools._function_configs import (
-    ask_client_for_permission_config,
-    change_google_account_config,
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
     create_ad_group_config,
@@ -29,12 +25,8 @@ from ..tools._function_configs import (
     create_geo_targeting_for_campaign_config,
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
-    execute_query_config,
-    get_info_from_the_web_page_config,
-    list_accessible_customers_config,
     remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
-    reply_to_client_2_config,
     update_ad_copy_config,
     update_ad_group_ad_config,
     update_ad_group_config,
@@ -42,11 +34,7 @@ from ..tools._function_configs import (
     update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
-from ..tools._functions import (
-    ask_client_for_permission,
-    get_info_from_the_web_page,
-    reply_to_client_2,
-)
+from ..tools._google_ads_team_tools import create_google_ads_team_toolbox
 from ._shared_prompts import MODIFICATION_FUNCTIONS_INSTRUCTIONS
 from ._team import Team
 
@@ -56,10 +44,6 @@ __all__ = ("GoogleAdsTeam",)
 @Team.register_team("default_team")
 class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        change_google_account_config,
-        list_accessible_customers_config,
-        execute_query_config,
-        reply_to_client_2_config,
         update_ad_group_ad_config,
         update_ad_group_config,
         update_campaign_config,
@@ -72,11 +56,9 @@ class GoogleAdsTeam(Team):
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
         create_ad_group_ad_config,
-        get_info_from_the_web_page_config,
         create_ad_group_config,
         create_campaign_config,
         create_geo_targeting_for_campaign_config,
-        ask_client_for_permission_config,
     ]
 
     _shared_system_message = (
@@ -162,7 +144,19 @@ sure it is understandable by non-experts.
         )
 
         self._create_members()
+
+        self._add_tools()
+
         self._create_initial_message()
+
+    def _add_tools(self) -> None:
+        self.toolbox = create_google_ads_team_toolbox(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+            clients_question_answer_list=self.clients_question_answer_list,
+        )
+        for agent in self.members:
+            self.toolbox.add_to_agent(agent, agent)
 
     @property
     def _task(self) -> str:
@@ -584,35 +578,6 @@ def _get_function_map(
     clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, Any]:
     function_map = {
-        "change_google_account": lambda: get_login_url(
-            user_id=user_id, conv_id=conv_id, force_new_login=True
-        ),
-        "list_accessible_customers": lambda: list_accessible_customers(
-            user_id=user_id, conv_id=conv_id
-        ),
-        "execute_query": lambda customer_ids=None, query=None: execute_query(
-            user_id=user_id,
-            conv_id=conv_id,
-            customer_ids=string_to_list(customer_ids),
-            query=query,
-            work_dir=work_dir,
-        ),
-        "reply_to_client": reply_to_client_2,
-        "ask_client_for_permission": lambda customer_id,
-        resource_details,
-        proposed_changes: ask_client_for_permission(
-            user_id=user_id,
-            conv_id=conv_id,
-            customer_id=customer_id,
-            clients_question_answer_list=clients_question_answer_list,
-            resource_details=resource_details,
-            proposed_changes=proposed_changes,
-        ),
-        "get_info_from_the_web_page": lambda url,
-        task,
-        task_guidelines: get_info_from_the_web_page(
-            url=url, task=task, task_guidelines=task_guidelines
-        ),
         "update_ad_group_ad": add_currency_check(
             update_ad_group_ad,
             user_id=user_id,
