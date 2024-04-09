@@ -2,13 +2,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..tools._campaign_creation_team_tools import create_campaign_creation_team_toolbox
 from ..tools._function_configs import (
-    ask_client_for_permission_config,
-    change_google_account_config,
     create_campaign_config,
-    execute_query_config,
-    get_info_from_the_web_page_config,
-    list_accessible_customers_config,
-    reply_to_client_2_config,
 )
 from ._google_ads_team import (
     get_campaign_creation_team_shared_functions,
@@ -26,13 +20,7 @@ __all__ = ("CampaignCreationTeam",)
 @Team.register_team("campaign_creation_team")
 class CampaignCreationTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        ask_client_for_permission_config,
-        change_google_account_config,
         create_campaign_config,
-        execute_query_config,
-        get_info_from_the_web_page_config,
-        list_accessible_customers_config,
-        reply_to_client_2_config,
     ]
 
     _default_roles = [

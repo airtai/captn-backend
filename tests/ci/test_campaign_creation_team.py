@@ -120,7 +120,8 @@ class TestCampaignCreationTeam:
             clients_answer = "yes"
             # In real ask_client_for_permission, we would append (message, None)
             # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
-            kwargs["clients_question_answer_list"].append((message, clients_answer))
+            context = kwargs["context"]
+            context.clients_question_answer_list.append((message, clients_answer))
             return clients_answer
 
         task = """Here is the customer brief:
@@ -172,12 +173,14 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
 """
 
             with (
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.list_accessible_customers",
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "list_accessible_customers",
                     return_value=["1111"],
-                ),  # as mock_list_accessible_customers,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission",
+                ),
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "ask_client_for_permission",
                     wraps=ask_client_for_permission_mock,
                 ) as mock_ask_client_for_permission,
                 unittest.mock.patch(
@@ -192,24 +195,26 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword",
                     wraps=_create_ad_group_keyword,
                 ) as mock_create_ad_group_keyword,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page",
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "get_info_from_the_web_page",
                     return_value=get_info_from_the_web_page_return_value,
-                ),  # as mock_get_info_from_the_web_page,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.execute_query",
+                ),
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "execute_query",
                     return_value=(
                         "This method isn't implemented yet. So do NOT use it."
                     ),
-                ),  # as mock_execute_query,
+                ),
                 unittest.mock.patch(
                     "captn.captn_agents.backend.teams._google_ads_team.create_campaign",
                     return_value="Campaign with id 1212 has already been created.",
-                ),  # as mock_create_campaign,
+                ),
                 unittest.mock.patch(
                     "captn.google_ads.client.get_login_url",
                     return_value={"login_url": ALREADY_AUTHENTICATED},
-                ),  # as mock_get_login_url,
+                ),
                 unittest.mock.patch(
                     "captn.google_ads.client.requests_get",
                     return_value=MagicMock(),

@@ -43,7 +43,7 @@ class TestTools:
         llm_config = agent.llm_config
         # print(f"{llm_config=}")
         assert "tools" in llm_config, f"{llm_config.keys()=}"
-        assert len(llm_config["tools"]) == 1, f"{llm_config['tools']=}"
+        assert len(llm_config["tools"]) == 7, f"{llm_config['tools']=}"
         assert (
             llm_config["tools"][0]["type"] == "function"
         ), f"{llm_config['tools'][0]['type']=}"

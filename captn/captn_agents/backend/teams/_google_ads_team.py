@@ -566,6 +566,24 @@ def get_campaign_creation_team_shared_functions(
     clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, Any]:
     function_map = {
+        "create_campaign": add_currency_check(
+            create_campaign,
+            user_id=user_id,
+            conv_id=conv_id,
+            clients_question_answer_list=clients_question_answer_list,
+            micros_var_name="budget_amount_micros",
+        ),
+    }
+    return function_map
+
+
+def _get_function_map(
+    user_id: int,
+    conv_id: int,
+    work_dir: str,
+    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+) -> Dict[str, Any]:
+    function_map = {
         "change_google_account": lambda: get_login_url(
             user_id=user_id, conv_id=conv_id, force_new_login=True
         ),
@@ -595,24 +613,6 @@ def get_campaign_creation_team_shared_functions(
         task_guidelines: get_info_from_the_web_page(
             url=url, task=task, task_guidelines=task_guidelines
         ),
-        "create_campaign": add_currency_check(
-            create_campaign,
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            micros_var_name="budget_amount_micros",
-        ),
-    }
-    return function_map
-
-
-def _get_function_map(
-    user_id: int,
-    conv_id: int,
-    work_dir: str,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-) -> Dict[str, Any]:
-    function_map = {
         "update_ad_group_ad": add_currency_check(
             update_ad_group_ad,
             user_id=user_id,

@@ -7,7 +7,24 @@ from typing_extensions import Annotated
 from ....google_ads.client import google_ads_create_update
 from ..toolboxes import Toolbox
 from ._function_configs import properties_config
-from ._functions import Context
+from ._functions import (
+    Context,
+    ask_client_for_permission,
+    ask_client_for_permission_description,
+    ask_client_for_permission_with_context,
+    get_info_from_the_web_page,
+    get_info_from_the_web_page_description,
+    reply_to_client_2,
+    reply_to_client_2_description,
+)
+from ._google_ads_team_functions import (
+    change_google_account,
+    change_google_account_description,
+    execute_query,
+    execute_query_description,
+    list_accessible_customers,
+    list_accessible_customers_description,
+)
 
 __all__ = ("create_campaign_creation_team_toolbox",)
 
@@ -283,5 +300,19 @@ def create_campaign_creation_team_toolbox(
         response += ad_group_keywords_response  # type: ignore
 
         return response
+
+    toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
+    toolbox.add_function(
+        description=ask_client_for_permission_description,
+        name=ask_client_for_permission.__name__,
+    )(ask_client_for_permission_with_context)
+    toolbox.add_function(get_info_from_the_web_page_description)(
+        get_info_from_the_web_page
+    )
+    toolbox.add_function(change_google_account_description)(change_google_account)
+    toolbox.add_function(list_accessible_customers_description)(
+        list_accessible_customers
+    )
+    toolbox.add_function(execute_query_description)(execute_query)
 
     return toolbox
