@@ -10,10 +10,9 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
-    Context,
-    # create_ad_group_with_ad_and_keywords,
     create_campaign_creation_team_toolbox,
 )
+from captn.captn_agents.backend.tools._functions import Context
 
 
 class TestTools:

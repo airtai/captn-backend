@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from annotated_types import Len
@@ -8,6 +7,7 @@ from typing_extensions import Annotated
 from ....google_ads.client import google_ads_create_update
 from ..toolboxes import Toolbox
 from ._function_configs import properties_config
+from ._functions import Context
 
 __all__ = ("create_campaign_creation_team_toolbox",)
 
@@ -194,13 +194,6 @@ def _create_ad_group_keywords(
         )
         response += f"Keyword: {keyword_response}\n"
     return response
-
-
-@dataclass
-class Context:
-    user_id: int
-    conv_id: int
-    clients_question_answer_list: List[Tuple[str, Optional[str]]]
 
 
 def create_campaign_creation_team_toolbox(

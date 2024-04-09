@@ -1,4 +1,5 @@
 import ast
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import autogen
@@ -11,6 +12,7 @@ from ...model import SmartSuggestions
 from ..config import Config
 
 __all__ = (
+    "Context",
     "reply_to_client_2",
     "ask_client_for_permission",
     "get_info_from_the_web_page",
@@ -66,6 +68,13 @@ def reply_to_client_2(
 YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
     suggestions=["Yes", "No"], type="oneOf"
 ).model_dump()
+
+
+@dataclass
+class Context:
+    user_id: int
+    conv_id: int
+    clients_question_answer_list: List[Tuple[str, Optional[str]]]
 
 
 def ask_client_for_permission(
