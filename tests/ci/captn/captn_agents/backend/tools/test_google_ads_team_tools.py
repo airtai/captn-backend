@@ -39,7 +39,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 10)
+        check_llm_config_total_tools(llm_config, 11)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -52,6 +52,7 @@ class TestGoogleAdsTeamTools:
             "create_keyword_for_ad_group": r"Creates \(regular and negative\) keywords for Ad Group",
             "update_ad_group_ad": "Update Google Ad.",
             "update_ad_group": "Update Google Ads Ad Group.",
+            "create_ad_group": "Create Google Ads Ad Group.",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 
@@ -153,6 +154,23 @@ class TestGoogleAdsTeamTools:
         "endpoint": "/update-ad-group",
     }
 
+    params_create_ad_group = {
+        "funtion_name": "create_ad_group",
+        "kwargs": {
+            "customer_id": "123",
+            "clients_approval_message": "yes",
+            "modification_question": "may I?",
+            "status": "ENABLED",
+            "local_currency": "EUR",
+            "campaign_id": "234",
+            "name": "cool ad group",
+            "cpc_bid_micros": 1000,
+        },
+        "kwargs_set_to_none": {},
+        "model_class": AdGroup,
+        "endpoint": "/create-ad-group",
+    }
+
     @pytest.mark.parametrize(
         "params",
         [
@@ -160,6 +178,7 @@ class TestGoogleAdsTeamTools:
             params_create_keyword_for_ad_group,
             params_update_ad_group_ad,
             params_update_ad_group,
+            params_create_ad_group,
         ],
     )
     def test_functions_which_use_add_currency_check_decorator(

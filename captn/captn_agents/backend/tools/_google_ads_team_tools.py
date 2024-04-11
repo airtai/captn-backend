@@ -355,6 +355,50 @@ def update_ad_group(
     )
 
 
+create_ad_group_description = f"Create Google Ads Ad Group. {MODIFICATION_WARNING}"
+
+
+@add_currency_check()
+def create_ad_group(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
+    context: Context,
+    *,
+    name: Annotated[Optional[str], "The name of the Ad Group"] = None,
+    status: Annotated[
+        Optional[Literal["ENABLED", "PAUSED"]],
+        "The status of the keyword (ENABLED or PAUSED)",
+    ] = None,
+    cpc_bid_micros: Annotated[
+        Optional[int], properties_config["cpc_bid_micros"]["description"]
+    ] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroup(
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            name=name,
+            cpc_bid_micros=cpc_bid_micros,
+            status=status,
+        ),
+        endpoint="/create-ad-group",
+    )
+
+
 def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
@@ -393,5 +437,6 @@ def create_google_ads_team_toolbox(
     )
     toolbox.add_function(update_ad_group_ad_description)(update_ad_group_ad)
     toolbox.add_function(update_ad_group_description)(update_ad_group)
+    toolbox.add_function(create_ad_group_description)(create_ad_group)
 
     return toolbox

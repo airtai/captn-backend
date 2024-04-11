@@ -20,7 +20,6 @@ from ....google_ads.client import (
 from ..tools._function_configs import (
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
-    create_ad_group_config,
     create_geo_targeting_for_campaign_config,
     create_negative_keyword_for_campaign_config,
     remove_ad_copy_headline_or_description_config,
@@ -49,7 +48,6 @@ class GoogleAdsTeam(Team):
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
         create_ad_group_ad_config,
-        create_ad_group_config,
         create_geo_targeting_for_campaign_config,
     ]
 
@@ -578,12 +576,6 @@ def _get_function_map(
             endpoint="/create-update-ad-copy",
         ),
         "update_ad_copy": _get_update_ad_copy(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-        ),
-        "create_ad_group": add_currency_check(
-            create_ad_group,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answer_list=clients_question_answer_list,

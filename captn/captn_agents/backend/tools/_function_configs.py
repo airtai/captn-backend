@@ -177,7 +177,7 @@ update_ad_group_config = {
 
 create_ad_group_config = {
     "name": "create_ad_group",
-    "description": f"Create Google Ad Group. {MODIFICATION_WARNING}",
+    "description": f"Create Google Ads Ad Group. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
