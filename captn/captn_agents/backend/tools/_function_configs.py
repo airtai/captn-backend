@@ -318,11 +318,11 @@ create_campaign_config = {
             "modification_question": properties_config["modification_question"],
             "name": {
                 "type": "string",
-                "description": "The name of the Ad",
+                "description": "The name of the Campaign",
             },
             "status": {
                 "type": "string",
-                "description": "The status of the Ad (ENABLED or PAUSED)",
+                "description": "The status of the Campaign (ENABLED or PAUSED)",
             },
             "budget_amount_micros": {
                 "type": "number",
