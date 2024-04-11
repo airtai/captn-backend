@@ -9,7 +9,7 @@ from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._google_ads_team_tools import (
     create_google_ads_team_toolbox,
 )
-from google_ads.model import AdGroupCriterion, Campaign
+from google_ads.model import AdGroupAd, AdGroupCriterion, Campaign
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
@@ -39,7 +39,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 8)
+        check_llm_config_total_tools(llm_config, 9)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -50,6 +50,7 @@ class TestGoogleAdsTeamTools:
             "execute_query": "Query the Google Ads API.",
             "create_campaign": "Creates Google Ads Campaign. VERY IMPORTANT:",
             "create_keyword_for_ad_group": r"Creates \(regular and negative\) keywords for Ad Group",
+            "update_ad_group_ad": "Update Google Ad.",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 
@@ -89,6 +90,7 @@ class TestGoogleAdsTeamTools:
             "network_settings_target_content_network": True,
             "local_currency": "EUR",
         },
+        "kwargs_set_to_none": {},
         "model_class": Campaign,
         "endpoint": "/create-campaign",
     }
@@ -108,12 +110,38 @@ class TestGoogleAdsTeamTools:
             "bid_modifier": 1.0,
             "cpc_bid_micros": 1000,
         },
+        "kwargs_set_to_none": {},
         "model_class": AdGroupCriterion,
         "endpoint": "/add-keywords-to-ad-group",
     }
 
+    params_update_ad_group_ad = {
+        "funtion_name": "update_ad_group_ad",
+        "kwargs": {
+            "customer_id": "123",
+            "clients_approval_message": "yes",
+            "modification_question": "may I?",
+            "status": "ENABLED",
+            "local_currency": "EUR",
+            "ad_group_id": "234",
+            "ad_id": "345",
+            "cpc_bid_micros": 1000,
+        },
+        "kwargs_set_to_none": {
+            "headlines": None,
+            "descriptions": None,
+        },
+        "model_class": AdGroupAd,
+        "endpoint": "/update-ad-group-ad",
+    }
+
     @pytest.mark.parametrize(
-        "params", [params_create_campaign, params_create_keyword_for_ad_group]
+        "params",
+        [
+            params_create_campaign,
+            params_create_keyword_for_ad_group,
+            params_update_ad_group_ad,
+        ],
     )
     def test_functions_which_use_add_currency_check_decorator(
         self, params: Dict[str, Any]
@@ -134,13 +162,15 @@ class TestGoogleAdsTeamTools:
 
             func(**params["kwargs"])
 
+            kwargs_combined = {**params["kwargs"], **params["kwargs_set_to_none"]}
+
             mock_google_ads_create_update.assert_called_once_with(
                 user_id=1234,
                 conv_id=5678,
                 clients_question_answer_list=[("whatsup?", "whatsup!")],
                 clients_approval_message="yes",
                 modification_question="may I?",
-                ad=params["model_class"](**params["kwargs"]),
+                ad=params["model_class"](**kwargs_combined),
                 endpoint=params["endpoint"],
             )
 

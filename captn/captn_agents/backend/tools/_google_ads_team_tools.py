@@ -3,7 +3,7 @@ import inspect
 from functools import wraps
 from typing import Annotated, Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
-from google_ads.model import AdGroupCriterion, Campaign
+from google_ads.model import AdGroupAd, AdGroupCriterion, Campaign
 
 from ....google_ads.client import execute_query as execute_query_client
 from ....google_ads.client import get_login_url, google_ads_create_update
@@ -265,6 +265,52 @@ def create_keyword_for_ad_group(
     )
 
 
+update_ad_group_ad_description = f"Update Google Ad. {MODIFICATION_WARNING}"
+
+
+@add_currency_check()
+def update_ad_group_ad(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    ad_group_id: Annotated[str, properties_config["ad_group_id"]["description"]],
+    ad_id: Annotated[str, properties_config["ad_id"]["description"]],
+    context: Context,
+    *,
+    status: Annotated[
+        Optional[Literal["ENABLED", "PAUSED"]],
+        "The status of the keyword (ENABLED or PAUSED)",
+    ] = None,
+    cpc_bid_micros: Annotated[
+        Optional[int], properties_config["cpc_bid_micros"]["description"]
+    ] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroupAd(
+            customer_id=customer_id,
+            ad_group_id=ad_group_id,
+            ad_id=ad_id,
+            cpc_bid_micros=cpc_bid_micros,
+            status=status,
+            headlines=None,
+            descriptions=None,
+        ),
+        endpoint="/update-ad-group-ad",
+    )
+
+
 def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
@@ -301,5 +347,6 @@ def create_google_ads_team_toolbox(
     toolbox.add_function(create_keyword_for_ad_group_description)(
         create_keyword_for_ad_group
     )
+    toolbox.add_function(update_ad_group_ad_description)(update_ad_group_ad)
 
     return toolbox
