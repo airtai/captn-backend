@@ -26,7 +26,6 @@ from ..tools._function_configs import (
     remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
     update_ad_copy_config,
-    update_ad_group_config,
     update_ad_group_criterion_config,
     update_campaign_config,
     update_campaigns_negative_keywords_config,
@@ -41,7 +40,6 @@ __all__ = ("GoogleAdsTeam",)
 @Team.register_team("default_team")
 class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        update_ad_group_config,
         update_campaign_config,
         update_ad_group_criterion_config,
         create_negative_keyword_for_campaign_config,
@@ -580,12 +578,6 @@ def _get_function_map(
             endpoint="/create-update-ad-copy",
         ),
         "update_ad_copy": _get_update_ad_copy(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-        ),
-        "update_ad_group": add_currency_check(
-            update_ad_group,
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answer_list=clients_question_answer_list,

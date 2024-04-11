@@ -9,7 +9,7 @@ from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._google_ads_team_tools import (
     create_google_ads_team_toolbox,
 )
-from google_ads.model import AdGroupAd, AdGroupCriterion, Campaign
+from google_ads.model import AdGroup, AdGroupAd, AdGroupCriterion, Campaign
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
@@ -39,7 +39,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 9)
+        check_llm_config_total_tools(llm_config, 10)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -51,6 +51,7 @@ class TestGoogleAdsTeamTools:
             "create_campaign": "Creates Google Ads Campaign. VERY IMPORTANT:",
             "create_keyword_for_ad_group": r"Creates \(regular and negative\) keywords for Ad Group",
             "update_ad_group_ad": "Update Google Ad.",
+            "update_ad_group": "Update Google Ads Ad Group.",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 
@@ -135,12 +136,30 @@ class TestGoogleAdsTeamTools:
         "endpoint": "/update-ad-group-ad",
     }
 
+    params_update_ad_group = {
+        "funtion_name": "update_ad_group",
+        "kwargs": {
+            "customer_id": "123",
+            "clients_approval_message": "yes",
+            "modification_question": "may I?",
+            "status": "ENABLED",
+            "local_currency": "EUR",
+            "ad_group_id": "234",
+            "cpc_bid_micros": 1000,
+            "name": "cool ad group",
+        },
+        "kwargs_set_to_none": {},
+        "model_class": AdGroup,
+        "endpoint": "/update-ad-group",
+    }
+
     @pytest.mark.parametrize(
         "params",
         [
             params_create_campaign,
             params_create_keyword_for_ad_group,
             params_update_ad_group_ad,
+            params_update_ad_group,
         ],
     )
     def test_functions_which_use_add_currency_check_decorator(

@@ -147,7 +147,7 @@ If the budget micros value is used, the currency code IS required!""",
 
 update_ad_group_config = {
     "name": "update_ad_group",
-    "description": f"Update Google Ad Group. {MODIFICATION_WARNING}",
+    "description": f"Update Google Ads Ad Group. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
