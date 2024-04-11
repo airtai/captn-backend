@@ -1,12 +1,18 @@
 import inspect
+import unittest
 from typing import Any, Dict, List, Optional, Tuple
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._google_ads_team_tools import (
+    Context,
+    _check_currency,
+    _get_customer_currency,
+    add_currency_check,
     create_google_ads_team_toolbox,
 )
 from google_ads.model import AdGroup, AdGroupAd, AdGroupCriterion, Campaign
@@ -259,3 +265,113 @@ class TestGoogleAdsTeamTools:
             "local_currency",
         ]
         assert set(param_names) == set(expected)
+
+    def test_get_customer_currency(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._google_ads_team_tools.execute_query_client"
+        ) as mock_execute_query:
+            mock_execute_query.return_value = str(
+                {"12121212": [{"customer": {"currencyCode": "EUR"}}]}
+            )
+            currency = _get_customer_currency(
+                user_id=-1, conv_id=-1, customer_id="12121212"
+            )
+            assert currency == "EUR"
+
+    def test_check_currency_raises_exception_if_incorrect_currency(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._google_ads_team_tools.execute_query_client"
+        ) as mock_execute_query:
+            mock_execute_query.return_value = str(
+                {"12121212": [{"customer": {"currencyCode": "EUR"}}]}
+            )
+
+            with pytest.raises(ValueError) as exc:
+                _check_currency(
+                    user_id=-1,
+                    conv_id=-1,
+                    customer_id="12121212",
+                    local_currency="USD",
+                )
+
+            assert (
+                str(exc.value)
+                == """Error: Customer (12121212) account has set currency (EUR) which is different from the provided currency (local_currency='USD').
+Please convert the budget to the customer's currency and ask the client for the approval with the new budget amount (in the customer's currency)."""
+            )
+
+    def test_check_currency_raises_exception_if_currency_is_none(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._google_ads_team_tools.execute_query_client"
+        ) as mock_execute_query:
+            mock_execute_query.return_value = str(
+                {"12121212": [{"customer": {"currencyCode": "EUR"}}]}
+            )
+
+            with pytest.raises(ValueError) as exc:
+                _check_currency(
+                    user_id=-1,
+                    conv_id=-1,
+                    customer_id="12121212",
+                    local_currency=None,
+                )
+
+            assert (
+                str(exc.value)
+                == """Error: Customer (12121212) account has set currency (EUR) which is different from the provided currency (local_currency=None).
+Please convert the budget to the customer's currency and ask the client for the approval with the new budget amount (in the customer's currency)."""
+            )
+
+    @pytest.mark.parametrize("micros_var_name", [None, "budget_micros"])
+    def test_add_currency_check_new(self, micros_var_name: Optional[str]) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._google_ads_team_tools._get_customer_currency"
+        ) as mock_get_customer_currency:
+            mock_get_customer_currency.return_value = "EUR"
+
+            f = MagicMock()
+
+            if micros_var_name is None:
+                f_with_check = add_currency_check(f)
+                micros_var_name = "cpc_bid_micros"
+            else:
+                f_with_check = add_currency_check(f)
+
+            context = Context(
+                user_id=123,
+                conv_id=456,
+                clients_question_answer_list=[],
+            )
+            kwargs = {
+                micros_var_name: 1000000,
+                "customer_id": "12121212",
+                "context": context,
+            }
+            f_with_check(
+                local_currency="EUR",
+                **kwargs,
+            )
+            mock_get_customer_currency.assert_called_once_with(
+                user_id=123, conv_id=456, customer_id="12121212"
+            )
+
+            mock_get_customer_currency.reset_mock()
+            f_with_check(
+                customer_id="12121212",
+                local_currency="EUR",
+            )
+            mock_get_customer_currency.assert_not_called()
+            ERROR_MSG = r"Error: Customer \(12121212\) account has set currency \(EUR\) which is different from the provided currency \(local_currency='USD'\)"
+            with pytest.raises(
+                ValueError,
+                match=ERROR_MSG,
+            ):
+                f_with_check(
+                    local_currency="USD",
+                    **kwargs,
+                )
+
+            f_with_check(
+                customer_id="12121212",
+                local_currency="USD",
+            )
