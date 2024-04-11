@@ -39,7 +39,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 11)
+        check_llm_config_total_tools(llm_config, 12)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -53,6 +53,7 @@ class TestGoogleAdsTeamTools:
             "update_ad_group_ad": "Update Google Ad.",
             "update_ad_group": "Update Google Ads Ad Group.",
             "create_ad_group": "Create Google Ads Ad Group.",
+            "update_ad_group_criterion": "Update Google Ads Group Criterion.",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 
@@ -100,11 +101,6 @@ class TestGoogleAdsTeamTools:
     params_create_keyword_for_ad_group = {
         "funtion_name": "create_keyword_for_ad_group",
         "kwargs": {
-            "customer_id": "123",
-            "clients_approval_message": "yes",
-            "modification_question": "may I?",
-            "status": "ENABLED",
-            "local_currency": "EUR",
             "ad_group_id": "234",
             "keyword_text": "keyword",
             "keyword_match_type": "EXACT",
@@ -120,11 +116,6 @@ class TestGoogleAdsTeamTools:
     params_update_ad_group_ad = {
         "funtion_name": "update_ad_group_ad",
         "kwargs": {
-            "customer_id": "123",
-            "clients_approval_message": "yes",
-            "modification_question": "may I?",
-            "status": "ENABLED",
-            "local_currency": "EUR",
             "ad_group_id": "234",
             "ad_id": "345",
             "cpc_bid_micros": 1000,
@@ -140,11 +131,6 @@ class TestGoogleAdsTeamTools:
     params_update_ad_group = {
         "funtion_name": "update_ad_group",
         "kwargs": {
-            "customer_id": "123",
-            "clients_approval_message": "yes",
-            "modification_question": "may I?",
-            "status": "ENABLED",
-            "local_currency": "EUR",
             "ad_group_id": "234",
             "cpc_bid_micros": 1000,
             "name": "cool ad group",
@@ -157,11 +143,6 @@ class TestGoogleAdsTeamTools:
     params_create_ad_group = {
         "funtion_name": "create_ad_group",
         "kwargs": {
-            "customer_id": "123",
-            "clients_approval_message": "yes",
-            "modification_question": "may I?",
-            "status": "ENABLED",
-            "local_currency": "EUR",
             "campaign_id": "234",
             "name": "cool ad group",
             "cpc_bid_micros": 1000,
@@ -169,6 +150,20 @@ class TestGoogleAdsTeamTools:
         "kwargs_set_to_none": {},
         "model_class": AdGroup,
         "endpoint": "/create-ad-group",
+    }
+
+    params_update_ad_group_criterion = {
+        "funtion_name": "update_ad_group_criterion",
+        "kwargs": {
+            "ad_group_id": "234",
+            "criterion_id": "345",
+            "cpc_bid_micros": 1000,
+            "keyword_text": "keyword",
+            "keyword_match_type": "EXACT",
+        },
+        "kwargs_set_to_none": {},
+        "model_class": AdGroupCriterion,
+        "endpoint": "/update-ad-group-criterion",
     }
 
     @pytest.mark.parametrize(
@@ -179,6 +174,7 @@ class TestGoogleAdsTeamTools:
             params_update_ad_group_ad,
             params_update_ad_group,
             params_create_ad_group,
+            params_update_ad_group_criterion,
         ],
     )
     def test_functions_which_use_add_currency_check_decorator(
@@ -197,6 +193,15 @@ class TestGoogleAdsTeamTools:
             ) as mock_get_customer_currency,
         ):
             self.clients_question_answer_list.append(("whatsup?", "whatsup!"))
+
+            default_kwargs = {
+                "customer_id": "123",
+                "clients_approval_message": "yes",
+                "modification_question": "may I?",
+                "status": "ENABLED",
+                "local_currency": "EUR",
+            }
+            params["kwargs"] = {**default_kwargs, **params["kwargs"]}
 
             func(**params["kwargs"])
 
