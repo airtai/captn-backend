@@ -1,12 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..tools._campaign_creation_team_tools import create_campaign_creation_team_toolbox
-from ..tools._function_configs import (
-    create_campaign_config,
-)
-from ._google_ads_team import (
-    get_campaign_creation_team_shared_functions,
-)
 from ._shared_prompts import (
     GET_INFO_FROM_THE_WEB_COMMAND,
     MODIFICATION_FUNCTIONS_INSTRUCTIONS,
@@ -19,9 +13,7 @@ __all__ = ("CampaignCreationTeam",)
 
 @Team.register_team("campaign_creation_team")
 class CampaignCreationTeam(Team):
-    _functions: List[Dict[str, Any]] = [
-        create_campaign_config,
-    ]
+    _functions: List[Dict[str, Any]] = []
 
     _default_roles = [
         {
@@ -59,14 +51,7 @@ sure it is understandable by non-experts.
         self.task = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
-        function_map: Dict[str, Callable[[Any], Any]] = (
-            get_campaign_creation_team_shared_functions(
-                user_id=user_id,
-                conv_id=conv_id,
-                work_dir=work_dir,
-                clients_question_answer_list=clients_question_answer_list,
-            )
-        )
+        function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
         super().__init__(
@@ -99,12 +84,6 @@ sure it is understandable by non-experts.
         )
         for agent in self.members:
             self.toolbox.add_to_agent(agent, agent)
-            # add_create_ad_group_with_ad_and_keywords_to_agent(
-            #     agent=agent,
-            #     user_id=self.user_id,
-            #     conv_id=self.conv_id,
-            #     clients_question_answer_list=self.clients_question_answer_list,
-            # )
 
     @property
     def _task(self) -> str:

@@ -19,7 +19,10 @@ class TestTeam:
 
     def test_create_member(self) -> None:
         team = Team(roles=TestTeam.roles, user_id=123, conv_id=456)
-        team.llm_config = {"api_key": "DUMMY", "model": "gpt-4"}
+        team.llm_config = {
+            "api_key": "DUMMY",  # pragma: allowlist secret
+            "model": "gpt-4",
+        }
         member = team._create_member("QA gpt", "Description1")
 
         system_message = """You are qa_gpt, Description1
@@ -32,7 +35,10 @@ Do NOT try to finish the task until other team members give their opinion.
 
     def test_create_members(self) -> None:
         team = Team(roles=TestTeam.roles, user_id=234, conv_id=456)
-        team.llm_config = {"api_key": "dummy", "model": "gpt-4"}
+        team.llm_config = {
+            "api_key": "dummy",  # pragma: allowlist secret
+            "model": "gpt-4",
+        }
         team._create_members()
 
         assert len(team.members) == len(TestTeam.roles)

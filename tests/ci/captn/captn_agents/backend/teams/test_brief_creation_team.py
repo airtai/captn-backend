@@ -11,7 +11,7 @@ from captn.captn_agents.backend.teams import (
     Team,
 )
 
-from .captn.captn_agents.backend.tools.test_brief_creation_team_tools import (
+from ..tools.test_brief_creation_team_tools import (
     BRIEF_CREATION_TEAM_RESPONSE,
 )
 

@@ -552,24 +552,6 @@ def string_to_list(
     )
 
 
-def get_campaign_creation_team_shared_functions(
-    user_id: int,
-    conv_id: int,
-    work_dir: str,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-) -> Dict[str, Any]:
-    function_map = {
-        "create_campaign": add_currency_check(
-            create_campaign,
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            micros_var_name="budget_amount_micros",
-        ),
-    }
-    return function_map
-
-
 def _get_function_map(
     user_id: int,
     conv_id: int,
@@ -793,17 +775,6 @@ def _get_function_map(
             endpoint="/create-update-ad-copy",
         ),
     }
-
-    # moved to toolbox
-    # campaign_creation_team_shared_function_map = (
-    #     get_campaign_creation_team_shared_functions(
-    #         user_id=user_id,
-    #         conv_id=conv_id,
-    #         work_dir=work_dir,
-    #         clients_question_answer_list=clients_question_answer_list,
-    #     )
-    # )
-    # function_map.update(campaign_creation_team_shared_function_map)
 
     return function_map
 

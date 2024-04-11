@@ -120,7 +120,9 @@ def add_currency_check(
             inspect.Parameter(
                 "local_currency",
                 inspect.Parameter.KEYWORD_ONLY,
-                annotation=Annotated[Optional[str], "local currency"],
+                annotation=Annotated[
+                    Optional[str], properties_config["local_currency"]["description"]
+                ],
                 default=None,
             )
         )
@@ -129,7 +131,9 @@ def add_currency_check(
         @wraps(f)
         def wrapper(
             *args: Any,
-            local_currency: Annotated[Optional[str], "local currency"] = None,
+            local_currency: Annotated[
+                Optional[str], properties_config["local_currency"]["description"]
+            ] = None,
             **kwargs: Any,
         ) -> Any:
             customer_id: str = kwargs["customer_id"]
@@ -219,8 +223,6 @@ def add_shared_functions(toolbox: Toolbox) -> None:
         list_accessible_customers
     )
     toolbox.add_function(execute_query_description)(execute_query)
-
-    # todo: wrap with add_currency_check
     toolbox.add_function(create_campaign_description)(create_campaign)
 
 
