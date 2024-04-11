@@ -14,6 +14,8 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
 )
 from captn.captn_agents.backend.tools._functions import Context
 
+from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
+
 
 class TestTools:
     @pytest.fixture(autouse=True)
@@ -41,22 +43,15 @@ class TestTools:
         # )
 
         llm_config = agent.llm_config
-        # print(f"{llm_config=}")
-        assert "tools" in llm_config, f"{llm_config.keys()=}"
-        assert len(llm_config["tools"]) == 7, f"{llm_config['tools']=}"
-        assert (
-            llm_config["tools"][0]["type"] == "function"
-        ), f"{llm_config['tools'][0]['type']=}"
 
-        function_config = llm_config["tools"][0]["function"]
-
-        assert (
-            function_config["name"] == "create_ad_group_with_ad_and_keywords"
-        ), function_config
-        assert (
-            function_config["description"]
-            == "Create an ad group with a single ad and a list of keywords"
-        ), function_config["description"]
+        check_llm_config_total_tools(llm_config, 8)
+        # todo; add the new tool to the test
+        check_llm_config_descriptions(
+            llm_config,
+            {
+                "create_ad_group_with_ad_and_keywords": "Create an ad group with a single ad and a list of keywords",
+            },
+        )
 
     def test_create_ad_group_with_ad_and_keywords(self) -> None:
         ad_group_ad = AdGroupAdForCreation(

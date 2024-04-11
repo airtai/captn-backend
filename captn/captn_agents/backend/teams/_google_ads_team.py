@@ -21,7 +21,6 @@ from ..tools._function_configs import (
     create_ad_copy_headline_or_description_config,
     create_ad_group_ad_config,
     create_ad_group_config,
-    create_campaign_config,
     create_geo_targeting_for_campaign_config,
     create_keyword_for_ad_group_config,
     create_negative_keyword_for_campaign_config,
@@ -57,7 +56,7 @@ class GoogleAdsTeam(Team):
         update_campaigns_negative_keywords_config,
         create_ad_group_ad_config,
         create_ad_group_config,
-        create_campaign_config,
+        # create_campaign_config,  # moved to toolbox
         create_geo_targeting_for_campaign_config,
     ]
 
@@ -795,15 +794,16 @@ def _get_function_map(
         ),
     }
 
-    campaign_creation_team_shared_function_map = (
-        get_campaign_creation_team_shared_functions(
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=work_dir,
-            clients_question_answer_list=clients_question_answer_list,
-        )
-    )
-    function_map.update(campaign_creation_team_shared_function_map)
+    # moved to toolbox
+    # campaign_creation_team_shared_function_map = (
+    #     get_campaign_creation_team_shared_functions(
+    #         user_id=user_id,
+    #         conv_id=conv_id,
+    #         work_dir=work_dir,
+    #         clients_question_answer_list=clients_question_answer_list,
+    #     )
+    # )
+    # function_map.update(campaign_creation_team_shared_function_map)
 
     return function_map
 

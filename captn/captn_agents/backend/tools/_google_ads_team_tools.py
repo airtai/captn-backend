@@ -1,6 +1,7 @@
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
-
-from typing_extensions import Annotated
+import ast
+import inspect
+from functools import wraps
+from typing import Annotated, Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 from google_ads.model import Campaign
 
@@ -80,15 +81,91 @@ This is the MOST IMPORTANT parameter, because it determines how much money will 
 create_campaign_description = f"Creates Google Ads Campaign. {MODIFICATION_WARNING}"
 
 
+def _get_customer_currency(user_id: int, conv_id: int, customer_id: str) -> str:
+    query = "SELECT customer.currency_code FROM customer"
+    query_result = execute_query_client(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+
+    currency = ast.literal_eval(query_result)[customer_id][0]["customer"][  # type: ignore[arg-type]
+        "currencyCode"
+    ]
+    return currency  # type: ignore
+
+
+def _check_currency(
+    user_id: int, conv_id: int, customer_id: str, local_currency: Optional[str]
+) -> None:
+    cutomers_currency = _get_customer_currency(
+        user_id=user_id, conv_id=conv_id, customer_id=customer_id
+    )
+    if (
+        local_currency is None
+        or cutomers_currency.upper() != local_currency.strip().upper()
+    ):
+        raise ValueError(
+            f"""Error: Customer ({customer_id}) account has set currency ({cutomers_currency}) which is different from the provided currency ({local_currency=}).
+Please convert the budget to the customer's currency and ask the client for the approval with the new budget amount (in the customer's currency)."""
+        )
+
+
+def add_currency_check(
+    *,
+    micros_var_name: str = "cpc_bid_micros",
+) -> Callable[..., Any]:
+    def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
+        sig = inspect.signature(f)
+        params = list(sig.parameters.values())
+        params.append(
+            inspect.Parameter(
+                "local_currency",
+                inspect.Parameter.KEYWORD_ONLY,
+                annotation=Annotated[Optional[str], "local currency"],
+                default=None,
+            )
+        )
+        new_sig = sig.replace(parameters=params)
+
+        @wraps(f)
+        def wrapper(
+            *args: Any,
+            local_currency: Annotated[Optional[str], "local currency"] = None,
+            **kwargs: Any,
+        ) -> Any:
+            customer_id: str = kwargs["customer_id"]
+            context: Context = kwargs["context"]
+
+            user_id = context.user_id
+            conv_id = context.conv_id
+            micros = kwargs.get(micros_var_name, None)
+            if micros is not None:
+                _check_currency(user_id, conv_id, customer_id, local_currency)
+
+            return f(
+                *args,
+                **kwargs,
+            )
+
+        wrapper.__signature__ = new_sig  # type: ignore[attr-defined]
+
+        return wrapper
+
+    return decorator
+
+
+@add_currency_check(micros_var_name="budget_amount_micros")
 def create_campaign(
-    context: Context,
-    customer_id: Annotated[str, properties_config["customer_id"]],
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
     name: Annotated[str, "The name of the campaign"],
     budget_amount_micros: Annotated[int, budget_amount_micros_description],
     clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]
+        str, properties_config["clients_approval_message"]["description"]
     ],
-    modification_question: Annotated[str, properties_config["modification_question"]],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    context: Context,
+    *,
     status: Annotated[
         Optional[Literal["ENABLED", "PAUSED"]],
         "The status of the campaign (ENABLED or PAUSED)",
@@ -143,8 +220,8 @@ def add_shared_functions(toolbox: Toolbox) -> None:
     )
     toolbox.add_function(execute_query_description)(execute_query)
 
-    # wrap with add_currency_check
-    # toolbox.add_function(create_campaign_description)(create_campaign)
+    # todo: wrap with add_currency_check
+    toolbox.add_function(create_campaign_description)(create_campaign)
 
 
 def create_google_ads_team_toolbox(

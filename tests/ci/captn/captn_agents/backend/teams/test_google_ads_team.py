@@ -287,3 +287,9 @@ def test_check_currency_raises_exception_if_currency_is_none() -> None:
             == """Error: Customer (12121212) account has set currency (EUR) which is different from the provided currency (local_currency=None).
 Please convert the budget to the customer's currency and ask the client for the approval with the new budget amount (in the customer's currency)."""
         )
+
+
+@pytest.mark.skip
+class TestGoogleAdsTeamNew:
+    def test_create_campaign(self):
+        raise NotImplementedError
