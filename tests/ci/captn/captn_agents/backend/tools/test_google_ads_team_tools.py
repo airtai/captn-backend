@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from unittest import mock
 
 import pytest
@@ -9,7 +9,7 @@ from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._google_ads_team_tools import (
     create_google_ads_team_toolbox,
 )
-from google_ads.model import Campaign
+from google_ads.model import AdGroupCriterion, Campaign
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
@@ -39,7 +39,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 7)
+        check_llm_config_total_tools(llm_config, 8)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -49,6 +49,7 @@ class TestGoogleAdsTeamTools:
             "list_accessible_customers": "List all the customers accessible to the user",
             "execute_query": "Query the Google Ads API.",
             "create_campaign": "Creates Google Ads Campaign. VERY IMPORTANT:",
+            "create_keyword_for_ad_group": r"Creates \(regular and negative\) keywords for Ad Group",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 
@@ -74,8 +75,50 @@ class TestGoogleAdsTeamTools:
         ]
         assert set(names) == set(expected)
 
-    def test_create_campaign_function(self) -> None:
-        create_campaign = self.user_proxy.function_map["create_campaign"]
+    params_create_campaign = {
+        "funtion_name": "create_campaign",
+        "kwargs": {
+            "customer_id": "123",
+            "name": "cool campaign",
+            "budget_amount_micros": 1000,
+            "clients_approval_message": "yes",
+            "modification_question": "may I?",
+            "status": "ENABLED",
+            "network_settings_target_google_search": True,
+            "network_settings_target_search_network": False,
+            "network_settings_target_content_network": True,
+            "local_currency": "EUR",
+        },
+        "model_class": Campaign,
+        "endpoint": "/create-campaign",
+    }
+
+    params_create_keyword_for_ad_group = {
+        "funtion_name": "create_keyword_for_ad_group",
+        "kwargs": {
+            "customer_id": "123",
+            "clients_approval_message": "yes",
+            "modification_question": "may I?",
+            "status": "ENABLED",
+            "local_currency": "EUR",
+            "ad_group_id": "234",
+            "keyword_text": "keyword",
+            "keyword_match_type": "EXACT",
+            "negative": False,
+            "bid_modifier": 1.0,
+            "cpc_bid_micros": 1000,
+        },
+        "model_class": AdGroupCriterion,
+        "endpoint": "/add-keywords-to-ad-group",
+    }
+
+    @pytest.mark.parametrize(
+        "params", [params_create_campaign, params_create_keyword_for_ad_group]
+    )
+    def test_functions_which_use_add_currency_check_decorator(
+        self, params: Dict[str, Any]
+    ) -> None:
+        func = self.user_proxy.function_map[params["funtion_name"]]
 
         with (
             mock.patch(
@@ -89,18 +132,7 @@ class TestGoogleAdsTeamTools:
         ):
             self.clients_question_answer_list.append(("whatsup?", "whatsup!"))
 
-            create_campaign(
-                customer_id="123",
-                name="cool campaign",
-                budget_amount_micros=1000,
-                clients_approval_message="yes",
-                modification_question="may I?",
-                status="ENABLED",
-                network_settings_target_google_search=True,
-                network_settings_target_search_network=False,
-                network_settings_target_content_network=True,
-                local_currency="EUR",
-            )
+            func(**params["kwargs"])
 
             mock_google_ads_create_update.assert_called_once_with(
                 user_id=1234,
@@ -108,16 +140,8 @@ class TestGoogleAdsTeamTools:
                 clients_question_answer_list=[("whatsup?", "whatsup!")],
                 clients_approval_message="yes",
                 modification_question="may I?",
-                ad=Campaign(
-                    customer_id="123",
-                    name="cool campaign",
-                    budget_amount_micros=1000,
-                    status="ENABLED",
-                    network_settings_target_google_search=True,
-                    network_settings_target_search_network=False,
-                    network_settings_target_content_network=True,
-                ),
-                endpoint="/create-campaign",
+                ad=params["model_class"](**params["kwargs"]),
+                endpoint=params["endpoint"],
             )
 
             mock_get_customer_currency.assert_called_once_with(
@@ -125,22 +149,13 @@ class TestGoogleAdsTeamTools:
             )
             mock_get_customer_currency.reset_mock()
 
+            params["kwargs"]["local_currency"] = "USD"
+            params["kwargs"]["customer_id"] = "987"
             with pytest.raises(
                 ValueError,
                 match=r"Error: Customer .+ account has set currency .EUR. which is different from the provided currency .+USD",
             ):
-                create_campaign(
-                    customer_id="987",
-                    name="cool campaign",
-                    budget_amount_micros=1000,
-                    clients_approval_message="yes",
-                    modification_question="may I?",
-                    status="ENABLED",
-                    network_settings_target_google_search=True,
-                    network_settings_target_search_network=False,
-                    network_settings_target_content_network=True,
-                    local_currency="USD",
-                )
+                func(**params["kwargs"])
             mock_get_customer_currency.assert_called_once_with(
                 user_id=1234, conv_id=5678, customer_id="987"
             )

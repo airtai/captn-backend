@@ -655,7 +655,7 @@ create_keyword_for_ad_group_config = {
             "modification_question": properties_config["modification_question"],
             "status": {
                 "type": "string",
-                "description": "The status of the Ad (ENABLED or PAUSED)",
+                "description": "The status of the keyword (ENABLED or PAUSED)",
             },
             "keyword_match_type": properties_config["keyword_match_type"],
             "keyword_text": properties_config["keyword_text"],
