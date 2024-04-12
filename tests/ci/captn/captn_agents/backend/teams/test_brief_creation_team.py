@@ -136,7 +136,9 @@ Digital Marketing Objectives: {Increase brand awareness, Boost sales}
 Next Steps: {First step is to get the summary of the Website.}
 Any Other Information Related to Customer Brief: {}"""
 
-        reply_to_client_return_value = "Create new Google Ads campaign"
+        reply_to_client_return_value = (
+            "Create new Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
+        )
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="campaign_creation_team",
@@ -153,7 +155,7 @@ Website: airt.ai
 Digital Marketing Objectives: Use Google Ads to maximize reach and conversions
 Next Steps: First step is to get the summary of the Website.
 Any Other Information Related to Customer Brief: None"""
-        reply_to_client_return_value = "Optimize existing Google Ads campaign"
+        reply_to_client_return_value = "Optimize existing Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="default_team",
