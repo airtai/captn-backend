@@ -64,6 +64,7 @@ sure it is understandable by non-experts.
             seed=seed,
             temperature=temperature,
             clients_question_answer_list=clients_question_answer_list,
+            use_user_proxy=True,
         )
 
         self.llm_config = CampaignCreationTeam._get_llm_config(
@@ -83,7 +84,8 @@ sure it is understandable by non-experts.
             clients_question_answer_list=self.clients_question_answer_list,
         )
         for agent in self.members:
-            self.toolbox.add_to_agent(agent, agent)
+            if agent != self.user_proxy:
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:

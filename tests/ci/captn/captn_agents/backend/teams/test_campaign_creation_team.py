@@ -207,8 +207,9 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                         "This method isn't implemented yet. So do NOT use it."
                     ),
                 ),
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.create_campaign",
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "create_campaign",
                     return_value="Campaign with id 1212 has already been created.",
                 ),
                 unittest.mock.patch(
