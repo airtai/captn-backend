@@ -3,7 +3,14 @@ import inspect
 from functools import wraps
 from typing import Annotated, Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
-from google_ads.model import AdCopy, AdGroup, AdGroupAd, AdGroupCriterion, Campaign
+from google_ads.model import (
+    AdCopy,
+    AdGroup,
+    AdGroupAd,
+    AdGroupCriterion,
+    Campaign,
+    GeoTargetCriterion,
+)
 
 from ....google_ads.client import execute_query as execute_query_client
 from ....google_ads.client import get_login_url, google_ads_create_update
@@ -283,7 +290,7 @@ def update_ad_group_ad(
     *,
     status: Annotated[
         Optional[Literal["ENABLED", "PAUSED"]],
-        "The status of the keyword (ENABLED or PAUSED)",
+        "The status of the Ad (ENABLED or PAUSED)",
     ] = None,
     cpc_bid_micros: Annotated[
         Optional[int], properties_config["cpc_bid_micros"]["description"]
@@ -329,7 +336,7 @@ def update_ad_group(
     name: Annotated[Optional[str], "The name of the Ad Group"] = None,
     status: Annotated[
         Optional[Literal["ENABLED", "PAUSED"]],
-        "The status of the keyword (ENABLED or PAUSED)",
+        "The status of the Ad Group (ENABLED or PAUSED)",
     ] = None,
     cpc_bid_micros: Annotated[
         Optional[int], properties_config["cpc_bid_micros"]["description"]
@@ -373,7 +380,7 @@ def create_ad_group(
     name: Annotated[Optional[str], "The name of the Ad Group"] = None,
     status: Annotated[
         Optional[Literal["ENABLED", "PAUSED"]],
-        "The status of the keyword (ENABLED or PAUSED)",
+        "The status of the Ad group (ENABLED or PAUSED)",
     ] = None,
     cpc_bid_micros: Annotated[
         Optional[int], properties_config["cpc_bid_micros"]["description"]
@@ -568,6 +575,160 @@ def update_campaign(
     )
 
 
+create_ad_copy_headline_or_description_description = f"""Create NEW headline and/or description in the the Google Ads Copy.
+This method does NOT create new Ad Copy, it only creates new headlines and/or descriptions for the existing Ad Copy.
+This method should NOT be used for updating existing headlines or descriptions.
+{MODIFICATION_WARNING}"""
+
+
+def create_ad_copy_headline_or_description(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    ad_id: Annotated[str, properties_config["ad_id"]["description"]],
+    context: Context,
+    *,
+    headline: Annotated[
+        Optional[str], properties_config["headline"]["description"]
+    ] = None,
+    description: Annotated[
+        Optional[str], properties_config["description"]["description"]
+    ] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdCopy(
+            customer_id=customer_id,
+            ad_id=ad_id,
+            headline=headline,
+            description=description,
+            update_existing_headline_index=None,
+            update_existing_description_index=None,
+            final_url=None,
+            final_mobile_urls=None,
+            path1=None,
+            path2=None,
+        ),
+        endpoint="/create-update-ad-copy",
+    )
+
+
+create_ad_group_ad_description = f"""Create Google Ads Ad.
+It is not mandatory but it is recommended to use (Display) path1 and path2 parameters.
+Use this method only when the client approves the creation of the new Ad, ALL the headlines, descriptions and final_url.
+{MODIFICATION_WARNING}"""
+
+
+def create_ad_group_ad(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    ad_group_id: Annotated[str, properties_config["ad_group_id"]["description"]],
+    headlines: Annotated[
+        List[str],
+        "List of headlines, MINIMUM 3, MAXIMUM 15 headlines. Each headline MUST be LESS than 30 characters!",
+    ],
+    descriptions: Annotated[
+        List[str],
+        "List of descriptions, MINIMUM 2, MAXIMUM 4 descriptions. Each description MUST be LESS than 90 characters!",
+    ],
+    final_url: Annotated[str, properties_config["final_url"]["description"]],
+    context: Context,
+    *,
+    status: Annotated[
+        Optional[Literal["ENABLED", "PAUSED"]],
+        "The status of the Ad (ENABLED or PAUSED)",
+    ] = None,
+    path1: Annotated[Optional[str], properties_config["path1"]["description"]] = None,
+    path2: Annotated[Optional[str], properties_config["path2"]["description"]] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdGroupAd(
+            customer_id=customer_id,
+            ad_group_id=ad_group_id,
+            status=status,
+            headlines=headlines,
+            descriptions=descriptions,
+            final_url=final_url,
+            path1=path1,
+            path2=path2,
+        ),
+        endpoint="/create-ad-group-ad",
+    )
+
+
+create_geo_targeting_for_campaign_description = f"""Creates geographical targeting on the campaign level.
+When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of available locations and their IDs.
+Once the client approves the locations, you can use the 'location_ids' parameter to create the geo targeting for the campaign.
+location_ids and location_names parameters are mutually exclusive and they can NOT be set to None at the same time.
+{MODIFICATION_WARNING}"""
+
+
+def create_geo_targeting_for_campaign(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
+    context: Context,
+    *,
+    negative: Annotated[
+        Optional[bool],
+        "Whether to target (False) or exclude (True) the criterion. Default is False.",
+    ] = None,
+    location_names: Annotated[
+        Optional[List[str]],
+        "A list of location names e.g. ['Croaita', 'Zagreb']. These values MUST be provided by the client, do NOT improvise!",
+    ] = None,
+    location_ids: Annotated[Optional[List[str]], "A list of location IDs"] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=GeoTargetCriterion(
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            location_names=location_names,
+            location_ids=location_ids,
+            negative=negative,
+        ),
+        endpoint="/create-geo-targeting-for-campaign",
+    )
+
+
 def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
@@ -610,5 +771,12 @@ def create_google_ads_team_toolbox(
     toolbox.add_function(ad_group_criterion_description)(update_ad_group_criterion)
     toolbox.add_function(update_ad_copy_description)(update_ad_copy)
     toolbox.add_function(update_campaign_description)(update_campaign)
+    toolbox.add_function(create_ad_copy_headline_or_description_description)(
+        create_ad_copy_headline_or_description
+    )
+    toolbox.add_function(create_ad_group_ad_description)(create_ad_group_ad)
+    toolbox.add_function(create_geo_targeting_for_campaign_description)(
+        create_geo_targeting_for_campaign
+    )
 
     return toolbox

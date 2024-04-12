@@ -238,7 +238,7 @@ update_ad_group_ad_config = {
 
 create_ad_group_ad_config = {
     "name": "create_ad_group_ad",
-    "description": f"""Create Google Ad.
+    "description": f"""Create Google Ads Ad.
 It is not mandatory but it is recommended to use (Display) path1 and path2 parameters.
 Use this method only when the client approves the creation of the new Ad, ALL the headlines, descriptions and final_url.
 {MODIFICATION_WARNING}""",

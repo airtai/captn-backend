@@ -45,7 +45,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 14)
+        check_llm_config_total_tools(llm_config, 17)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -62,6 +62,9 @@ class TestGoogleAdsTeamTools:
             "update_ad_group_criterion": "Update Google Ads Group Criterion.",
             "update_ad_copy": "Updates existing Google Ads Ad Copy.",
             "update_campaign": "Update Google Ads Campaign.",
+            "create_ad_copy_headline_or_description": "Create NEW headline and/or description in the the Google Ads Copy.",
+            "create_ad_group_ad": "Create Google Ads Ad.",
+            "create_geo_targeting_for_campaign": "Creates geographical targeting on the campaign level.",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 

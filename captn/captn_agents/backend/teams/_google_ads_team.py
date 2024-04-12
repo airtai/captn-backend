@@ -3,9 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from google_ads.model import (
     AdCopy,
-    AdGroupAd,
     CampaignCriterion,
-    GeoTargetCriterion,
     RemoveResource,
 )
 
@@ -13,9 +11,6 @@ from ....google_ads.client import (
     google_ads_create_update,
 )
 from ..tools._function_configs import (
-    create_ad_copy_headline_or_description_config,
-    create_ad_group_ad_config,
-    create_geo_targeting_for_campaign_config,
     create_negative_keyword_for_campaign_config,
     remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
@@ -33,11 +28,8 @@ class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
         create_negative_keyword_for_campaign_config,
         remove_google_ads_resource_config,
-        create_ad_copy_headline_or_description_config,
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
-        create_ad_group_ad_config,
-        create_geo_targeting_for_campaign_config,
     ]
 
     _shared_system_message = (
@@ -539,31 +531,6 @@ def _get_function_map(
     clients_question_answer_list: List[Tuple[str, Optional[str]]],
 ) -> Dict[str, Any]:
     function_map = {
-        "create_ad_copy_headline_or_description": lambda customer_id,
-        ad_id,
-        clients_approval_message,
-        modification_question,
-        headline=None,
-        description=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdCopy(
-                customer_id=customer_id,
-                ad_id=ad_id,
-                headline=headline,
-                description=description,
-                update_existing_headline_index=None,
-                update_existing_description_index=None,
-                final_url=None,
-                final_mobile_urls=None,
-                path1=None,
-                path2=None,
-            ),
-            endpoint="/create-update-ad-copy",
-        ),
         "update_campaigns_negative_keywords": lambda customer_id,
         campaign_id,
         criterion_id,
@@ -609,54 +576,6 @@ def _get_function_map(
                 bid_modifier=bid_modifier,
             ),
             endpoint="/add-negative-keywords-to-campaign",
-        ),
-        "create_ad_group_ad": lambda customer_id,
-        ad_group_id,
-        clients_approval_message,
-        modification_question,
-        headlines,
-        descriptions,
-        final_url,
-        path1=None,
-        path2=None,
-        status=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdGroupAd(
-                customer_id=customer_id,
-                ad_group_id=ad_group_id,
-                status=status,
-                headlines=headlines,
-                descriptions=descriptions,
-                final_url=final_url,
-                path1=path1,
-                path2=path2,
-            ),
-            endpoint="/create-ad-group-ad",
-        ),
-        "create_geo_targeting_for_campaign": lambda customer_id,
-        campaign_id,
-        clients_approval_message,
-        modification_question,
-        negative=None,
-        location_names=None,
-        location_ids=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=GeoTargetCriterion(
-                customer_id=customer_id,
-                campaign_id=campaign_id,
-                location_names=location_names,
-                location_ids=location_ids,
-                negative=negative,
-            ),
-            endpoint="/create-geo-targeting-for-campaign",
         ),
         "remove_google_ads_resource": lambda customer_id,
         resource_id,
