@@ -24,7 +24,6 @@ from ._functions import (
     Context,
     ask_client_for_permission,
     ask_client_for_permission_description,
-    ask_client_for_permission_with_context,
     get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client_2,
@@ -1005,8 +1004,7 @@ def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
         description=ask_client_for_permission_description,
-        name=ask_client_for_permission.__name__,
-    )(ask_client_for_permission_with_context)
+    )(ask_client_for_permission)
     toolbox.add_function(get_info_from_the_web_page_description)(
         get_info_from_the_web_page
     )

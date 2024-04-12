@@ -15,7 +15,6 @@ __all__ = (
     "Context",
     "reply_to_client_2",
     "ask_client_for_permission",
-    "ask_client_for_permission_with_context",
     "ask_client_for_permission_description",
     "get_info_from_the_web_page",
     "get_info_from_the_web_page_description",
@@ -82,32 +81,6 @@ class Context:
     get_only_non_manager_accounts: bool = False
 
 
-def ask_client_for_permission(
-    user_id: int,
-    conv_id: int,
-    customer_id: str,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-    resource_details: str,
-    proposed_changes: str,
-) -> str:
-    query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
-    query_result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
-    )
-    descriptiveName = ast.literal_eval(query_result)[customer_id][0]["customer"][  # type: ignore
-        "descriptiveName"
-    ]
-
-    customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
-    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
-
-    clients_question_answer_list.append((message, None))
-
-    return reply_to_client_2(
-        message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
-    )
-
-
 ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'proposed_changes' to describe the changes which you want to make.
 Do NOT use this method before you have all the information about the resource and the changes which you want to make!
@@ -136,7 +109,7 @@ Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
 Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
 
 
-def ask_client_for_permission_with_context(
+def ask_client_for_permission(
     customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
     resource_details: Annotated[str, resource_details_description],
     proposed_changes: Annotated[str, proposed_changes_description],
@@ -146,13 +119,21 @@ def ask_client_for_permission_with_context(
     conv_id = context.conv_id
     clients_question_answer_list = context.clients_question_answer_list
 
-    return ask_client_for_permission(
-        user_id=user_id,
-        conv_id=conv_id,
-        customer_id=customer_id,
-        clients_question_answer_list=clients_question_answer_list,
-        resource_details=resource_details,
-        proposed_changes=proposed_changes,
+    query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
+    query_result = execute_query(
+        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
+    )
+    descriptiveName = ast.literal_eval(query_result)[customer_id][0]["customer"][  # type: ignore
+        "descriptiveName"
+    ]
+
+    customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
+    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+
+    clients_question_answer_list.append((message, None))
+
+    return reply_to_client_2(
+        message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
     )
 
 
