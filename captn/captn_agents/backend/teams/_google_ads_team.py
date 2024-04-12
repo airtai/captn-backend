@@ -4,7 +4,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from google_ads.model import (
     AdCopy,
     AdGroupAd,
-    Campaign,
     CampaignCriterion,
     GeoTargetCriterion,
     RemoveResource,
@@ -20,7 +19,6 @@ from ..tools._function_configs import (
     create_negative_keyword_for_campaign_config,
     remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
-    update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
 from ..tools._google_ads_team_tools import create_google_ads_team_toolbox
@@ -33,7 +31,6 @@ __all__ = ("GoogleAdsTeam",)
 @Team.register_team("default_team")
 class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        update_campaign_config,
         create_negative_keyword_for_campaign_config,
         remove_google_ads_resource_config,
         create_ad_copy_headline_or_description_config,
@@ -566,25 +563,6 @@ def _get_function_map(
                 path2=None,
             ),
             endpoint="/create-update-ad-copy",
-        ),
-        "update_campaign": lambda customer_id,
-        campaign_id,
-        clients_approval_message,
-        modification_question,
-        name=None,
-        status=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=Campaign(
-                customer_id=customer_id,
-                campaign_id=campaign_id,
-                name=name,
-                status=status,
-            ),
-            endpoint="/update-campaign",
         ),
         "update_campaigns_negative_keywords": lambda customer_id,
         campaign_id,

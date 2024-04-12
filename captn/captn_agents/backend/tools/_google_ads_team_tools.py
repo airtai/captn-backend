@@ -528,6 +528,46 @@ def update_ad_copy(
     )
 
 
+update_campaign_description = f"Update Google Ads Campaign. {MODIFICATION_WARNING}"
+
+
+def update_campaign(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
+    context: Context,
+    *,
+    name: Annotated[Optional[str], "The name of the campaign"] = None,
+    status: Annotated[
+        Optional[Literal["ENABLED", "PAUSED"]],
+        "The status of the campaign (ENABLED or PAUSED)",
+    ] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=Campaign(
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            name=name,
+            status=status,
+        ),
+        endpoint="/update-campaign",
+    )
+
+
 def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
@@ -569,5 +609,6 @@ def create_google_ads_team_toolbox(
     toolbox.add_function(create_ad_group_description)(create_ad_group)
     toolbox.add_function(ad_group_criterion_description)(update_ad_group_criterion)
     toolbox.add_function(update_ad_copy_description)(update_ad_copy)
+    toolbox.add_function(update_campaign_description)(update_campaign)
 
     return toolbox
