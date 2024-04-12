@@ -4,6 +4,7 @@ from typing import Iterator, Optional
 from unittest.mock import MagicMock
 
 import pytest
+from autogen.agentchat import UserProxyAgent
 from autogen.cache import Cache
 
 from captn.captn_agents.backend.teams import Team
@@ -79,29 +80,35 @@ class TestCampaignCreationTeam:
             assert campaign_creation_team.conv_id == 456
             assert campaign_creation_team.task == "do your magic"
 
-            assert len(campaign_creation_team.members) == 2
+            assert len(campaign_creation_team.members) == 3
 
-            expected_no_tools = 8
+            number_of_functions = 8
+
             for agent in campaign_creation_team.members:
                 # execution of the tools
-                print()
-                for k, v in agent.function_map.items():
-                    print(f"  - {k=}, {v=}")
-                print()
-                assert len(agent.function_map) == expected_no_tools
+                number_of_functions_in_function_map = len(agent.function_map)
+                if isinstance(agent, UserProxyAgent):
+                    assert number_of_functions_in_function_map == number_of_functions
+                else:
+                    assert number_of_functions_in_function_map == 0
 
                 # specification of the tools
                 llm_config = agent.llm_config
-                assert "tools" in llm_config, f"{llm_config.keys()=}"
-                assert (
-                    len(llm_config["tools"]) == expected_no_tools
-                ), f"{llm_config['tools']=}"
+                if not isinstance(agent, UserProxyAgent):
+                    assert "tools" in llm_config, f"{llm_config.keys()=}"
+                    assert (
+                        len(llm_config["tools"]) == number_of_functions
+                    ), f"{llm_config['tools']=}"
 
-                function_names = [
-                    tool["function"]["name"] for tool in llm_config["tools"]
-                ]
+                    function_names = [
+                        tool["function"]["name"] for tool in llm_config["tools"]
+                    ]
 
-                assert set(agent.function_map.keys()) == set(function_names)
+                    assert set(
+                        campaign_creation_team.user_proxy.function_map.keys()
+                    ) == set(function_names)
+                else:
+                    assert llm_config is False
         finally:
             user_id, conv_id = campaign_creation_team.name.split("_")[-2:]
             success = Team.pop_team(user_id=int(user_id), conv_id=int(conv_id))
