@@ -4,16 +4,13 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from google_ads.model import (
     AdCopy,
     CampaignCriterion,
-    RemoveResource,
 )
 
 from ....google_ads.client import (
     google_ads_create_update,
 )
 from ..tools._function_configs import (
-    create_negative_keyword_for_campaign_config,
     remove_ad_copy_headline_or_description_config,
-    remove_google_ads_resource_config,
     update_campaigns_negative_keywords_config,
 )
 from ..tools._google_ads_team_tools import create_google_ads_team_toolbox
@@ -26,8 +23,6 @@ __all__ = ("GoogleAdsTeam",)
 @Team.register_team("default_team")
 class GoogleAdsTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        create_negative_keyword_for_campaign_config,
-        remove_google_ads_resource_config,
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
     ]
@@ -551,50 +546,6 @@ def _get_function_map(
                 keyword_match_type=keyword_match_type,
             ),
             endpoint="/update-campaigns-negative-keywords",
-        ),
-        "create_negative_keyword_for_campaign": lambda customer_id,
-        campaign_id,
-        keyword_text,
-        keyword_match_type,
-        clients_approval_message,
-        modification_question,
-        status=None,
-        negative=None,
-        bid_modifier=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=CampaignCriterion(
-                customer_id=customer_id,
-                campaign_id=campaign_id,
-                status=status,
-                keyword_match_type=keyword_match_type,
-                keyword_text=keyword_text,
-                negative=negative,
-                bid_modifier=bid_modifier,
-            ),
-            endpoint="/add-negative-keywords-to-campaign",
-        ),
-        "remove_google_ads_resource": lambda customer_id,
-        resource_id,
-        resource_type,
-        clients_approval_message,
-        modification_question,
-        parent_id=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=RemoveResource(
-                customer_id=customer_id,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                parent_id=parent_id,
-            ),
-            endpoint="/remove-google-ads-resource",
         ),
         "remove_ad_copy_headline_or_description": lambda customer_id,
         ad_id,

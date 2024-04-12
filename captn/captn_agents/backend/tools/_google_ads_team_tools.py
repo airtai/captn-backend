@@ -9,7 +9,9 @@ from google_ads.model import (
     AdGroupAd,
     AdGroupCriterion,
     Campaign,
+    CampaignCriterion,
     GeoTargetCriterion,
+    RemoveResource,
 )
 
 from ....google_ads.client import execute_query as execute_query_client
@@ -729,6 +731,105 @@ def create_geo_targeting_for_campaign(
     )
 
 
+create_negative_keyword_for_campaign_description = (
+    f"Creates Negative campaign keywords (CampaignCriterion). {MODIFICATION_WARNING}"
+)
+
+
+def create_negative_keyword_for_campaign(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
+    keyword_text: Annotated[str, properties_config["keyword_text"]["description"]],
+    keyword_match_type: Annotated[
+        str, properties_config["keyword_match_type"]["description"]
+    ],
+    context: Context,
+    *,
+    status: Annotated[
+        Optional[Literal["ENABLED", "PAUSED"]],
+        "The status of the keyword (ENABLED or PAUSED)",
+    ] = None,
+    negative: Annotated[
+        Optional[bool], "Whether to target (false) or exclude (true) the criterion"
+    ] = None,
+    bid_modifier: Annotated[
+        Optional[float], "The modifier for the bids when the criterion matches."
+    ] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=CampaignCriterion(
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            status=status,
+            keyword_match_type=keyword_match_type,
+            keyword_text=keyword_text,
+            negative=negative,
+            bid_modifier=bid_modifier,
+        ),
+        endpoint="/add-negative-keywords-to-campaign",
+    )
+
+
+remove_google_ads_resource_description = (
+    f"Removes the google ads resource. {MODIFICATION_WARNING}"
+)
+
+resource_type_description = """One of the following:
+Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion']"""
+
+parent_id_description = """Id of the parent resource, campaign and ad group do not have parent,
+ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaign_id"""
+
+
+def remove_google_ads_resource(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    resource_id: Annotated[str, "Id of the resource which will be removed"],
+    resource_type: Annotated[str, resource_type_description],
+    context: Context,
+    *,
+    parent_id: Annotated[Optional[str], parent_id_description] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=RemoveResource(
+            customer_id=customer_id,
+            resource_id=resource_id,
+            resource_type=resource_type,
+            parent_id=parent_id,
+        ),
+        endpoint="/remove-google-ads-resource",
+    )
+
+
 def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
@@ -777,6 +878,12 @@ def create_google_ads_team_toolbox(
     toolbox.add_function(create_ad_group_ad_description)(create_ad_group_ad)
     toolbox.add_function(create_geo_targeting_for_campaign_description)(
         create_geo_targeting_for_campaign
+    )
+    toolbox.add_function(create_negative_keyword_for_campaign_description)(
+        create_negative_keyword_for_campaign
+    )
+    toolbox.add_function(remove_google_ads_resource_description)(
+        remove_google_ads_resource
     )
 
     return toolbox
