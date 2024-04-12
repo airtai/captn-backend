@@ -45,7 +45,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 19)
+        check_llm_config_total_tools(llm_config, 21)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -67,6 +67,8 @@ class TestGoogleAdsTeamTools:
             "create_geo_targeting_for_campaign": "Creates geographical targeting on the campaign level.",
             "create_negative_keyword_for_campaign": "Creates Negative campaign keywords",
             "remove_google_ads_resource": "Removes the google ads resource.",
+            "remove_ad_copy_headline_or_description": "Removes existing Google Ads Ad Copy headline or/and description.",
+            "update_campaigns_negative_keywords": "Update the Google Ads keywords",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 

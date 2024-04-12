@@ -830,6 +830,99 @@ def remove_google_ads_resource(
     )
 
 
+remove_ad_copy_headline_or_description_description = f"""Removes existing Google Ads Ad Copy headline or/and description.
+Use 'update_existing_headline_index' if you want to remove existing headline and/or 'update_existing_description_index' to remove existing description.
+{MODIFICATION_WARNING}"""
+
+
+def remove_ad_copy_headline_or_description(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    ad_id: Annotated[str, properties_config["ad_id"]["description"]],
+    context: Context,
+    *,
+    update_existing_headline_index: Annotated[
+        Optional[str],
+        "Index in the headlines list which needs to be removed. Index starts from 0.",
+    ] = None,
+    update_existing_description_index: Annotated[
+        Optional[str],
+        "Index in the descriptions list which needs to be removed. Index starts from 0.",
+    ] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdCopy(
+            customer_id=customer_id,
+            ad_id=ad_id,
+            headline=None,
+            description=None,
+            update_existing_headline_index=update_existing_headline_index,
+            update_existing_description_index=update_existing_description_index,
+            final_url=None,
+            final_mobile_urls=None,
+        ),
+        endpoint="/create-update-ad-copy",
+    )
+
+
+update_campaigns_negative_keywords_description = (
+    f"Update the Google Ads keywords (on campaign level). {MODIFICATION_WARNING}"
+)
+
+
+def update_campaigns_negative_keywords(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
+    criterion_id: Annotated[str, "Id of the Campaign criterion"],
+    context: Context,
+    *,
+    keyword_text: Annotated[
+        Optional[str], properties_config["keyword_text"]["description"]
+    ] = None,
+    keyword_match_type: Annotated[
+        Optional[str], properties_config["keyword_match_type"]["description"]
+    ] = None,
+) -> Union[Dict[str, Any], str]:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=CampaignCriterion(
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            criterion_id=criterion_id,
+            keyword_text=keyword_text,
+            keyword_match_type=keyword_match_type,
+        ),
+        endpoint="/update-campaigns-negative-keywords",
+    )
+
+
 def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
@@ -884,6 +977,12 @@ def create_google_ads_team_toolbox(
     )
     toolbox.add_function(remove_google_ads_resource_description)(
         remove_google_ads_resource
+    )
+    toolbox.add_function(remove_ad_copy_headline_or_description_description)(
+        remove_ad_copy_headline_or_description
+    )
+    toolbox.add_function(update_campaigns_negative_keywords_description)(
+        update_campaigns_negative_keywords
     )
 
     return toolbox

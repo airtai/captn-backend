@@ -1,18 +1,6 @@
 import ast
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from google_ads.model import (
-    AdCopy,
-    CampaignCriterion,
-)
-
-from ....google_ads.client import (
-    google_ads_create_update,
-)
-from ..tools._function_configs import (
-    remove_ad_copy_headline_or_description_config,
-    update_campaigns_negative_keywords_config,
-)
 from ..tools._google_ads_team_tools import create_google_ads_team_toolbox
 from ._shared_prompts import MODIFICATION_FUNCTIONS_INSTRUCTIONS
 from ._team import Team
@@ -22,10 +10,7 @@ __all__ = ("GoogleAdsTeam",)
 
 @Team.register_team("default_team")
 class GoogleAdsTeam(Team):
-    _functions: List[Dict[str, Any]] = [
-        remove_ad_copy_headline_or_description_config,
-        update_campaigns_negative_keywords_config,
-    ]
+    _functions: List[Dict[str, Any]] = []
 
     _shared_system_message = (
         "You have a strong SQL knowledge (and very experienced with postgresql)."
@@ -84,12 +69,7 @@ sure it is understandable by non-experts.
         temperature: float = 0.2,
     ):
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
-        function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=work_dir,
-            clients_question_answer_list=clients_question_answer_list,
-        )
+        function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
         super().__init__(
@@ -517,59 +497,3 @@ def string_to_list(
     raise TypeError(
         "Error: parameter customer_ids must be a list of strings. e.g. ['1', '5', '10']"
     )
-
-
-def _get_function_map(
-    user_id: int,
-    conv_id: int,
-    work_dir: str,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-) -> Dict[str, Any]:
-    function_map = {
-        "update_campaigns_negative_keywords": lambda customer_id,
-        campaign_id,
-        criterion_id,
-        clients_approval_message,
-        modification_question,
-        keyword_match_type=None,
-        keyword_text=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=CampaignCriterion(
-                customer_id=customer_id,
-                campaign_id=campaign_id,
-                criterion_id=criterion_id,
-                keyword_text=keyword_text,
-                keyword_match_type=keyword_match_type,
-            ),
-            endpoint="/update-campaigns-negative-keywords",
-        ),
-        "remove_ad_copy_headline_or_description": lambda customer_id,
-        ad_id,
-        clients_approval_message,
-        modification_question,
-        update_existing_headline_index=None,
-        update_existing_description_index=None: google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdCopy(
-                customer_id=customer_id,
-                ad_id=ad_id,
-                headline=None,
-                description=None,
-                update_existing_headline_index=update_existing_headline_index,
-                update_existing_description_index=update_existing_description_index,
-                final_url=None,
-                final_mobile_urls=None,
-            ),
-            endpoint="/create-update-ad-copy",
-        ),
-    }
-
-    return function_map
