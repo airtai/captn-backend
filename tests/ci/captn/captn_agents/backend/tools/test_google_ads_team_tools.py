@@ -1,8 +1,7 @@
 import inspect
 import unittest
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from unittest import mock
-from unittest.mock import MagicMock
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
@@ -329,13 +328,30 @@ Please convert the budget to the customer's currency and ask the client for the 
         ) as mock_get_customer_currency:
             mock_get_customer_currency.return_value = "EUR"
 
-            f = MagicMock()
-
             if micros_var_name is None:
-                f_with_check = add_currency_check(f)
                 micros_var_name = "cpc_bid_micros"
+
+                @add_currency_check()
+                def f(
+                    customer_id: str,
+                    context: Context,
+                    cpc_bid_micros: Optional[int] = None,
+                ) -> Union[Dict[str, Any], str]:
+                    pass
+
+                f_with_check = f
+
             else:
-                f_with_check = add_currency_check(f)
+
+                @add_currency_check(micros_var_name=micros_var_name)
+                def f(
+                    customer_id: str,
+                    context: Context,
+                    budget_micros: Optional[int] = None,
+                ) -> Union[Dict[str, Any], str]:
+                    pass
+
+                f_with_check = f
 
             context = Context(
                 user_id=123,
@@ -343,10 +359,11 @@ Please convert the budget to the customer's currency and ask the client for the 
                 clients_question_answer_list=[],
             )
             kwargs = {
-                micros_var_name: 1000000,
                 "customer_id": "12121212",
                 "context": context,
+                micros_var_name: 1000000,
             }
+
             f_with_check(
                 local_currency="EUR",
                 **kwargs,
@@ -356,9 +373,10 @@ Please convert the budget to the customer's currency and ask the client for the 
             )
 
             mock_get_customer_currency.reset_mock()
+            kwargs.pop(micros_var_name)
             f_with_check(
-                customer_id="12121212",
                 local_currency="EUR",
+                **kwargs,
             )
             mock_get_customer_currency.assert_not_called()
             ERROR_MSG = r"Error: Customer \(12121212\) account has set currency \(EUR\) which is different from the provided currency \(local_currency='USD'\)"
@@ -366,12 +384,14 @@ Please convert the budget to the customer's currency and ask the client for the 
                 ValueError,
                 match=ERROR_MSG,
             ):
+                kwargs[micros_var_name] = 1000000
                 f_with_check(
                     local_currency="USD",
                     **kwargs,
                 )
 
+            kwargs.pop(micros_var_name)
             f_with_check(
-                customer_id="12121212",
                 local_currency="USD",
+                **kwargs,
             )

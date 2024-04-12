@@ -1,5 +1,4 @@
 import ast
-from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from google_ads.model import (
@@ -12,7 +11,6 @@ from google_ads.model import (
 )
 
 from ....google_ads.client import (
-    execute_query,
     google_ads_create_update,
 )
 from ..tools._function_configs import (
@@ -734,61 +732,6 @@ def _get_function_map(
     }
 
     return function_map
-
-
-def get_customer_currency(user_id: int, conv_id: int, customer_id: str) -> str:
-    query = "SELECT customer.currency_code FROM customer"
-    query_result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
-    )
-
-    currency = ast.literal_eval(query_result)[customer_id][0]["customer"][  # type: ignore[arg-type]
-        "currencyCode"
-    ]
-    return currency  # type: ignore
-
-
-def check_currency(
-    user_id: int, conv_id: int, customer_id: str, local_currency: Optional[str]
-) -> None:
-    cutomers_currency = get_customer_currency(
-        user_id=user_id, conv_id=conv_id, customer_id=customer_id
-    )
-    if (
-        local_currency is None
-        or cutomers_currency.upper() != local_currency.strip().upper()
-    ):
-        raise ValueError(
-            f"""Error: Customer ({customer_id}) account has set currency ({cutomers_currency}) which is different from the provided currency ({local_currency=}).
-Please convert the budget to the customer's currency and ask the client for the approval with the new budget amount (in the customer's currency)."""
-        )
-
-
-def add_currency_check(
-    f: Callable[..., Any],
-    user_id: int,
-    conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-    *,
-    micros_var_name: str = "cpc_bid_micros",
-) -> Callable[..., Any]:
-    @wraps(f)
-    def wrapper(
-        *, customer_id: str, local_currency: Optional[str] = None, **kwargs: Any
-    ) -> Any:
-        micros = kwargs.get(micros_var_name, None)
-        if micros is not None:
-            check_currency(user_id, conv_id, customer_id, local_currency)
-
-        return f(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            customer_id=customer_id,
-            **kwargs,
-        )
-
-    return wrapper
 
 
 def _get_update_ad_copy(
