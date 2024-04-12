@@ -20,7 +20,6 @@ from ..tools._function_configs import (
     create_negative_keyword_for_campaign_config,
     remove_ad_copy_headline_or_description_config,
     remove_google_ads_resource_config,
-    update_ad_copy_config,
     update_campaign_config,
     update_campaigns_negative_keywords_config,
 )
@@ -37,7 +36,6 @@ class GoogleAdsTeam(Team):
         update_campaign_config,
         create_negative_keyword_for_campaign_config,
         remove_google_ads_resource_config,
-        update_ad_copy_config,
         create_ad_copy_headline_or_description_config,
         remove_ad_copy_headline_or_description_config,
         update_campaigns_negative_keywords_config,
@@ -569,11 +567,6 @@ def _get_function_map(
             ),
             endpoint="/create-update-ad-copy",
         ),
-        "update_ad_copy": _get_update_ad_copy(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-        ),
         "update_campaign": lambda customer_id,
         campaign_id,
         clients_approval_message,
@@ -732,69 +725,3 @@ def _get_function_map(
     }
 
     return function_map
-
-
-def _get_update_ad_copy(
-    user_id: int,
-    conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-) -> Callable[
-    [
-        str,
-        str,
-        str,
-        str,
-        Optional[str],
-        Optional[str],
-        Optional[int],
-        Optional[int],
-        Optional[str],
-        Optional[str],
-    ],
-    Union[Dict[str, Any], str],
-]:
-    def _update_ad_copy(
-        customer_id: str,
-        ad_id: str,
-        clients_approval_message: str,
-        modification_question: str,
-        headline: Optional[str] = None,
-        description: Optional[str] = None,
-        update_existing_headline_index: Optional[int] = None,
-        update_existing_description_index: Optional[int] = None,
-        final_url: Optional[str] = None,
-        final_mobile_urls: Optional[str] = None,
-        path1: Optional[str] = None,
-        path2: Optional[str] = None,
-    ) -> Union[Dict[str, Any], str]:
-        if headline and not update_existing_headline_index:
-            raise ValueError(
-                "If you want to update existing headline, you must specify update_existing_headline_index"
-            )
-        if description and not update_existing_description_index:
-            raise ValueError(
-                "If you want to update existing description, you must specify update_existing_description_index"
-            )
-
-        return google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
-            ad=AdCopy(
-                customer_id=customer_id,
-                ad_id=ad_id,
-                headline=headline,
-                description=description,
-                update_existing_headline_index=update_existing_headline_index,
-                update_existing_description_index=update_existing_description_index,
-                final_url=final_url,
-                final_mobile_urls=final_mobile_urls,
-                path1=path1,
-                path2=path2,
-            ),
-            endpoint="/create-update-ad-copy",
-        )
-
-    return _update_ad_copy

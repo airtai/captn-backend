@@ -13,6 +13,7 @@ from captn.captn_agents.backend.tools._google_ads_team_tools import (
     _get_customer_currency,
     add_currency_check,
     create_google_ads_team_toolbox,
+    update_ad_copy,
 )
 from google_ads.model import AdGroup, AdGroupAd, AdGroupCriterion, Campaign
 
@@ -44,7 +45,7 @@ class TestGoogleAdsTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 12)
+        check_llm_config_total_tools(llm_config, 13)
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
@@ -59,6 +60,7 @@ class TestGoogleAdsTeamTools:
             "update_ad_group": "Update Google Ads Ad Group.",
             "create_ad_group": "Create Google Ads Ad Group.",
             "update_ad_group_criterion": "Update Google Ads Group Criterion.",
+            "update_ad_copy": "Updates existing Google Ads Ad Copy.",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)
 
@@ -394,4 +396,37 @@ Please convert the budget to the customer's currency and ask the client for the 
             f_with_check(
                 local_currency="USD",
                 **kwargs,
+            )
+
+    def test_update_ad_copy_raises_exception_when_index_is_missing(self) -> None:
+        context = Context(
+            user_id=123,
+            conv_id=456,
+            clients_question_answer_list=[],
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="If you want to update existing headline",
+        ):
+            update_ad_copy(
+                customer_id="234",
+                ad_id="345",
+                headline="headline",
+                clients_approval_message="yes",
+                modification_question="may I?",
+                context=context,
+            )
+
+        with pytest.raises(
+            ValueError,
+            match="If you want to update existing description",
+        ):
+            update_ad_copy(
+                customer_id="234",
+                ad_id="345",
+                description="description",
+                clients_approval_message="yes",
+                modification_question="may I?",
+                context=context,
             )

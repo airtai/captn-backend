@@ -3,7 +3,7 @@ import inspect
 from functools import wraps
 from typing import Annotated, Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
-from google_ads.model import AdGroup, AdGroupAd, AdGroupCriterion, Campaign
+from google_ads.model import AdCopy, AdGroup, AdGroupAd, AdGroupCriterion, Campaign
 
 from ....google_ads.client import execute_query as execute_query_client
 from ....google_ads.client import get_login_url, google_ads_create_update
@@ -453,6 +453,81 @@ def update_ad_group_criterion(
     )
 
 
+update_ad_copy_description = f"""Updates existing Google Ads Ad Copy.
+Use 'update_existing_headline_index' if you want to modify existing headline and/or 'update_existing_description_index' to modify existing description.
+{MODIFICATION_WARNING}"""
+
+update_existing_headline_index_description = """Index in the headlines list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing headline!"""
+
+update_existing_headline_index_description_description = """Index in the descriptions list which needs to be updated. Index starts from 0.
+Use this parameter ONLY when you want to modify existing description!"""
+
+
+def update_ad_copy(
+    customer_id: Annotated[str, properties_config["customer_id"]["description"]],
+    clients_approval_message: Annotated[
+        str, properties_config["clients_approval_message"]["description"]
+    ],
+    modification_question: Annotated[
+        str, properties_config["modification_question"]["description"]
+    ],
+    ad_id: Annotated[str, properties_config["ad_id"]["description"]],
+    context: Context,
+    *,
+    headline: Annotated[
+        Optional[str], properties_config["headline"]["description"]
+    ] = None,
+    description: Annotated[
+        Optional[str], properties_config["description"]["description"]
+    ] = None,
+    update_existing_headline_index: Annotated[
+        Optional[str], update_existing_headline_index_description
+    ] = None,
+    update_existing_description_index: Annotated[
+        Optional[str], update_existing_headline_index_description_description
+    ] = None,
+    final_url: Annotated[
+        Optional[str], properties_config["final_url"]["description"]
+    ] = None,
+    final_mobile_urls: Annotated[Optional[str], "Ad Copy final_mobile_urls"] = None,
+    path1: Annotated[Optional[str], properties_config["path1"]["description"]] = None,
+    path2: Annotated[Optional[str], properties_config["path2"]["description"]] = None,
+) -> Union[Dict[str, Any], str]:
+    if headline and not update_existing_headline_index:
+        raise ValueError(
+            "If you want to update existing headline, you must specify update_existing_headline_index"
+        )
+    if description and not update_existing_description_index:
+        raise ValueError(
+            "If you want to update existing description, you must specify update_existing_description_index"
+        )
+
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+    return google_ads_create_update(
+        user_id=user_id,
+        conv_id=conv_id,
+        clients_question_answer_list=clients_question_answer_list,
+        clients_approval_message=clients_approval_message,
+        modification_question=modification_question,
+        ad=AdCopy(
+            customer_id=customer_id,
+            ad_id=ad_id,
+            headline=headline,
+            description=description,
+            update_existing_headline_index=update_existing_headline_index,
+            update_existing_description_index=update_existing_description_index,
+            final_url=final_url,
+            final_mobile_urls=final_mobile_urls,
+            path1=path1,
+            path2=path2,
+        ),
+        endpoint="/create-update-ad-copy",
+    )
+
+
 def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
@@ -493,5 +568,6 @@ def create_google_ads_team_toolbox(
     toolbox.add_function(update_ad_group_description)(update_ad_group)
     toolbox.add_function(create_ad_group_description)(create_ad_group)
     toolbox.add_function(ad_group_criterion_description)(update_ad_group_criterion)
+    toolbox.add_function(update_ad_copy_description)(update_ad_copy)
 
     return toolbox
