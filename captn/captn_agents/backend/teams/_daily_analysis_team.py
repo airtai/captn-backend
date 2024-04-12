@@ -21,10 +21,10 @@ from ....google_ads.client import (
     get_user_ids_and_emails,
     list_accessible_customers,
 )
+from ..tools._daily_analysis_team_tools import create_daily_analysis_team_toolbox
 from ..tools._function_configs import (
     execute_query_config,
     get_info_from_the_web_page_config,
-    list_accessible_customers_config,
     send_email_config,
 )
 from ..tools._functions import get_info_from_the_web_page, send_email
@@ -604,7 +604,6 @@ def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
 
 class DailyAnalysisTeam(Team):
     _functions: List[Dict[str, Any]] = [
-        list_accessible_customers_config,
         execute_query_config,
         send_email_config,
         get_info_from_the_web_page_config,
@@ -683,7 +682,20 @@ sure it is understandable by non-experts.
         )
 
         self._create_members()
+
+        self._add_tools()
+
         self._create_initial_message()
+
+    def _add_tools(self) -> None:
+        self.toolbox = create_daily_analysis_team_toolbox(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+            clients_question_answer_list=self.clients_question_answer_list,
+        )
+        for agent in self.members:
+            # if agent != self.user_proxy:
+            self.toolbox.add_to_agent(agent, agent)
 
     @property
     def _task(self) -> str:
@@ -825,9 +837,9 @@ You can execute the provided queries ONLY by using the 'execute_query' command!
 
 def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
     function_map = {
-        "list_accessible_customers": lambda: list_accessible_customers(
-            user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
-        ),
+        # "list_accessible_customers": lambda: list_accessible_customers(
+        #     user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
+        # ),
         "execute_query": lambda customer_ids=None, query=None: execute_query(
             user_id=user_id,
             conv_id=conv_id,

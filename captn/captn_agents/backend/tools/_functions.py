@@ -78,6 +78,7 @@ class Context:
     user_id: int
     conv_id: int
     clients_question_answer_list: List[Tuple[str, Optional[str]]]
+    get_only_non_manager_accounts: bool = False
 
 
 def ask_client_for_permission(

@@ -58,8 +58,13 @@ list_accessible_customers_description = "List all the customers accessible to th
 def list_accessible_customers(context: Context) -> Union[List[str], Dict[str, str]]:
     user_id = context.user_id
     conv_id = context.conv_id
+    get_only_non_manager_accounts = context.get_only_non_manager_accounts
 
-    return list_accessible_customers_client(user_id=user_id, conv_id=conv_id)
+    return list_accessible_customers_client(
+        user_id=user_id,
+        conv_id=conv_id,
+        get_only_non_manager_accounts=get_only_non_manager_accounts,
+    )
 
 
 execute_query_description = """Query the Google Ads API.

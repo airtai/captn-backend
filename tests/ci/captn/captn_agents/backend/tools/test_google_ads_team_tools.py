@@ -13,6 +13,7 @@ from captn.captn_agents.backend.tools._google_ads_team_tools import (
     _get_customer_currency,
     add_currency_check,
     create_google_ads_team_toolbox,
+    list_accessible_customers,
     update_ad_copy,
 )
 from google_ads.model import AdGroup, AdGroupAd, AdGroupCriterion, Campaign
@@ -437,4 +438,20 @@ Please convert the budget to the customer's currency and ask the client for the 
                 clients_approval_message="yes",
                 modification_question="may I?",
                 context=context,
+            )
+
+    def test_list_accessible_customers(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._google_ads_team_tools.list_accessible_customers_client",
+            return_value=["123", "456"],
+        ) as mock_list_accessible_customers_client:
+            context = Context(
+                user_id=123,
+                conv_id=456,
+                clients_question_answer_list=[],
+            )
+            list_accessible_customers(context=context)
+
+            mock_list_accessible_customers_client.assert_called_once_with(
+                user_id=123, conv_id=456, get_only_non_manager_accounts=False
             )
