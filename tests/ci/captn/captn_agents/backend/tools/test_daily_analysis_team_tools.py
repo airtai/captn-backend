@@ -36,9 +36,12 @@ class TestDailyAnalysisTeamTools:
     def test_llm_config(self) -> None:
         llm_config = self.agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 1)
+        check_llm_config_total_tools(llm_config, 4)
 
         name_desc_dict = {
             "list_accessible_customers": "List all the customers accessible to the user",
+            "execute_query": "Query the Google Ads API.",
+            "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
+            "send_email": "Send email to the client.",
         }
         check_llm_config_descriptions(llm_config, name_desc_dict)

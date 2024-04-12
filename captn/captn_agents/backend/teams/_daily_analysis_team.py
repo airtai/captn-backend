@@ -22,13 +22,6 @@ from ....google_ads.client import (
     list_accessible_customers,
 )
 from ..tools._daily_analysis_team_tools import create_daily_analysis_team_toolbox
-from ..tools._function_configs import (
-    execute_query_config,
-    get_info_from_the_web_page_config,
-    send_email_config,
-)
-from ..tools._functions import get_info_from_the_web_page, send_email
-from ._google_ads_team import string_to_list
 from ._team import Team
 
 __all__ = ("DailyAnalysisTeam",)
@@ -603,11 +596,7 @@ def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
 
 
 class DailyAnalysisTeam(Team):
-    _functions: List[Dict[str, Any]] = [
-        execute_query_config,
-        send_email_config,
-        get_info_from_the_web_page_config,
-    ]
+    _functions: List[Dict[str, Any]] = []
 
     _shared_system_message = (
         "You have a strong SQL knowledge (and very experienced with postgresql)."
@@ -659,11 +648,7 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=work_dir,
-        )
+        function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = DailyAnalysisTeam._default_roles
 
         super().__init__(
@@ -675,6 +660,7 @@ sure it is understandable by non-experts.
             max_round=max_round,
             seed=seed,
             temperature=temperature,
+            use_user_proxy=True,
         )
         self.task = task
         self.llm_config = DailyAnalysisTeam._get_llm_config(
@@ -694,8 +680,8 @@ sure it is understandable by non-experts.
             clients_question_answer_list=self.clients_question_answer_list,
         )
         for agent in self.members:
-            # if agent != self.user_proxy:
-            self.toolbox.add_to_agent(agent, agent)
+            if agent != self.user_proxy:
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
@@ -833,27 +819,6 @@ SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criter
 NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
 You can execute the provided queries ONLY by using the 'execute_query' command!
 """
-
-
-def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
-    function_map = {
-        # "list_accessible_customers": lambda: list_accessible_customers(
-        #     user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
-        # ),
-        "execute_query": lambda customer_ids=None, query=None: execute_query(
-            user_id=user_id,
-            conv_id=conv_id,
-            customer_ids=string_to_list(customer_ids),
-            query=query,
-            work_dir=work_dir,
-        ),
-        "send_email": lambda proposed_user_actions: send_email(
-            proposed_user_actions=proposed_user_actions,
-        ),
-        "get_info_from_the_web_page": get_info_from_the_web_page,
-    }
-
-    return function_map
 
 
 def _create_final_html_message(

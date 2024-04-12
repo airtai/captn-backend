@@ -20,6 +20,7 @@ __all__ = (
     "get_info_from_the_web_page",
     "get_info_from_the_web_page_description",
     "send_email",
+    "send_email_description",
 )
 
 
@@ -277,8 +278,11 @@ You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY infor
     return str(user_proxy.last_message()["content"])
 
 
+send_email_description = "Send email to the client."
+
+
 def send_email(
-    proposed_user_actions: List[str],
+    proposed_user_actions: Annotated[List[str], "List of proposed user actions"],
 ) -> Dict[str, Any]:
     return_msg = {
         "subject": "Capt’n.ai Daily Analysis",
