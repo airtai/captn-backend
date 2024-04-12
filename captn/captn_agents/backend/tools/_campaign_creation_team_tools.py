@@ -6,12 +6,12 @@ from typing_extensions import Annotated
 
 from ....google_ads.client import google_ads_create_update
 from ..toolboxes import Toolbox
-from ._function_configs import properties_config
 from ._functions import (
     Context,
 )
 from ._google_ads_team_tools import (
     add_shared_functions,
+    properties_config,
 )
 
 __all__ = ("create_campaign_creation_team_toolbox",)
