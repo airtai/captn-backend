@@ -137,6 +137,34 @@ def ask_client_for_permission(
     )
 
 
+ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
+Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'proposed_changes' to describe the changes which you want to make.
+Do NOT use this method before you have all the information about the resource and the changes which you want to make!
+This method should ONLY be used when you know the exact resource and exact changes which you want to make and NOT for the general questions like: 'Do you want to update keywords?'.
+Also, propose one change at a time. If you want to make multiple changes, ask the client for the permission for each change separately i.e. before each modification, use this method to ask the client for the permission.
+At the end of the message, inform the client that the modifications will be made ONLY if he answers explicitly 'Yes'."""
+
+resource_details_description = """Make sure you add all the information which the client needs to know, because the client does NOT see the internal team messages!
+You MUST also describe to the client the current situation for that resource.
+If you want to modify the Ad Copy, you MUST provide the current Ad Copy details, e.g:
+The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are 'h1', 'h2' and 'h3'. The descriptions are 'd1' and 'd2'.
+
+If you want to modify the keywords, you MUST provide the current keywords details, e.g:
+Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'."""
+
+proposed_changes_description = """Explains which changes you want to make and why you want to make them.
+I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
+You MUST also tell about all the fields which will be effected by the changes, e.g.:
+'status' will be changed from 'ENABLED' to 'PAUSED'
+Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '2000000')
+
+e.g. for AdGroupAd:
+'final_url' will be set to 'https://my-web-page.com'
+Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
+
+Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
+
+
 config = Config()
 
 llm_config_gpt_4 = {
