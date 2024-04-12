@@ -147,7 +147,7 @@ If the budget micros value is used, the currency code IS required!""",
 
 update_ad_group_config = {
     "name": "update_ad_group",
-    "description": f"Update Google Ad Group. {MODIFICATION_WARNING}",
+    "description": f"Update Google Ads Ad Group. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -177,7 +177,7 @@ update_ad_group_config = {
 
 create_ad_group_config = {
     "name": "create_ad_group",
-    "description": f"Create Google Ad Group. {MODIFICATION_WARNING}",
+    "description": f"Create Google Ads Ad Group. {MODIFICATION_WARNING}",
     "parameters": {
         "type": "object",
         "properties": {
@@ -238,7 +238,7 @@ update_ad_group_ad_config = {
 
 create_ad_group_ad_config = {
     "name": "create_ad_group_ad",
-    "description": f"""Create Google Ad.
+    "description": f"""Create Google Ads Ad.
 It is not mandatory but it is recommended to use (Display) path1 and path2 parameters.
 Use this method only when the client approves the creation of the new Ad, ALL the headlines, descriptions and final_url.
 {MODIFICATION_WARNING}""",
@@ -291,7 +291,7 @@ update_campaign_config = {
             "modification_question": properties_config["modification_question"],
             "name": {
                 "type": "string",
-                "description": "The name of the Ad",
+                "description": "The name of the Campaign",
             },
             "status": {
                 "type": "string",
@@ -318,11 +318,11 @@ create_campaign_config = {
             "modification_question": properties_config["modification_question"],
             "name": {
                 "type": "string",
-                "description": "The name of the Ad",
+                "description": "The name of the Campaign",
             },
             "status": {
                 "type": "string",
-                "description": "The status of the Ad (ENABLED or PAUSED)",
+                "description": "The status of the Campaign (ENABLED or PAUSED)",
             },
             "budget_amount_micros": {
                 "type": "number",
@@ -655,7 +655,7 @@ create_keyword_for_ad_group_config = {
             "modification_question": properties_config["modification_question"],
             "status": {
                 "type": "string",
-                "description": "The status of the Ad (ENABLED or PAUSED)",
+                "description": "The status of the keyword (ENABLED or PAUSED)",
             },
             "keyword_match_type": properties_config["keyword_match_type"],
             "keyword_text": properties_config["keyword_text"],

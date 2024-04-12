@@ -18,3 +18,5 @@ tmp*
 
 # Google Ads client secret
 client_secret.json
+
+.vscode/

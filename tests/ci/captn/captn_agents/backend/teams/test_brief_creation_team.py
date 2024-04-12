@@ -11,7 +11,10 @@ from captn.captn_agents.backend.teams import (
     Team,
 )
 
-from .test_brief_creation_team_tools import BRIEF_CREATION_TEAM_RESPONSE
+from ..tools.test_brief_creation_team_tools import (
+    BRIEF_CREATION_TEAM_RESPONSE,
+)
+from .helpers import helper_test_init
 
 
 class TestBriefCreationTeam:
@@ -19,6 +22,20 @@ class TestBriefCreationTeam:
     def setup(self) -> Iterator[None]:
         Team._teams.clear()
         yield
+
+    def test_init(self) -> None:
+        brief_creation_team = BriefCreationTeam(
+            user_id=123,
+            conv_id=456,
+            task="do your magic",
+        )
+
+        helper_test_init(
+            team=brief_creation_team,
+            number_of_team_members=3,
+            number_of_functions=4,
+            team_class=BriefCreationTeam,
+        )
 
     def test_get_avaliable_teams_and_their_descriptions(self) -> None:
         avaliable_teams_and_their_descriptions = (
@@ -119,7 +136,9 @@ Digital Marketing Objectives: {Increase brand awareness, Boost sales}
 Next Steps: {First step is to get the summary of the Website.}
 Any Other Information Related to Customer Brief: {}"""
 
-        reply_to_client_return_value = "Create new Google Ads campaign"
+        reply_to_client_return_value = (
+            "Create new Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
+        )
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="campaign_creation_team",
@@ -136,7 +155,7 @@ Website: airt.ai
 Digital Marketing Objectives: Use Google Ads to maximize reach and conversions
 Next Steps: First step is to get the summary of the Website.
 Any Other Information Related to Customer Brief: None"""
-        reply_to_client_return_value = "Optimize existing Google Ads campaign"
+        reply_to_client_return_value = "Optimize existing Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="default_team",

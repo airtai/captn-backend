@@ -21,6 +21,8 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
+from .helpers import helper_test_init
+
 
 class TestCampaignCreationTeam:
     @pytest.fixture()
@@ -67,45 +69,19 @@ class TestCampaignCreationTeam:
             # do some cleanup if needed
             Team._teams.clear()
 
-    def test_init(self, setup_ad_group_with_ad_and_keywords: None) -> None:
+    def test_init(self) -> None:
         campaign_creation_team = CampaignCreationTeam(
             user_id=123,
             conv_id=456,
             task="do your magic",
         )
-        try:
-            assert isinstance(campaign_creation_team, CampaignCreationTeam)
-            assert campaign_creation_team.user_id == 123
-            assert campaign_creation_team.conv_id == 456
-            assert campaign_creation_team.task == "do your magic"
 
-            assert len(campaign_creation_team.members) == 2
-
-            expected_no_tools = 8
-            for agent in campaign_creation_team.members:
-                # execution of the tools
-                print()
-                for k, v in agent.function_map.items():
-                    print(f"  - {k=}, {v=}")
-                print()
-                assert len(agent.function_map) == expected_no_tools
-
-                # specification of the tools
-                llm_config = agent.llm_config
-                assert "tools" in llm_config, f"{llm_config.keys()=}"
-                assert (
-                    len(llm_config["tools"]) == expected_no_tools
-                ), f"{llm_config['tools']=}"
-
-                function_names = [
-                    tool["function"]["name"] for tool in llm_config["tools"]
-                ]
-
-                assert set(agent.function_map.keys()) == set(function_names)
-        finally:
-            user_id, conv_id = campaign_creation_team.name.split("_")[-2:]
-            success = Team.pop_team(user_id=int(user_id), conv_id=int(conv_id))
-            assert success is not None
+        helper_test_init(
+            team=campaign_creation_team,
+            number_of_team_members=3,
+            number_of_functions=8,
+            team_class=CampaignCreationTeam,
+        )
 
     @pytest.mark.flaky
     @pytest.mark.openai
@@ -120,7 +96,8 @@ class TestCampaignCreationTeam:
             clients_answer = "yes"
             # In real ask_client_for_permission, we would append (message, None)
             # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
-            kwargs["clients_question_answer_list"].append((message, clients_answer))
+            context = kwargs["context"]
+            context.clients_question_answer_list.append((message, clients_answer))
             return clients_answer
 
         task = """Here is the customer brief:
@@ -172,12 +149,14 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
 """
 
             with (
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.list_accessible_customers",
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "list_accessible_customers",
                     return_value=["1111"],
-                ),  # as mock_list_accessible_customers,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.ask_client_for_permission",
+                ),
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "ask_client_for_permission",
                     wraps=ask_client_for_permission_mock,
                 ) as mock_ask_client_for_permission,
                 unittest.mock.patch(
@@ -192,24 +171,27 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                     "captn.captn_agents.backend.tools._campaign_creation_team_tools._create_ad_group_keyword",
                     wraps=_create_ad_group_keyword,
                 ) as mock_create_ad_group_keyword,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.get_info_from_the_web_page",
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "get_info_from_the_web_page",
                     return_value=get_info_from_the_web_page_return_value,
-                ),  # as mock_get_info_from_the_web_page,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.execute_query",
+                ),
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "execute_query",
                     return_value=(
                         "This method isn't implemented yet. So do NOT use it."
                     ),
-                ),  # as mock_execute_query,
-                unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._google_ads_team.create_campaign",
+                ),
+                unittest.mock.patch.object(
+                    campaign_creation_team.toolbox.functions,
+                    "create_campaign",
                     return_value="Campaign with id 1212 has already been created.",
-                ),  # as mock_create_campaign,
+                ),
                 unittest.mock.patch(
                     "captn.google_ads.client.get_login_url",
                     return_value={"login_url": ALREADY_AUTHENTICATED},
-                ),  # as mock_get_login_url,
+                ),
                 unittest.mock.patch(
                     "captn.google_ads.client.requests_get",
                     return_value=MagicMock(),

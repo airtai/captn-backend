@@ -1,18 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..tools._campaign_creation_team_tools import create_campaign_creation_team_toolbox
-from ..tools._function_configs import (
-    ask_client_for_permission_config,
-    change_google_account_config,
-    create_campaign_config,
-    execute_query_config,
-    get_info_from_the_web_page_config,
-    list_accessible_customers_config,
-    reply_to_client_2_config,
-)
-from ._google_ads_team import (
-    get_campaign_creation_team_shared_functions,
-)
 from ._shared_prompts import (
     GET_INFO_FROM_THE_WEB_COMMAND,
     MODIFICATION_FUNCTIONS_INSTRUCTIONS,
@@ -25,15 +13,7 @@ __all__ = ("CampaignCreationTeam",)
 
 @Team.register_team("campaign_creation_team")
 class CampaignCreationTeam(Team):
-    _functions: List[Dict[str, Any]] = [
-        ask_client_for_permission_config,
-        change_google_account_config,
-        create_campaign_config,
-        execute_query_config,
-        get_info_from_the_web_page_config,
-        list_accessible_customers_config,
-        reply_to_client_2_config,
-    ]
+    _functions: List[Dict[str, Any]] = []
 
     _default_roles = [
         {
@@ -71,14 +51,7 @@ sure it is understandable by non-experts.
         self.task = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
-        function_map: Dict[str, Callable[[Any], Any]] = (
-            get_campaign_creation_team_shared_functions(
-                user_id=user_id,
-                conv_id=conv_id,
-                work_dir=work_dir,
-                clients_question_answer_list=clients_question_answer_list,
-            )
-        )
+        function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
         super().__init__(
@@ -91,6 +64,7 @@ sure it is understandable by non-experts.
             seed=seed,
             temperature=temperature,
             clients_question_answer_list=clients_question_answer_list,
+            use_user_proxy=True,
         )
 
         self.llm_config = CampaignCreationTeam._get_llm_config(
@@ -110,13 +84,8 @@ sure it is understandable by non-experts.
             clients_question_answer_list=self.clients_question_answer_list,
         )
         for agent in self.members:
-            self.toolbox.add_to_agent(agent, agent)
-            # add_create_ad_group_with_ad_and_keywords_to_agent(
-            #     agent=agent,
-            #     user_id=self.user_id,
-            #     conv_id=self.conv_id,
-            #     clients_question_answer_list=self.clients_question_answer_list,
-            # )
+            if agent != self.user_proxy:
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
