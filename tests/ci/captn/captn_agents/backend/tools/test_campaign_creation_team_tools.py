@@ -34,22 +34,20 @@ class TestTools:
         user_proxy = UserProxyAgent(name="user_proxy")
 
         self.toolbox.add_to_agent(agent, user_proxy)
-
-        # add_create_ad_group_with_ad_and_keywords_to_agent(
-        #     agent=agent,
-        #     user_id=1,
-        #     conv_id=1,
-        #     clients_question_answer_list=[("question", "yes")],
-        # )
-
         llm_config = agent.llm_config
 
         check_llm_config_total_tools(llm_config, 8)
-        # todo; add the new tool to the test
         check_llm_config_descriptions(
             llm_config,
             {
                 "create_ad_group_with_ad_and_keywords": "Create an ad group with a single ad and a list of keywords",
+                "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
+                "reply_to_client_2": r"Respond to the client \(answer to his task or question for additional information\)",
+                "ask_client_for_permission": "Ask the client for permission to make the changes.",
+                "change_google_account": "This method should be used only when the client explicitly asks for the change of the Google account",
+                "list_accessible_customers": "List all the customers accessible to the user",
+                "execute_query": "Query the Google Ads API.",
+                "create_campaign": "Creates Google Ads Campaign. VERY IMPORTANT:",
             },
         )
 
