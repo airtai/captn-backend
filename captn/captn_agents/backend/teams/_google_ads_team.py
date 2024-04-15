@@ -1,5 +1,4 @@
-import ast
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..tools._google_ads_team_tools import create_google_ads_team_toolbox
 from ._shared_prompts import MODIFICATION_FUNCTIONS_INSTRUCTIONS
@@ -484,18 +483,3 @@ Any Other Information Related to Customer Brief:
 
 Please extract and represent relevant details from the conversation under these headings
 """
-
-
-def string_to_list(
-    customer_ids: Optional[Union[List[str], str]],
-) -> Optional[List[str]]:
-    if customer_ids is None or isinstance(customer_ids, list):
-        return customer_ids
-
-    customer_ids_list = ast.literal_eval(customer_ids)
-    if isinstance(customer_ids_list, list):
-        return customer_ids_list
-
-    raise TypeError(
-        "Error: parameter customer_ids must be a list of strings. e.g. ['1', '5', '10']"
-    )

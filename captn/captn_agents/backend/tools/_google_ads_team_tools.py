@@ -20,12 +20,10 @@ from ....google_ads.client import (
     list_accessible_customers as list_accessible_customers_client,
 )
 from ..toolboxes import Toolbox
-from ._function_configs import MODIFICATION_WARNING, properties_config
 from ._functions import (
     Context,
     ask_client_for_permission,
     ask_client_for_permission_description,
-    ask_client_for_permission_with_context,
     get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client_2,
@@ -40,6 +38,7 @@ __all__ = (
     "execute_query_description",
     "list_accessible_customers",
     "list_accessible_customers_description",
+    "properties_config",
 )
 
 change_google_account_description = "This method should be used only when the client explicitly asks for the change of the Google account (the account which will be used for Google Ads)!"
@@ -58,8 +57,13 @@ list_accessible_customers_description = "List all the customers accessible to th
 def list_accessible_customers(context: Context) -> Union[List[str], Dict[str, str]]:
     user_id = context.user_id
     conv_id = context.conv_id
+    get_only_non_manager_accounts = context.get_only_non_manager_accounts
 
-    return list_accessible_customers_client(user_id=user_id, conv_id=conv_id)
+    return list_accessible_customers_client(
+        user_id=user_id,
+        conv_id=conv_id,
+        get_only_non_manager_accounts=get_only_non_manager_accounts,
+    )
 
 
 execute_query_description = """Query the Google Ads API.
@@ -81,6 +85,79 @@ def execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=customer_ids, query=query
     )
 
+
+properties_config = {
+    "customer_id": {
+        "type": "string",
+        "description": "Id of the customer",
+    },
+    "campaign_id": {
+        "type": "string",
+        "description": "Id of the campaign",
+    },
+    "ad_group_id": {
+        "type": "string",
+        "description": "Id of the Ad group",
+    },
+    "ad_id": {
+        "type": "string",
+        "description": "Id of the Ad",
+    },
+    "clients_approval_message": {
+        "type": "string",
+        "description": """Clients approval message.
+The client can approve by answering 'Yes' to the question. If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else.
+NEVER create this message on your own, or modify clients message in ANY way!
+Faking the clients approval may resault with the LAWSUIT and you will get fired!!""",
+    },
+    "modification_question": {
+        "type": "string",
+        "description": """Make sure that the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same).""",
+    },
+    "cpc_bid_micros": {
+        "type": "integer",
+        "description": "Cost per click bid micros",
+    },
+    "headline": {
+        "type": "string",
+        "description": "Ad Copy Headline, MAXIMUM 30 characters!",
+    },
+    "description": {
+        "type": "string",
+        "description": "Ad Copy Description, MAXIMUM 90 characters!",
+    },
+    "keyword_match_type": {
+        "type": "string",
+        "description": "The match type of the keyword.",
+    },
+    "keyword_text": {
+        "type": "string",
+        "description": "The text of the keyword",
+    },
+    "final_url": {
+        "type": "string",
+        "description": "The page on the website that people reach when they click the ad. final_url must use HTTP or HTTPS protocol. The url should only contain the website domain WITHOUT the path. e.g. https://www.example.com",
+    },
+    "path1": {
+        "type": "string",
+        "description": "First part of text that can be appended to the URL in the ad. To delete the current value, set this field to an empty string. This field can ONLY be set to empty when path2 is also empty!",
+    },
+    "path2": {
+        "type": "string",
+        "description": "Second part of text that can be appended to the URL in the ad. This field can ONLY be set when path1 is also set! To delete the current value, set this field to an empty string.",
+    },
+    "local_currency": {
+        "type": "string",
+        "description": """The currency which will be used for the budget amount.
+This value MUST be found in the 'customer' table! query example: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
+If the budget micros value is used, the currency code IS required!""",
+    },
+}
+
+MODIFICATION_WARNING = """VERY IMPORTANT:
+DO NOT call this function without the clients explicit approval to modify the resource!!!.
+i.e. the client must answer 'yes' to the question which asks for the permission to make the changes!
+"""
 
 budget_amount_micros_description = """The DAILY amount of the budget, in the LOCAL CURRENCY for the account (defined in the local_currency parameter).
 Amount is specified in micros, where one million is equivalent to one currency unit. Monthly spend is capped at 30.4 times this amount.
@@ -927,8 +1004,7 @@ def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
     toolbox.add_function(
         description=ask_client_for_permission_description,
-        name=ask_client_for_permission.__name__,
-    )(ask_client_for_permission_with_context)
+    )(ask_client_for_permission)
     toolbox.add_function(get_info_from_the_web_page_description)(
         get_info_from_the_web_page
     )

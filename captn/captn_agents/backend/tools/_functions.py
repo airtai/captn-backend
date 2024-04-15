@@ -15,11 +15,11 @@ __all__ = (
     "Context",
     "reply_to_client_2",
     "ask_client_for_permission",
-    "ask_client_for_permission_with_context",
     "ask_client_for_permission_description",
     "get_info_from_the_web_page",
     "get_info_from_the_web_page_description",
     "send_email",
+    "send_email_description",
 )
 
 
@@ -78,16 +78,47 @@ class Context:
     user_id: int
     conv_id: int
     clients_question_answer_list: List[Tuple[str, Optional[str]]]
+    get_only_non_manager_accounts: bool = False
+
+
+ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
+Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'proposed_changes' to describe the changes which you want to make.
+Do NOT use this method before you have all the information about the resource and the changes which you want to make!
+This method should ONLY be used when you know the exact resource and exact changes which you want to make and NOT for the general questions like: 'Do you want to update keywords?'.
+Also, propose one change at a time. If you want to make multiple changes, ask the client for the permission for each change separately i.e. before each modification, use this method to ask the client for the permission.
+At the end of the message, inform the client that the modifications will be made ONLY if he answers explicitly 'Yes'."""
+
+resource_details_description = """Make sure you add all the information which the client needs to know, because the client does NOT see the internal team messages!
+You MUST also describe to the client the current situation for that resource.
+If you want to modify the Ad Copy, you MUST provide the current Ad Copy details, e.g:
+The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are 'h1', 'h2' and 'h3'. The descriptions are 'd1' and 'd2'.
+
+If you want to modify the keywords, you MUST provide the current keywords details, e.g:
+Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'."""
+
+proposed_changes_description = """Explains which changes you want to make and why you want to make them.
+I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
+You MUST also tell about all the fields which will be effected by the changes, e.g.:
+'status' will be changed from 'ENABLED' to 'PAUSED'
+Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '2000000')
+
+e.g. for AdGroupAd:
+'final_url' will be set to 'https://my-web-page.com'
+Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
+
+Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
 
 
 def ask_client_for_permission(
-    user_id: int,
-    conv_id: int,
-    customer_id: str,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-    resource_details: str,
-    proposed_changes: str,
+    customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
+    resource_details: Annotated[str, resource_details_description],
+    proposed_changes: Annotated[str, proposed_changes_description],
+    context: Context,
 ) -> str:
+    user_id = context.user_id
+    conv_id = context.conv_id
+    clients_question_answer_list = context.clients_question_answer_list
+
     query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
     query_result = execute_query(
         user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
@@ -132,26 +163,6 @@ e.g. for AdGroupAd:
 Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
 
 Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
-
-
-def ask_client_for_permission_with_context(
-    customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
-    resource_details: Annotated[str, resource_details_description],
-    proposed_changes: Annotated[str, proposed_changes_description],
-    context: Context,
-) -> str:
-    user_id = context.user_id
-    conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
-
-    return ask_client_for_permission(
-        user_id=user_id,
-        conv_id=conv_id,
-        customer_id=customer_id,
-        clients_question_answer_list=clients_question_answer_list,
-        resource_details=resource_details,
-        proposed_changes=proposed_changes,
-    )
 
 
 config = Config()
@@ -276,8 +287,11 @@ You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY infor
     return str(user_proxy.last_message()["content"])
 
 
+send_email_description = "Send email to the client."
+
+
 def send_email(
-    proposed_user_actions: List[str],
+    proposed_user_actions: Annotated[List[str], "List of proposed user actions"],
 ) -> Dict[str, Any]:
     return_msg = {
         "subject": "Capt’n.ai Daily Analysis",
