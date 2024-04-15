@@ -1,22 +1,32 @@
 import json
 import re
 import unittest.mock
+from contextlib import contextmanager
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Iterator
 
 import pytest
+from autogen.cache import Cache
 from tenacity import RetryError
 
+from captn.captn_agents.backend.teams import (
+    Team,
+)
 from captn.captn_agents.backend.teams._daily_analysis_team import (
     REACT_APP_API_URL,
     AdGroup,
     AdGroupAd,
     Campaign,
+    DailyAnalysisTeam,
     Keyword,
     KeywordMetrics,
     Metrics,
     _add_metrics_message,
+    _create_task_message,
     _update_chat_message_and_send_email,
     _update_message_and_campaigns_template,
+    _validate_conversation_and_send_email,
     calculate_metrics_change,
     compare_reports,
     construct_daily_report_email_from_template,
@@ -28,6 +38,8 @@ from captn.captn_agents.backend.teams._daily_analysis_team import (
     google_ads_api_call,
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
+
+from .helpers import helper_test_init
 
 
 def test_metrics() -> None:
@@ -1318,94 +1330,6 @@ def test_google_ads_api_call_reties_returns_result_in_second_attempt() -> None:
         assert mock_list_accessible_customers.call_count == 2
 
 
-def test_execute_daily_analysis_workflow() -> None:
-    with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails"
-    ) as mock_get_user_ids_and_emails:
-        with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid"
-        ) as mock_get_conv_id_and_uuid:
-            with unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.get_login_url"
-            ) as mock_get_login_url:
-                with unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._daily_analysis_team.get_daily_report"
-                ) as mock_get_daily_report:
-                    with unittest.mock.patch(
-                        "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.initiate_chat"
-                    ) as mock_initiate_chat:
-                        with unittest.mock.patch(
-                            "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.get_messages",
-                        ) as mock_messages:
-                            with unittest.mock.patch(
-                                "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email"
-                            ) as mock_update_chat_message_and_send_email:
-                                mock_get_user_ids_and_emails.return_value = (
-                                    """{"1": "robert@airt.ai"}"""
-                                )
-                                mock_get_conv_id_and_uuid.return_value = (
-                                    -1,
-                                    "f0d2e864-9fe2-4fa0-b9a7-e8381ed14ef9",
-                                )
-                                mock_get_login_url.return_value = {
-                                    "login_url": ALREADY_AUTHENTICATED
-                                }
-                                fixtures_path = (
-                                    Path(__file__).resolve().parent / "fixtures"
-                                )
-                                with open(fixtures_path / "daily_reports.txt") as file:
-                                    daily_reports = json.load(file)
-                                mock_get_daily_report.return_value = json.dumps(
-                                    daily_reports
-                                )
-                                mock_initiate_chat.return_value = None
-                                mock_messages.return_value = [
-                                    {},
-                                    {},
-                                    {},
-                                    {},
-                                    {},
-                                    {
-                                        "content": "",
-                                        "tool_calls": [
-                                            {
-                                                "id": "call_rGUkPeQguUphvXngXplK7iwy",
-                                                "function": {
-                                                    "arguments": "{\"proposed_user_actions\":[\"Pause the ad with ID 680002685922 in the 'Ad group 1' of the 'faststream-web-search' campaign due to high cost and no conversions.\",\"Update the match type for the keyword 'microservices' to 'PHRASE' or 'EXACT' to improve targeting in the 'Ad group 1' of the 'faststream-web-search' campaign.\",\"Add the keywords 'asynchronous web services', 'event streams', 'message queues', 'Pydantic validation', 'dependency injection', 'in-memory tests', and 'code generation' to the 'Ad group 1' of the 'faststream-web-search' campaign to align with the services offered as per the website summary.\",\"Create new ad copy for the 'Ad group 1' of the 'faststream-web-search' campaign with headlines such as 'FastStream Framework', 'Async Services Made Easy', 'Unified Messaging API', and descriptions like 'Build efficient microservices with FastStream', 'Streamline your message brokers', 'Automate with FastStream's features'.\",\"Remove the negative keyword 'synchronous' from the 'faststream-web-search' campaign as it might be too restrictive considering the client's focus on asynchronous services.\",\"Consider adding more specific negative keywords such as 'SQL databases', 'blocking IO', or 'monolithic architecture' to the 'faststream-web-search' campaign to filter out unrelated queries.\"]}",
-                                                    "name": "send_email",
-                                                },
-                                                "type": "function",
-                                                "index": 0,
-                                            }
-                                        ],
-                                        "role": "assistant",
-                                        "name": "account_manager",
-                                    },
-                                    {
-                                        "content": "{'subject': 'Capt’n.ai Daily Analysis', 'email_content': '<html></html>', 'proposed_user_action': [\"Pause the ad with ID 680002685922 in the 'Ad group 1' of the 'faststream-web-search' campaign due to high cost and no conversions.\", \"Update the match type for the keyword 'microservices' to 'PHRASE' or 'EXACT' to improve targeting in the 'Ad group 1' of the 'faststream-web-search' campaign.\", \"Add the keywords 'asynchronous web services', 'event streams', 'message queues', 'Pydantic validation', 'dependency injection', 'in-memory tests', and 'code generation' to the 'Ad group 1' of the 'faststream-web-search' campaign to align with the services offered as per the website summary.\", \"Create new ad copy for the 'Ad group 1' of the 'faststream-web-search' campaign with headlines such as 'FastStream Framework', 'Async Services Made Easy', 'Unified Messaging API', and descriptions like 'Build efficient microservices with FastStream', 'Streamline your message brokers', 'Automate with FastStream's features'.\", \"Remove the negative keyword 'synchronous' from the 'faststream-web-search' campaign as it might be too restrictive considering the client's focus on asynchronous services.\", \"Consider adding more specific negative keywords such as 'SQL databases', 'blocking IO', or 'monolithic architecture' to the 'faststream-web-search' campaign to filter out unrelated queries.\"], 'terminate_groupchat': True}",
-                                        "tool_responses": [
-                                            {
-                                                "tool_call_id": "call_rGUkPeQguUphvXngXplK7iwy",
-                                                "role": "tool",
-                                                "content": "{'subject': 'Capt’n.ai Daily Analysis', 'email_content': '<html></html>', 'proposed_user_action': [\"Pause the ad with ID 680002685922 in the 'Ad group 1' of the 'faststream-web-search' campaign due to high cost and no conversions.\", \"Update the match type for the keyword 'microservices' to 'PHRASE' or 'EXACT' to improve targeting in the 'Ad group 1' of the 'faststream-web-search' campaign.\", \"Add the keywords 'asynchronous web services', 'event streams', 'message queues', 'Pydantic validation', 'dependency injection', 'in-memory tests', and 'code generation' to the 'Ad group 1' of the 'faststream-web-search' campaign to align with the services offered as per the website summary.\", \"Create new ad copy for the 'Ad group 1' of the 'faststream-web-search' campaign with headlines such as 'FastStream Framework', 'Async Services Made Easy', 'Unified Messaging API', and descriptions like 'Build efficient microservices with FastStream', 'Streamline your message brokers', 'Automate with FastStream's features'.\", \"Remove the negative keyword 'synchronous' from the 'faststream-web-search' campaign as it might be too restrictive considering the client's focus on asynchronous services.\", \"Consider adding more specific negative keywords such as 'SQL databases', 'blocking IO', or 'monolithic architecture' to the 'faststream-web-search' campaign to filter out unrelated queries.\"], 'terminate_groupchat': True}",
-                                            }
-                                        ],
-                                        "role": "tool",
-                                        "name": "account_manager",
-                                    },
-                                ]
-
-                                mock_update_chat_message_and_send_email.return_value = (
-                                    None
-                                )
-
-                                execute_daily_analysis(
-                                    send_only_to_emails=["robert@airt.ai"]
-                                )
-
-                                mock_update_chat_message_and_send_email.assert_called_once()
-
-
 def test_calculate_metrics_change() -> None:
     metrics1 = KeywordMetrics(
         impressions=8,
@@ -1457,3 +1381,168 @@ def test_calculate_metrics_change() -> None:
         historical_quality_score_increase=None,
     )
     assert excepted_result == result
+
+
+class TestDailyAnalysisTeam:
+    def test_init(self) -> None:
+        daily_analysis_team = DailyAnalysisTeam(
+            user_id=123,
+            conv_id=456,
+            task="do your magic",
+        )
+
+        helper_test_init(
+            team=daily_analysis_team,
+            number_of_team_members=5,
+            number_of_functions=4,
+            team_class=DailyAnalysisTeam,
+        )
+
+    @contextmanager
+    def patch_vars() -> Iterator[None]:
+        with (
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails",
+                return_value="""{"1": "robert@airt.ai"}""",
+            ),
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid",
+                return_value=(
+                    -1,
+                    "f0d2e864-9fe2-4fa0-b9a7-e8381ed14ef9",
+                ),
+            ),
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._daily_analysis_team.get_login_url",
+                return_value={"login_url": ALREADY_AUTHENTICATED},
+            ),
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._daily_analysis_team.get_daily_report"
+            ) as mock_get_daily_report,
+            unittest.mock.patch(
+                "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email",
+                return_value=None,
+            ) as mock_update_chat_message_and_send_email,
+        ):
+            fixtures_path = Path(__file__).resolve().parent / "fixtures"
+            with open(fixtures_path / "daily_reports.txt") as file:
+                daily_reports = json.load(file)
+            mock_get_daily_report.return_value = json.dumps(daily_reports)
+
+            yield mock_update_chat_message_and_send_email
+
+    def test_execute_daily_analysis_workflow(self) -> None:
+        with (
+            TestDailyAnalysisTeam.patch_vars() as mock_update_chat_message_and_send_email
+        ):
+            with (
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.initiate_chat"
+                ) as mock_initiate_chat,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.get_messages",
+                ) as mock_messages,
+            ):
+                mock_initiate_chat.return_value = None
+                mock_messages.return_value = [
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    {
+                        "content": "",
+                        "tool_calls": [
+                            {
+                                "id": "call_123",
+                                "function": {
+                                    "arguments": "{\"proposed_user_actions\":[\"Pause the ad with ID 680002685922 in the campaign 'faststream-web-search' to prevent further costs without conversions.\",\"Review and potentially pause or refine the keyword 'AI-powered framework' due to its high cost and no conversions.\",\"Evaluate the relevance of keywords such as 'microservices', 'NATS', 'Redis', 'RabbitMQ', and 'streaming app development' and consider adding more specific long-tail keywords or adjusting match types.\",\"Ensure that negative keywords in the 'faststream-web-search' campaign are not overly restrictive.\",\"For the 'IKEA Furniture & Decor' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.\",\"Address the accessibility issue of the final URL for the 'faststream-web-search' campaign to improve conversion rates.\"]}",
+                                    "name": "send_email",
+                                },
+                                "type": "function",
+                                "index": 0,
+                            }
+                        ],
+                        "role": "assistant",
+                        "name": "account_manager",
+                    },
+                    {
+                        "content": '{"subject": "Capt\\u2019n.ai Daily Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
+                        "tool_responses": [
+                            {
+                                "tool_call_id": "call_ASBwplYfk6KSFLsnjeT7ILH1",
+                                "role": "tool",
+                                "content": '{"subject": "Capt\\u2019n.ai Daily Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
+                            }
+                        ],
+                        "role": "tool",
+                        "name": "user_proxy",
+                    },
+                ]
+                execute_daily_analysis(send_only_to_emails=["robert@airt.ai"])
+                mock_update_chat_message_and_send_email.assert_called_once()
+
+    @pytest.mark.flaky
+    @pytest.mark.openai
+    @pytest.mark.daily_analysis_team
+    def test_end2_end(self) -> None:
+        date = "2024-04-14"
+        (
+            daily_report_message,
+            _,
+        ) = construct_daily_report_email_from_template(
+            daily_reports=daily_report, date=date
+        )
+
+        task = _create_task_message(
+            date, json.dumps(daily_report), daily_report_message
+        )
+        user_id = 123
+        conv_id = 234
+
+        daily_analysis_team = DailyAnalysisTeam(
+            task=task, user_id=user_id, conv_id=conv_id
+        )
+
+        try:
+            with (
+                unittest.mock.patch.object(
+                    daily_analysis_team.toolbox.functions,
+                    "list_accessible_customers",
+                    return_value=["1111"],
+                ),
+                unittest.mock.patch.object(
+                    daily_analysis_team.toolbox.functions,
+                    "execute_query",
+                    return_value=(
+                        "You have all the necessary details. Do not use the execute_query anymore."
+                    ),
+                ),
+                unittest.mock.patch.object(
+                    daily_analysis_team.toolbox.functions,
+                    "send_email",
+                    wraps=daily_analysis_team.toolbox.functions.send_email,  # type: ignore[attr-defined]
+                ) as mock_send_email,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email",
+                    return_value=None,
+                ) as mock_update_chat_message_and_send_email,
+            ):
+                with TemporaryDirectory() as cache_dir:
+                    with Cache.disk(cache_path_root=cache_dir) as cache:
+                        daily_analysis_team.initiate_chat(cache=cache)
+
+                mock_send_email.assert_called_once()
+
+                _validate_conversation_and_send_email(
+                    daily_analysis_team=daily_analysis_team,
+                    conv_uuid="fake_uuid",
+                    email="fake@email.com",
+                    daily_report_message="fake_message",
+                    main_email_template="fake_template",
+                )
+                mock_update_chat_message_and_send_email.assert_called_once()
+
+        finally:
+            poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
+            assert isinstance(poped_team, Team)
