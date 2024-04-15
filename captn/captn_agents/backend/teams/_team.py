@@ -245,7 +245,14 @@ Do NOT try to finish the task until other team members give their opinion.
 
     @property
     def _first_section(self) -> str:
-        roles = ", ".join([str(member.name) for member in self.members])
+        # Do not mention user_proxy in the roles
+        roles = ", ".join(
+            [
+                str(member.name)
+                for member in self.members
+                if not isinstance(member, autogen.UserProxyAgent)
+            ]
+        )
         return f"""The team is consisting of the following roles: {roles}.
 
 
