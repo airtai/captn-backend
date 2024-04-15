@@ -951,6 +951,68 @@ def _delete_chat_webhook(user_id: int, conv_id: int) -> None:
         print(e)
 
 
+def _create_task_message(
+    date: str, daily_reports: str, daily_report_message: str
+) -> str:
+    task = f"""
+You need to perform Google Ads Analysis for date: {date}.
+
+Check which ads have the highest cost and which have the highest number of conversions.
+If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
+At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
+- pause the ads with the highest cost and the lowest number of conversions.
+- keywords analysis (add negative keywords, add positive keywords, change match type etc).
+- ad copy analysis (change the ad copy, add more ads etc).
+
+I have prepared you a JSON file with the daily report for the wanted date. Use it to suggest the next steps to the client.
+{daily_reports}
+
+
+Here is also a HTML summary of the daily report which will be sent to the client:
+{daily_report_message}
+
+Please propose the next steps and send the email to the client.
+"""
+    return task
+
+
+def _validate_conversation_and_send_email(
+    daily_analysis_team: DailyAnalysisTeam,
+    conv_uuid: str,
+    email: str,
+    daily_report_message: str,
+    main_email_template: str,
+) -> None:
+    last_message = daily_analysis_team.get_last_message(add_prefix=False)
+
+    messages_list = daily_analysis_team.get_messages()
+    check_if_send_email = messages_list[-2]
+    if (
+        "tool_calls" in check_if_send_email
+        and check_if_send_email["tool_calls"][0]["function"]["name"] == "send_email"
+    ):
+        if len(messages_list) < 3:
+            messages = "[]"
+        else:
+            # Don't include the first message (task) and the last message (send_email)
+            messages = json.dumps(messages_list[1:-1])
+        last_message_json = json.loads(last_message)
+        _update_chat_message_and_send_email(
+            user_id=daily_analysis_team.user_id,
+            conv_id=daily_analysis_team.conv_id,
+            conv_uuid=conv_uuid,
+            client_email=email,
+            messages=messages,
+            initial_message_in_chat=daily_report_message,
+            main_email_template=main_email_template,
+            proposed_user_action=last_message_json["proposed_user_action"],
+        )
+    else:
+        raise ValueError(
+            f"Send email function is not called for user_id: {daily_analysis_team.user_id} - email {email}!"
+        )
+
+
 def execute_daily_analysis(
     send_only_to_emails: Optional[List[str]] = None,
     date: Optional[str] = None,
@@ -1002,25 +1064,7 @@ def execute_daily_analysis(
                     daily_reports=json.loads(daily_reports), date=date
                 )
 
-                task = f"""
-You need to perform Google Ads Analysis for date: {date}.
-
-Check which ads have the highest cost and which have the highest number of conversions.
-If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
-At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
-- pause the ads with the highest cost and the lowest number of conversions.
-- keywords analysis (add negative keywords, add positive keywords, change match type etc).
-- ad copy analysis (change the ad copy, add more ads etc).
-
-I have prepared you a JSON file with the daily report for the wanted date. Use it to suggest the next steps to the client.
-{daily_reports}
-
-
-Here is also a HTML summary of the daily report which will be sent to the client:
-{daily_report_message}
-
-Please propose the next steps and send the email to the client.
-"""
+                task = _create_task_message(date, daily_reports, daily_report_message)
 
                 daily_analysis_team = DailyAnalysisTeam(
                     task=task,
@@ -1028,35 +1072,14 @@ Please propose the next steps and send the email to the client.
                     conv_id=conv_id,
                 )
                 daily_analysis_team.initiate_chat()
-                last_message = daily_analysis_team.get_last_message(add_prefix=False)
+                _validate_conversation_and_send_email(
+                    daily_analysis_team=daily_analysis_team,
+                    conv_uuid=conv_uuid,
+                    email=email,
+                    daily_report_message=daily_report_message,
+                    main_email_template=main_email_template,
+                )
 
-                messages_list = daily_analysis_team.get_messages()
-                check_if_send_email = messages_list[-2]
-                if (
-                    "tool_calls" in check_if_send_email
-                    and check_if_send_email["tool_calls"][0]["function"]["name"]
-                    == "send_email"
-                ):
-                    if len(messages_list) < 3:
-                        messages = "[]"
-                    else:
-                        # Don't include the first message (task) and the last message (send_email)
-                        messages = json.dumps(messages_list[1:-1])
-                    last_message_json = ast.literal_eval(last_message)
-                    _update_chat_message_and_send_email(
-                        user_id=user_id,
-                        conv_id=conv_id,
-                        conv_uuid=conv_uuid,
-                        client_email=email,
-                        messages=messages,
-                        initial_message_in_chat=daily_report_message,
-                        main_email_template=main_email_template,
-                        proposed_user_action=last_message_json["proposed_user_action"],
-                    )
-                else:
-                    raise ValueError(
-                        f"Send email function is not called for user_id: {user_id} - email {email}!"
-                    )
             except Exception as e:
                 print(
                     f"Daily analysis failed for user_id: {user_id} - email {email}.\nError: {e}"
