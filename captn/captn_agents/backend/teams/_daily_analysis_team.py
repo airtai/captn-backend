@@ -1042,7 +1042,7 @@ Please propose the next steps and send the email to the client.
                     else:
                         # Don't include the first message (task) and the last message (send_email)
                         messages = json.dumps(messages_list[1:-1])
-                    last_message_json = ast.literal_eval(last_message)
+                    last_message_json = json.loads(last_message)
                     _update_chat_message_and_send_email(
                         user_id=user_id,
                         conv_id=conv_id,
