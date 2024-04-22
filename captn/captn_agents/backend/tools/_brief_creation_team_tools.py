@@ -9,8 +9,8 @@ from ..toolboxes import Toolbox
 from ._functions import (
     get_info_from_the_web_page,
     get_info_from_the_web_page_description,
-    reply_to_client_2,
-    reply_to_client_2_description,
+    reply_to_client,
+    reply_to_client_description,
 )
 
 
@@ -92,6 +92,6 @@ def create_brief_creation_team_toolbox(
         get_info_from_the_web_page
     )
 
-    toolbox.add_function(reply_to_client_2_description)(reply_to_client_2)
+    toolbox.add_function(reply_to_client_description)(reply_to_client)
 
     return toolbox

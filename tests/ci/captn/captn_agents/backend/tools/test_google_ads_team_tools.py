@@ -50,7 +50,7 @@ class TestGoogleAdsTeamTools:
 
         name_desc_dict = {
             "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
-            "reply_to_client_2": r"Respond to the client \(answer to his task or question for additional information\)",
+            "reply_to_client": r"Respond to the client \(answer to his task or question for additional information\)",
             "ask_client_for_permission": "Ask the client for permission to make the changes.",
             "change_google_account": "This method should be used only when the client explicitly asks for the change of the Google account",
             "list_accessible_customers": "List all the customers accessible to the user",

@@ -13,7 +13,7 @@ from ..config import Config
 
 __all__ = (
     "Context",
-    "reply_to_client_2",
+    "reply_to_client",
     "ask_client_for_permission",
     "ask_client_for_permission_description",
     "get_info_from_the_web_page",
@@ -23,7 +23,7 @@ __all__ = (
 )
 
 
-reply_to_client_2_description = """Respond to the client (answer to his task or question for additional information).
+reply_to_client_description = """Respond to the client (answer to his task or question for additional information).
 Use 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible, or you will be penalized!
 Do NOT just copy half of the message which you are sending and use it as a smart suggestion!
 Smart suggestions are used to suggest the next steps to the client. It will be displayed as quick replies in the chat so make them short and clear!
@@ -42,7 +42,7 @@ class TeamResponse(BaseModel):
     terminate_groupchat: bool
 
 
-def reply_to_client_2(
+def reply_to_client(
     message: Annotated[str, "Message for the client"],
     completed: Annotated[
         bool, "Has the team completed the task or are they waiting for additional info"
@@ -132,7 +132,7 @@ def ask_client_for_permission(
 
     clients_question_answer_list.append((message, None))
 
-    return reply_to_client_2(
+    return reply_to_client(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
     )
 

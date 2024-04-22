@@ -51,7 +51,7 @@ class TestBriefCreationTeam:
     def patch_vars(self, team: BriefCreationTeam) -> Iterator[None]:
         with (
             unittest.mock.patch.object(
-                team.toolbox.functions, "reply_to_client_2"
+                team.toolbox.functions, "reply_to_client"
             ) as mock_reply_to_client,
             unittest.mock.patch.object(
                 team.toolbox.functions, "get_info_from_the_web_page"
