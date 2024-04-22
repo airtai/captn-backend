@@ -149,6 +149,8 @@ If you are unable to retrieve the information, use the 'reply_to_client' command
 6. When you have gathered all the information, create a detailed brief.
 Team members should discuss and agree on the content of the brief before sending it to the chosen team.
 Do NOT mention to the client that you are creating a brief. This is your internal task and the client does not need to know that.
+Do NOT ask the client which information he wants to include in the brief.
+i.e. word 'brief' should NOT be mentioned to the client at all!
 
 7. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
 
