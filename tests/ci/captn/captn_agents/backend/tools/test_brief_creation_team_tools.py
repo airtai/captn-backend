@@ -28,6 +28,7 @@ class TestTools:
         self.toolbox = create_brief_creation_team_toolbox(
             user_id=12345,
             conv_id=67890,
+            initial_brief="Initial brief. This is a test.",
         )
 
     def test_llm_config(self) -> None:
@@ -65,17 +66,18 @@ class TestTools:
                 context = Context(
                     user_id=12345,
                     conv_id=67890,
+                    initial_brief="Initial brief. This is a test.",
                 )
 
                 delagate_task_f = self.toolbox.get_function("delagate_task")
-                delegate_task = DelegateTask(
+                task_and_context_to_delegate = DelegateTask(
                     team_name="default_team",
                     task="Just give me a list of all the customer ids.",
                     customers_business_brief="Customer business brief, at least 30 char. This is a test.",
                     summary_from_web_page="Summary from web page. This is a test. At least 30 char.",
                 )
                 response = delagate_task_f(
-                    delegate_task=delegate_task,
+                    task_and_context_to_delegate=task_and_context_to_delegate,
                     context=context,
                 )
 

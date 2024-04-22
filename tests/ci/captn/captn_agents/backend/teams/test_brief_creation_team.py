@@ -122,8 +122,14 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                         team.initiate_chat(cache=cache)
 
                 mock_get_info_from_the_web_page.assert_called()
-                mock_get_brief_template.assert_called_with(team_name=team_name)
+                mock_get_brief_template.assert_called()
                 mock_delagate_task.assert_called_once()
+                assert (
+                    mock_delagate_task.call_args.kwargs[
+                        "task_and_context_to_delegate"
+                    ].team_name
+                    == team_name
+                )
         finally:
             poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
             assert isinstance(poped_team, Team)
@@ -142,6 +148,7 @@ Any Other Information Related to Customer Brief: {}"""
 
         reply_to_client_side_effect = [
             "Create new Google Ads campaign.",
+            "I accept everything.",
             "Continue with the campaign creation.",
         ]
         self._test_end2_end_default_team_choosed(

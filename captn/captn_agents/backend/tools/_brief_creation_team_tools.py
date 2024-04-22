@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Type
+from dataclasses import dataclass, field
+from typing import Dict, Type
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -18,6 +18,8 @@ from ._functions import (
 class Context:
     user_id: int
     conv_id: int
+    initial_brief: str
+    function_call_counter: Dict[str, bool] = field(default_factory=dict)
 
 
 class DelegateTask(BaseModel):
@@ -28,24 +30,31 @@ class DelegateTask(BaseModel):
         Field(
             ...,
             min_length=30,
-            description="The brief containing the main information about the customer's business",
+            description="""Updated customer brief. The brief should contain all important information received from the previous team along with the new information you have retrieved.
+You must fill in all the fields. NEVER write [Insert client's business]!! You are responsible for filling in the information!""",
         ),
     ]
     summary_from_web_page: Annotated[
         str,
-        Field(..., min_length=30, description="The summary of the web page content"),
+        Field(
+            ...,
+            min_length=30,
+            description="The summary of the web page content which will be used to complete the task.",
+        ),
     ]
 
 
 def create_brief_creation_team_toolbox(
     user_id: int,
     conv_id: int,
+    initial_brief: str,
 ) -> Toolbox:
     toolbox = Toolbox()
 
     context = Context(
         user_id=user_id,
         conv_id=conv_id,
+        initial_brief=initial_brief,
     )
     toolbox.set_context(context)
 
@@ -57,23 +66,43 @@ def create_brief_creation_team_toolbox(
             str,
             "The name of the team which will be responsible for the task. Make sure to select the right team for the task!",
         ],
+        context: Context,
     ) -> str:
+        counter = context.function_call_counter
+        key = f"get_brief_template_{team_name}"
+        if key in counter:
+            return "You have already received the brief template, please sproceed with the task."
+
+        counter[key] = True
         team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
-        return team_class.get_brief_template()
+        brief_template = f"""Here is the customer brief we have received from the previous team:
+
+{context.initial_brief}
+Use this information to fill in the rest of the fields in the customer brief template.
+
+
+Here is a template for the customer brief you will need to create:
+{team_class.get_brief_template()}
+"""
+
+        return brief_template
 
     @toolbox.add_function("Delegate the task to the selected team")
     def delagate_task(
-        delegate_task: DelegateTask,
+        task_and_context_to_delegate: Annotated[
+            DelegateTask,
+            "All the information needed to delegate the task. Make sure to fill in all the fields!",
+        ],
         context: Context,
     ) -> str:
         user_id = context.user_id
         conv_id = context.conv_id
 
         team_class: Type[Team] = Team.get_class_by_registred_team_name(
-            delegate_task.team_name
+            task_and_context_to_delegate.team_name
         )
 
-        final_task = f"Here is the customer brief:\n{delegate_task.customers_business_brief}\n\nAdditional info from the web page:\n{delegate_task.summary_from_web_page}\n\nAnd the task is following:\n{delegate_task.task}"
+        final_task = f"Here is the customer brief:\n{task_and_context_to_delegate.customers_business_brief}\n\nAdditional info from the web page:\n{task_and_context_to_delegate.summary_from_web_page}\n\nAnd the task is following:\n{task_and_context_to_delegate.task}"
 
         # Remove the user_id-conv_id pair from the team so that the new team can be created
         Team.pop_team(user_id=user_id, conv_id=conv_id)

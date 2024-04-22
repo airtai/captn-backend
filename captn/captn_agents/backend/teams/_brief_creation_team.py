@@ -45,6 +45,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         temperature: float = 0.2,
     ):
         self.task = task
+        self.initial_brief = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
@@ -79,6 +80,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self.toolbox = create_brief_creation_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
+            initial_brief=self.initial_brief,
         )
         for agent in self.members:
             if agent != self.user_proxy:
@@ -139,7 +141,9 @@ If you fail to choose the appropriate team, you will be penalized!
 {self.construct_team_names_and_descriptions_message()}
 
 4. AFTER the client has told you if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task,
-use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
+use 'get_brief_template' command to get the template for the brief which you will need to fill out.
+Once you have the template, you are responsible for filling in all the fields. Do NOT ask the client to fill in the information for you, otherwise you will be penalized!
+
 
 5. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
 It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
@@ -189,6 +193,8 @@ Do NOT tell the client that your job is to create a brief. The client does not n
 
 5. Ensure that your responses are formatted using markdown syntax (except for the HTML anchor tags),
 as they will be featured on a webpage to ensure a user-friendly presentation.
+
+6. Do not suggest next steps to the client, these steps will be suggested by another team to whom you will delegate the task.
 """
 
     @property

@@ -307,8 +307,7 @@ But if you want to optimize an existing campaign or make some changes this is NO
 
     @classmethod
     def get_brief_template(cls) -> str:
-        return """Here is a template for the customer brief:
-A structured customer brief, adhering to industry standards for a digital marketing campaign. You must fill in the following details based on the client's requirements:
+        return """A structured customer brief, adhering to industry standards for a digital marketing campaign. You must fill in the following details based on the client's requirements:
 
 Business:
 Goal:
@@ -325,11 +324,5 @@ Not needed info:
 - target audience
 - conversion tracking
 
-Please extract and represent relevant details from the conversation under these headings.
-
-Once the brief is created and you need the clients approval to send it to the this team, you can use smart suggestions like:
-"smart_suggestions": {{
-    "suggestions":["Continue with the campaign creation"],
-    "type":"oneOf"
-}}
+Now Let's get all the information from the clients web page and create a detailed plan for the campaign.
 """
