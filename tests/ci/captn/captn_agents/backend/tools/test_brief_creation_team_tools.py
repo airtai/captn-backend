@@ -8,6 +8,7 @@ from captn.captn_agents.backend.teams._google_ads_team import GoogleAdsTeam
 from captn.captn_agents.backend.teams._team import Team
 from captn.captn_agents.backend.tools._brief_creation_team_tools import (
     Context,
+    DelegateTask,
     create_brief_creation_team_toolbox,
 )
 from captn.captn_agents.backend.tools._functions import TeamResponse
@@ -67,11 +68,14 @@ class TestTools:
                 )
 
                 delagate_task_f = self.toolbox.get_function("delagate_task")
-                response = delagate_task_f(
+                delegate_task = DelegateTask(
                     team_name="default_team",
                     task="Just give me a list of all the customer ids.",
-                    customers_brief="No brief",
-                    summary_from_web_page="Summary from web page",
+                    customers_business_brief="Customer business brief, at least 30 char. This is a test.",
+                    summary_from_web_page="Summary from web page. This is a test. At least 30 char.",
+                )
+                response = delagate_task_f(
+                    delegate_task=delegate_task,
                     context=context,
                 )
 

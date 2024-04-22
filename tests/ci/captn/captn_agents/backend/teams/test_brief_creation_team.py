@@ -1,7 +1,7 @@
 import unittest
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Iterator
+from typing import Iterator, List
 
 import pytest
 from autogen.cache import Cache
@@ -98,7 +98,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
             )
 
     def _test_end2_end_default_team_choosed(
-        self, task: str, team_name: str, reply_to_client_return_value: str
+        self, task: str, team_name: str, reply_to_client_side_effect: List[str]
     ) -> None:
         user_id = 123
         conv_id = 234
@@ -112,7 +112,11 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                 mock_delagate_task,
                 mock_get_brief_template,
             ):
-                mock_reply_to_client.return_value = reply_to_client_return_value
+                # Repeat the last item in the list 5 times
+                reply_to_client_side_effect = (
+                    reply_to_client_side_effect + reply_to_client_side_effect[-1:] * 5
+                )
+                mock_reply_to_client.side_effect = reply_to_client_side_effect
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
                         team.initiate_chat(cache=cache)
@@ -136,13 +140,14 @@ Digital Marketing Objectives: {Increase brand awareness, Boost sales}
 Next Steps: {First step is to get the summary of the Website.}
 Any Other Information Related to Customer Brief: {}"""
 
-        reply_to_client_return_value = (
-            "Create new Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
-        )
+        reply_to_client_side_effect = [
+            "Create new Google Ads campaign.",
+            "Continue with the campaign creation.",
+        ]
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="campaign_creation_team",
-            reply_to_client_return_value=reply_to_client_return_value,
+            reply_to_client_side_effect=reply_to_client_side_effect,
         )
 
     @pytest.mark.flaky
@@ -155,9 +160,12 @@ Website: airt.ai
 Digital Marketing Objectives: Use Google Ads to maximize reach and conversions
 Next Steps: First step is to get the summary of the Website.
 Any Other Information Related to Customer Brief: None"""
-        reply_to_client_return_value = "Optimize existing Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
+        reply_to_client_side_effect = [
+            "Optimize existing Google Ads campaign.",
+            "Continue with the Google Ads optimization",
+        ]
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="default_team",
-            reply_to_client_return_value=reply_to_client_return_value,
+            reply_to_client_side_effect=reply_to_client_side_effect,
         )

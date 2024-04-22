@@ -481,5 +481,11 @@ Digital Marketing Objectives:
 Next Steps:
 Any Other Information Related to Customer Brief:
 
-Please extract and represent relevant details from the conversation under these headings
+Please extract and represent relevant details from the conversation under these headings.
+
+Once the brief is created and you need the clients approval to send it to the this team, you can use smart suggestions like:
+"smart_suggestions": {{
+    "suggestions":["Continue with the Google Ads optimization"],
+    "type":"oneOf"
+}}
 """
