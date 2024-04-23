@@ -14,7 +14,7 @@ from captn.captn_agents.backend.teams import (
 from ..tools.test_brief_creation_team_tools import (
     BRIEF_CREATION_TEAM_RESPONSE,
 )
-from .helpers import helper_test_init
+from .helpers import get_client_response, helper_test_init
 
 
 class TestBriefCreationTeam:
@@ -48,10 +48,19 @@ class TestBriefCreationTeam:
         )
 
     @contextmanager
-    def patch_vars(self, team: BriefCreationTeam) -> Iterator[None]:
+    def patch_vars(
+        self,
+        team: BriefCreationTeam,
+        client_system_message: str,
+        cache: Cache,
+    ) -> Iterator[None]:
         with (
             unittest.mock.patch.object(
-                team.toolbox.functions, "reply_to_client_2"
+                team.toolbox.functions,
+                "reply_to_client",
+                wraps=get_client_response(
+                    team=team, cache=cache, client_system_message=client_system_message
+                ),
             ) as mock_reply_to_client,
             unittest.mock.patch.object(
                 team.toolbox.functions, "get_info_from_the_web_page"
@@ -98,7 +107,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
             )
 
     def _test_end2_end_default_team_choosed(
-        self, task: str, team_name: str, reply_to_client_return_value: str
+        self, task: str, team_name: str, client_system_message: str
     ) -> None:
         user_id = 123
         conv_id = 234
@@ -106,20 +115,29 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
         team = BriefCreationTeam(task=task, user_id=user_id, conv_id=conv_id)
 
         try:
-            with self.patch_vars(team) as (
-                mock_reply_to_client,
-                mock_get_info_from_the_web_page,
-                mock_delagate_task,
-                mock_get_brief_template,
-            ):
-                mock_reply_to_client.return_value = reply_to_client_return_value
-                with TemporaryDirectory() as cache_dir:
-                    with Cache.disk(cache_path_root=cache_dir) as cache:
+            with TemporaryDirectory() as cache_dir:
+                with Cache.disk(cache_path_root=cache_dir) as cache:
+                    with self.patch_vars(
+                        team=team,
+                        client_system_message=client_system_message,
+                        cache=cache,
+                    ) as (
+                        _,
+                        mock_get_info_from_the_web_page,
+                        mock_delagate_task,
+                        mock_get_brief_template,
+                    ):
                         team.initiate_chat(cache=cache)
 
-                mock_get_info_from_the_web_page.assert_called()
-                mock_get_brief_template.assert_called_with(team_name=team_name)
-                mock_delagate_task.assert_called_once()
+                        mock_get_info_from_the_web_page.assert_called()
+                        mock_get_brief_template.assert_called()
+                        mock_delagate_task.assert_called_once()
+                        assert (
+                            mock_delagate_task.call_args.kwargs[
+                                "task_and_context_to_delegate"
+                            ].team_name
+                            == team_name
+                        )
         finally:
             poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
             assert isinstance(poped_team, Team)
@@ -136,13 +154,21 @@ Digital Marketing Objectives: {Increase brand awareness, Boost sales}
 Next Steps: {First step is to get the summary of the Website.}
 Any Other Information Related to Customer Brief: {}"""
 
-        reply_to_client_return_value = (
-            "Create new Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
-        )
+        client_system_message = """You are a client who wants to create a ne google ads campaign.
+You are in a conversation with a team of experts who will help you create a new google ads campaign.
+Use their smart suggestions to guide you through the process.
+
+Your answers should be short and to the point.
+e.g.
+I want to create new campaign.
+I accept the suggestion.
+Yes
+"""
+
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="campaign_creation_team",
-            reply_to_client_return_value=reply_to_client_return_value,
+            client_system_message=client_system_message,
         )
 
     @pytest.mark.flaky
@@ -155,9 +181,19 @@ Website: airt.ai
 Digital Marketing Objectives: Use Google Ads to maximize reach and conversions
 Next Steps: First step is to get the summary of the Website.
 Any Other Information Related to Customer Brief: None"""
-        reply_to_client_return_value = "Optimize existing Google Ads campaign. PROCEED WITHOUT ASKING ANY QUESTIONS!"
+
+        client_system_message = """You are a client who wants to optimize existing google ads campaign.
+You are in a conversation with a team of experts who will help you optimize your google ads.
+Use their smart suggestions to guide you through the process.
+
+Your answers should be short and to the point.
+e.g.
+I want to optimize existing campaign.
+I accept the suggestion.
+Yes
+"""
         self._test_end2_end_default_team_choosed(
             task=task,
             team_name="default_team",
-            reply_to_client_return_value=reply_to_client_return_value,
+            client_system_message=client_system_message,
         )

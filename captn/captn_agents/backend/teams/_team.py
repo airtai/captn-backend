@@ -271,8 +271,7 @@ Play to your strengths as an LLM and pursue simple strategies with no legal comp
     def _constraints(self) -> str:
         return """## Constraints
 You operate within the following constraints:
-1. If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.
-2. The context size is limited so try to be as concise in discussinos as possible. Do NOT repeat yourself or others.
+1. The context size is limited so try to be as concise in discussinos as possible. Do NOT repeat yourself or others.
 """
 
     @property
@@ -280,20 +279,12 @@ You operate within the following constraints:
         raise NotImplementedError()
 
     @property
-    def _resources(self) -> str:
-        return """## Resources
-You can leverage access to the following resources:
-1. Command execution
-"""
-
-    @property
     def _best_practices(self) -> str:
         return """## Best practices
 1. Continuously review and analyze your actions to ensure you are performing to the best of your abilities.
 2. Constructively self-criticize your big-picture behavior constantly.
-3. Reflect on past decisions and strategies to refine your approach.
-4. Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.
-5. If you have some doubts, ask question.
+3. Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.
+4. If you have some doubts, ask question.
 """
 
     @property
@@ -310,8 +301,6 @@ You can leverage access to the following resources:
 {self._constraints}
 
 {self._commands}
-
-{self._resources}
 
 {self._best_practices}
 

@@ -470,8 +470,7 @@ Do NOT use this team if the client wants to setup a new campaign!
 
     @classmethod
     def get_brief_template(cls) -> str:
-        return """Here is a template for the customer brief:
-A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
+        return """A structured customer brief, adhering to industry standards for a digital marketing campaign. Organize the information under the following headings:
 
 Business:
 Goal:
@@ -481,5 +480,5 @@ Digital Marketing Objectives:
 Next Steps:
 Any Other Information Related to Customer Brief:
 
-Please extract and represent relevant details from the conversation under these headings
+Now Let's get all the information from the clients web page and create a detailed plan for the campaign.
 """

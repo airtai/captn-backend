@@ -73,6 +73,7 @@ test-core = [
     "dirty-equals==0.7.1.post0",
     "pyarrow==15.0.2",
     "pytest-retry==1.6.2",
+    "pytest-repeat==0.9.3",
 ]
 
 testing = [
