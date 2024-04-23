@@ -1,79 +1,20 @@
-import json
 import unittest
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Dict, Iterator, List, Optional, Union
+from typing import Iterator
 
-import autogen
 import pytest
 from autogen.cache import Cache
 
-from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.teams import (
     BriefCreationTeam,
     Team,
 )
-from captn.captn_agents.backend.tools._functions import reply_to_client
 
 from ..tools.test_brief_creation_team_tools import (
     BRIEF_CREATION_TEAM_RESPONSE,
 )
-from .helpers import helper_test_init
-
-
-def get_client_response(
-    team: Team,
-    client_system_message: str = "Just accept everything.",
-) -> str:
-    def clients_response(
-        message: str,
-        completed: bool,
-        smart_suggestions: Optional[Dict[str, Union[str, List[str]]]] = None,
-    ) -> str:
-        message_for_client = reply_to_client(
-            message=message,
-            completed=completed,
-            smart_suggestions=smart_suggestions,
-        )
-
-        message_for_client_json = json.loads(message_for_client)
-        # Remove the keys that are not relevant for the client
-        message_for_client_json.pop("is_question")
-        message_for_client_json.pop("status")
-        message_for_client_json.pop("terminate_groupchat")
-        message_for_client = json.dumps(message_for_client_json)
-
-        # This agent is used only to send the message to the client
-        sender = autogen.AssistantAgent(
-            name="assistant",
-            is_termination_msg=lambda x: True,  # Once the client replies, the sender will terminate the conversation
-        )
-
-        config_list = Config().config_list_gpt_3_5
-
-        client = autogen.AssistantAgent(
-            name="client",
-            system_message=client_system_message,
-            llm_config={
-                "config_list": config_list,
-                "temperature": 0,
-            },
-        )
-
-        # Get the conversation history of the team, excluding the first and last message
-        team_chat_history = (
-            team.get_messages()[1:-1]
-            if len(team.get_messages()) > 2
-            else "No conversation yet."
-        )
-
-        message = f"This is the whole conversation between the team:\n\n{team_chat_history}\n\nYou must answer the following question:\n\n{message_for_client}"
-        sender.initiate_chat(client, message=message)
-        # last_message is the last message sent by the client
-        last_message = client.chat_messages[sender][-1]["content"]
-        return last_message
-
-    return clients_response
+from .helpers import get_client_response, helper_test_init
 
 
 class TestBriefCreationTeam:
@@ -108,14 +49,17 @@ class TestBriefCreationTeam:
 
     @contextmanager
     def patch_vars(
-        self, team: BriefCreationTeam, client_system_message: str
+        self,
+        team: BriefCreationTeam,
+        client_system_message: str,
+        cache: Cache,
     ) -> Iterator[None]:
         with (
             unittest.mock.patch.object(
                 team.toolbox.functions,
                 "reply_to_client",
                 wraps=get_client_response(
-                    team=team, client_system_message=client_system_message
+                    team=team, cache=cache, client_system_message=client_system_message
                 ),
             ) as mock_reply_to_client,
             unittest.mock.patch.object(
@@ -171,27 +115,29 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
         team = BriefCreationTeam(task=task, user_id=user_id, conv_id=conv_id)
 
         try:
-            with self.patch_vars(
-                team=team, client_system_message=client_system_message
-            ) as (
-                mock_reply_to_client,
-                mock_get_info_from_the_web_page,
-                mock_delagate_task,
-                mock_get_brief_template,
-            ):
-                with TemporaryDirectory() as cache_dir:
-                    with Cache.disk(cache_path_root=cache_dir) as cache:
+            with TemporaryDirectory() as cache_dir:
+                with Cache.disk(cache_path_root=cache_dir) as cache:
+                    with self.patch_vars(
+                        team=team,
+                        client_system_message=client_system_message,
+                        cache=cache,
+                    ) as (
+                        _,
+                        mock_get_info_from_the_web_page,
+                        mock_delagate_task,
+                        mock_get_brief_template,
+                    ):
                         team.initiate_chat(cache=cache)
 
-                mock_get_info_from_the_web_page.assert_called()
-                mock_get_brief_template.assert_called()
-                mock_delagate_task.assert_called_once()
-                assert (
-                    mock_delagate_task.call_args.kwargs[
-                        "task_and_context_to_delegate"
-                    ].team_name
-                    == team_name
-                )
+                        mock_get_info_from_the_web_page.assert_called()
+                        mock_get_brief_template.assert_called()
+                        mock_delagate_task.assert_called_once()
+                        assert (
+                            mock_delagate_task.call_args.kwargs[
+                                "task_and_context_to_delegate"
+                            ].team_name
+                            == team_name
+                        )
         finally:
             poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
             assert isinstance(poped_team, Team)
@@ -250,15 +196,4 @@ Yes
             task=task,
             team_name="default_team",
             client_system_message=client_system_message,
-        )
-
-    def test_end_user(self) -> None:
-        team = BriefCreationTeam(task="task", user_id=12, conv_id=13)
-
-        clients_response = get_client_response(
-            team=team,
-        )
-        clients_response(
-            message="Do you accept the suggestion?",
-            completed=False,
         )
