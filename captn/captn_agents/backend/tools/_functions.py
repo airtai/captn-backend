@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl, field_validator
 from typing_extensions import Annotated
 
 from ....google_ads.client import execute_query
@@ -185,6 +185,23 @@ NEVER use this function for scraping Google Ads pages (e.g. https://ads.google.c
 """
 
 
+class WebUrl(BaseModel):
+    url: Annotated[HttpUrl, "The url of the web page which needs to be summarized"]
+
+    @field_validator("url", mode="before")
+    def validate_url(cls, v: str) -> str:
+        google_ads_url = "ads.google.com"
+        if google_ads_url in v:
+            raise ValueError(
+                "FAILED: This function should NOT be used for scraping google ads!"
+            )
+
+        # add https if protocol is missing
+        if isinstance(v, str) and not v.startswith("http"):
+            return f"https://{v}"
+        return v
+
+
 def get_info_from_the_web_page(
     url: Annotated[str, "The url of the web page which needs to be summarized"],
     task: Annotated[
@@ -201,9 +218,9 @@ This parameter should NOT mention that we are working on some Google Ads task.
 """,
     ],
 ) -> str:
-    google_ads_url = "ads.google.com"
-    if google_ads_url in url:
-        return "FAILED: This function should NOT be used for scraping google ads!"
+    # validate url, error will be raised if url is invalid
+    # Append https if protocol is missing
+    url = str(WebUrl(url=url).url)
 
     web_surfer = WebSurferAgent(
         "web_surfer",
@@ -215,16 +232,18 @@ This parameter should NOT mention that we are working on some Google Ads task.
         human_input_mode="NEVER",
     )
 
-    user_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
+    web_surfer_navigator_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
 web_surfer is able to CLICK on links, SCROLL down, and scrape the content of the web page. e.g. you cen tell him: "Click the 'Getting Started' result".
 Each time you receive a reply from web_surfer, you need to tell him what to do next. e.g. "Click the TV link" or "Scroll down".
-It is very important that you explore ALL the page links relevant for the task!
+It is very important that you explore ONLY the page links relevant for the task!
 
 GUIDELINES:
 - {task_guidelines}
 - Once you retrieve the content from the received url, you can tell web_surfer to CLICK on links, SCROLL down...
 By using these capabilities, you will be able to retrieve MUCH BETTER information from the web page than by just scraping the given URL!
 You MUST use these capabilities when you receive a task for a specific category/product etc.
+It is recommended to Clck on MAXIMUM 5 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 5)!
+
 Examples:
 "Click the 'TVs' result" - This way you will navigate to the TVs section of the page and you will find more information about TVs.
 "Click 'Electronics' link" - This way you will navigate to the Electronics section of the page and you will find more information about Electronics.
@@ -232,10 +251,11 @@ Examples:
 
 - Do NOT try to click all the links on the page, but only the ones which are RELEVANT for the task! Web pages can be very long and you will be penalized if spend too much time on this task!
 - Your final goal is to summarize the findings for the given task. The summary must be in English!
-- Create a summary after you have retrieved ALL the relevant information from ALL the pages which you think are relevant for the task!
-- It is also useful to include in the summary relevant links where more information can be found.
+- Create a summary after you successfully retrieve the information from the web page.
+- It is useful to include in the summary relevant links where more information can be found.
 e.g. If the page is offering to sell TVs, you can include a link to the TV section of the page.
-- If you get some 40x error, please do NOT give up immediately, but try to navigate to another page and continue with the task. Give up only if you get 40x error on ALL the pages which you tried to navigate to.
+- If you get some 40x error, please do NOT give up immediately, but try to navigate to another page and continue with the task.
+Give up only if you get 40x error on ALL the pages which you tried to navigate to.
 
 
 FINAL MESSAGE:
@@ -271,20 +291,18 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
 
 Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
-You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' and the summary of your findings.
+You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' of the information you were able to retrieve!
 """
-    user_proxy = autogen.AssistantAgent(
-        "user_proxy",
-        # human_input_mode="NEVER",
-        # code_execution_config=False,
+    web_surfer_navigator = autogen.AssistantAgent(
+        "web_surfer_navigator",
         llm_config=llm_config_gpt_3_5,
-        system_message=user_system_message,
+        system_message=web_surfer_navigator_system_message,
     )
 
     initial_message = f"URL: {url}\nTASK: {task}"
-    user_proxy.initiate_chat(web_surfer, message=initial_message)
+    web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
 
-    return str(user_proxy.last_message()["content"])
+    return str(web_surfer_navigator.last_message()["content"])
 
 
 send_email_description = "Send email to the client."
