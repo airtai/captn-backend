@@ -87,7 +87,9 @@ Here is a template for the customer brief you will need to create:
 
         return brief_template
 
-    @toolbox.add_function("Delegate the task to the selected team")
+    @toolbox.add_function(
+        "Delegate the task to the selected team. Use this function only once you have scraped the web page and filled in the customer brief!"
+    )
     def delagate_task(
         task_and_context_to_delegate: Annotated[
             DelegateTask,
