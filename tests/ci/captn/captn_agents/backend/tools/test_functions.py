@@ -40,22 +40,21 @@ class TestWebSurfer:
             "airt.ai",
             "https://www.ikea.com/",
             "https://docs.pydantic.dev/",
-        ],
-    )
-    @pytest.mark.parametrize(
-        "task",
-        [
-            "Website summary",
-            "Find out the core business of the company",
+            "https://websitedemos.net/electronic-store-04",
+            "https://websitedemos.net/organic-shop-02/",
+            "https://www.disneystore.eu",
+            "https://www.hamleys.com/",
+            "www.bbc.com/news",
+            "https://www.konzum.hr/",
         ],
     )
     @pytest.mark.flaky
     @pytest.mark.openai
     @pytest.mark.get_info_from_the_web_page
-    def test_get_info_from_the_web_page(self, url: str, task: str):
+    def test_get_info_from_the_web_page(self, url: str):
         info = get_info_from_the_web_page(
             url=url,
-            task=task,
+            task="I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.",
             task_guidelines="Please provide a summary of the website, including the products/services offered, target audience, and any unique selling points.",
         )
 

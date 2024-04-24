@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
-from pydantic import BaseModel, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 from typing_extensions import Annotated
 
 from ....google_ads.client import execute_query
@@ -186,7 +186,10 @@ NEVER use this function for scraping Google Ads pages (e.g. https://ads.google.c
 
 
 class WebUrl(BaseModel):
-    url: Annotated[HttpUrl, "The url of the web page which needs to be summarized"]
+    url: Annotated[
+        HttpUrl,
+        Field(description="The url of the web page which needs to be summarized"),
+    ]
 
     @field_validator("url", mode="before")
     def validate_url(cls, v: str) -> str:
@@ -207,15 +210,14 @@ def get_info_from_the_web_page(
     task: Annotated[
         str,
         """Task which needs to be solved.
-This parameter should NOT mention that we are working on some Google Ads task.
 The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
+e.g. I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.
 """,
     ],
     task_guidelines: Annotated[
         str,
         """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
-This parameter should NOT mention that we are working on some Google Ads task.
-""",
+e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
     ],
 ) -> str:
     # validate url, error will be raised if url is invalid
@@ -242,7 +244,8 @@ GUIDELINES:
 - Once you retrieve the content from the received url, you can tell web_surfer to CLICK on links, SCROLL down...
 By using these capabilities, you will be able to retrieve MUCH BETTER information from the web page than by just scraping the given URL!
 You MUST use these capabilities when you receive a task for a specific category/product etc.
-It is recommended to Clck on MAXIMUM 5 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 5)!
+It is recommended to Clck on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
+On the other hand, do NOT try to create a summary without clicking on any link, because you will be missing a lot of information!
 
 Examples:
 "Click the 'TVs' result" - This way you will navigate to the TVs section of the page and you will find more information about TVs.
@@ -262,34 +265,54 @@ FINAL MESSAGE:
 If successful, your last message needs to start with "SUMMARY:" and then you need to write the summary.
 Note: NEVER suggest the next steps in the summary! It is NOT your job to do that!
 
-Suggest 15 relevant headlines where each headline has MAXIMUM 30 characters (including spaces). (headlines are often similar to keywords)
-Suggest 4 relevant descriptions where each description has MAXIMUM 90 characters (including spaces).
+This summary will later be used by another team to create Google Ads resources (e.g. keywords, headlines, descriptions) based on the information you provide.
+For each relevant link (category of products, services etc.) which you find on the page, you need to suggest the next steps to the client:
+- name
+- final URL
+- keywords
+- 15 (MAX 30 chars each)
+- 4 (MAX 90 chars each)
+
+VERY IMPORTANT:
+- each headline must have LESS than 30 characters and each description must have LESS than 90 characters
+- generate EXACTLY 15 headlines and 4 descriptions for EACH link which you think is relevant for the Google Ads campaign!
+- if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
+We are interested ONLY in the products/services which the page is offering.
+- NEVER include in the summary links which return 40x error!
 
 Example
 '''
 SUMMARY:
 
-Page content: The store offers a variety of electronic categories including Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, and Refrigerators.
+Page content: The store offers a variety of electronic categories including Air Conditioners, Refrigerators, Kitchen Appliances, PCs & Laptops and Gadgets
 Relevant links:
-- Air Conditioners: https://store-eg.net/product-category/air-conditioner/
-- Kitchen Appliances: https://store-eg.net/product-category/kitchen-appliances/
-- PCs & Laptops: https://store-eg.net/product-category/pcs-laptop/
-- Gadgets: https://store-eg.net/product-category/gadgets/
-- Smart Home: https://store-eg.net/product-category/smart-home/
-- Home Appliances: https://store-eg.net/product-category/home-appliances/
-- Audio & Video: https://store-eg.net/product-category/audio-video/
-- Refrigerators: https://store-eg.net/product-category/refrigerator/
-- New Arrivals: https://store-eg.net/new-arrivals/
+#Air Conditioners
+##final URL: https://store-eg.net/product-category/air-conditioner/
+##Keywords:
+Air Conditioners, Cooling, HVAC, Energy Efficiency, Smart Features, Quiet Operation
+##Headlines:
+"Cool Comfort, Anywhere", "Beat the Heat with Ease", "Stay Chill All Summer", "Your Cooling Solution", "Ultimate Climate Control", "AC: Your Hot Weather Ally",
+"Effortless Cooling at Home", "Upgrade Your Comfort Level", "Smart Cooling Technology", "Fresh Air, Always", "Whisper-Quiet Cooling", "Energy-Efficient Cooling",
+"Compact & Powerful AC", "Sleek Cooling Solutions", "Instant Relief from Heat"
+##Descriptions:
+"Powerful cooling for any space", "Effortless control, maximum comfort", "Whisper-quiet operation for peace", "Smart features for smarter living"
 
-## Keywords: store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators
-## Headlines (MAX 30 char each): store, electronic, Air Conditioners, Kitchen Appliances, PCs & Laptops, Gadgets, Smart Home devices, Home Appliances, Audio & Video equipment, Refrigerators, New Arrivals
-## Descriptions (MAX 90 char each): Best store for electronic devices in Europe, Buy electronic devices online, Save 20% on electronic devices, Top quality electronic devices
-(VERY IMPORTANT: each headline has LESS than 30 characters and each description has LESS than 90 characters)
 
-Use these information to SUGGEST the next steps to the client, but do NOT make any permanent changes without the client's approval!
+#Refrigerators
+##final URL: https://store-eg.net/product-category/refrigerator/
+##Keywords:
+Refrigerators, Cooling, Energy Efficiency, Smart Features, Freshness Preservation, Style, Spacious Design
+##Headlines:
+"Freshness Preserved", "Cool Convenience", "Keep it Fresh", "Ultimate Food Storage", "Smart Refrigeration", "Stylish Cooling" "Space-Saving Solutions"
+"Energy-Efficient Cooling", "Whisper-Quiet Operation", "Upgrade Your Kitchen", "Fresh Food Guarantee",  "Effortless Refrigeration",
+"Innovative Technology", "Compact & Stylish", "Instant Relief"
+##Descriptions:
+"Keep your food fresh longer", "Convenient control for maximum freshness", "Peaceful operation for your kitchen", "Smart features for fresher food"
+
+...
 '''
 
-Otherwise, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
+If you are NOT able to retrieve ANY information from the web page, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
 You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' of the information you were able to retrieve!
 """
