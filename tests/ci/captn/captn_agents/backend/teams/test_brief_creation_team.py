@@ -14,6 +14,7 @@ from captn.captn_agents.backend.teams import (
 from ..tools.test_brief_creation_team_tools import (
     BRIEF_CREATION_TEAM_RESPONSE,
 )
+from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_AIRT
 from .helpers import get_client_response, helper_test_init
 
 
@@ -63,7 +64,9 @@ class TestBriefCreationTeam:
                 ),
             ) as mock_reply_to_client,
             unittest.mock.patch.object(
-                team.toolbox.functions, "get_info_from_the_web_page"
+                team.toolbox.functions,
+                "get_info_from_the_web_page",
+                return_value=WEB_PAGE_SUMMARY_AIRT,
             ) as mock_get_info_from_the_web_page,
             unittest.mock.patch.object(
                 team.toolbox.functions,
@@ -75,29 +78,6 @@ class TestBriefCreationTeam:
                 wraps=team.toolbox.functions.get_brief_template,  # type: ignore[attr-defined]
             ) as mock_get_brief_template,
         ):
-            mock_get_info_from_the_web_page.return_value = (
-                mock_get_info_from_the_web_page.return_value
-            ) = """SUMMARY:
-
-Page content: The website is for a company called "airt" that offers an AI-powered framework for streaming app development. They provide a FastStream framework for creating, testing, and managing microservices for streaming data. They also have tools like Monotonic Neural Networks and Material for nbdev. The company focuses on driving impact with deep learning and incorporates a GPT-based model for predicting future events to be streamed. They have a community section and offer various products and tools. The website provides information about the company, news, and contact details.
-
-Relevant links:
-- FastStream framework: https://faststream.airt.ai
-- Monotonic Neural Networks: https://monotonic.airt.ai
-- Material for nbdev: https://nbdev-mkdocs.airt.ai
-- News: /news
-- About Us: /about-us
-- Company information: /company-information
-- Contact Us: /contact-us
-
-Keywords: airt, AI-powered framework, streaming app development, FastStream framework, microservices, Monotonic Neural Networks, Material for nbdev, deep learning, GPT-based model
-
-Headlines (MAX 30 char each): airt, AI-powered framework, FastStream, microservices, Monotonic Neural Networks, deep learning, GPT-based model, community, news, contact
-
-Descriptions (MAX 90 char each): AI-powered framework for streaming app development, Create, test, and manage microservices for streaming data, Driving impact with deep learning, GPT-based model for predicting future events, Explore news and contact information
-
-Use these information to SUGGEST the next steps to the client, but do NOT make any permanent changes without the client's approval!
-"""
             mock_delagate_task.return_value = BRIEF_CREATION_TEAM_RESPONSE
             yield (
                 mock_reply_to_client,

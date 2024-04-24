@@ -21,6 +21,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
+from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_AIRT
 from .helpers import helper_test_init
 
 
@@ -126,28 +127,6 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 task=task,
             )
 
-            get_info_from_the_web_page_return_value = """SUMMARY:
-
-Page content: The website is for a company called "airt" that offers an AI-powered framework for streaming app development. They provide a FastStream framework for creating, testing, and managing microservices for streaming data. They also have tools like Monotonic Neural Networks and Material for nbdev. The company focuses on driving impact with deep learning and incorporates a GPT-based model for predicting future events to be streamed. They have a community section and offer various products and tools. The website provides information about the company, news, and contact details.
-
-Relevant links:
-- FastStream framework: https://faststream.airt.ai
-- Monotonic Neural Networks: https://monotonic.airt.ai
-- Material for nbdev: https://nbdev-mkdocs.airt.ai
-- News: /news
-- About Us: /about-us
-- Company information: /company-information
-- Contact Us: /contact-us
-
-Keywords: airt, AI-powered framework, streaming app development, FastStream framework, microservices, Monotonic Neural Networks, Material for nbdev, deep learning, GPT-based model
-
-Headlines (MAX 30 char each): airt, AI-powered framework, FastStream, microservices, Monotonic Neural Networks, deep learning, GPT-based model, community, news, contact
-
-Descriptions (MAX 90 char each): AI-powered framework for streaming app development, Create, test, and manage microservices for streaming data, Driving impact with deep learning, GPT-based model for predicting future events, Explore news and contact information
-
-Use these information to SUGGEST the next steps to the client, but do NOT make any permanent changes without the client's approval!
-"""
-
             with (
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,
@@ -174,7 +153,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,
                     "get_info_from_the_web_page",
-                    return_value=get_info_from_the_web_page_return_value,
+                    return_value=WEB_PAGE_SUMMARY_AIRT,
                 ),
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,

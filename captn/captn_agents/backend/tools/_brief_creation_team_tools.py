@@ -39,7 +39,7 @@ You must fill in all the fields. NEVER write [Insert client's business]!! You ar
         Field(
             ...,
             min_length=30,
-            description="The summary of the web page content which will be used to complete the task.",
+            description="The summary of the web page content which will be used to complete the task. Use get_info_from_the_web_page function to get the summary.",
         ),
     ]
 

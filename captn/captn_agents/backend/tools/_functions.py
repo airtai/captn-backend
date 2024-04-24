@@ -286,27 +286,27 @@ SUMMARY:
 
 Page content: The store offers a variety of electronic categories including Air Conditioners, Refrigerators, Kitchen Appliances, PCs & Laptops and Gadgets
 Relevant links:
-#Air Conditioners
-##final URL: https://store-eg.net/product-category/air-conditioner/
-##Keywords:
+Air Conditioners
+final URL: https://store-eg.net/product-category/air-conditioner/
+Keywords:
 Air Conditioners, Cooling, HVAC, Energy Efficiency, Smart Features, Quiet Operation
-##Headlines:
+Headlines:
 "Cool Comfort, Anywhere", "Beat the Heat with Ease", "Stay Chill All Summer", "Your Cooling Solution", "Ultimate Climate Control", "AC: Your Hot Weather Ally",
 "Effortless Cooling at Home", "Upgrade Your Comfort Level", "Smart Cooling Technology", "Fresh Air, Always", "Whisper-Quiet Cooling", "Energy-Efficient Cooling",
 "Compact & Powerful AC", "Sleek Cooling Solutions", "Instant Relief from Heat"
-##Descriptions:
+Descriptions:
 "Powerful cooling for any space", "Effortless control, maximum comfort", "Whisper-quiet operation for peace", "Smart features for smarter living"
 
 
-#Refrigerators
-##final URL: https://store-eg.net/product-category/refrigerator/
-##Keywords:
+Refrigerators
+final URL: https://store-eg.net/product-category/refrigerator/
+Keywords:
 Refrigerators, Cooling, Energy Efficiency, Smart Features, Freshness Preservation, Style, Spacious Design
-##Headlines:
+Headlines:
 "Freshness Preserved", "Cool Convenience", "Keep it Fresh", "Ultimate Food Storage", "Smart Refrigeration", "Stylish Cooling" "Space-Saving Solutions"
 "Energy-Efficient Cooling", "Whisper-Quiet Operation", "Upgrade Your Kitchen", "Fresh Food Guarantee",  "Effortless Refrigeration",
 "Innovative Technology", "Compact & Stylish", "Instant Relief"
-##Descriptions:
+Descriptions:
 "Keep your food fresh longer", "Convenient control for maximum freshness", "Peaceful operation for your kitchen", "Smart features for fresher food"
 
 ...
@@ -314,7 +314,8 @@ Refrigerators, Cooling, Energy Efficiency, Smart Features, Freshness Preservatio
 
 If you are NOT able to retrieve ANY information from the web page, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
-You should respond with 'FAILED' ONLY if you were NOT able to retrieve ANY information from the web page! Otherwise, you should respond with 'SUMMARY' of the information you were able to retrieve!
+If you are able to retrieve any information, create a summary and do NOT return FAILED message!
+A message should NEVER contain both "FAILED:" and "SUMMARY:"!
 """
     web_surfer_navigator = autogen.AssistantAgent(
         "web_surfer_navigator",
