@@ -285,7 +285,11 @@ class WebUrl(BaseModel):
 
 
 def get_get_info_from_the_web_page(
-    num_retries: int = 3,
+    outer_retries: int = 3,
+    inner_retries: int = 10,
+    summarizer_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
+    websurfer_llm_config: Dict[str, Any] = llm_config_gpt_4,
+    websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
 ) -> Callable[[str, str, str], str]:
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
@@ -360,12 +364,12 @@ A message should NEVER contain both "FAILED:" and "SUMMARY:"!
         url = str(WebUrl(url=url).url)
 
         last_message = ""
-        for _ in range(num_retries):
+        for _ in range(outer_retries):
             try:
                 web_surfer = WebSurferAgent(
                     "web_surfer",
-                    llm_config=llm_config_gpt_4,
-                    summarizer_llm_config=llm_config_gpt_3_5,
+                    llm_config=websurfer_llm_config,
+                    summarizer_llm_config=summarizer_llm_config,
                     browser_config={"viewport_size": 4096, "bing_api_key": None},
                     is_termination_msg=lambda x: x["content"].startswith(
                         '{"type":"SUMMARY"'
@@ -379,7 +383,7 @@ A message should NEVER contain both "FAILED:" and "SUMMARY:"!
 
                 web_surfer_navigator = autogen.AssistantAgent(
                     "web_surfer_navigator",
-                    llm_config=llm_config_gpt_3_5,
+                    llm_config=websurfer_navigator_llm_config,
                     system_message=web_surfer_navigator_system_message,
                 )
 
@@ -390,7 +394,7 @@ TASK: {task}
 
                 web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
 
-                for _ in range(10):
+                for _ in range(inner_retries):
                     last_message = str(web_surfer_navigator.last_message()["content"])
                     # print(last_message)
                     try:
