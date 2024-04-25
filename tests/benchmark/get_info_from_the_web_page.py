@@ -24,7 +24,7 @@ class Models(str, Enum):
     gpt4 = "gpt4"
 
 
-def calculate_benchmark(
+def run_test(
     url: str,
     outer_retries: int,
     inner_retries: int,
@@ -37,7 +37,6 @@ def calculate_benchmark(
     last_message = ""
     try:
         raise Exception("Test exception")
-        print("In the try block")
         last_message = get_get_info_from_the_web_page(
             outer_retries=outer_retries,
             inner_retries=inner_retries,
@@ -58,7 +57,6 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
 """,
             task_guidelines="Please provide a summary of the website, including the products/services offered, target audience, and any unique selling points.",
         )
-        print(last_message)
 
         assert "SUMMARY" in last_message
 
@@ -86,10 +84,31 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
     return result
 
 
-def generate_aggregated_report(df: pd.DataFrame, reports_folder: Path):
-    success_df = df["success"].value_counts(normalize=True)
+REPORTS_FOLDER = Path(__file__).resolve().parent / "reports"
+REPORTS_FOLDER.mkdir(exist_ok=True)
 
-    print(df)
+app = typer.Typer()
+
+
+def _get_file_name(file_suffix: str) -> str:
+    file_name = f"get_info_from_the_web_page_{file_suffix}.csv"
+    return file_name
+
+
+@app.command()
+def generate_aggregated_report(
+    file_suffix: str = typer.Option(
+        "test",
+        "--file-suffix",
+        "-fs",
+        help="File suffix for the aggregated report",
+    ),
+):
+    file_name_all_tests = _get_file_name(file_suffix)
+    report_all_runs_path = REPORTS_FOLDER / file_name_all_tests
+    df = pd.read_csv(report_all_runs_path, sep="\t")
+
+    success_df = df["success"].value_counts(normalize=True)
 
     report = df[
         [
@@ -100,6 +119,7 @@ def generate_aggregated_report(df: pd.DataFrame, reports_folder: Path):
             "success",
         ]
     ].drop_duplicates()
+
     time_average = (
         df[["success", "time"]]
         .groupby(
@@ -110,15 +130,13 @@ def generate_aggregated_report(df: pd.DataFrame, reports_folder: Path):
         .mean()
     )
 
-    print(report)
     report = report.join(time_average, on="success", how="outer")
-    print(report)
     report = report.join(success_df, on="success", how="outer")
     report = report.rename(columns={"proportion": "percentage"})
     print(report)
 
     report_aggregated_path = (
-        reports_folder / "get_info_from_the_web_page_aggregated.csv"
+        REPORTS_FOLDER / f"get_info_from_the_web_page_aggregated_{file_suffix}.csv"
     )
     report.to_csv(str(report_aggregated_path), sep="\t")
 
@@ -139,26 +157,21 @@ def generate_reports(results: Dict[str, Any], file_suffix: str):
         ],
     )
 
-    reports_folder = Path(__file__).resolve().parent / "reports"
-    reports_folder.mkdir(exist_ok=True)
-
-    file_name = f"get_info_from_the_web_page_{file_suffix}.csv"
-    report_all_runs_path = reports_folder / file_name
-    report_all_runs_path_lock = reports_folder / f"{file_name}.lock"
+    file_name = _get_file_name(file_suffix)
+    report_all_runs_path = REPORTS_FOLDER / file_name
+    report_all_runs_path_lock = REPORTS_FOLDER / f"{file_name}.lock"
 
     with FileLock(str(report_all_runs_path_lock)):
         # work with the file as it is now locked
-        print("Lock acquired.")
         header = not report_all_runs_path.exists()
         df.to_csv(
             str(report_all_runs_path), mode="a", header=header, sep="\t", index=False
         )
-        # generate_aggregated_report(df=df, reports_folder=reports_folder)
-        print("Lock released.")
     report_all_runs_path_lock.unlink()
 
 
-def main(
+@app.command()
+def run_tests(
     outer_retries: int = typer.Option(
         1,
         "--outer-retries",
@@ -196,11 +209,10 @@ def main(
         help="File suffix for the reports",
     ),
 ):
-    print(f"file suffix: {file_suffix}")
     URLS = ["https://www.ikea.com/gb/en/"]
     results = []
     for url in URLS:
-        result = calculate_benchmark(
+        result = run_test(
             url=url,
             outer_retries=outer_retries,
             inner_retries=inner_retries,
@@ -214,4 +226,4 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
