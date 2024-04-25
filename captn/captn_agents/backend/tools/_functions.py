@@ -388,7 +388,8 @@ A message should NEVER contain both "FAILED:" and "SUMMARY:"!
                 )
 
                 # initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
-                initial_message = f"""URL: {url}
+                initial_message = f"""
+URL: {url}
 TASK: {task}
 """
 
@@ -446,6 +447,7 @@ Example of correctly formatted JSON (unrelated to the task):
                         )
             except Exception as e:
                 # todo: log the exception
+                last_message = str(e)
                 print("Exception")
                 print(e)
 

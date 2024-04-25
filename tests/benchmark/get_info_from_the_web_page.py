@@ -36,7 +36,7 @@ def run_test(
     success = False
     last_message = ""
     try:
-        raise Exception("Test exception")
+        # raise Exception("Test exception")
         last_message = get_get_info_from_the_web_page(
             outer_retries=outer_retries,
             inner_retries=inner_retries,
@@ -59,14 +59,10 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
         )
 
         assert "SUMMARY" in last_message
-
-        # assert  bool(random.getrandbits(1))
-        # assert True
         success = True
     except Exception as e:
-        last_message = str(e)
+        print(f"Error handling.... {last_message}")
         print(e)
-        pass
     finally:
         total_time = time.time() - time_start
         result = {
