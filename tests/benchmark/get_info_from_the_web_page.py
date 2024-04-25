@@ -1,6 +1,7 @@
 import argparse
 import time
 from pathlib import Path
+from typing import Any, Dict
 
 import pandas as pd
 
@@ -18,19 +19,18 @@ AVALIABLE_MODELS = list(LLM_CONFIGS.keys())
 
 
 def calculate_benchmark(
-    df: pd.DataFrame,
     url: str,
     outer_retries: int,
     inner_retries: int,
     summarizer_llm: str,
     websurfer_llm: str,
     websurfer_navigator_llm: str,
-) -> pd.DataFrame:
+) -> Dict[str, Any]:
     time_start = time.time()
     success = False
     last_message = ""
     try:
-        # assert False
+        raise Exception("Test exception")
         print("In the try block")
         last_message = get_get_info_from_the_web_page(
             outer_retries=outer_retries,
@@ -65,7 +65,7 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
         pass
     finally:
         total_time = time.time() - time_start
-        df.loc[len(df)] = {
+        result = {
             "name": "get_info_from_the_web_page",
             "time": total_time,
             "success": success,
@@ -77,7 +77,7 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
             "last_message": last_message,
         }
 
-    return df
+    return result
 
 
 p = argparse.ArgumentParser()
@@ -121,7 +121,36 @@ if __name__ == "__main__":
     websurfer_llm = args.websurfer_llm
     websurfer_navigator_llm = args.websurfer_navgator_llm
 
+    NUM_REPETITIONS = 2
+    URLS = ["https://www.ikea.com/gb/en/"]
+    results = []
+
+    # for url in URLS:
+    #     for _ in range(NUM_REPETITIONS):
+    #         result = calculate_benchmark(
+    #             url=url,
+    #             outer_retries=outer_retries,
+    #             inner_retries=inner_retries,
+    #             summarizer_llm=summarizer_llm,
+    #             websurfer_llm=websurfer_llm,
+    #             websurfer_navigator_llm=websurfer_navigator_llm,
+    #         )
+    #         results.append(result)
+
+    for url in URLS:
+        for _ in range(NUM_REPETITIONS):
+            result = calculate_benchmark(
+                url=url,
+                outer_retries=outer_retries,
+                inner_retries=inner_retries,
+                summarizer_llm=summarizer_llm,
+                websurfer_llm=websurfer_llm,
+                websurfer_navigator_llm=websurfer_navigator_llm,
+            )
+            results.append(result)
+
     df = pd.DataFrame(
+        data=results,
         columns=[
             "name",
             "summarizer_llm",
@@ -132,23 +161,8 @@ if __name__ == "__main__":
             "outer_retries",
             "inner_retries",
             "last_message",
-        ]
+        ],
     )
-
-    NUM_REPETITIONS = 2
-    URLS = ["https://www.ikea.com/gb/en/"]
-
-    for url in URLS:
-        for _ in range(NUM_REPETITIONS):
-            df = calculate_benchmark(
-                df=df,
-                url=url,
-                outer_retries=outer_retries,
-                inner_retries=inner_retries,
-                summarizer_llm=summarizer_llm,
-                websurfer_llm=websurfer_llm,
-                websurfer_navigator_llm=websurfer_navigator_llm,
-            )
 
     reports_folder = Path(__file__).resolve().parent / "reports"
     reports_folder.mkdir(exist_ok=True)
@@ -156,20 +170,6 @@ if __name__ == "__main__":
     df.to_csv(str(report_all_runs_path), sep="\t")
 
     success_df = df["success"].value_counts(normalize=True)
-
-    # time_average = (
-    #     df.groupby(
-    #         [
-    #             "name",
-    #             "summarizer_llm",
-    #             "websurfer_llm",
-    #             "websurfer_navigator_llm",
-    #             "success",
-    #             "last_message"
-    #         ]
-    #     )
-    #     .mean()
-    # )
 
     print(df)
 
