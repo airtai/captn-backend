@@ -24,7 +24,7 @@ from ._functions import (
     Context,
     ask_client_for_permission,
     ask_client_for_permission_description,
-    get_info_from_the_web_page,
+    get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client,
     reply_to_client_description,
@@ -1006,7 +1006,7 @@ def add_shared_functions(toolbox: Toolbox) -> None:
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)
     toolbox.add_function(get_info_from_the_web_page_description)(
-        get_info_from_the_web_page
+        get_get_info_from_the_web_page()
     )
     toolbox.add_function(change_google_account_description)(change_google_account)
     toolbox.add_function(list_accessible_customers_description)(

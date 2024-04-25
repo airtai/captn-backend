@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 from ..teams._team import Team
 from ..toolboxes import Toolbox
 from ._functions import (
-    get_info_from_the_web_page,
+    get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client,
     reply_to_client_description,
@@ -120,7 +120,7 @@ Here is a template for the customer brief you will need to create:
         return last_message
 
     toolbox.add_function(get_info_from_the_web_page_description)(
-        get_info_from_the_web_page
+        get_get_info_from_the_web_page()
     )
 
     toolbox.add_function(reply_to_client_description)(reply_to_client)

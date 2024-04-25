@@ -1,8 +1,7 @@
 import ast
-import datetime
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
@@ -18,7 +17,7 @@ __all__ = (
     "reply_to_client",
     "ask_client_for_permission",
     "ask_client_for_permission_description",
-    "get_info_from_the_web_page",
+    "get_get_info_from_the_web_page",
     "get_info_from_the_web_page_description",
     "send_email",
     "send_email_description",
@@ -285,22 +284,25 @@ class WebUrl(BaseModel):
         return v
 
 
-def get_info_from_the_web_page(
-    url: Annotated[str, "The url of the web page which needs to be summarized"],
-    task: Annotated[
-        str,
-        """Task which needs to be solved.
-The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
-e.g. I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.
-""",
-    ],
-    task_guidelines: Annotated[
-        str,
-        """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
-e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
-    ],
-) -> str:
-    web_surfer_navigator_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
+def get_get_info_from_the_web_page(
+    num_retries: int = 3,
+) -> Callable[[str, str, str], str]:
+    def get_info_from_the_web_page(
+        url: Annotated[str, "The url of the web page which needs to be summarized"],
+        task: Annotated[
+            str,
+            """Task which needs to be solved.
+    The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
+    e.g. I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.
+    """,
+        ],
+        task_guidelines: Annotated[
+            str,
+            """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
+    e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
+        ],
+    ) -> str:
+        web_surfer_navigator_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
 web_surfer is able to CLICK on links, SCROLL down, and scrape the content of the web page. e.g. you cen tell him: "Click the 'Getting Started' result".
 Each time you receive a reply from web_surfer, you need to tell him what to do next. e.g. "Click the TV link" or "Scroll down".
 It is very important that you explore ONLY the page links relevant for the task!
@@ -353,70 +355,72 @@ If some links are not working, try navigating to the previous page or the home p
 If you are able to retrieve any information, create a summary and do NOT return FAILED message!
 A message should NEVER contain both "FAILED:" and "SUMMARY:"!
 """
-    last_message = ""
-    for _ in range(3):
-        try:
-            # validate url, error will be raised if url is invalid
-            # Append https if protocol is missing
-            url = str(WebUrl(url=url).url)
+        # validate url, error will be raised if url is invalid
+        # Append https if protocol is missing
+        url = str(WebUrl(url=url).url)
 
-            web_surfer = WebSurferAgent(
-                "web_surfer",
-                llm_config=llm_config_gpt_4,
-                summarizer_llm_config=llm_config_gpt_3_5,
-                browser_config={"viewport_size": 4096, "bing_api_key": None},
-                is_termination_msg=lambda x: x["content"].startswith(
-                    '{"type":"SUMMARY"'
+        last_message = ""
+        for _ in range(num_retries):
+            try:
+                web_surfer = WebSurferAgent(
+                    "web_surfer",
+                    llm_config=llm_config_gpt_4,
+                    summarizer_llm_config=llm_config_gpt_3_5,
+                    browser_config={"viewport_size": 4096, "bing_api_key": None},
+                    is_termination_msg=lambda x: x["content"].startswith(
+                        '{"type":"SUMMARY"'
+                    )
+                    or x["content"].startswith('{"type": "SUMMARY"')
+                    or "TERMINATE" in x["content"]
+                    or x["content"].startswith("```json"),
+                    # or "FAILED" in x["content"],
+                    human_input_mode="NEVER",
                 )
-                or x["content"].startswith('{"type": "SUMMARY"')
-                or "TERMINATE" in x["content"]
-                or x["content"].startswith("```json"),
-                # or "FAILED" in x["content"],
-                human_input_mode="NEVER",
-            )
 
-            web_surfer_navigator = autogen.AssistantAgent(
-                "web_surfer_navigator",
-                llm_config=llm_config_gpt_4,
-                system_message=web_surfer_navigator_system_message,
-            )
+                web_surfer_navigator = autogen.AssistantAgent(
+                    "web_surfer_navigator",
+                    llm_config=llm_config_gpt_3_5,
+                    system_message=web_surfer_navigator_system_message,
+                )
 
-            initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
-URL: {url}
+                # initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
+                initial_message = f"""URL: {url}
 TASK: {task}
 """
 
-            web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
+                web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
 
-            for _ in range(10):
-                last_message = str(web_surfer_navigator.last_message()["content"])
-                # print(last_message)
-                try:
-                    if "TERMINATE" in last_message:
-                        web_surfer.send(
-                            "Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message.",
-                            recipient=web_surfer_navigator,
+                for _ in range(10):
+                    last_message = str(web_surfer_navigator.last_message()["content"])
+                    # print(last_message)
+                    try:
+                        if "TERMINATE" in last_message:
+                            web_surfer.send(
+                                "Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message.",
+                                recipient=web_surfer_navigator,
+                            )
+                            continue
+                        match = re.search(
+                            r"```json\n(.*)\n```", last_message, re.DOTALL
                         )
-                        continue
-                    match = re.search(r"```json\n(.*)\n```", last_message, re.DOTALL)
-                    # print(f"{match=}")
-                    if match:
-                        last_message = match.group(1)
-                        # print(f"After match: {last_message=}")
-                    summary = Summary.model_validate_json(last_message)
-                    if len(summary.relevant_pages) < 4:
+                        # print(f"{match=}")
+                        if match:
+                            last_message = match.group(1)
+                            # print(f"After match: {last_message=}")
+                        summary = Summary.model_validate_json(last_message)
+                        if len(summary.relevant_pages) < 4:
+                            web_surfer.send(
+                                f"FAILED: The summary must include AT LEAST 3 or more relevant pages. You have provided only {len(summary.relevant_pages)} pages. Please try again.",
+                                recipient=web_surfer_navigator,
+                            )
+                            continue
+                        print(f"Summary validated: {summary}")
+                        return last_message
+                    except ValidationError as e:
+                        print("Validation error")
+                        print(e)
                         web_surfer.send(
-                            f"FAILED: The summary must include AT LEAST 3 or more relevant pages. You have provided only {len(summary.relevant_pages)} pages. Please try again.",
-                            recipient=web_surfer_navigator,
-                        )
-                        continue
-                    print(f"Summary validated: {summary}")
-                    return last_message
-                except ValidationError as e:
-                    print("Validation error")
-                    print(e)
-                    web_surfer.send(
-                        f"""FAILED to decode provided JSON:
+                            f"""FAILED to decode provided JSON:
 {str(e.errors())}
 
 Please create a new JSON-encoded summary according to the following schema:
@@ -426,20 +430,24 @@ Example of correctly formatted JSON (unrelated to the task):
 ```json
 {example.model_dump_json()}
 ```
-    """,
-                        recipient=web_surfer_navigator,
-                    )
+""",
+                            recipient=web_surfer_navigator,
+                        )
 
-                except Exception as e:
-                    print("Regular exception")
-                    print(e)
-                    web_surfer.send(f"FAILED: {str(e)}", recipient=web_surfer_navigator)
-        except Exception as e:
-            # todo: log the exception
-            print("Exception")
-            print(e)
+                    except Exception as e:
+                        print("Regular exception")
+                        print(e)
+                        web_surfer.send(
+                            f"FAILED: {str(e)}", recipient=web_surfer_navigator
+                        )
+            except Exception as e:
+                # todo: log the exception
+                print("Exception")
+                print(e)
 
-    return f"FAILED: Could not retrieve the information from the web page. This is the best I could do: {last_message}"
+        return f"FAILED: Could not retrieve the information from the web page. This is the best I could do: {last_message}"
+
+    return get_info_from_the_web_page
 
 
 send_email_description = "Send email to the client."

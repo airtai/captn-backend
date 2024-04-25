@@ -3,7 +3,7 @@ from pydantic_core._pydantic_core import ValidationError
 
 from captn.captn_agents.backend.tools._functions import (
     WebUrl,
-    get_info_from_the_web_page,
+    get_get_info_from_the_web_page,
 )
 
 
@@ -27,7 +27,7 @@ class TestWebSurfer:
 
     def test_get_info_from_the_web_page_raises_error_if_url_is_invalid(self):
         with pytest.raises(ValidationError):
-            get_info_from_the_web_page(
+            get_get_info_from_the_web_page()(
                 url="[Insert URL here]",
                 task="Website summary",
                 task_guidelines="guidelines.",
@@ -53,7 +53,7 @@ class TestWebSurfer:
     @pytest.mark.openai
     @pytest.mark.get_info_from_the_web_page
     def test_get_info_from_the_web_page(self, url: str):
-        info = get_info_from_the_web_page(
+        info = get_get_info_from_the_web_page()(
             url=url,
             # task="I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.",
             task="""We are tasked with creating a new Google Ads campaign for the website.
