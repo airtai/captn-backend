@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 import pandas as pd
 import typer
+from filelock import FileLock
 
 from captn.captn_agents.backend.tools._functions import (
     get_get_info_from_the_web_page,
@@ -122,7 +123,7 @@ def generate_aggregated_report(df: pd.DataFrame, reports_folder: Path):
     report.to_csv(str(report_aggregated_path), sep="\t")
 
 
-def generate_reports(results: Dict[str, Any]):
+def generate_reports(results: Dict[str, Any], file_suffix: str):
     df = pd.DataFrame(
         data=results,
         columns=[
@@ -140,10 +141,21 @@ def generate_reports(results: Dict[str, Any]):
 
     reports_folder = Path(__file__).resolve().parent / "reports"
     reports_folder.mkdir(exist_ok=True)
-    report_all_runs_path = reports_folder / "get_info_from_the_web_page_all_runs.csv"
-    df.to_csv(str(report_all_runs_path), sep="\t")
 
-    generate_aggregated_report(df=df, reports_folder=reports_folder)
+    file_name = f"get_info_from_the_web_page_{file_suffix}.csv"
+    report_all_runs_path = reports_folder / file_name
+    report_all_runs_path_lock = reports_folder / f"{file_name}.lock"
+
+    with FileLock(str(report_all_runs_path_lock)):
+        # work with the file as it is now locked
+        print("Lock acquired.")
+        header = not report_all_runs_path.exists()
+        df.to_csv(
+            str(report_all_runs_path), mode="a", header=header, sep="\t", index=False
+        )
+        # generate_aggregated_report(df=df, reports_folder=reports_folder)
+        print("Lock released.")
+    report_all_runs_path_lock.unlink()
 
 
 def main(
@@ -177,23 +189,28 @@ def main(
         "-wsnllm",
         help="Model which will be used by the web surfer navigator",
     ),
+    file_suffix: str = typer.Option(
+        "test",
+        "--file-suffix",
+        "-fs",
+        help="File suffix for the reports",
+    ),
 ):
-    NUM_REPETITIONS = 2
+    print(f"file suffix: {file_suffix}")
     URLS = ["https://www.ikea.com/gb/en/"]
     results = []
     for url in URLS:
-        for _ in range(NUM_REPETITIONS):
-            result = calculate_benchmark(
-                url=url,
-                outer_retries=outer_retries,
-                inner_retries=inner_retries,
-                summarizer_llm=summarizer_llm,
-                websurfer_llm=websurfer_llm,
-                websurfer_navigator_llm=websurfer_navigator_llm,
-            )
-            results.append(result)
+        result = calculate_benchmark(
+            url=url,
+            outer_retries=outer_retries,
+            inner_retries=inner_retries,
+            summarizer_llm=summarizer_llm,
+            websurfer_llm=websurfer_llm,
+            websurfer_navigator_llm=websurfer_navigator_llm,
+        )
+        results.append(result)
 
-    generate_reports(results)
+    generate_reports(results=results, file_suffix=file_suffix)
 
 
 if __name__ == "__main__":
