@@ -1,10 +1,12 @@
 import ast
+import datetime
+import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import autogen
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import Annotated
 
 from ....google_ads.client import execute_query
@@ -40,6 +42,84 @@ class TeamResponse(BaseModel):
     is_question: bool
     status: str
     terminate_groupchat: bool
+
+
+class WebPageSummary(BaseModel):
+    url: HttpUrl
+    title: str
+    page_summary: str
+    keywords: List[str]
+    headlines: List[str]
+    descriptions: List[str]
+
+
+class Summary(BaseModel):
+    type: Literal["SUMMARY"] = "SUMMARY"
+    summary: str
+    relevant_pages: List[WebPageSummary]
+
+
+example = Summary(
+    summary="Page content: The store offers a variety of electronic categories including Air Conditioners, Refrigerators, Kitchen Appliances, PCs & Laptops and Gadgets",
+    relevant_pages=[
+        WebPageSummary(
+            url="https://store-eg.net/product-category/air-conditioner/",
+            title="Air Conditioners",
+            page_summary="Product pages for air conditioners",
+            keywords=[
+                "Air Conditioners",
+                "Cooling",
+                "HVAC",
+                "Energy Efficiency",
+                "Smart Features",
+                "Quiet Operation",
+            ],
+            headlines=[
+                "Cool Comfort, Anywhere",
+                "Beat the Heat with Ease",
+                "Stay Chill All Summer",
+                "Your Cooling Solution",
+                "Ultimate Climate Control",
+                "AC: Your Hot Weather Ally",
+            ],
+            descriptions=[
+                "Powerful cooling for any space",
+                "Effortless control, maximum comfort",
+                "Whisper-quiet operation for peace",
+                "Smart features for smarter living",
+            ],
+        ),
+        WebPageSummary(
+            url="https://store-eg.net/product-category/refrigerator/",
+            title="Refrigerators",
+            page_summary="Product pages for refrigerators",
+            keywords=[
+                "Refrigerators",
+                "Cooling",
+                "Energy Efficiency",
+                "Smart Features",
+                "Freshness Preservation",
+                "Style",
+                "Spacious Design",
+            ],
+            headlines=[
+                "Freshness Preserved",
+                "Cool Convenience",
+                "Keep it Fresh",
+                "Ultimate Food Storage",
+                "Smart Refrigeration",
+                "Stylish Cooling",
+                "Space-Saving Solutions",
+            ],
+            descriptions=[
+                "Keep your food fresh longer",
+                "Convenient control for maximum freshness",
+                "Peaceful operation for your kitchen",
+                "Smart features for fresher food",
+            ],
+        ),
+    ],
+)
 
 
 def reply_to_client(
@@ -220,20 +300,6 @@ e.g. I need website summary which will help me create Google Ads ad groups, ads,
 e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
     ],
 ) -> str:
-    # validate url, error will be raised if url is invalid
-    # Append https if protocol is missing
-    url = str(WebUrl(url=url).url)
-
-    web_surfer = WebSurferAgent(
-        "web_surfer",
-        llm_config=llm_config_gpt_4,
-        summarizer_llm_config=llm_config_gpt_3_5,
-        browser_config={"viewport_size": 4096, "bing_api_key": None},
-        is_termination_msg=lambda x: "SUMMARY" in x["content"]
-        or "FAILED" in x["content"],
-        human_input_mode="NEVER",
-    )
-
     web_surfer_navigator_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
 web_surfer is able to CLICK on links, SCROLL down, and scrape the content of the web page. e.g. you cen tell him: "Click the 'Getting Started' result".
 Each time you receive a reply from web_surfer, you need to tell him what to do next. e.g. "Click the TV link" or "Scroll down".
@@ -262,16 +328,18 @@ Give up only if you get 40x error on ALL the pages which you tried to navigate t
 
 
 FINAL MESSAGE:
-If successful, your last message needs to start with "SUMMARY:" and then you need to write the summary.
-Note: NEVER suggest the next steps in the summary! It is NOT your job to do that!
+If successful, your last message MUST be JSON-encoded summary according to the following JSON schema:
+{example.model_json_schema()}
 
-This summary will later be used by another team to create Google Ads resources (e.g. keywords, headlines, descriptions) based on the information you provide.
-For each relevant link (category of products, services etc.) which you find on the page, you need to suggest the next steps to the client:
-- name
-- final URL
-- keywords
-- 15 (MAX 30 chars each)
-- 4 (MAX 90 chars each)
+You MUST not include any other text or formatting in the message, only JSON-encoded summary!
+
+This is an example of correctly formatted JSON (unrelated to the task):
+```json
+{example.model_dump_json()}
+```
+
+TERMINATION:
+When you are finished, write a single 'TERMINATE' to end the task.
 
 VERY IMPORTANT:
 - each headline must have LESS than 30 characters and each description must have LESS than 90 characters
@@ -280,53 +348,98 @@ VERY IMPORTANT:
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
 
-Example
-'''
-SUMMARY:
-
-Page content: The store offers a variety of electronic categories including Air Conditioners, Refrigerators, Kitchen Appliances, PCs & Laptops and Gadgets
-Relevant links:
-Air Conditioners
-final URL: https://store-eg.net/product-category/air-conditioner/
-Keywords:
-Air Conditioners, Cooling, HVAC, Energy Efficiency, Smart Features, Quiet Operation
-Headlines:
-"Cool Comfort, Anywhere", "Beat the Heat with Ease", "Stay Chill All Summer", "Your Cooling Solution", "Ultimate Climate Control", "AC: Your Hot Weather Ally",
-"Effortless Cooling at Home", "Upgrade Your Comfort Level", "Smart Cooling Technology", "Fresh Air, Always", "Whisper-Quiet Cooling", "Energy-Efficient Cooling",
-"Compact & Powerful AC", "Sleek Cooling Solutions", "Instant Relief from Heat"
-Descriptions:
-"Powerful cooling for any space", "Effortless control, maximum comfort", "Whisper-quiet operation for peace", "Smart features for smarter living"
-
-
-Refrigerators
-final URL: https://store-eg.net/product-category/refrigerator/
-Keywords:
-Refrigerators, Cooling, Energy Efficiency, Smart Features, Freshness Preservation, Style, Spacious Design
-Headlines:
-"Freshness Preserved", "Cool Convenience", "Keep it Fresh", "Ultimate Food Storage", "Smart Refrigeration", "Stylish Cooling" "Space-Saving Solutions"
-"Energy-Efficient Cooling", "Whisper-Quiet Operation", "Upgrade Your Kitchen", "Fresh Food Guarantee",  "Effortless Refrigeration",
-"Innovative Technology", "Compact & Stylish", "Instant Relief"
-Descriptions:
-"Keep your food fresh longer", "Convenient control for maximum freshness", "Peaceful operation for your kitchen", "Smart features for fresher food"
-
-...
-'''
-
 If you are NOT able to retrieve ANY information from the web page, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
 If you are able to retrieve any information, create a summary and do NOT return FAILED message!
 A message should NEVER contain both "FAILED:" and "SUMMARY:"!
 """
-    web_surfer_navigator = autogen.AssistantAgent(
-        "web_surfer_navigator",
-        llm_config=llm_config_gpt_3_5,
-        system_message=web_surfer_navigator_system_message,
-    )
+    last_message = ""
+    for _ in range(3):
+        try:
+            # validate url, error will be raised if url is invalid
+            # Append https if protocol is missing
+            url = str(WebUrl(url=url).url)
 
-    initial_message = f"URL: {url}\nTASK: {task}"
-    web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
+            web_surfer = WebSurferAgent(
+                "web_surfer",
+                llm_config=llm_config_gpt_4,
+                summarizer_llm_config=llm_config_gpt_3_5,
+                browser_config={"viewport_size": 4096, "bing_api_key": None},
+                is_termination_msg=lambda x: x["content"].startswith(
+                    '{"type":"SUMMARY"'
+                )
+                or x["content"].startswith('{"type": "SUMMARY"')
+                or "TERMINATE" in x["content"]
+                or x["content"].startswith("```json"),
+                # or "FAILED" in x["content"],
+                human_input_mode="NEVER",
+            )
 
-    return str(web_surfer_navigator.last_message()["content"])
+            web_surfer_navigator = autogen.AssistantAgent(
+                "web_surfer_navigator",
+                llm_config=llm_config_gpt_4,
+                system_message=web_surfer_navigator_system_message,
+            )
+
+            initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
+URL: {url}
+TASK: {task}
+"""
+
+            web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
+
+            for _ in range(10):
+                last_message = str(web_surfer_navigator.last_message()["content"])
+                # print(last_message)
+                try:
+                    if "TERMINATE" in last_message:
+                        web_surfer.send(
+                            "Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message.",
+                            recipient=web_surfer_navigator,
+                        )
+                        continue
+                    match = re.search(r"```json\n(.*)\n```", last_message, re.DOTALL)
+                    # print(f"{match=}")
+                    if match:
+                        last_message = match.group(1)
+                        # print(f"After match: {last_message=}")
+                    summary = Summary.model_validate_json(last_message)
+                    if len(summary.relevant_pages) < 4:
+                        web_surfer.send(
+                            f"FAILED: The summary must include AT LEAST 3 or more relevant pages. You have provided only {len(summary.relevant_pages)} pages. Please try again.",
+                            recipient=web_surfer_navigator,
+                        )
+                        continue
+                    print(f"Summary validated: {summary}")
+                    return last_message
+                except ValidationError as e:
+                    print("Validation error")
+                    print(e)
+                    web_surfer.send(
+                        f"""FAILED to decode provided JSON:
+{str(e.errors())}
+
+Please create a new JSON-encoded summary according to the following schema:
+{Summary.model_json_schema()}
+
+Example of correctly formatted JSON (unrelated to the task):
+```json
+{example.model_dump_json()}
+```
+    """,
+                        recipient=web_surfer_navigator,
+                    )
+
+                except Exception as e:
+                    print("Regular exception")
+                    print(e)
+                    web_surfer.send(f"FAILED: {str(e)}", recipient=web_surfer_navigator)
+        except Exception as e:
+            # todo: log the exception
+            print("Exception")
+            print(e)
+
+    return f"FAILED: Could not retrieve the information from the web page. This is the best I could do: {last_message}"
 
 
 send_email_description = "Send email to the client."
