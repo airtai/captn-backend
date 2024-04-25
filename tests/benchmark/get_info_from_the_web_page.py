@@ -1,9 +1,10 @@
-import argparse
 import time
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict
 
 import pandas as pd
+import typer
 
 from captn.captn_agents.backend.tools._functions import (
     get_get_info_from_the_web_page,
@@ -13,9 +14,13 @@ from captn.captn_agents.backend.tools._functions import (
 
 LLM_CONFIGS = {
     "gpt3-5": llm_config_gpt_3_5,
-    "gpt-4": llm_config_gpt_4,
+    "gpt4": llm_config_gpt_4,
 }
-AVALIABLE_MODELS = list(LLM_CONFIGS.keys())
+
+
+class Models(str, Enum):
+    gpt3_5 = "gpt3-5"
+    gpt4 = "gpt4"
 
 
 def calculate_benchmark(
@@ -80,95 +85,7 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
     return result
 
 
-p = argparse.ArgumentParser()
-p.add_argument("-or", "--outer-retries", default=1, help="Number of complete retries")
-p.add_argument(
-    "-ir",
-    "--inner-retries",
-    default=10,
-    help="Number of retries to fix the created summary",
-)
-
-
-p.add_argument(
-    "-sllm",
-    "--summarizer-llm",
-    default="gpt3-5",
-    choices=AVALIABLE_MODELS,
-    help="Model which will be used by the web surfer summarizer",
-)
-p.add_argument(
-    "-wsllm",
-    "--websurfer-llm",
-    default="gpt-4",
-    choices=AVALIABLE_MODELS,
-    help="Model which will be used by the web surfer",
-)
-p.add_argument(
-    "-wsnllm",
-    "--websurfer-navgator-llm",
-    default="gpt3-5",
-    choices=AVALIABLE_MODELS,
-    help="Model which will be used by the web surfer navigator",
-)
-
-
-if __name__ == "__main__":
-    args = p.parse_args()
-    outer_retries = int(args.outer_retries)
-    inner_retries = int(args.inner_retries)
-    summarizer_llm = args.summarizer_llm
-    websurfer_llm = args.websurfer_llm
-    websurfer_navigator_llm = args.websurfer_navgator_llm
-
-    NUM_REPETITIONS = 2
-    URLS = ["https://www.ikea.com/gb/en/"]
-    results = []
-
-    # for url in URLS:
-    #     for _ in range(NUM_REPETITIONS):
-    #         result = calculate_benchmark(
-    #             url=url,
-    #             outer_retries=outer_retries,
-    #             inner_retries=inner_retries,
-    #             summarizer_llm=summarizer_llm,
-    #             websurfer_llm=websurfer_llm,
-    #             websurfer_navigator_llm=websurfer_navigator_llm,
-    #         )
-    #         results.append(result)
-
-    for url in URLS:
-        for _ in range(NUM_REPETITIONS):
-            result = calculate_benchmark(
-                url=url,
-                outer_retries=outer_retries,
-                inner_retries=inner_retries,
-                summarizer_llm=summarizer_llm,
-                websurfer_llm=websurfer_llm,
-                websurfer_navigator_llm=websurfer_navigator_llm,
-            )
-            results.append(result)
-
-    df = pd.DataFrame(
-        data=results,
-        columns=[
-            "name",
-            "summarizer_llm",
-            "websurfer_llm",
-            "websurfer_navigator_llm",
-            "time",
-            "success",
-            "outer_retries",
-            "inner_retries",
-            "last_message",
-        ],
-    )
-
-    reports_folder = Path(__file__).resolve().parent / "reports"
-    reports_folder.mkdir(exist_ok=True)
-    report_all_runs_path = reports_folder / "get_info_from_the_web_page_all_runs.csv"
-    df.to_csv(str(report_all_runs_path), sep="\t")
-
+def generate_aggregated_report(df: pd.DataFrame, reports_folder: Path):
     success_df = df["success"].value_counts(normalize=True)
 
     print(df)
@@ -203,3 +120,81 @@ if __name__ == "__main__":
         reports_folder / "get_info_from_the_web_page_aggregated.csv"
     )
     report.to_csv(str(report_aggregated_path), sep="\t")
+
+
+def generate_reports(results: Dict[str, Any]):
+    df = pd.DataFrame(
+        data=results,
+        columns=[
+            "name",
+            "summarizer_llm",
+            "websurfer_llm",
+            "websurfer_navigator_llm",
+            "time",
+            "success",
+            "outer_retries",
+            "inner_retries",
+            "last_message",
+        ],
+    )
+
+    reports_folder = Path(__file__).resolve().parent / "reports"
+    reports_folder.mkdir(exist_ok=True)
+    report_all_runs_path = reports_folder / "get_info_from_the_web_page_all_runs.csv"
+    df.to_csv(str(report_all_runs_path), sep="\t")
+
+    generate_aggregated_report(df=df, reports_folder=reports_folder)
+
+
+def main(
+    outer_retries: int = typer.Option(
+        1,
+        "--outer-retries",
+        "-or",
+        help="Number of complete retries",
+    ),
+    inner_retries: int = typer.Option(
+        10,
+        "--inner-retries",
+        "-ir",
+        help="Number of retries to fix the created summary",
+    ),
+    summarizer_llm: Models = typer.Option(  # noqa: B008
+        Models.gpt3_5,
+        "--summarizer-llm",
+        "-sllm",
+        help="Model which will be used by the web surfer summarizer",
+    ),
+    websurfer_llm: Models = typer.Option(  # noqa: B008
+        Models.gpt4,
+        "--websurfer-llm",
+        "-wsllm",
+        help="Model which will be used by the web surfer",
+    ),
+    websurfer_navigator_llm: Models = typer.Option(  # noqa: B008
+        Models.gpt3_5,
+        "--websurfer-navgator-llm",
+        "-wsnllm",
+        help="Model which will be used by the web surfer navigator",
+    ),
+):
+    NUM_REPETITIONS = 2
+    URLS = ["https://www.ikea.com/gb/en/"]
+    results = []
+    for url in URLS:
+        for _ in range(NUM_REPETITIONS):
+            result = calculate_benchmark(
+                url=url,
+                outer_retries=outer_retries,
+                inner_retries=inner_retries,
+                summarizer_llm=summarizer_llm,
+                websurfer_llm=websurfer_llm,
+                websurfer_navigator_llm=websurfer_navigator_llm,
+            )
+            results.append(result)
+
+    generate_reports(results)
+
+
+if __name__ == "__main__":
+    typer.run(main)
