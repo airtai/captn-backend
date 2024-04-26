@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 from enum import Enum
 from pathlib import Path
@@ -7,16 +9,13 @@ import pandas as pd
 import typer
 from filelock import FileLock
 
-from captn.captn_agents.backend.tools._functions import (
-    get_get_info_from_the_web_page,
-    llm_config_gpt_3_5,
-    llm_config_gpt_4,
-)
+# TODO: How to import the helper_test_get_info_from_the_web_page function from the test_functions.py file?
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-LLM_CONFIGS = {
-    "gpt3-5": llm_config_gpt_3_5,
-    "gpt4": llm_config_gpt_4,
-}
+from ci.captn.captn_agents.backend.tools.test_functions import (  # noqa: E402
+    TestWebSurfer,
+)
 
 
 class Models(str, Enum):
@@ -36,29 +35,15 @@ def run_test(
     success = False
     last_message = ""
     try:
-        # raise Exception("Test exception")
-        last_message = get_get_info_from_the_web_page(
+        last_message = TestWebSurfer.helper_test_get_info_from_the_web_page(
+            url=url,
             outer_retries=outer_retries,
             inner_retries=inner_retries,
-            summarizer_llm_config=LLM_CONFIGS[summarizer_llm],
-            websurfer_llm_config=LLM_CONFIGS[websurfer_llm],
-            websurfer_navigator_llm_config=LLM_CONFIGS[websurfer_navigator_llm],
-        )(
-            url=url,
-            # task="I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.",
-            task="""We are tasked with creating a new Google Ads campaign for the website.
-In order to create the campaign, we need to understand the website and its products/services.
-Our task is to provide a summary of the website, including the products/services offered, target audience, and any unique selling points.
-This is the first step in creating the Google Ads campaign so please gather as much information as possible.
-Visit the most likely pages to be advertised, such as the homepage, product pages, and any other relevant pages.
-Please provide a detailed summary of the website as JSON-encoded text as instructed in the guidelines.
-
-AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
-""",
-            task_guidelines="Please provide a summary of the website, including the products/services offered, target audience, and any unique selling points.",
+            summarizer_llm=summarizer_llm,
+            websurfer_llm=websurfer_llm,
+            websurfer_navigator_llm=websurfer_navigator_llm,
         )
 
-        assert "SUMMARY" in last_message
         success = True
     except Exception as e:
         print(f"Error handling.... {last_message}")
@@ -129,7 +114,6 @@ def generate_aggregated_report(
     report = report.join(time_average, on="success", how="outer")
     report = report.join(success_df, on="success", how="outer")
     report = report.rename(columns={"proportion": "percentage"})
-    print(report)
 
     report_aggregated_path = (
         REPORTS_FOLDER / f"get_info_from_the_web_page_aggregated_{file_suffix}.csv"
