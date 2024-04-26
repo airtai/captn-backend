@@ -346,6 +346,7 @@ def get_get_info_from_the_web_page(
     summarizer_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
     websurfer_llm_config: Dict[str, Any] = llm_config_gpt_4,
     websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
+    timestamp: Optional[str] = None,
 ) -> Callable[[str, str, str], str]:
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
@@ -395,7 +396,8 @@ def get_get_info_from_the_web_page(
                 )
 
                 # initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
-                initial_message = f"""
+                initial_message = f"Time now is {timestamp}." if timestamp else ""
+                initial_message += f"""
 URL: {url}
 TASK: {task}
 """

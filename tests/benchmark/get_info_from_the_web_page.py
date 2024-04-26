@@ -16,6 +16,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from ci.captn.captn_agents.backend.tools.test_functions import (  # noqa: E402
+    Summary,
     TestWebSurfer,
 )
 
@@ -32,6 +33,7 @@ def run_test(
     summarizer_llm: str,
     websurfer_llm: str,
     websurfer_navigator_llm: str,
+    timestamp: str = "2024-01-01T00:00:0",
 ) -> Dict[str, Any]:
     time_start = time.time()
     success = False
@@ -44,11 +46,11 @@ def run_test(
             summarizer_llm=summarizer_llm,
             websurfer_llm=websurfer_llm,
             websurfer_navigator_llm=websurfer_navigator_llm,
+            timestamp=timestamp,
         )
-        assert "SUMMARY" in last_message
+        Summary.model_validate_json(last_message)
         success = True
     except Exception as e:
-        print(f"Error handling.... {last_message}")
         print(e)
     finally:
         total_time = time.time() - time_start
@@ -62,6 +64,7 @@ def run_test(
             "inner_retries": inner_retries,
             "last_message": last_message,
             "status": "DONE",
+            "timestamp": timestamp,
         }
 
     return result
@@ -127,7 +130,7 @@ def generate_reports(result: Dict[str, Any], file_suffix: str):
     with lock_file(file_suffix) as report_all_runs_path:
         df = pd.read_csv(report_all_runs_path)
         # Delete the row with the same id
-        df = df[df["id"] != result["id"]]
+        df = df[df["timestamp"] != result["timestamp"]]
         # Add the updated row
         df = pd.concat([df, pd.DataFrame([result])], ignore_index=True)
 
@@ -147,7 +150,7 @@ def generate_task_table(
 ):
     df = pd.DataFrame(
         columns=[
-            "id",
+            "timestamp",
             "url",
             "time",
             "success",
@@ -170,7 +173,9 @@ def generate_task_table(
     URLS = URLS * repeat
 
     df["url"] = URLS
-    df["id"] = range(len(URLS))
+    timestamp = "2024-01-01T00:00:0"
+    timestamps = [timestamp + str(i) for i in range(len(URLS))]
+    df["timestamp"] = timestamps
 
     file_name = _get_file_name(file_suffix)
     report_all_runs_path = REPORTS_FOLDER / file_name
@@ -192,7 +197,7 @@ def run_tests(
         help="Model which will be used by the web surfer",
     ),
     websurfer_navigator_llm: Models = typer.Option(  # noqa: B008
-        Models.gpt3_5,
+        Models.gpt4,
         help="Model which will be used by the web surfer navigator",
     ),
     file_suffix: str = typer.Option(
@@ -221,7 +226,7 @@ def run_tests(
             row = df_status_nan.iloc[i]
 
             df["status"] = df["status"].astype(str)
-            df.loc[df["id"] == row["id"], "status"] = "PENDING"
+            df.loc[df["timestamp"] == row["timestamp"], "status"] = "PENDING"
 
             df.to_csv(report_all_runs_path, index=False)
 
@@ -232,9 +237,8 @@ def run_tests(
             summarizer_llm=summarizer_llm,
             websurfer_llm=websurfer_llm,
             websurfer_navigator_llm=websurfer_navigator_llm,
+            timestamp=row["timestamp"],
         )
-        result["id"] = row["id"]
-
         generate_reports(result=result, file_suffix=file_suffix)
 
         generate_aggregated_report(file_suffix=file_suffix)

@@ -2,7 +2,7 @@
 
 date=$(date +"%FT%T")
 # delete after
-date="test"
+# date="test"
 
 start=`date +%s`
 

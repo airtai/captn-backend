@@ -2,6 +2,7 @@ import pytest
 from pydantic_core._pydantic_core import ValidationError
 
 from captn.captn_agents.backend.tools._functions import (
+    Summary,
     WebUrl,
     get_get_info_from_the_web_page,
     llm_config_gpt_3_5,
@@ -62,12 +63,14 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
         summarizer_llm: str = "gpt3-5",
         websurfer_llm: str = "gpt4",
         websurfer_navigator_llm: str = "gpt4",
+        timestamp: str = "2024-01-01T00:00:0",
     ) -> str:
-        info = get_get_info_from_the_web_page(
+        last_message = get_get_info_from_the_web_page(
             outer_retries=outer_retries,
             inner_retries=inner_retries,
             summarizer_llm_config=TestWebSurfer.LLM_CONFIGS[summarizer_llm],
             websurfer_llm_config=TestWebSurfer.LLM_CONFIGS[websurfer_llm],
+            timestamp=timestamp,
             websurfer_navigator_llm_config=TestWebSurfer.LLM_CONFIGS[
                 websurfer_navigator_llm
             ],
@@ -77,7 +80,7 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
             task_guidelines=task_guidelines,
         )
 
-        return info
+        return last_message
 
     @pytest.mark.parametrize(
         "url",
@@ -99,5 +102,5 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
     @pytest.mark.openai
     @pytest.mark.get_info_from_the_web_page
     def test_get_info_from_the_web_page(self, url: str):
-        info = self.helper_test_get_info_from_the_web_page(url=url)
-        assert "SUMMARY" in info
+        last_message = self.helper_test_get_info_from_the_web_page(url=url)
+        Summary.model_validate_json(last_message)
