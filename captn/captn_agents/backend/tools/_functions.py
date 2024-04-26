@@ -370,6 +370,7 @@ def get_get_info_from_the_web_page(
         url = str(WebUrl(url=url).url)
 
         last_message = ""
+        failure_message = ""
         for _ in range(outer_retries):
             try:
                 web_surfer = WebSurferAgent(
@@ -453,11 +454,20 @@ Example of correctly formatted JSON (unrelated to the task):
                         )
             except Exception as e:
                 # todo: log the exception
-                last_message = str(e)
+                failure_message = str(e)
                 print("Exception")
                 print(e)
 
-        return f"FAILED: Could not retrieve the information from the web page. This is the best I could do: {last_message}"
+        last_message = (
+            f"This is the best we could do: {last_message}"
+            if len(last_message) > 0
+            else last_message
+        )
+        return f"""FAILED: Could not retrieve the information from the web page.
+We had the following error:
+{failure_message}
+
+{last_message}"""
 
     return get_info_from_the_web_page
 

@@ -77,7 +77,6 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
             task_guidelines=task_guidelines,
         )
 
-        assert "SUMMARY" in info
         return info
 
     @pytest.mark.parametrize(
@@ -100,4 +99,5 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
     @pytest.mark.openai
     @pytest.mark.get_info_from_the_web_page
     def test_get_info_from_the_web_page(self, url: str):
-        self.helper_test_get_info_from_the_web_page(url=url)
+        info = self.helper_test_get_info_from_the_web_page(url=url)
+        assert "SUMMARY" in info

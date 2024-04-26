@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import time
 from contextlib import contextmanager
@@ -44,7 +45,7 @@ def run_test(
             websurfer_llm=websurfer_llm,
             websurfer_navigator_llm=websurfer_navigator_llm,
         )
-
+        assert "SUMMARY" in last_message
         success = True
     except Exception as e:
         print(f"Error handling.... {last_message}")
@@ -58,7 +59,6 @@ def run_test(
             "summarizer_llm": summarizer_llm,
             "websurfer_llm": websurfer_llm,
             "websurfer_navigator_llm": websurfer_navigator_llm,
-            # "outer_retries": outer_retries,
             "inner_retries": inner_retries,
             "last_message": last_message,
             "status": "DONE",
@@ -163,9 +163,9 @@ def generate_task_table(
     URLS = [
         "https://www.ikea.com/gb/en/",
         "https://www.disneystore.eu",
-        # "https://www.hamleys.com/",
-        # "https://www.konzum.hr",
-        # "https://faststream.airt.ai",
+        "https://www.hamleys.com/",
+        "https://www.konzum.hr",
+        "https://faststream.airt.ai",
     ]
     URLS = URLS * repeat
 
@@ -192,7 +192,7 @@ def run_tests(
         help="Model which will be used by the web surfer",
     ),
     websurfer_navigator_llm: Models = typer.Option(  # noqa: B008
-        Models.gpt4,
+        Models.gpt3_5,
         help="Model which will be used by the web surfer navigator",
     ),
     file_suffix: str = typer.Option(
@@ -200,11 +200,9 @@ def run_tests(
         help="File suffix for the reports",
     ),
 ):
-    # outer_retries: int = 1
-
+    outer_retries: int = 1
     while True:
-        url = ""
-        id = -1
+        row: pd.Series
         with lock_file(file_suffix) as report_all_runs_path:
             if not report_all_runs_path.exists():
                 print("Generating task table")
@@ -212,73 +210,34 @@ def run_tests(
 
             df = pd.read_csv(report_all_runs_path)
 
-            df_isna = df["status"].isna()
-            if not df_isna.any():
+            df_isnan = df["status"].isna()
+            if not df_isnan.any():
                 print("All tasks are done")
                 break
 
-            row = df[df_isna].iloc[0]
-            url = row["url"]
-            id = row["id"]
+            df_status_nan = df[df_isnan]
+            count = df_status_nan.shape[0]
+            i = random.randint(0, count - 1)
+            row = df_status_nan.iloc[i]
 
             df["status"] = df["status"].astype(str)
             df.loc[df["id"] == row["id"], "status"] = "PENDING"
 
-            # print(f"Updating the status of the task with url: {url}")
-
             df.to_csv(report_all_runs_path, index=False)
 
-        print(f"Running test for {url}")
-
-        result = {
-            "url": url,
-            "time": 0,
-            "success": True,
-            "summarizer_llm": summarizer_llm,
-            "websurfer_llm": websurfer_llm,
-            "websurfer_navigator_llm": websurfer_navigator_llm,
-            "inner_retries": inner_retries,
-            "last_message": "vfvfvfvfv",
-            "status": "DONE",
-        }
-
-        # result = run_test(
-        #     url=url,
-        #     outer_retries=outer_retries,
-        #     inner_retries=inner_retries,
-        #     summarizer_llm=summarizer_llm,
-        #     websurfer_llm=websurfer_llm,
-        #     websurfer_navigator_llm=websurfer_navigator_llm,
-        # )
-        result["id"] = id
+        result = run_test(
+            url=row["url"],
+            outer_retries=outer_retries,
+            inner_retries=inner_retries,
+            summarizer_llm=summarizer_llm,
+            websurfer_llm=websurfer_llm,
+            websurfer_navigator_llm=websurfer_navigator_llm,
+        )
+        result["id"] = row["id"]
 
         generate_reports(result=result, file_suffix=file_suffix)
 
-    #     generate_aggregated_report(file_suffix=file_suffix)
-
-    # URLS = [
-    #     "https://www.ikea.com/gb/en/",
-    #     "https://www.disneystore.eu",
-    #     # "https://www.hamleys.com/",
-    #     # "https://www.konzum.hr",
-    #     # "https://faststream.airt.ai",
-    # ]
-
-    # rng = np.random.default_rng()
-    # urls = rng.permutation(URLS)
-    # for url in urls:
-    #     result = run_test(
-    #         url=url,
-    #         outer_retries=outer_retries,
-    #         inner_retries=inner_retries,
-    #         summarizer_llm=summarizer_llm,
-    #         websurfer_llm=websurfer_llm,
-    #         websurfer_navigator_llm=websurfer_navigator_llm,
-    #     )
-
-    #     generate_reports(results=[result], file_suffix=file_suffix)
-
-    #     generate_aggregated_report(file_suffix=file_suffix)
+        generate_aggregated_report(file_suffix=file_suffix)
 
 
 if __name__ == "__main__":
