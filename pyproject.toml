@@ -83,6 +83,11 @@ testing = [
     "freezegun"
 ]
 
+benchmarking = [
+    "typer==0.12.3",
+    "filelock==3.13.4",
+]
+
 agents = [
     "fastapi==0.110.1",
     "APScheduler==3.10.4",
@@ -106,7 +111,7 @@ agents = [
 ]
 
 dev = [
-    "captn[lint,testing,agents]",
+    "captn[lint,testing,agents,benchmarking]",
 ]
 
 

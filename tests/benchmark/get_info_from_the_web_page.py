@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict
 
+import numpy as np
 import pandas as pd
 import typer
 from filelock import FileLock
@@ -51,13 +52,13 @@ def run_test(
     finally:
         total_time = time.time() - time_start
         result = {
-            "name": "get_info_from_the_web_page",
+            "url": url,
             "time": total_time,
             "success": success,
             "summarizer_llm": summarizer_llm,
             "websurfer_llm": websurfer_llm,
             "websurfer_navigator_llm": websurfer_navigator_llm,
-            "outer_retries": outer_retries,
+            # "outer_retries": outer_retries,
             "inner_retries": inner_retries,
             "last_message": last_message,
         }
@@ -76,6 +77,20 @@ def _get_file_name(file_suffix: str) -> str:
     return file_name
 
 
+def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
+    group = df.groupby("url")["success"]
+    total = group.count()
+    success = group.sum()
+    success_rate = (success / total).rename("success_rate")
+
+    group = df.groupby("url")["time"]
+    avg_time = group.mean().rename("avg_time")
+
+    return pd.concat([success_rate, avg_time], axis=1).sort_values(
+        "success_rate", ascending=True
+    )
+
+
 @app.command()
 def generate_aggregated_report(
     file_suffix: str = typer.Option(
@@ -87,54 +102,29 @@ def generate_aggregated_report(
 ):
     file_name_all_tests = _get_file_name(file_suffix)
     report_all_runs_path = REPORTS_FOLDER / file_name_all_tests
-    df = pd.read_csv(report_all_runs_path, sep="\t")
-
-    success_df = df["success"].value_counts(normalize=True)
-
-    report = df[
-        [
-            "name",
-            "summarizer_llm",
-            "websurfer_llm",
-            "websurfer_navigator_llm",
-            "success",
-        ]
-    ].drop_duplicates()
-
-    time_average = (
-        df[["success", "time"]]
-        .groupby(
-            [
-                "success",
-            ]
-        )
-        .mean()
-    )
-
-    report = report.join(time_average, on="success", how="outer")
-    report = report.join(success_df, on="success", how="outer")
-    report = report.rename(columns={"proportion": "percentage"})
+    df = pd.read_csv(report_all_runs_path)
+    report_df = create_ag_report(df)
 
     report_aggregated_path = (
         REPORTS_FOLDER / f"get_info_from_the_web_page_aggregated_{file_suffix}.csv"
     )
-    report.to_csv(str(report_aggregated_path), sep="\t")
+    report_df.to_csv(report_aggregated_path)
 
 
 def generate_reports(results: Dict[str, Any], file_suffix: str):
     df = pd.DataFrame(
         data=results,
-        columns=[
-            "name",
-            "summarizer_llm",
-            "websurfer_llm",
-            "websurfer_navigator_llm",
-            "time",
-            "success",
-            "outer_retries",
-            "inner_retries",
-            "last_message",
-        ],
+        # columns=[
+        #     "url",
+        #     "summarizer_llm",
+        #     "websurfer_llm",
+        #     "websurfer_navigator_llm",
+        #     "time",
+        #     "success",
+        #     # "outer_retries",
+        #     "inner_retries",
+        #     "last_message",
+        # ],
     )
 
     file_name = _get_file_name(file_suffix)
@@ -144,54 +134,46 @@ def generate_reports(results: Dict[str, Any], file_suffix: str):
     with FileLock(str(report_all_runs_path_lock)):
         # work with the file as it is now locked
         header = not report_all_runs_path.exists()
-        df.to_csv(
-            str(report_all_runs_path), mode="a", header=header, sep="\t", index=False
-        )
+        df.to_csv(report_all_runs_path, mode="a", header=header, index=False)
     report_all_runs_path_lock.unlink()
 
 
 @app.command()
 def run_tests(
-    outer_retries: int = typer.Option(
-        1,
-        "--outer-retries",
-        "-or",
-        help="Number of complete retries",
-    ),
     inner_retries: int = typer.Option(
         10,
-        "--inner-retries",
-        "-ir",
         help="Number of retries to fix the created summary",
     ),
     summarizer_llm: Models = typer.Option(  # noqa: B008
         Models.gpt3_5,
-        "--summarizer-llm",
-        "-sllm",
         help="Model which will be used by the web surfer summarizer",
     ),
     websurfer_llm: Models = typer.Option(  # noqa: B008
         Models.gpt4,
-        "--websurfer-llm",
-        "-wsllm",
         help="Model which will be used by the web surfer",
     ),
     websurfer_navigator_llm: Models = typer.Option(  # noqa: B008
         Models.gpt4,
-        "--websurfer-navgator-llm",
-        "-wsnllm",
         help="Model which will be used by the web surfer navigator",
     ),
     file_suffix: str = typer.Option(
         "test",
-        "--file-suffix",
-        "-fs",
         help="File suffix for the reports",
     ),
 ):
-    URLS = ["https://www.ikea.com/gb/en/"]
-    results = []
-    for url in URLS:
+    outer_retries: int = 1
+
+    URLS = [
+        "https://www.ikea.com/gb/en/",
+        "https://www.disneystore.eu",
+        "https://www.hamleys.com/",
+        "https://www.konzum.hr",
+        "https://faststream.airt.ai",
+    ]
+
+    rng = np.random.default_rng()
+    urls = rng.permutation(URLS)
+    for url in urls:
         result = run_test(
             url=url,
             outer_retries=outer_retries,
@@ -200,9 +182,8 @@ def run_tests(
             websurfer_llm=websurfer_llm,
             websurfer_navigator_llm=websurfer_navigator_llm,
         )
-        results.append(result)
 
-    generate_reports(results=results, file_suffix=file_suffix)
+        generate_reports(results=[result], file_suffix=file_suffix)
 
 
 if __name__ == "__main__":
