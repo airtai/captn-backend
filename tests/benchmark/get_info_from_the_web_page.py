@@ -177,7 +177,7 @@ def run_tests(
         help="Model which will be used by the web surfer",
     ),
     websurfer_navigator_llm: Models = typer.Option(  # noqa: B008
-        Models.gpt3_5,
+        Models.gpt4,
         "--websurfer-navgator-llm",
         "-wsnllm",
         help="Model which will be used by the web surfer navigator",

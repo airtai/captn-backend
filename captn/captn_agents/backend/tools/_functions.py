@@ -284,29 +284,8 @@ class WebUrl(BaseModel):
         return v
 
 
-def get_get_info_from_the_web_page(
-    outer_retries: int = 3,
-    inner_retries: int = 10,
-    summarizer_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
-    websurfer_llm_config: Dict[str, Any] = llm_config_gpt_4,
-    websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
-) -> Callable[[str, str, str], str]:
-    def get_info_from_the_web_page(
-        url: Annotated[str, "The url of the web page which needs to be summarized"],
-        task: Annotated[
-            str,
-            """Task which needs to be solved.
-    The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
-    e.g. I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.
-    """,
-        ],
-        task_guidelines: Annotated[
-            str,
-            """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
-    e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
-        ],
-    ) -> str:
-        web_surfer_navigator_system_message = f"""You are in charge of navigating the web_surfer agent to scrape the web.
+def _create_web_surfer_navigator_system_message(task_guidelines: str) -> str:
+    return f"""You are in charge of navigating the web_surfer agent to scrape the web.
 web_surfer is able to CLICK on links, SCROLL down, and scrape the content of the web page. e.g. you cen tell him: "Click the 'Getting Started' result".
 Each time you receive a reply from web_surfer, you need to tell him what to do next. e.g. "Click the TV link" or "Scroll down".
 It is very important that you explore ONLY the page links relevant for the task!
@@ -359,6 +338,33 @@ If some links are not working, try navigating to the previous page or the home p
 If you are able to retrieve any information, create a summary and do NOT return FAILED message!
 A message should NEVER contain both "FAILED:" and "SUMMARY:"!
 """
+
+
+def get_get_info_from_the_web_page(
+    outer_retries: int = 3,
+    inner_retries: int = 10,
+    summarizer_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
+    websurfer_llm_config: Dict[str, Any] = llm_config_gpt_4,
+    websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
+) -> Callable[[str, str, str], str]:
+    def get_info_from_the_web_page(
+        url: Annotated[str, "The url of the web page which needs to be summarized"],
+        task: Annotated[
+            str,
+            """Task which needs to be solved.
+    The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
+    e.g. I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.
+    """,
+        ],
+        task_guidelines: Annotated[
+            str,
+            """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
+    e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
+        ],
+    ) -> str:
+        web_surfer_navigator_system_message = (
+            _create_web_surfer_navigator_system_message(task_guidelines=task_guidelines)
+        )
         # validate url, error will be raised if url is invalid
         # Append https if protocol is missing
         url = str(WebUrl(url=url).url)
@@ -413,7 +419,7 @@ TASK: {task}
                             last_message = match.group(1)
                             # print(f"After match: {last_message=}")
                         summary = Summary.model_validate_json(last_message)
-                        if len(summary.relevant_pages) < 4:
+                        if len(summary.relevant_pages) < 3:
                             web_surfer.send(
                                 f"FAILED: The summary must include AT LEAST 3 or more relevant pages. You have provided only {len(summary.relevant_pages)} pages. Please try again.",
                                 recipient=web_surfer_navigator,

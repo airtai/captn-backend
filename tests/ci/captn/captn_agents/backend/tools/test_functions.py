@@ -61,7 +61,7 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
         inner_retries: int = 10,
         summarizer_llm: str = "gpt3-5",
         websurfer_llm: str = "gpt4",
-        websurfer_navigator_llm: str = "gpt3-5",
+        websurfer_navigator_llm: str = "gpt4",
     ) -> str:
         info = get_get_info_from_the_web_page(
             outer_retries=outer_retries,
