@@ -27,21 +27,6 @@ app = typer.Typer()
 tasks_types: TypeAlias = Literal["websurfer"]
 
 
-def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.dropna(subset=["success"])
-    group = df.groupby("url")["success"]
-    total = group.count()
-    success = group.sum()
-    success_rate = (success / total).rename("success_rate")
-
-    group = df.groupby("url")["time"]
-    avg_time = group.mean().rename("avg_time")
-
-    return pd.concat([success_rate, avg_time], axis=1).sort_values(
-        "success_rate", ascending=True
-    )
-
-
 @contextmanager
 def lock_file(path: Path) -> Iterator[None]:
     lock_path = path.parents[0] / f"{path.name}.lock"
@@ -132,7 +117,8 @@ def generate_task_table_for_websurfer(
         "llm",
         "navigator_llm",
     ]
-    df = pd.DataFrame(list(itertools.product(*params_list)), columns=params_names)
+    data = list(itertools.product(*params_list))  # type: ignore[call-overload]
+    df = pd.DataFrame(data=data, columns=params_names)
 
     _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
 
@@ -175,6 +161,21 @@ def get_random_nan_index(xs: pd.Series) -> Any:
     return xs_isnan.index[i]
 
 
+def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.dropna(subset=["success"])
+    group = df.groupby("url")["success"]
+    total = group.count()
+    success = group.sum()
+    success_rate = (success / total).rename("success_rate")
+
+    group = df.groupby("url")["execution_time"]
+    avg_time = group.mean().rename("avg_time")
+
+    return pd.concat([success_rate, avg_time], axis=1).sort_values(
+        "success_rate", ascending=True
+    )
+
+
 @app.command()
 def run_tests(
     file_path: str = typer.Option(
@@ -215,11 +216,9 @@ def run_tests(
 
                 df.to_csv(_file_path, index=True)
 
-                report_df = create_ag_report(df)
-                report_aggregated_path = (
-                    _file_path.parent / f"{_file_path.stem}_aggregated.csv"
-                )
-                report_df.to_csv(report_aggregated_path, index=True)
+                report_ag_df = create_ag_report(df)
+                report_ag_path = _file_path.parent / f"{_file_path.stem}-aggregated.csv"
+                report_ag_df.to_csv(report_ag_path, index=True)
 
         except Exception as e:
             # this should never happen unless there is some system error
@@ -228,21 +227,6 @@ def run_tests(
                 df.iloc[i, df.columns.get_loc("status")] = "Unhandled exception"
                 df.iloc[i, df.columns.get_loc("output")] = f"{e}"
                 df.to_csv(_file_path, index=True)
-
-        # generate_aggregated_report(file_suffix=file_suffix)
-
-
-# def generate_aggregated_report(
-#     file_path: Path,
-# ):
-#     with lock_file(file_path) as report_all_runs_path:
-#         df = pd.read_csv(report_all_runs_path)
-#         report_df = create_ag_report(df)
-
-#         report_aggregated_path = (
-#             REPORTS_FOLDER / f"get_info_from_the_web_page_aggregated_{file_suffix}.csv"
-#         )
-#         report_df.to_csv(report_aggregated_path)
 
 
 if __name__ == "__main__":
