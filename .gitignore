@@ -20,5 +20,4 @@ tmp*
 client_secret.json
 
 .vscode/
-tests/benchmark/reports/*
-benchmarks/
+benchmarking/working/*

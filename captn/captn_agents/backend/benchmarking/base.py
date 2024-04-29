@@ -7,7 +7,7 @@ import time
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterator, Literal, Optional, TypeAlias
+from typing import Any, Dict, Iterator, Literal, TypeAlias
 
 import pandas as pd
 import typer
@@ -25,11 +25,6 @@ class Models(str, Enum):
 app = typer.Typer()
 
 tasks_types: TypeAlias = Literal["websurfer"]
-
-
-def _get_file_name(task: tasks_types, file_suffix: str) -> str:
-    file_name = f"{task}{file_suffix}.csv"
-    return file_name
 
 
 def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
@@ -101,11 +96,11 @@ def generate_task_table_for_websurfer(
         10,
         help="Number of times to repeat each url",
     ),
-    output_dir: Path = typer.Option(
+    output_dir: str = typer.Option(  # noqa: B008
         "./",
         help="Output directory for the reports",
     ),
-):
+) -> None:
     URLS = [
         "https://www.ikea.com/gb/en/",
         "https://www.disneystore.eu",
@@ -144,7 +139,7 @@ def generate_task_table_for_websurfer(
 
 def run_test(
     task: tasks_types,
-    **kwargs,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     benchmarks = {
         "websurfer": benchmark_websurfer,
@@ -170,7 +165,7 @@ def run_test(
     }
 
 
-def get_random_nan_index(xs: pd.Series) -> Optional[int]:
+def get_random_nan_index(xs: pd.Series) -> Any:
     xs_isnan = xs[xs.isna()]
     count = xs_isnan.shape[0]
     if count == 0:
@@ -186,12 +181,12 @@ def run_tests(
         ...,
         help="Path to the file with the tasks",
     ),
-):
-    file_path = Path(file_path)
+) -> None:
+    _file_path: Path = Path(file_path)
     while True:
         row: pd.Series
-        with lock_file(file_path):
-            df = pd.read_csv(file_path, index_col=0)
+        with lock_file(_file_path):
+            df = pd.read_csv(_file_path, index_col=0)
 
             i = get_random_nan_index(df["status"])
             if i is None:
@@ -203,7 +198,7 @@ def run_tests(
             df["status"] = df["status"].astype(str)
             df.iloc[i, df.columns.get_loc("status")] = "PENDING"
 
-            df.to_csv(file_path, index=True)
+            df.to_csv(_file_path, index=True)
 
         kwargs = row.to_dict()
         for k in COMMON_COLUMNS:
@@ -211,54 +206,43 @@ def run_tests(
         try:
             result = run_test(**kwargs)
 
-            with lock_file(file_path):
-                df = pd.read_csv(file_path, index_col=0)
+            with lock_file(_file_path):
+                df = pd.read_csv(_file_path, index_col=0)
                 for k, v in result.items():
                     j = df.columns.get_loc(k)
                     df.iloc[i, j] = v
                 df.iloc[i, df.columns.get_loc("status")] = "DONE"
 
-                df.to_csv(file_path, index=True)
+                df.to_csv(_file_path, index=True)
+
+                report_df = create_ag_report(df)
+                report_aggregated_path = (
+                    _file_path.parent / f"{_file_path.stem}_aggregated.csv"
+                )
+                report_df.to_csv(report_aggregated_path, index=True)
 
         except Exception as e:
             # this should never happen unless there is some system error
-            with lock_file(file_path):
-                df = pd.read_csv(file_path, index_col=0)
+            with lock_file(_file_path):
+                df = pd.read_csv(_file_path, index_col=0)
                 df.iloc[i, df.columns.get_loc("status")] = "Unhandled exception"
                 df.iloc[i, df.columns.get_loc("output")] = f"{e}"
-                df.to_csv(file_path, index=True)
+                df.to_csv(_file_path, index=True)
 
         # generate_aggregated_report(file_suffix=file_suffix)
 
 
-@app.command()
-def generate_aggregated_report(
-    file_suffix: str = typer.Option(
-        "test",
-        "--file-suffix",
-        "-fs",
-        help="File suffix for the aggregated report",
-    ),
-):
-    with lock_file(file_suffix) as report_all_runs_path:
-        df = pd.read_csv(report_all_runs_path)
-        report_df = create_ag_report(df)
+# def generate_aggregated_report(
+#     file_path: Path,
+# ):
+#     with lock_file(file_path) as report_all_runs_path:
+#         df = pd.read_csv(report_all_runs_path)
+#         report_df = create_ag_report(df)
 
-        report_aggregated_path = (
-            REPORTS_FOLDER / f"get_info_from_the_web_page_aggregated_{file_suffix}.csv"
-        )
-        report_df.to_csv(report_aggregated_path)
-
-
-def save_results(result: Dict[str, Any], file_suffix: str):
-    with lock_file(file_suffix) as report_all_runs_path:
-        df = pd.read_csv(report_all_runs_path)
-        # Delete the row with the same id
-        df = df[df["timestamp"] != result["timestamp"]]
-        # Add the updated row
-        df = pd.concat([df, pd.DataFrame([result])], ignore_index=True)
-
-        df.to_csv(report_all_runs_path, index=False)
+#         report_aggregated_path = (
+#             REPORTS_FOLDER / f"get_info_from_the_web_page_aggregated_{file_suffix}.csv"
+#         )
+#         report_df.to_csv(report_aggregated_path)
 
 
 if __name__ == "__main__":

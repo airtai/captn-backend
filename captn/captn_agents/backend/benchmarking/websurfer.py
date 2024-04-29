@@ -31,18 +31,19 @@ def benchmark_websurfer(
     outer_retries: int = 1,
     inner_retries: int = 10,
     summarizer_llm: str = "gpt3-5",
-    websurfer_llm: str = "gpt4",
-    websurfer_navigator_llm: str = "gpt4",
+    llm: str = "gpt4",
+    navigator_llm: str = "gpt4",
     timestamp: str = "2024-01-01T00:00:0",
 ) -> str:
-    last_message = get_get_info_from_the_web_page(
+    get_info_from_the_web_page = get_get_info_from_the_web_page(
         outer_retries=outer_retries,
         inner_retries=inner_retries,
         summarizer_llm_config=_llm_configs[summarizer_llm],
-        websurfer_llm_config=_llm_configs[websurfer_llm],
+        websurfer_llm_config=_llm_configs[llm],
         timestamp=timestamp,
-        websurfer_navigator_llm_config=_llm_configs[websurfer_navigator_llm],
-    )(
+        websurfer_navigator_llm_config=_llm_configs[navigator_llm],
+    )
+    last_message = get_info_from_the_web_page(
         url=url,
         task=task,
         task_guidelines=task_guidelines,
