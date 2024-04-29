@@ -144,7 +144,7 @@ def generate_task_table(
         help="File suffix for the reports",
     ),
     repeat: int = typer.Option(
-        2,
+        10,
         help="Number of times to repeat each url",
     ),
 ):
