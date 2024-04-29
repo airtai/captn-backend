@@ -2,7 +2,6 @@ import pytest
 from pydantic_core._pydantic_core import ValidationError
 
 from captn.captn_agents.backend.tools._functions import (
-    Summary,
     WebUrl,
     get_get_info_from_the_web_page,
     llm_config_gpt_3_5,
@@ -103,4 +102,6 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
     @pytest.mark.get_info_from_the_web_page
     def test_get_info_from_the_web_page(self, url: str):
         last_message = self.helper_test_get_info_from_the_web_page(url=url)
-        Summary.model_validate_json(last_message)
+        assert last_message.startswith(
+            "Here is a summary of the information you requested:"
+        )

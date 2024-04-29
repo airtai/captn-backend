@@ -1,5 +1,6 @@
 import ast
 import re
+import time
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
@@ -340,6 +341,39 @@ A message should NEVER contain both "FAILED:" and "SUMMARY:"!
 """
 
 
+def _format_last_message(summary: Summary) -> str:
+    summary_response = f"""Here is a summary of the information you requested:
+
+{summary.summary}
+
+Relevant Pages:
+"""
+
+    for i, page in enumerate(summary.relevant_pages):
+        summary_response += f"""
+{i+1}. {page.title}:
+    URL: {page.url}
+    Summary: {page.page_summary}
+    Keywords: {str(page.keywords)[1:-1]}
+    Headlines: {str(page.headlines)[1:-1]}
+    Descriptions: {str(page.descriptions)[1:-1]}
+"""
+
+    return summary_response
+
+
+def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
+    content = x.get("content")
+    if content is None or not isinstance(content, str):
+        return False
+    return (
+        content.startswith('{"type":"SUMMARY"')
+        or content.startswith('{"type": "SUMMARY"')
+        or "TERMINATE" in content
+        or content.startswith("```json")
+    )
+
+
 def get_get_info_from_the_web_page(
     outer_retries: int = 3,
     inner_retries: int = 10,
@@ -363,6 +397,7 @@ def get_get_info_from_the_web_page(
     e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
         ],
     ) -> str:
+        timestamp_copy = timestamp
         web_surfer_navigator_system_message = (
             _create_web_surfer_navigator_system_message(task_guidelines=task_guidelines)
         )
@@ -379,13 +414,7 @@ def get_get_info_from_the_web_page(
                     llm_config=websurfer_llm_config,
                     summarizer_llm_config=summarizer_llm_config,
                     browser_config={"viewport_size": 4096, "bing_api_key": None},
-                    is_termination_msg=lambda x: x["content"].startswith(
-                        '{"type":"SUMMARY"'
-                    )
-                    or x["content"].startswith('{"type": "SUMMARY"')
-                    or "TERMINATE" in x["content"]
-                    or x["content"].startswith("```json"),
-                    # or "FAILED" in x["content"],
+                    is_termination_msg=_is_termination_msg,
                     human_input_mode="NEVER",
                 )
 
@@ -393,10 +422,13 @@ def get_get_info_from_the_web_page(
                     "web_surfer_navigator",
                     llm_config=websurfer_navigator_llm_config,
                     system_message=web_surfer_navigator_system_message,
+                    is_termination_msg=_is_termination_msg,
                 )
 
                 # initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
-                initial_message = f"Time now is {timestamp}." if timestamp else ""
+                initial_message = (
+                    f"Time now is {timestamp_copy}." if timestamp_copy else ""
+                )
                 initial_message += f"""
 URL: {url}
 TASK: {task}
@@ -406,21 +438,13 @@ TASK: {task}
 
                 for _ in range(inner_retries):
                     last_message = str(web_surfer_navigator.last_message()["content"])
-                    # print(last_message)
                     try:
-                        if "TERMINATE" in last_message:
-                            web_surfer.send(
-                                "Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message.",
-                                recipient=web_surfer_navigator,
-                            )
-                            continue
                         match = re.search(
                             r"```json\n(.*)\n```", last_message, re.DOTALL
                         )
-                        # print(f"{match=}")
                         if match:
                             last_message = match.group(1)
-                            # print(f"After match: {last_message=}")
+
                         summary = Summary.model_validate_json(last_message)
                         if len(summary.relevant_pages) < 3:
                             web_surfer.send(
@@ -428,11 +452,9 @@ TASK: {task}
                                 recipient=web_surfer_navigator,
                             )
                             continue
-                        print(f"Summary validated: {summary}")
+                        last_message = _format_last_message(summary)
                         return last_message
                     except ValidationError as e:
-                        print("Validation error")
-                        print(e)
                         web_surfer.send(
                             f"""FAILED to decode provided JSON:
 {str(e.errors())}
@@ -449,16 +471,18 @@ Example of correctly formatted JSON (unrelated to the task):
                         )
 
                     except Exception as e:
-                        print("Regular exception")
-                        print(e)
                         web_surfer.send(
                             f"FAILED: {str(e)}", recipient=web_surfer_navigator
                         )
             except Exception as e:
                 # todo: log the exception
                 failure_message = str(e)
-                print("Exception")
+                print("Exception:")
                 print(e)
+            finally:
+                if timestamp_copy:
+                    # reset the timestamp (because of the autogen cache)
+                    timestamp_copy = time.strftime("%Y-%m-%dT%H:%M:%S")
 
         last_message = (
             f"This is the best we could do: {last_message}"

@@ -16,7 +16,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from ci.captn.captn_agents.backend.tools.test_functions import (  # noqa: E402
-    Summary,
     TestWebSurfer,
 )
 
@@ -48,7 +47,9 @@ def run_test(
             websurfer_navigator_llm=websurfer_navigator_llm,
             timestamp=timestamp,
         )
-        Summary.model_validate_json(last_message)
+        assert last_message.startswith(
+            "Here is a summary of the information you requested:"
+        )
         success = True
     except Exception as e:
         print(e)
