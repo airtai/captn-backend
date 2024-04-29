@@ -21,3 +21,4 @@ client_secret.json
 
 .vscode/
 tests/benchmark/reports/*
+benchmarks/
