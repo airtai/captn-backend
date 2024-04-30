@@ -21,7 +21,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
-from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_AIRT
+from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_IKEA
 from .helpers import helper_test_init
 
 
@@ -89,7 +89,9 @@ class TestCampaignCreationTeam:
     @pytest.mark.campaign_creation_team
     def test_end2end(self, setup_ad_group_with_ad_and_keywords: None) -> None:
         def ask_client_for_permission_mock(*args, **kwargs) -> str:
-            customer_to_update = "We propose changes for the following customer: 'airt technologies d.o.o' (ID: 1111)"
+            customer_to_update = (
+                "We propose changes for the following customer: 'IKEA' (ID: 1111)"
+            )
             assert "resource_details" in kwargs, f"{kwargs.keys()=}"
             assert "proposed_changes" in kwargs, f"{kwargs.keys()=}"
             message = f"{customer_to_update}\n\n{kwargs['resource_details']}\n\n{kwargs['proposed_changes']}"
@@ -102,14 +104,12 @@ class TestCampaignCreationTeam:
             return clients_answer
 
         task = """Here is the customer brief:
-Business: airt.ai
-Goal: The goal of the Google Ads campaign is to increase brand awareness and boost sales for airt.ai.
+Business: IKEA
+Goal: The goal of the Google Ads campaign is to increase brand awareness and boost sales for https://www.ikea.com/gb/en.
 Current Situation: The client is currently running digital marketing campaigns.
-Website: The website for airt.ai is [airt.ai](https://airt.ai).
-Digital Marketing Objectives: The objectives of the Google Ads campaign are to increase brand awareness and drive website traffic for airt.ai.
+Website: The website for https://www.ikea.com/gb/en is [https://www.ikea.com/gb/en](https://https://www.ikea.com/gb/en).
+Digital Marketing Objectives: The objectives of the Google Ads campaign are to increase brand awareness and drive website traffic for https://www.ikea.com/gb/en.
 Any Other Information Related to Customer Brief: N/A
-Additional info from the web page:
-airt.ai is a website that offers an AI-powered framework for streaming app development. They provide a fast and efficient framework for creating, testing, and managing microservices for streaming data. They also use bleeding-edge technology and deep learning to drive impact in their solutions. The website offers various products and tools for developers to explore, including the FastStream framework, Monotonic Neural Networks, and Material for nbdev. Users can also find news and information about the company on the website.
 And the task is following:
 For customer with ID 1111 I have already created campaign with ID: 1212.
 The currency set for that campaign is EUR.
@@ -153,7 +153,7 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,
                     "get_info_from_the_web_page",
-                    return_value=WEB_PAGE_SUMMARY_AIRT,
+                    return_value=WEB_PAGE_SUMMARY_IKEA,
                 ),
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,

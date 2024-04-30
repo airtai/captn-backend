@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import autogen
+import requests
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import Annotated
@@ -22,6 +23,7 @@ __all__ = (
     "get_info_from_the_web_page_description",
     "send_email",
     "send_email_description",
+    "get_webpage_status_code",
 )
 
 
@@ -296,8 +298,7 @@ GUIDELINES:
 - Once you retrieve the content from the received url, you can tell web_surfer to CLICK on links, SCROLL down...
 By using these capabilities, you will be able to retrieve MUCH BETTER information from the web page than by just scraping the given URL!
 You MUST use these capabilities when you receive a task for a specific category/product etc.
-It is recommended to Clck on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
-On the other hand, do NOT try to create a summary without clicking on any link, because you will be missing a lot of information!
+- do NOT try to create a summary without clicking on any link, because you will be missing a lot of information!
 
 Examples:
 "Click the 'TVs' result" - This way you will navigate to the TVs section of the page and you will find more information about TVs.
@@ -374,6 +375,16 @@ def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
     )
 
 
+def get_webpage_status_code(url: str) -> Optional[int]:
+    if "http" not in url:
+        url = f"https://{url}"
+    try:
+        status_code = requests.head(url, allow_redirects=True, timeout=10).status_code
+        return status_code
+    except requests.ConnectionError:
+        return None
+
+
 _task = """We are tasked with creating a new Google Ads campaign for the website.
 In order to create the campaign, we need to understand the website and its products/services.
 Our task is to provide a summary of the website, including the products/services offered and any unique selling points.
@@ -382,6 +393,8 @@ Visit the most likely pages to be advertised, such as the homepage, product page
 Please provide a detailed summary of the website as JSON-encoded text as instructed in the guidelines.
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
+You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
+When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones)" to the message.
 """
 
 _task_guidelines = "Please provide a summary of the website, including the products/services offered and any unique selling points."
@@ -408,9 +421,15 @@ def get_get_info_from_the_web_page(
         # validate url, error will be raised if url is invalid
         # Append https if protocol is missing
         url = str(WebUrl(url=url).url)
+        status_code = get_webpage_status_code(url)
+        if status_code is None:
+            return "FAILED: The URL is invalid. Please provide a valid URL."
+        elif status_code < 200 or status_code >= 400:
+            return f"FAILED: The URL returned status code {status_code}. Please provide a valid URL."
 
         last_message = ""
         failure_message = ""
+        min_relevant_pages_msg = f"The summary must include AT LEAST {min_relevant_pages} or more relevant pages."
         for _ in range(outer_retries):
             try:
                 web_surfer = WebSurferAgent(
@@ -429,13 +448,13 @@ def get_get_info_from_the_web_page(
                     # is_termination_msg=_is_termination_msg,
                 )
 
-                # initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
                 initial_message = (
                     f"Time now is {timestamp_copy}." if timestamp_copy else ""
                 )
                 initial_message += f"""
 URL: {url}
 TASK: {_task}
+The JSON-encoded summary must contain at least {min_relevant_pages} relevant pages!
 """
 
                 web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
@@ -448,7 +467,7 @@ TASK: {_task}
                             and "```json" not in last_message
                         ):
                             web_surfer.send(
-                                "Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message.",
+                                f"Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message. {min_relevant_pages_msg}",
                                 recipient=web_surfer_navigator,
                             )
                             continue
@@ -461,7 +480,7 @@ TASK: {_task}
                         summary = Summary.model_validate_json(last_message)
                         if len(summary.relevant_pages) < min_relevant_pages:
                             web_surfer.send(
-                                f"FAILED: The summary must include AT LEAST {min_relevant_pages} or more relevant pages. You have provided only {len(summary.relevant_pages)} pages. Please try again.",
+                                f"FAILED: {min_relevant_pages_msg} You have provided only {len(summary.relevant_pages)} pages. Please try again.",
                                 recipient=web_surfer_navigator,
                             )
                             continue

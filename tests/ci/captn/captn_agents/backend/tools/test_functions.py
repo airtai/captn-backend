@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from pydantic_core._pydantic_core import ValidationError
 
@@ -5,6 +7,7 @@ from captn.captn_agents.backend.benchmarking.websurfer import benchmark_websurfe
 from captn.captn_agents.backend.tools._functions import (
     WebUrl,
     get_get_info_from_the_web_page,
+    get_webpage_status_code,
 )
 
 
@@ -32,13 +35,31 @@ class TestWebSurfer:
                 url="[Insert URL here]",
             )
 
+    def test_get_info_from_the_web_page_returns_404_status_code_message(self):
+        url = "https://airt.ai/lalala"
+        result = get_get_info_from_the_web_page()(url=url)
+        assert "404" in result
+
+    def test_get_webpage_status_code_returns_200(self):
+        url = "https://airt.ai"
+        status_code = get_webpage_status_code(url=url)
+        assert status_code == 200
+
+    def test_get_webpage_status_code_returns_when_url_is_invalid(self):
+        url = "www.non-valid-url.com"
+        status_code = get_webpage_status_code(url=url)
+        assert status_code == None
+
+        url = "https://airt.ai/lalala"
+        status_code = get_webpage_status_code(url=url)
+        assert status_code == 404
+
     @pytest.mark.parametrize(
         "url",
         [
             # "faststream.airt.ai",
-            # "airt.ai",
-            # "https://www.ikea.com/",
-            "https://www.ikea.com/gb/en/",
+            "airt.ai",
+            # "https://www.ikea.com/gb/en/",
             # "https://docs.pydantic.dev/",
             # "https://websitedemos.net/electronic-store-04",
             # "https://websitedemos.net/organic-shop-02/",
@@ -52,4 +73,7 @@ class TestWebSurfer:
     @pytest.mark.openai
     @pytest.mark.get_info_from_the_web_page
     def test_get_info_from_the_web_page(self, url: str):
-        benchmark_websurfer(url=url, outer_retries=3)
+        # print isoformat timestamp
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+        result = benchmark_websurfer(url=url, outer_retries=3, timestamp=timestamp)
+        print(result)

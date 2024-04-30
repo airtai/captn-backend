@@ -22,6 +22,7 @@ from ....google_ads.client import (
     list_accessible_customers,
 )
 from ..tools._daily_analysis_team_tools import create_daily_analysis_team_toolbox
+from ..tools._functions import get_webpage_status_code
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND
 from ._team import Team
 
@@ -397,15 +398,8 @@ def get_web_status_code_report_for_campaign(
         for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
             final_urls = ad_group_ad["final_urls"]
             for final_url in final_urls:
-                if "http" not in final_url:
-                    final_url = f"https://{final_url}"
-                try:
-                    status_code = requests.head(
-                        final_url, allow_redirects=True, timeout=10
-                    ).status_code
-                except requests.ConnectionError:
-                    status_code = 0
-                if status_code < 200 or status_code >= 400:
+                status_code = get_webpage_status_code(url=final_url)
+                if status_code is None or status_code < 200 or status_code >= 400:
                     send_warning_message_for_campaign = True
                     final_url_link = (
                         f"<a href='{final_url}' target='_blank'>{final_url}</a>"

@@ -14,7 +14,7 @@ from captn.captn_agents.backend.teams import (
 from ..tools.test_brief_creation_team_tools import (
     BRIEF_CREATION_TEAM_RESPONSE,
 )
-from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_AIRT
+from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_IKEA
 from .helpers import get_client_response, helper_test_init
 
 
@@ -66,7 +66,7 @@ class TestBriefCreationTeam:
             unittest.mock.patch.object(
                 team.toolbox.functions,
                 "get_info_from_the_web_page",
-                return_value=WEB_PAGE_SUMMARY_AIRT,
+                return_value=WEB_PAGE_SUMMARY_IKEA,
             ) as mock_get_info_from_the_web_page,
             unittest.mock.patch.object(
                 team.toolbox.functions,
@@ -128,8 +128,8 @@ class TestBriefCreationTeam:
     def test_end2_end_campaign_creation_team_choosed(self) -> None:
         task = """Business: {Boost sales / Increase brand awareness}
 Goal: {Increase brand awareness and boost sales}
-Current Situation: {Website: airt.ai, Digital Marketing: Yes, Using Google Ads}
-Website: {airt.ai}
+Current Situation: {Website: https://www.ikea.com/gb/en, Digital Marketing: Yes, Using Google Ads}
+Website: {https://www.ikea.com/gb/en}
 Digital Marketing Objectives: {Increase brand awareness, Boost sales}
 Next Steps: {First step is to get the summary of the Website.}
 Any Other Information Related to Customer Brief: {}"""
@@ -157,7 +157,7 @@ Yes
     def test_end2_end_default_team_choosed(self) -> None:
         task = """Business: Boost sales
 Goal: Increase brand awareness
-Website: airt.ai
+Website: https://www.ikea.com/gb/en
 Digital Marketing Objectives: Use Google Ads to maximize reach and conversions
 Next Steps: First step is to get the summary of the Website.
 Any Other Information Related to Customer Brief: None"""
