@@ -117,6 +117,7 @@ def generate_task_table_for_websurfer(
         "llm",
         "navigator_llm",
     ]
+    # TODO: Fix type-ignore
     data = list(itertools.product(*params_list))  # type: ignore[call-overload]
     df = pd.DataFrame(data=data, columns=params_names)
 
@@ -157,7 +158,7 @@ def get_random_nan_index(xs: pd.Series) -> Any:
     if count == 0:
         return None
 
-    i = random.randint(0, count - 1)
+    i = random.randint(0, count - 1)  # nosec[B311]
     return xs_isnan.index[i]
 
 

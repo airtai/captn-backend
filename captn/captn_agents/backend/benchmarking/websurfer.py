@@ -30,8 +30,9 @@ def benchmark_websurfer(
         timestamp=timestamp,
         websurfer_navigator_llm_config=_llm_configs[navigator_llm],
     )
+    # TODO: Fix type-ignore
     last_message = get_info_from_the_web_page(
-        url=url,
+        url=url,  # type: ignore[call-arg]
     )
 
     if not last_message.startswith(

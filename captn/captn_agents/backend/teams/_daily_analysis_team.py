@@ -811,7 +811,7 @@ SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criter
 
 NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
 You can execute the provided queries ONLY by using the 'execute_query' command!
-"""
+"""  # nosec: [B608]
 
 
 def _create_final_html_message(

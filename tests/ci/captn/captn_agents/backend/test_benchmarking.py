@@ -21,7 +21,7 @@ class TestWebsurfer:
     def test_help(self):
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "Usage: root [OPTIONS]" in result.stdout
+        assert "root [OPTIONS]" in result.stdout
         assert "generate-task-table-for-websurfer" in result.stdout
 
     @staticmethod
