@@ -48,7 +48,7 @@ class TestWebSurfer:
     def test_get_webpage_status_code_returns_when_url_is_invalid(self):
         url = "www.non-valid-url.com"
         status_code = get_webpage_status_code(url=url)
-        assert status_code == None
+        assert status_code is None
 
         url = "https://airt.ai/lalala"
         status_code = get_webpage_status_code(url=url)

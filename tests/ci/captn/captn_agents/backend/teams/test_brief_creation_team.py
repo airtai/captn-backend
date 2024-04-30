@@ -63,26 +63,24 @@ class TestBriefCreationTeam:
                     team=team, cache=cache, client_system_message=client_system_message
                 ),
             ) as mock_reply_to_client,
-            unittest.mock.patch.object(
-                team.toolbox.functions,
-                "get_info_from_the_web_page",
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._brief_creation_team_tools._get_info_from_the_web_page_original",
                 return_value=WEB_PAGE_SUMMARY_IKEA,
             ) as mock_get_info_from_the_web_page,
-            unittest.mock.patch.object(
-                team.toolbox.functions,
-                "delagate_task",
-            ) as mock_delagate_task,
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._brief_creation_team_tools._change_the_team_and_start_new_chat",
+                return_value=BRIEF_CREATION_TEAM_RESPONSE,
+            ) as mock_change_the_team_and_start_new_chat,
             unittest.mock.patch.object(
                 team.toolbox.functions,
                 "get_brief_template",
                 wraps=team.toolbox.functions.get_brief_template,  # type: ignore[attr-defined]
             ) as mock_get_brief_template,
         ):
-            mock_delagate_task.return_value = BRIEF_CREATION_TEAM_RESPONSE
             yield (
                 mock_reply_to_client,
                 mock_get_info_from_the_web_page,
-                mock_delagate_task,
+                mock_change_the_team_and_start_new_chat,
                 mock_get_brief_template,
             )
 
@@ -104,20 +102,21 @@ class TestBriefCreationTeam:
                     ) as (
                         _,
                         mock_get_info_from_the_web_page,
-                        mock_delagate_task,
+                        mock_change_the_team_and_start_new_chat,
                         mock_get_brief_template,
                     ):
                         team.initiate_chat(cache=cache)
 
                         mock_get_info_from_the_web_page.assert_called()
                         mock_get_brief_template.assert_called()
-                        mock_delagate_task.assert_called_once()
-                        assert (
-                            mock_delagate_task.call_args.kwargs[
-                                "task_and_context_to_delegate"
-                            ].team_name
-                            == team_name
+                        mock_change_the_team_and_start_new_chat.assert_called()
+                        team_class: Team = (
+                            mock_change_the_team_and_start_new_chat.call_args.kwargs[
+                                "team_class"
+                            ]
                         )
+                        assert team_class.get_registred_team_name() == team_name
+
         finally:
             poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
             assert isinstance(poped_team, Team)

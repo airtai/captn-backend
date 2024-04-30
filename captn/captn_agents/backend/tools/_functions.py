@@ -24,6 +24,7 @@ __all__ = (
     "send_email",
     "send_email_description",
     "get_webpage_status_code",
+    "LAST_MESSAGE_BEGINNING",
 )
 
 
@@ -342,8 +343,11 @@ A message should NEVER contain both "FAILED:" and "SUMMARY:"!
 """
 
 
+LAST_MESSAGE_BEGINNING = "Here is a summary of the information you requested:"
+
+
 def _format_last_message(summary: Summary) -> str:
-    summary_response = f"""Here is a summary of the information you requested:
+    summary_response = f"""{LAST_MESSAGE_BEGINNING}
 
 {summary.summary}
 
