@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
-date=$(date +"%FT%T")
-# delete after
-# date="test"
-
 start=`date +%s`
 
-# Generate the task table
-benchmark generate-task-table-for-websurfer --output-dir benchmarking/working --file-name "websurfer-benchmark-task-list-$date"
+date=$(date +"%FT%T")
+output_dir="benchmarking/working"
+file_name="websurfer-benchmark-task-list-$date.csv"
 
+echo "Output directory: $output_dir"
+echo "File name: $file_name"
+# Generate the task table
+benchmark generate-task-table-for-websurfer --output-dir $output_dir --file-name $file_name
+
+echo "File path: $output_dir/$file_name"
 # Run the tests three in parallel
-benchmark run-tests --file-path "benchmarking/working/websurfer-benchmark-task-list-$date"
+benchmark run-tests --file-path "$output_dir/$file_name"
 
 end=`date +%s`
 echo Total execution time: $((end-start))s
