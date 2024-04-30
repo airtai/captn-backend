@@ -409,7 +409,7 @@ def get_get_info_from_the_web_page(
     inner_retries: int = 10,
     summarizer_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
     websurfer_llm_config: Dict[str, Any] = llm_config_gpt_4,
-    websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
+    websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_4,
     timestamp: Optional[str] = None,
     min_relevant_pages: int = 3,
 ) -> Callable[[str], str]:

@@ -114,6 +114,7 @@ And the task is following:
 For customer with ID 1111 I have already created campaign with ID: 1212.
 The currency set for that campaign is EUR.
 Create new ad groups with ad and keywords for the campaign.
+- create ONLY ad groups for "IKEA for Business" and "Beds & Mattresses"
 
 DO NOT ask client for feedback while you are planning or executing the task. You can ask for feedback only after you
 have all information needed to ask for the final approval by calling 'ask_client_for_permission' function. Only after
