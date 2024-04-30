@@ -97,7 +97,11 @@ class TestWebsurfer:
         )
         report_ag_df = captn.captn_agents.backend.benchmarking.base.create_ag_report(df)
 
+        assert report_ag_df.shape == (3, 2)
+
         assert report_ag_df.loc["url1", "success_rate"] == 0.25
         assert report_ag_df.loc["url1", "avg_time"] == 2.75
         assert report_ag_df.loc["url2", "success_rate"] == 0.5
         assert report_ag_df.loc["url2", "avg_time"] == 3.0
+        assert report_ag_df.loc["Total", "success_rate"] == 0.33
+        assert report_ag_df.loc["Total", "avg_time"] == 2.83

@@ -171,9 +171,23 @@ def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
     group = df.groupby("url")["execution_time"]
     avg_time = group.mean().rename("avg_time")
 
-    return pd.concat([success_rate, avg_time], axis=1).sort_values(
+    ag_report_df = pd.concat([success_rate, avg_time], axis=1).sort_values(
         "success_rate", ascending=True
     )
+
+    # Calculate total success rate and average time
+    total_success = success.sum()
+    count = len(df)
+    total_time = df["execution_time"].sum()
+    total_success_rate = total_success / count
+    total_avg_time = total_time / count
+
+    ag_report_df.loc["Total"] = [total_success_rate, total_avg_time]
+
+    # round columns to 2 decimal places
+    ag_report_df = ag_report_df.round(2)
+
+    return ag_report_df
 
 
 @app.command()
