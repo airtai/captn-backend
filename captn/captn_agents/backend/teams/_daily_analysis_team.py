@@ -22,6 +22,7 @@ from ....google_ads.client import (
     list_accessible_customers,
 )
 from ..tools._daily_analysis_team_tools import create_daily_analysis_team_toolbox
+from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND
 from ._team import Team
 
 __all__ = ("DailyAnalysisTeam",)
@@ -788,7 +789,7 @@ Try to figure out as much as possible before sending the email to the client. If
 
     @property
     def _commands(self) -> str:
-        return """## Commands
+        return f"""## Commands
 Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
@@ -796,9 +797,7 @@ All team members have access to the following command:
 1. send_email: Send email to the client, params: (proposed_user_actions: List[str]])
 Each message in the 'proposed_user_actions' parameter must contain all information useful to the client, because the client does not see your team's conversation
 As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
-2. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
-It should be used only for the clients web page(s), final_url(s) etc.
-This command should be used for retrieving the information from clients web page.
+2. {GET_INFO_FROM_THE_WEB_COMMAND}
 
 ONLY Google ads specialist can suggest following commands:
 1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()

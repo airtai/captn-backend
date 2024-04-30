@@ -30,8 +30,6 @@ class TestWebSurfer:
         with pytest.raises(ValidationError):
             get_get_info_from_the_web_page()(
                 url="[Insert URL here]",
-                task="Website summary",
-                task_guidelines="guidelines.",
             )
 
     @pytest.mark.parametrize(

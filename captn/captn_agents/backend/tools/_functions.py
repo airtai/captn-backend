@@ -370,8 +370,21 @@ def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         content.startswith('{"type":"SUMMARY"')
         or content.startswith('{"type": "SUMMARY"')
         or "TERMINATE" in content
-        or content.startswith("```json")
+        or "```json" in content
     )
+
+
+_task = """We are tasked with creating a new Google Ads campaign for the website.
+In order to create the campaign, we need to understand the website and its products/services.
+Our task is to provide a summary of the website, including the products/services offered and any unique selling points.
+This is the first step in creating the Google Ads campaign so please gather as much information as possible.
+Visit the most likely pages to be advertised, such as the homepage, product pages, and any other relevant pages.
+Please provide a detailed summary of the website as JSON-encoded text as instructed in the guidelines.
+
+AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
+"""
+
+_task_guidelines = "Please provide a summary of the website, including the products/services offered and any unique selling points."
 
 
 def get_get_info_from_the_web_page(
@@ -381,25 +394,16 @@ def get_get_info_from_the_web_page(
     websurfer_llm_config: Dict[str, Any] = llm_config_gpt_4,
     websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
     timestamp: Optional[str] = None,
-) -> Callable[[str, str, str], str]:
+    min_relevant_pages: int = 3,
+) -> Callable[[str], str]:
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
-        task: Annotated[
-            str,
-            """Task which needs to be solved.
-    The focus of the task is usually retrieving the information from the web page e.g.: categories, products, services etc.
-    e.g. I need website summary which will help me create Google Ads ad groups, ads, and keywords for the website.
-    """,
-        ],
-        task_guidelines: Annotated[
-            str,
-            """Guidelines which will help you to solve the task. What information are we looking for, what questions need to be answered, etc.
-    e.g. Please provide a summary of the website, including the products/services offered. The summary will be used to create Google Ads resources based on the information you provide.""",
-        ],
     ) -> str:
         timestamp_copy = timestamp
         web_surfer_navigator_system_message = (
-            _create_web_surfer_navigator_system_message(task_guidelines=task_guidelines)
+            _create_web_surfer_navigator_system_message(
+                task_guidelines=_task_guidelines
+            )
         )
         # validate url, error will be raised if url is invalid
         # Append https if protocol is missing
@@ -422,7 +426,7 @@ def get_get_info_from_the_web_page(
                     "web_surfer_navigator",
                     llm_config=websurfer_navigator_llm_config,
                     system_message=web_surfer_navigator_system_message,
-                    is_termination_msg=_is_termination_msg,
+                    # is_termination_msg=_is_termination_msg,
                 )
 
                 # initial_message = f"""Time now is {datetime.datetime.now().isoformat()}.
@@ -431,7 +435,7 @@ def get_get_info_from_the_web_page(
                 )
                 initial_message += f"""
 URL: {url}
-TASK: {task}
+TASK: {_task}
 """
 
                 web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
@@ -439,6 +443,15 @@ TASK: {task}
                 for _ in range(inner_retries):
                     last_message = str(web_surfer_navigator.last_message()["content"])
                     try:
+                        if (
+                            "TERMINATE" in last_message
+                            and "```json" not in last_message
+                        ):
+                            web_surfer.send(
+                                "Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message.",
+                                recipient=web_surfer_navigator,
+                            )
+                            continue
                         match = re.search(
                             r"```json\n(.*)\n```", last_message, re.DOTALL
                         )
@@ -446,9 +459,9 @@ TASK: {task}
                             last_message = match.group(1)
 
                         summary = Summary.model_validate_json(last_message)
-                        if len(summary.relevant_pages) < 3:
+                        if len(summary.relevant_pages) < min_relevant_pages:
                             web_surfer.send(
-                                f"FAILED: The summary must include AT LEAST 3 or more relevant pages. You have provided only {len(summary.relevant_pages)} pages. Please try again.",
+                                f"FAILED: The summary must include AT LEAST {min_relevant_pages} or more relevant pages. You have provided only {len(summary.relevant_pages)} pages. Please try again.",
                                 recipient=web_surfer_navigator,
                             )
                             continue

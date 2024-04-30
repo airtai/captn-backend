@@ -1,7 +1,10 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..tools._google_ads_team_tools import create_google_ads_team_toolbox
-from ._shared_prompts import MODIFICATION_FUNCTIONS_INSTRUCTIONS
+from ._shared_prompts import (
+    GET_INFO_FROM_THE_WEB_COMMAND,
+    MODIFICATION_FUNCTIONS_INSTRUCTIONS,
+)
 from ._team import Team
 
 __all__ = ("GoogleAdsTeam",)
@@ -442,11 +445,7 @@ If not explicitly asked, you MUST ask the client for approval before removing an
 params: (customer_id: string, ad_id: string, clients_approval_message: string, modification_question: str
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
-18. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
-It should be used only for the clients web page(s), final_url(s) etc.
-This command should be used for retrieving the information from clients web page.
-If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc.
-
+18. {GET_INFO_FROM_THE_WEB_COMMAND}
 19. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
 Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
 
