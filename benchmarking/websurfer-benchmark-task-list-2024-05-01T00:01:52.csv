@@ -1,0 +1,1719 @@
+,timestamp,task,url,inner_retries,summarizer_llm,llm,navigator_llm,execution_time,status,success,output
+0,2024-01-01 00:00:00,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,143.16504788398743,DONE,True,"Here is a summary of the information you requested:
+
+IKEA offers a wide range of home furnishing products including furniture, smart home devices, and kitchen solutions. They provide affordable solutions with a focus on design and sustainability. The website features special offers, new products, and a variety of collections for every room.
+
+Relevant Pages:
+
+1. Offers - Discounts:
+    URL: https://www.ikea.com/gb/en/offers/?itm_content=Nav&itm_element=Top&itm_campaign=offers
+    Summary: Current promotions and deals on IKEA products.
+    Keywords: 'Offers', 'Discounts', 'Deals', 'IKEA Sale', 'Promotions', 'Savings', 'Bargains', 'Clearance', 'Special Offers', 'Price Cuts', 'Limited Time', 'Seasonal Sales', 'Exclusive Deals', 'Online Offers', 'In-Store Promotions'
+    Headlines: 'Hot Deals Await', 'IKEA Sale Now', 'Save Big Today', 'Discount Galore', 'Bargain Finds', 'Price Drops', 'Deal Highlights', 'Shop & Save', 'Offers Galore', 'Mega Savings', 'Clearance Picks', 'Promo Specials', 'Sale Season', 'Budget Buys', 'Exclusive Offers'
+    Descriptions: 'Unbeatable IKEA offers', 'Your chance to save', ""Deals you can't miss"", 'Promotions on furniture'
+
+2. Furniture:
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: A wide range of furniture for every room in the home.
+    Keywords: 'Furniture', 'Home Decor', 'Living Room', 'Bedroom', 'Office Furniture', 'Modern Design', 'Sustainable', 'Affordable', 'Quality', 'Functional', 'Scandinavian Style', 'Storage Solutions', 'Comfort', 'Durable', 'Stylish'
+    Headlines: 'Furnish Your Home', 'Stylish Pieces', 'Modern Furniture', 'Chic Sofas', 'Cozy Beds', 'Office Desks', 'Storage Units', 'Elegant Tables', 'Comfy Chairs', 'Decor Dreams', 'Room Makeover', 'IKEA Classics', 'New Arrivals', 'Trendy Decor', 'Functional Style'
+    Descriptions: 'Stylish furniture finds', 'Modern home essentials', 'Functional & affordable', 'Design meets comfort'
+
+3. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: Complete kitchen solutions that combine functionality and style.
+    Keywords: 'Kitchens', 'Cabinetry', 'Modern Kitchens', 'Kitchen Design', 'Kitchen Islands', 'Storage', 'Appliances', 'Kitchen Accessories', 'Sinks', 'Faucets', 'Worktops', 'Kitchen Planning', 'Custom Kitchens', 'Kitchen Upgrades', 'Space Saving'
+    Headlines: 'Dream Kitchens', 'Cook in Style', 'Kitchen Redo', 'Cabinetry Picks', 'Island Goals', 'Appliance Sale', 'Storage Magic', 'Design It', 'Customize Now', 'Sleek Sinks', 'Modern Faucets', 'Worktop Wonders', 'Plan Perfectly', 'Upgrade Today', 'Space Savers'
+    Descriptions: 'Stylish kitchen designs', 'Functional kitchen space', 'Modern kitchen must-haves', 'Customize your kitchen'
+
+4. Smart Home:
+    URL: https://www.ikea.com/gb/en/cat/smart-home-hs001/
+    Summary: Smart home devices to enhance your living experience.
+    Keywords: 'Smart Home', 'Technology', 'Home Automation', 'Smart Lighting', 'Wireless Charging', 'Smart Speakers', 'Home Security', 'Smart Blinds', 'Remote Control', 'App Integration', 'Voice Control', 'Connected Home', 'Tech Gadgets', 'Innovation', 'IKEA Home Smart'
+    Headlines: 'Smart Home Tech', 'Automate Now', 'Lighting Solutions', 'Wireless Charging', 'Sound & Vision', 'Secure Your Home', 'Smart Blinds', 'Control Remotely', 'Tech Integration', 'Voice Commands', 'Home Connected', 'Gadget Finds', 'Innovate Living', 'IKEA Tech', 'Smart Choices'
+    Descriptions: 'Enhance with tech', 'Smart living solutions', 'Innovative home gadgets', 'Tech for modern homes'
+
+5. New Products:
+    URL: https://www.ikea.com/gb/en/new
+    Summary: The latest products and collections recently added to IKEA's range.
+    Keywords: 'New Arrivals', 'Latest Products', 'New Collection', 'IKEA Updates', 'Recent Additions', 'Modern Trends', 'Fresh Finds', 'Just Launched', 'New In Store', 'Latest Designs', 'Innovation', 'Contemporary', 'New Releases', 'Must Haves', 'Shop New'
+    Headlines: 'New at IKEA', 'Latest Finds', 'Just In', 'Fresh IKEA Picks', 'Trendy New', 'Modern Musts', 'Just Launched', 'New Collection', 'Fresh Designs', 'Innovative Picks', 'Contemporary Finds', 'New Releases', 'Must-Have Items', 'Shop Latest', 'New Essentials'
+    Descriptions: 'Discover new arrivals', 'Latest IKEA trends', 'Fresh collection here', 'New and innovative'
+"
+1,2024-01-01 00:00:00,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,192.73416900634768,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney, Marvel, Pixar, and Star Wars merchandise, including toys, fancy dress costumes, collectibles, and home accessories. Unique selling points include free delivery over 60€, free returns, and a variety of Click & Collect locations.
+
+Relevant Pages:
+
+1. New In Products:
+    URL: https://www.disneystore.eu/new
+    Summary: Latest Disney, Marvel, Pixar, and Star Wars products.
+    Keywords: 'New Arrivals', 'Latest Collection', 'Disney Merchandise', 'Marvel Gear', 'Pixar Toys', 'Star Wars Products', 'New Releases', 'Trending Now', 'Latest Trends', 'New Disney', 'Fresh Finds', 'Just In', 'New Additions', 'Latest Picks', 'New Selection'
+    Headlines: 'New Disney Arrivals', 'Latest Marvel Picks', 'Fresh Pixar Toys', 'New Star Wars Gear', 'Trending Disney Finds', 'Just Released', 'Newest Additions', 'Latest Disney Gear', 'Marvel New Arrivals', ""Pixar's Latest"", 'Star Wars New', ""Disney's New Picks"", ""Marvel's Fresh Finds"", ""Pixar's New Gear"", 'Star Wars Trends'
+    Descriptions: 'Discover the latest Disney products', 'Shop the newest Marvel merchandise', 'Find fresh Pixar toys and games', 'Explore new Star Wars items'
+
+2. Offers:
+    URL: https://www.disneystore.eu/offers
+    Summary: Discounts and promotions on Disney merchandise.
+    Keywords: 'Disney Offers', 'Promotions', 'Discounts', 'Deals', 'Savings', 'Special Offers', 'Sale', 'Bargains', 'Reduced Prices', 'Clearance', 'Disney Deals', 'Markdowns', 'Exclusive Offers', 'Limited Time', 'Special Prices'
+    Headlines: 'Disney Deals', 'Special Offers', 'Disney Discounts', 'Promotional Sales', 'Exclusive Savings', 'Limited Deals', 'Clearance Finds', 'Special Prices', 'Markdown Madness', 'Disney Bargains', 'Offer Zone', 'Sale Selection', 'Price Drops', 'Deal Highlights', 'Savings Spot'
+    Descriptions: 'Save on Disney products', 'Exclusive Disney promotions', 'Special offers on toys', 'Discounted Disney gear'
+
+3. Star Wars Toys:
+    URL: https://www.disneystore.eu/characters-and-movies/star-wars/products
+    Summary: A collection of Star Wars themed toys and gifts.
+    Keywords: 'Star Wars Toys', 'Star Wars Gifts', 'Figures', 'Collectibles', 'Lightsabers', 'Action Figures', 'Star Wars Games', 'Star Wars Accessories', 'The Mandalorian', 'Skywalker Saga', 'Galactic Toys', 'Jedi Gear', 'Sith Collectibles', 'Droids', 'Star Wars Universe'
+    Headlines: 'Star Wars Figures', 'Galactic Gifts', 'Jedi Toys', 'Sith Collectibles', 'Droid Playsets', 'Lightsaber Duels', 'Action Figures', 'Star Wars Puzzles', 'The Mandalorian Gear', 'Skywalker Toys', 'Rebel Games', 'Empire Gifts', 'Force-Filled Fun', ""Galaxy's Best"", 'Star Wars Universe'
+    Descriptions: 'Explore Star Wars toys', 'Gifts for Star Wars fans', 'Figures from the galaxy', 'Collectibles for Jedi'
+"
+2,2024-01-01 00:00:00,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,,nan,,
+3,2024-01-01 00:00:00,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,214.48992586135864,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including outdoor items, private label brands, fresh produce, dairy products, and meat and fish. The website features special categories for seasonal products, which could be highlighted in a Google Ads campaign.
+
+Relevant Pages:
+
+1. Na otvorenom:
+    URL: https://www.konzum.hr/web/t/kategorije/na-otvorenom
+    Summary: Seasonal outdoor products including pools, garden furniture, and grilling equipment.
+    Keywords: 'Outdoor', 'Garden', 'Pools', 'Furniture', 'Grilling', 'Seasonal'
+    Headlines: 'Summer Fun Awaits', 'Garden Essentials', 'Poolside Bliss', 'Grill & Chill', 'Outdoor Living', 'Patio Picks', 'Backyard Oasis', 'Sunny Days', 'Al Fresco Style', 'Lawn Luxury', 'BBQ Favorites', 'Garden Gear', 'Outdoor Adventure', 'Patio Pleasures', 'Grill Masters'
+    Descriptions: 'Make a splash with pools', 'Elevate your garden space', ""Grill masters' top picks"", 'Outdoor fun starts here'
+
+2. Naše robne marke:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: Konzum's private label brands offering a variety of products.
+    Keywords: 'Private Label', 'Exclusive', 'Quality', 'K Plus', 'Affordable'
+    Headlines: 'Exclusive Brands', 'Quality Choices', 'K Plus Selection', 'Trusted Quality', 'Budget-Friendly', 'Local Favorites', 'Exclusive Finds', 'Quality Meets Value', 'Signature Products', 'Unique Selections', 'Store Brands', 'Konzum Quality', ""Shopper's Choice"", 'Quality Assured', 'Brand Excellence'
+    Descriptions: 'Discover exclusive brands', 'Quality meets affordability', 'K Plus range of products', 'Private label excellence'
+
+3. Voće i povrće:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: A wide selection of fresh fruits and vegetables.
+    Keywords: 'Fresh Produce', 'Fruits', 'Vegetables', 'Organic', 'Healthy'
+    Headlines: 'Fresh Picks Daily', 'Organic Choices', 'Healthy & Fresh', 'Fruitful Selection', 'Veggie Delights', ""Nature's Best"", 'Freshness First', 'Garden Fresh', 'Crisp & Tasty', 'Juicy Finds', 'Eat Fresh', 'Green Goodness', 'Farm to Table', 'Seasonal Produce', ""Nature's Bounty""
+    Descriptions: 'Enjoy fresh produce', 'Crisp fruits and veggies', 'Organic and healthy', ""Nature's finest selection""
+
+4. Mliječni proizvodi i jaja:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: Dairy products and eggs from various brands.
+    Keywords: 'Dairy', 'Milk', 'Cheese', 'Eggs', 'Yogurt'
+    Headlines: 'Dairy Delights', 'Creamy Goodness', 'Eggcellent Range', 'Cheese Galore', 'Milk Must-Haves', 'Yogurt Yum', 'Butter & Cream', 'Dairy Variety', 'Fresh & Creamy', 'Egg Essentials', 'Cheesy Bites', 'Dairy Deals', 'Breakfast Staples', 'Dairy Essentials', 'Eggstra Special'
+    Descriptions: 'Fresh dairy selection', 'Eggs for every need', 'Cheese for all tastes', 'Milk and more essentials'
+
+5. Meso i riba:
+    URL: https://www.konzum.hr/web/t/kategorije/meso-i-riba
+    Summary: A selection of meat and fish products for various culinary needs.
+    Keywords: 'Meat', 'Fish', 'Seafood', 'Fresh', 'Quality'
+    Headlines: ""Meat Lovers' Treat"", 'Fresh Seafood', 'Quality Meats', 'Fish Favorites', ""Butcher's Best"", 'Sea Delicacies', 'Grill Ready', 'Savory Selection', 'Prime Cuts', 'Ocean Fresh', 'Meaty Goodness', 'Fish Market', 'Steak Specials', 'Seafood Platter', 'Catch of the Day'
+    Descriptions: 'Quality meat and fish', 'Freshness in every bite', 'Seafood for the soul', 'Prime cuts for you'
+"
+4,2024-01-01 00:00:00,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,147.72898697853088,DONE,True,"Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services that interact with event streams. It simplifies the creation of producers and consumers for message queues, automates parsing, networking, and documentation generation, and streamlines workflows to accelerate progress. FastStream provides a unified API across multiple message brokers like Kafka, RabbitMQ, NATS, and Redis, and includes features like Pydantic validation, automatic AsyncAPI documentation, full-typed editor support, a powerful dependency injection system, in-memory testing, extensibility for custom serialization and middleware, and compatibility with HTTP frameworks, especially FastAPI. It is also optimized for automatic code generation using models like GPT and Llama.
+
+Relevant Pages:
+
+1. Features:
+    URL: https://faststream.airt.ai/latest/faststream/
+    Summary: Overview of FastStream features including unified API, Pydantic validation, automatic documentation, and more.
+    Keywords: 'FastStream', 'Asynchronous', 'Event Streams', 'Message Queues', 'API', 'Pydantic', 'AsyncAPI', 'Dependency Injection', 'Testing', 'Extensibility', 'HTTP Frameworks', 'Code Generation'
+    Headlines: 'Unified Messaging API', 'Pydantic Validation', 'Auto AsyncAPI Docs', 'Full-Typed Support', 'Dependency Injection', 'In-Memory Testing', 'Custom Serialization', 'Middleware Extensibility', 'HTTP Framework Comp.', 'Code Generation Opt.', 'Kafka Integration', 'RabbitMQ Integration', 'NATS Integration', 'Redis Integration', 'FastAPI Compatibility'
+    Descriptions: 'Simplify message queue interactions', 'Validate messages with Pydantic', 'Generate AsyncAPI docs automatically', 'Catch errors before runtime'
+
+2. Getting Started:
+    URL: https://faststream.airt.ai/latest/getting-started/
+    Summary: Instructions on how to install and start using FastStream for event stream processing.
+    Keywords: 'Getting Started', 'Installation', 'FastStream Setup', 'Event Stream Processing', 'Message Broker Integration', 'Docker', 'Pip Install', 'Basic Usage'
+    Headlines: 'Install FastStream', ""Beginner's Guide"", 'Setup with Docker', 'FastStream via Pip', 'Basic App Creation', 'Broker Containers', 'Quick Start Tips', 'Project Initialization', 'Service Testing', 'Run Applications', 'Documentation Help', 'Manage Dependencies', 'Framework Integrations', 'CLI Command Guide', 'Logging Configuration'
+    Descriptions: 'Get started with FastStream', 'Easy setup with Docker', 'Create services with ease', 'Integrate with message brokers'
+
+3. Reference - Code API:
+    URL: https://faststream.airt.ai/latest/api/
+    Summary: Detailed API reference for FastStream, including classes, functions, and usage.
+    Keywords: 'Code API', 'FastStream Reference', 'Classes', 'Functions', 'Middleware', 'API Documentation', 'FastStream Parts', 'Application Development'
+    Headlines: 'API Documentation', 'Middleware Classes', 'Function Details', 'API Usage Guide', 'Develop with FastStream', 'Reference for FastAPI', 'Middleware Integration', 'API Attributes', 'FastStream Functions', 'API Parameters', 'Class Descriptions', 'API Source Code', 'Middleware Hooks', 'API Initialization', 'Message Handling API'
+    Descriptions: 'Explore FastStream API', 'Detailed middleware info', 'Understand API functions', 'Develop applications easily'
+"
+5,2024-01-01 00:00:01,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,,nan,,
+6,2024-01-01 00:00:01,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,336.1479549407959,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney, Pixar, Marvel, and National Geographic merchandise, including toys, fancy dress, collectibles, and accessories. The store features special collections for Easter, new movie releases like The Little Mermaid 2023, and popular franchises such as Star Wars. Unique selling points include free delivery over 60€, free returns, and numerous click & collect locations.
+
+Relevant Pages:
+
+1. Offers:
+    URL: https://www.disneystore.eu/offers
+    Summary: Special offers and promotions on Disney merchandise.
+    Keywords: 'Disney Offers', 'Discounts', 'Promotions', 'Deals', 'Savings', 'Sale', 'Bargains', 'Specials', 'Clearance', 'Exclusive', 'Limited Time', 'Seasonal', 'Merchandise', 'Gifts', 'Collectibles', 'Apparel'
+    Headlines: 'Big Savings!', 'Disney Deals', 'Sale Now On', 'Save More', 'Hot Offers', 'Shop & Save', 'Mega Deals', 'Price Drops', 'Bargain Finds', 'Deal Alert', 'Just Reduced', 'Clearance Sale', 'Special Offers', 'Promo Time', 'Discount Days'
+    Descriptions: 'Save on Disney goods', 'Deals on characters', 'Exclusive discounts', 'Shop Disney offers'
+
+2. Star Wars:
+    URL: https://www.disneystore.eu/characters-and-movies/star-wars/products
+    Summary: Star Wars themed toys, gifts, and collectibles.
+    Keywords: 'Star Wars Toys', 'Gifts', 'Figures', 'Collectibles', 'Merchandise', 'Apparel', 'Accessories', 'Lightsabers', 'Costumes', 'Action Figures', 'Dolls', 'Playsets', 'Vehicles', 'Games', 'Home Decor'
+    Headlines: 'Galactic Toys', 'Jedi Gear', 'Sith Deals', 'Force Finds', 'Rebel Sale', 'Star Wars Shop', 'Droid Deals', 'Skywalker Saga', 'Galaxy Gifts', 'Epic Figures', 'Toy Adventures', 'Space Playsets', 'Collect Them All', 'Star Wars Fun', 'Action-Packed'
+    Descriptions: 'Toys from the galaxy', 'Gifts for fans', 'Epic Star Wars toys', 'Collect Star Wars'
+
+3. Toys & Fancy Dress:
+    URL: https://www.disneystore.eu/toys-and-fancy-dress
+    Summary: A variety of Disney toys and costumes for dress-up.
+    Keywords: 'Disney Toys', 'Fancy Dress', 'Costumes', 'Playtime', 'Dress-Up', 'Figures', 'Plush Toys', 'Role Play', 'Pretend Play', ""Kids' Costumes"", 'Character Outfits', 'Party Wear', 'Themed Toys', 'Interactive Toys', 'Educational Toys'
+    Headlines: 'Dress-Up Fun', 'Toy Wonderland', 'Costume Corner', 'Playtime Picks', 'Fancy Dress-Up', 'Character Costumes', 'Magical Toys', 'Imaginative Play', 'Party Outfits', 'Heroic Costumes', 'Princess Gowns', 'Adventure Gear', 'Toy Treasures', 'Costume Magic', 'Playful Outfits'
+    Descriptions: 'Disney dress-up', 'Toys for all ages', 'Costumes for kids', 'Magical playtime'
+
+4. Easter Gifts & Toys:
+    URL: https://www.disneystore.eu/easter
+    Summary: Easter-themed Disney books and soft toys.
+    Keywords: 'Easter Gifts', 'Disney Easter', 'Soft Toys', 'Books', 'Spring Collection', 'Easter Toys', 'Plush Bunnies', 'Themed Books', 'Gift Ideas', 'Seasonal Toys', 'Easter Basket', ""Children's Books"", 'Stuffed Animals', 'Easter Surprises', 'Holiday Specials'
+    Headlines: 'Easter Surprises', 'Springtime Toys', 'Bunny Plush', 'Easter Reads', 'Gifts for Kids', 'Easter Fun', 'Spring Plush', 'Book Treasures', 'Toy Delights', 'Basket Goodies', 'Festive Finds', 'Easter Joy', 'Plush Pals', 'Story Time', 'Hoppy Toys'
+    Descriptions: 'Easter toy gifts', 'Books for Easter', 'Soft toy bunnies', 'Disney Easter fun'
+
+5. Disney Pins & Badges:
+    URL: https://www.disneystore.co.uk/toys-and-fancy-dress/collectibles/pins?srule=newest
+    Summary: Collectible Disney pins and badges for enthusiasts.
+    Keywords: 'Disney Pins', 'Collectible Badges', 'Pin Trading', 'Limited Edition', 'Enamel Pins', 'Character Pins', ""Collector's Items"", 'Exclusive Pins', 'Themed Badges', 'Pin Sets', 'Trading Pins', 'Decorative Pins', 'Disney Accessories', 'Pin Collecting', 'Badge Collection'
+    Headlines: 'Pin Collectibles', 'Badge Bonanza', 'Trading Pins', 'Pin Sets', 'Enamel Elegance', 'Character Pins', 'Collector Pins', 'Exclusive Badges', 'Pin Magic', 'Badge Bliss', 'Pin Pals', 'Collect Them', 'Pin Parade', 'Badge Bounty', 'Pin Perfection'
+    Descriptions: 'Disney pin magic', 'Exclusive pin sets', 'Collectible badges', 'Pin trading fun'
+
+6. Stitch Merchandise:
+    URL: https://www.disneystore.co.uk/characters-and-movies/popular-characters/stitch?srule=newest
+    Summary: Stitch-themed soft toys, clothing, mugs, and more.
+    Keywords: 'Stitch Toys', 'Disney Stitch', 'Lilo & Stitch', 'Stitch Apparel', 'Stitch Mugs', 'Character Merchandise', 'Soft Toys', 'Stitch Accessories', 'Themed Clothing', 'Stitch Collectibles', 'Plush Toys', 'Stitch Gifts', 'Novelty Items', 'Fan Favorites', 'Cute Merch'
+    Headlines: 'Stitch Galore', ""Lilo's Pal"", 'Stitch Stuff', 'Alien Plush', 'Stitch Style', 'Ohana Means', 'Stitch Gifts', 'Blue Fun', 'Cuddly Stitch', 'Stitch Gear', 'Alien Finds', 'Stitch Love', 'Hawaiian Charm', 'Stitch Mania', 'Plush Pals'
+    Descriptions: 'Stitch themed toys', 'Stitch for fans', 'Cuddly Stitch plush', 'Stitch merchandise'
+
+7. Loungefly Accessories:
+    URL: https://www.disneystore.co.uk/brands/loungefly?srule=newest
+    Summary: Loungefly brand backpacks and accessories with Disney themes.
+    Keywords: 'Loungefly', 'Disney Backpacks', 'Fashion Accessories', 'Loungefly Bags', 'Character Designs', 'Stylish Backpacks', 'Loungefly Wallets', 'Disney Purses', 'Themed Accessories', 'Fashionable Gear', ""Collector's Backpacks"", 'Trendy Bags', 'Loungefly Collectibles', 'Exclusive Designs', 'Accessory Must-Haves'
+    Headlines: 'Loungefly Love', 'Backpack Bliss', 'Stylish Packs', 'Bag Bonanza', 'Trendy Totes', 'Loungefly Luxe', 'Chic Bags', 'Carry in Style', 'Wallet Wonders', 'Purse Perfection', 'Accessory Alert', 'Fashion Finds', 'Loungefly Looks', 'Designer Disney', 'Bag Magic'
+    Descriptions: 'Loungefly Disney', 'Chic Disney bags', 'Stylish accessories', 'Loungefly exclusives'
+
+8. The Little Mermaid 2023:
+    URL: https://www.disneystore.eu/characters-and-movies/disney/the-little-mermaid-2023
+    Summary: Merchandise for the new The Little Mermaid movie.
+    Keywords: 'Little Mermaid', 'Disney Mermaid', 'Ariel Toys', 'Mermaid Dolls', '2023 Movie', 'New Release', 'Mermaid Merchandise', 'Themed Toys', 'Ariel Apparel', 'Movie Collectibles', 'Under the Sea', 'Mermaid Accessories', 'Film Souvenirs', 'Character Goods', 'Mermaid Gifts'
+    Headlines: 'Mermaid Magic', ""Ariel's World"", 'Sea Treasures', 'Mermaid Toys', 'Ariel Arrivals', 'Ocean Wonders', 'Mermaid Mania', ""Ariel's Finds"", 'Sea Style', 'Mermaid Moments', ""Ariel's Gear"", 'Oceanic Toys', 'Mermaid Gifts', ""Ariel's Picks"", 'Sea Souvenirs'
+    Descriptions: ""Ariel's new toys"", 'Mermaid movie gear', 'Little Mermaid dolls', '2023 Ariel merch'
+
+9. Marvel Merchandise:
+    URL: https://www.disneystore.eu/new/franchise/marvel-products
+    Summary: Marvel-themed toys, costumes, and more for fans.
+    Keywords: 'Marvel Toys', 'Superhero Gear', 'Marvel Costumes', 'Action Figures', 'Marvel Apparel', 'Avengers Merchandise', 'Comic Book Toys', 'Superhero Outfits', 'Marvel Accessories', 'Themed Merch', ""Collector's Items"", 'Heroic Play', 'Marvel Universe', 'Fan Favorites', 'Epic Collectibles'
+    Headlines: 'Heroic Toys', 'Marvel Mania', 'Super Gear', 'Avenger Alerts', 'Marvel Magic', 'Hero Costumes', 'Epic Figures', 'Marvel Style', 'Super Play', 'Comic Collect', 'Avengers Assemble', 'Marvel Must-Haves', 'Heroic Finds', 'Superhero Style', 'Marvel Madness'
+    Descriptions: 'Marvel toy lineup', 'Superhero costumes', 'Marvel fan gear', 'Epic Marvel goods'
+
+10. National Geographic:
+    URL: https://www.disneystore.eu/new/franchise/national-geographic-products
+    Summary: National Geographic themed soft toys, clothing, and bags.
+    Keywords: 'National Geographic', 'Educational Toys', 'Nature Inspired', 'Adventure Gear', 'Soft Toys', 'Explorer Apparel', 'Themed Bags', 'Educational Gifts', 'Wildlife Toys', 'Explorer Accessories', 'Learning Toys', 'Nature Gear', 'Documentary Merchandise', 'Outdoor Play', 'Science Toys'
+    Headlines: 'Explore More', 'Nat Geo Gear', 'Wildlife Toys', 'Explorer Finds', 'Nature Play', 'Edu Toys', 'Nat Geo Style', 'Adventure Ready', 'Wild Wonders', ""Explorer's Choice"", 'Nat Geo Gifts', 'Outdoor Fun', 'Science Play', 'Nature Gifts', 'Learning Adventure'
+    Descriptions: 'Nat Geo toys', ""Explorer's apparel"", 'Educational play', 'Nat Geo merchandise'
+"
+7,2024-01-01 00:00:01,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,1221.940351009369,DONE,True,"Here is a summary of the information you requested:
+
+Hamleys offers a diverse range of children's toys, including LEGO & Construction, Soft Toys, Preschool Learning, Action Toys & Vehicles, Dolls & Fashion, Games & Puzzles, and Sports & Leisure Playsets. The site features toys for various age groups and interests, with options to shop by price point, ensuring offerings for every budget.
+
+Relevant Pages:
+
+1. LEGO & Construction Toys:
+    URL: https://www.hamleys.com/shop-toys/construction
+    Summary: Features LEGO sets, Playmobil, and other construction toys for skill development.
+    Keywords: 'LEGO', 'Construction', 'Playmobil', 'Building', 'Creative Play'
+    Headlines: 'Build & Play', 'LEGO Adventures', 'Construct Fun', 'Playmobil Worlds', 'Brick Creations', 'Build Imagination', 'Creative Blocks', 'Toy Structures', 'Play & Build', 'Brick by Brick', 'Model Making', 'Construct Kits', 'Building Blocks', 'Creative Sets', 'Play Builders'
+    Descriptions: 'Endless building fun', 'Create with LEGO', 'Imaginative playsets', 'Playmobil excitement'
+
+2. Soft Toys:
+    URL: https://www.hamleys.com/shop-toys/soft-toys
+    Summary: Includes Hamleys' signature range and a variety of plush animals and teddy bears.
+    Keywords: 'Soft Toys', 'Plush', 'Teddy Bears', 'Cuddly', 'Stuffed Animals'
+    Headlines: 'Cuddle Companions', 'Soft & Snuggly', 'Plush Pals', 'Teddy Treasures', 'Huggable Bears', 'Soft Toy Safari', 'Plush Playtime', 'Snuggle Buddies', 'Furry Friends', 'Cuddly Critters', 'Teddy Collection', 'Soft Hugs', 'Plush Zoo', 'Cuddle Corner', 'Stuffed Delights'
+    Descriptions: 'Soft toys for hugs', 'Friendly plush pals', 'Teddy bear classics', 'Cute and cuddly toys'
+
+3. Preschool Learning Toys:
+    URL: https://www.hamleys.com/shop-toys/preschool
+    Summary: Educational toys for early development, including bath toys and early learning.
+    Keywords: 'Preschool', 'Educational', 'Learning Toys', 'Bath Toys', 'Babies'
+    Headlines: 'Learn Through Play', 'Preschool Fun', 'Bath Time Toys', 'Early Education', ""Baby's First Toy"", 'Learning Games', 'Toddler Play', 'Smart Start', 'Fun Learning', 'Play & Learn', 'Educational Fun', 'Learning Adventure', 'Smart Toys', 'Grow & Learn', 'Infant Playtime'
+    Descriptions: 'Toys for learning', 'Educational playsets', 'Fun and learning mix', 'Grow with play'
+
+4. Action Toys & Vehicles:
+    URL: https://www.hamleys.com/shop-toys/action-toys-vehicles
+    Summary: Action figures, toy vehicles, and remote control toys for active play.
+    Keywords: 'Action Toys', 'Vehicles', 'RC Toys', 'Figures', 'Playsets'
+    Headlines: 'Action-Packed Fun', 'Toy Cars Galore', 'RC Adventures', 'Heroic Figures', 'Vehicle Playsets', 'Action Excitement', 'Drive & Play', 'RC Thrills', 'Figure Fantasy', 'Speedy Playtime', 'Toy Motors', 'Action Roleplay', 'Remote Fun', 'Drive Imagination', 'Figure World'
+    Descriptions: 'Exciting action toys', 'Vehicles for play', 'Remote control fun', 'Figures to collect'
+
+5. Dolls & Fashion:
+    URL: https://www.hamleys.com/shop-toys/dolls-fashion
+    Summary: Includes fashion dolls, baby dolls, and accessories for imaginative play.
+    Keywords: 'Dolls', 'Fashion Toys', 'Playsets', 'Accessories', 'Beauty'
+    Headlines: 'Doll Dress-Up', 'Fashion Play', 'Dollhouse Fun', 'Stylish Dolls', 'Baby Doll Care', 'Chic Playtime', 'Doll Adventures', 'Fashion Figures', 'Pretend Parents', 'Style & Play', 'Doll World', 'Fashionista Fun', 'Doll Accessories', 'Beauty Toys', 'Playful Fashion'
+    Descriptions: 'Dolls for imagination', 'Fashionable doll play', 'Doll playsets galore', 'Styling fun with dolls'
+
+6. Games & Puzzles:
+    URL: https://www.hamleys.com/shop-toys/games-puzzles
+    Summary: Board games and puzzles for family fun and cognitive development.
+    Keywords: 'Games', 'Puzzles', 'Board Games', 'Family Fun', 'Brain Teasers'
+    Headlines: 'Puzzle Time', 'Game Night Fun', 'Board Game Bliss', 'Family Puzzles', 'Mind Games', 'Puzzle Challenge', 'Strategic Play', 'Game On', 'Puzzle Pieces', 'Brainy Fun', 'Game Winners', 'Puzzle Masters', 'Family Game Time', 'Brain Teasers', 'Puzzle Play'
+    Descriptions: 'Engaging board games', 'Fun with puzzles', 'Family game favorites', 'Cognitive puzzle play'
+
+7. Sports Toys and Leisure Playsets:
+    URL: https://www.hamleys.com/shop-toys/sports-and-leisure
+    Summary: Sports and outdoor toys for physical activity and motor skills development.
+    Keywords: 'Sports Toys', 'Outdoor Play', 'Ride Ons', 'Leisure', 'Active Play'
+    Headlines: 'Active Playtime', 'Sports Fun', 'Ride On Joy', 'Outdoor Adventure', 'Leisure Games', 'Active Toys', 'Ride & Play', 'Outdoor Sports', 'Leisure Playsets', 'Sporty Action', 'Riding Fun', 'Play Outside', 'Leisure Time', 'Active Kids', 'Outdoor Fun'
+    Descriptions: 'Toys for active play', 'Outdoor sports fun', 'Ride on excitement', 'Leisure playtime'
+
+8. Toys £20 and Under:
+    URL: https://www.hamleys.com/shop-toys/by-price-point/20-and-under
+    Summary: Affordable toy options for budget-conscious shoppers, featuring a variety of toys.
+    Keywords: 'Affordable Toys', 'Budget-Friendly', 'Under £20', 'Value Toys', 'Economical'
+    Headlines: 'Budget-Friendly', 'Under £20 Toys', 'Value Playtime', 'Affordable Fun', 'Economical Toys', 'Budget Play', 'Value Gifts', 'Cheap Thrills', 'Smart Buys', 'Economy Play', 'Frugal Fun', 'Pennywise Play', 'Value Finds', 'Budget Gifts', 'Economical Fun'
+    Descriptions: 'Toys on a budget', 'Affordable toy range', 'Value for money toys', 'Economical play options'
+"
+8,2024-01-01 00:00:01,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,172.42806100845337,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including food, household items, and outdoor equipment. The website features special offers, own brands, and highlights Croatian products.
+
+Relevant Pages:
+
+1. Na otvorenom:
+    URL: https://www.konzum.hr/web/t/kategorije/na-otvorenom
+    Summary: Outdoor category with products like pools, garden furniture, and grilling equipment.
+    Keywords: 'Outdoor', 'Garden', 'Pools', 'Furniture', 'Grilling', 'Tools', 'Equipment', 'Leisure', 'Backyard', 'Patio', 'BBQ', 'Summer', 'Gardening', 'Recreation', 'Home'
+    Headlines: 'Summer Fun Awaits', 'Garden Essentials', 'Poolside Bliss', 'BBQ Season Gear', 'Outdoor Adventures', 'Backyard Leisure', 'Patio Perfection', 'Grill & Chill', 'Garden Makeover', 'Tools for Tasks', 'Outdoor Living', 'Leisure Time', 'Home Recreation', 'Sunny Days', 'Family Time'
+    Descriptions: 'Equip your garden space', 'Enjoy outdoor living', 'All for your backyard', 'Make summer memorable'
+
+2. Naše robne marke:
+    URL: https://www.konzum.hr/nase-robne-marke
+    Summary: Konzum's own brands offer a variety of products from food to pet supplies.
+    Keywords: 'Own Brands', 'Quality', 'Affordable', 'Food', 'Beverages', 'Pets', 'Household', 'Groceries', 'Private Label', 'Exclusive', 'Variety', 'Local', 'Croatian', 'Savings', 'Choice'
+    Headlines: 'Exclusive Selection', 'Quality Meets Value', 'Local Brand Choice', 'Savings Galore', 'Grocery Essentials', 'Pet Care Range', 'Taste of Croatia', 'Household Staples', 'Private Label Picks', 'Everyday Savings', 'Quality Assured', 'Affordable Finds', 'Diverse Offerings', 'Smart Shopping', 'Konzum Quality'
+    Descriptions: 'Discover our own brands', 'Quality at great prices', 'Wide range, smart choice', 'Croatian brand variety'
+
+3. Najbolje iz Hrvatske:
+    URL: https://www.konzum.hr/najbolje-iz-hrvatske
+    Summary: A selection of the best Croatian products, supporting local producers.
+    Keywords: 'Croatian Products', 'Local Producers', 'Quality Goods', 'Regional Specialties', 'Support Local', 'Authentic', ""Croatia's Finest"", 'Traditional', 'Craftsmanship', 'Local Economy', 'Patriotic Shopping', 'Homegrown', 'National Pride', 'Culinary Delights', 'Heritage'
+    Headlines: 'Croatian Delights', 'Local Excellence', 'Authentic Goods', 'Homegrown Picks', 'Crafted in Croatia', 'Taste Tradition', 'Support Local', 'Quality Finds', 'Patriotic Buys', 'Regional Best', 'Culinary Pride', 'Heritage Flavors', 'Local Craft', 'National Gems', 'True Croatia'
+    Descriptions: 'Best of Croatian goods', 'Support local excellence', 'Discover regional tastes', 'Celebrate Croatian pride'
+"
+9,2024-01-01 00:00:01,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,137.51423001289368,DONE,True,"Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services that interact with event streams. It provides a unified API to work with multiple message brokers like Kafka, RabbitMQ, NATS, and Redis. Key features include Pydantic validation, automatic AsyncAPI documentation, full-typed editor support, a powerful dependency injection system, support for in-memory tests, and compatibility with any HTTP framework, particularly FastAPI. FastStream is optimized for automatic code generation using advanced models like GPT and Llama.
+
+Relevant Pages:
+
+1. Features - FastStream:
+    URL: https://faststream.airt.ai/latest/faststream/
+    Summary: Overview of FastStream features including multiple brokers support, Pydantic validation, automatic documentation, and more.
+    Keywords: 'FastStream', 'Features', 'Pydantic', 'AsyncAPI', 'Dependency Injection', 'In-Memory Tests', 'Extensible', 'Integrations', 'Automatic Code Generation'
+    Headlines: 'Unified API', 'Pydantic Validation', 'Auto Docs', 'Typed Support', 'DI System', 'Testable', 'Extensible', 'HTTP Integrations', 'Code Generation', 'Multiple Brokers', 'Automatic Documentation', 'Intuitive Editing', 'Dependency Management', 'In-Memory Testing', 'Framework Compatibility'
+    Descriptions: 'Support for multiple brokers', 'Leverage Pydantic validation', 'Generate AsyncAPI docs', 'Smooth development with full-typed editor support'
+
+2. Getting Started - FastStream:
+    URL: https://faststream.airt.ai/latest/getting-started/
+    Summary: Instructions on how to get started with FastStream, including installation and basic usage.
+    Keywords: 'Getting Started', 'Installation', 'Basic Usage', 'FastStream Tutorial', 'Quick Start', 'Test Broker', 'Docker', 'Pip Install'
+    Headlines: 'Install FastStream', 'Quick Start Guide', 'Basic Usage', 'FastStream Tutorial', 'Test Broker Setup', 'Docker Commands', 'Pip Installation', 'Project Setup', 'Service Testing', 'Run Application', 'Documentation Guide', 'Manage Dependencies', 'Framework Integration', 'CLI Usage', 'Logging Setup'
+    Descriptions: 'Guide to install FastStream', 'Quick start with FastStream', 'Learn basic usage of FastStream', 'Tutorial for FastStream beginners'
+
+3. Reference - Code API - FastStream:
+    URL: https://faststream.airt.ai/latest/api/
+    Summary: Detailed API reference for FastStream, including classes, functions, and usage.
+    Keywords: 'Code API', 'Reference', 'FastStream Classes', 'FastStream Functions', 'API Usage', 'Middleware', 'Context', 'Dependencies', 'Security', 'Testing'
+    Headlines: 'API Reference', 'Middleware Guide', 'Context Details', 'Dependency Info', 'Security Config', 'Testing Reference', 'API Classes', 'API Functions', 'Usage Examples', 'API Parameters', 'Attribute Info', 'Broker Details', 'CLI Commands', 'Exception Handling', 'Type Definitions'
+    Descriptions: 'Comprehensive API reference', 'Guide on FastStream middleware', 'Details on context usage', 'Information on dependencies and security'
+"
+10,2024-01-01 00:00:02,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,234.37134218215945,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of home furnishing products including furniture, kitchens, smart home devices, outdoor living items, decorations, and lighting. They provide solutions for every room and also cater to business customers with their IKEA for Business program. The website features a section for new products, highlighting the latest trends and designs. Additionally, IKEA offers various services to assist customers, such as planning tools and customer support.
+
+Relevant Pages:
+
+1. Furniture:
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: Explore a variety of furniture for all rooms
+    Keywords: 'Sofas', 'Chairs', 'Tables', 'Beds', 'Storage', 'Office Furniture', ""Children's Furniture""
+    Headlines: 'Comfy Sofas', 'Stylish Tables', 'Cozy Beds', 'Smart Storage', 'Work Desks', ""Kids' Rooms"", 'Outdoor Seats', 'Dining Sets', 'Bookcases', 'Wardrobes', 'TV Units', 'Armchairs', 'Dressers', 'Nightstands', 'Shelving'
+    Descriptions: 'Seating for all', 'Dine in style', 'Sleep well', 'Organize easily', 'Work from home', 'Fun for kids'
+
+2. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: Find complete kitchen solutions
+    Keywords: 'Kitchen Cabinets', 'Appliances', 'Countertops', 'Kitchenware', 'Sinks', 'Faucets', 'Pantry'
+    Headlines: 'Modern Kitchens', 'Cabinet Choices', 'Appliance Range', 'Countertop Styles', 'Kitchen Tools', 'Stylish Sinks', 'Functional Faucets', 'Pantry Storage', 'Kitchen Islands', 'Wall Storage', 'Cooking Essentials', 'Kitchen Lighting', 'Bar Stools', 'Kitchen Decor', 'Waste Solutions'
+    Descriptions: 'Cook in style', 'Storage solutions', 'Appliances for chefs', 'Design your kitchen'
+
+3. Smart Home:
+    URL: https://www.ikea.com/gb/en/cat/smart-home-hs001/
+    Summary: Discover smart devices for a connected home
+    Keywords: 'Smart Lighting', 'Smart Blinds', 'Home Automation', 'Wireless Charging', 'Smart Speakers', 'Sensors', 'Smart Locks'
+    Headlines: 'Smart Lights', 'Automated Blinds', 'Home Control', 'Charge Wirelessly', 'Sound & Vision', 'Home Sensors', 'Secure Locks', 'Smart Plugs', 'Climate Control', 'Voice Assistants', 'App Control', 'Tech Integration', 'Smart Alarms', 'Connected Living', 'Tech Comforts'
+    Descriptions: 'Lighting made smart', 'Automate your home', 'Tech for living', 'Connected convenience'
+
+4. Offers:
+    URL: https://www.ikea.com/gb/en/offers/
+    Summary: Browse current deals and discounts
+    Keywords: 'Discounts', 'Sales', 'Special Offers', 'Clearance', 'Limited Time', 'Bargains', 'Promotions'
+    Headlines: 'Hot Deals', 'Save More', 'IKEA Sales', 'Clearance Finds', 'Special Buys', 'Offer Alerts', 'Price Drops', 'Bundle Savings', 'Seasonal Sales', 'Member Offers', 'Flash Deals', 'Discounted Goods', 'Budget Picks', 'Value Packs', 'Economical Choices'
+    Descriptions: 'Deals to grab', 'Discounted items', 'Save on IKEA', 'Special promotions'
+
+5. IKEA for Business:
+    URL: https://www.ikea.com/gb/en/ikea-business/
+    Summary: Solutions for businesses of all sizes
+    Keywords: 'Business Interiors', 'Office Furniture', 'Retail Solutions', 'Hospitality', 'Bulk Orders', 'Business Planning', 'Workspaces'
+    Headlines: 'Office Style', 'Retail Fitouts', 'Cafe Decor', 'Bulk Buying', 'Business Design', 'Workspace Desks', 'Meeting Rooms', 'Storage Units', 'Business Lighting', 'Ergonomic Chairs', 'Reception Areas', 'Business Discounts', 'Corporate Orders', 'Functional Spaces', 'Business Trends'
+    Descriptions: 'Business solutions', 'Office essentials', 'Retail furnishings', 'Corporate interiors'
+
+6. Our Services:
+    URL: https://www.ikea.com/gb/en/customer-service/services/
+    Summary: Explore the full range of customer services
+    Keywords: 'Delivery', 'Assembly', 'Installation', 'Planning Tools', 'Customer Support', 'Returns', 'Financing'
+    Headlines: 'Delivery Help', 'Assembly Aid', 'Install Services', 'Plan with Ease', 'Support Team', 'Easy Returns', 'Finance Options', 'Order Tracking', 'Product Guides', 'Warranty Info', 'FAQ Access', 'Design Advice', 'Tool Rentals', 'Space Planning', 'In-Store Help'
+    Descriptions: 'Service options', 'Helpful support', 'IKEA services', 'Customer care'
+"
+11,2024-01-01 00:00:02,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,96.28247404098512,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney, Marvel, Pixar, and Star Wars merchandise including toys, fancy dress, collectibles, and accessories. Unique selling points include free delivery over 60€, free returns, and numerous click & collect locations.
+
+Relevant Pages:
+
+1. New In Products:
+    URL: https://www.disneystore.eu/new
+    Summary: Latest Disney, Marvel, Pixar, and Star Wars products.
+    Keywords: 'New Arrivals', 'Disney', 'Marvel', 'Pixar', 'Star Wars', 'Latest Merchandise', 'New Collection', 'Shop Disney', 'New Toys', 'New Accessories', 'New Clothing', 'Disney Store New', 'Just In', 'New Releases', 'Trending Now'
+    Headlines: 'Just Released', 'New Disney Gear', 'Latest Marvel', 'Fresh Pixar Finds', 'New Star Wars', 'Trending Disney', 'Just Arrived', 'New Collection', 'Shop Latest', 'New Merch', 'Disney Newness', ""Pixar's Newest"", ""Marvel's Latest"", 'Star Wars New', 'Fresh Arrivals'
+    Descriptions: 'Discover the latest Disney products', 'New Marvel merchandise available', 'Fresh Pixar arrivals in store', 'Latest Star Wars gear here'
+
+2. Uniquely Disney Collection:
+    URL: https://www.disneystore.eu/new/uniquely-disney
+    Summary: Exclusive Disney mugs, accessories, toys, and more.
+    Keywords: 'Uniquely Disney', 'Exclusive Merchandise', 'Disney Mugs', 'Disney Accessories', 'Disney Toys', 'Unique Finds', 'Disney Collectibles', 'Exclusive Toys', 'Disney Exclusives', 'Unique Gifts', 'Disney Shopping', 'Exclusive Collection', 'Disney Store Exclusives', 'Unique Disney', 'Exclusive Products'
+    Headlines: 'Disney Exclusives', 'Unique Disney Finds', 'Exclusive Mugs', 'Disney Toy Exclusives', 'Unique Accessories', 'Exclusive Collectibles', 'Disney Unique', 'Shop Exclusives', 'Only Here', 'Unique Gifts', 'Exclusive Range', 'Disney Specials', 'Only Disney', 'Unique Merch', 'Disney Only'
+    Descriptions: 'Shop exclusive Disney products', 'Unique Disney gifts available', 'Exclusive Disney toys and more', 'Find unique Disney collectibles'
+
+3. Disney Easter Collection:
+    URL: https://www.disneystore.eu/new/uniquely-disney/easter
+    Summary: Disney-themed Easter gifts and merchandise.
+    Keywords: 'Disney Easter', 'Easter Gifts', 'Disney Spring', 'Easter Merchandise', 'Disney Holiday', 'Easter Collection', 'Spring Arrivals', 'Disney Bunnies', 'Easter Toys', 'Easter Accessories', 'Disney Easter Eggs', 'Holiday Specials', 'Spring Disney', 'Easter Specials', 'Disney Festive'
+    Headlines: 'Easter Disney Fun', 'Spring Into Disney', 'Easter Gifts Galore', 'Disney Easter Eggs', 'Festive Disney Finds', 'Easter Toy Hunt', 'Disney Spring Gifts', 'Easter Surprises', 'Springtime Disney', 'Disney Holiday Shop', 'Easter Magic', 'Disney Festivities', 'Hop Into Disney', 'Easter Specials', 'Disney Celebrates'
+    Descriptions: 'Disney Easter gifts for all', 'Celebrate Easter with Disney', 'Spring surprises from Disney', 'Festive Disney Easter finds'
+"
+12,2024-01-01 00:00:02,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,,PENDING,,
+13,2024-01-01 00:00:02,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,194.74315214157104,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including special offers, private label brands, fresh produce, dairy, and meat & fish. Unique selling points include a variety of private label brands, fresh local produce, and a loyalty program through MultiPlusCard.
+
+Relevant Pages:
+
+1. Posebne ponude - Konzum:
+    URL: https://www.konzum.hr/web/posebne-ponude
+    Summary: Special offers section featuring current promotions and deals.
+    Keywords: 'Special Offers', 'Discounts', 'Deals', 'Promotions', 'Savings', 'Weekly Ads', 'Bargains', 'Sale', 'Limited Time', 'Exclusive Offers', 'Clearance', 'Value Packs', 'Combo Deals', 'Seasonal Sales', 'Member Discounts'
+    Headlines: 'Hot Deals', 'Save Big', 'Weekly Ads', 'Mega Sale', 'Super Savings', 'Price Cuts', 'Deal Alert', 'Flash Sale', 'Bargain Buys', 'Discount Days', 'Promo Offers', 'Clearance', 'Special Buys', 'Sale Event', 'Best Offers'
+    Descriptions: 'Unbeatable deals await', 'Save more every day', 'Exclusive offers here', 'Shop the best deals'
+
+2. Naše robne marke - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: Our Brands section showcasing Konzum's private label products.
+    Keywords: 'Private Labels', 'Our Brands', 'Exclusive Products', 'Quality Brands', 'K Plus', 'Active Zone', 'Gelatissimo', 'Adria Mare', 'Bio Zone', 'Garden Good', 'Rise&Smile', 'Minute', 'Hrusty', 'Finesse', 'Sunny'
+    Headlines: 'Exclusive Brands', 'Quality Goods', 'Our Best', 'Private Labels', 'Brand Savings', 'K Plus', 'Active Zone', 'Gelatissimo', 'Adria Mare', 'Bio Zone', 'Garden Picks', 'Rise&Smile', 'Quick Meals', 'Hrusty Snacks', 'Finesse Care'
+    Descriptions: 'Shop our exclusive brands', 'Quality meets value', 'Discover our brands', 'Private label favorites'
+
+3. Voće i povrće - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: Fruits and Vegetables section with a variety of fresh produce.
+    Keywords: 'Fresh Produce', 'Fruits', 'Vegetables', 'Organic', 'Local Produce', 'Seasonal Fruits', 'Healthy Options', 'Exotic Fruits', 'Green Vegetables', 'Salad Ingredients', 'Citrus Fruits', 'Berries', 'Root Vegetables', 'Leafy Greens', 'Herbs'
+    Headlines: 'Fresh Picks', 'Healthy Fruits', 'Green Veggies', 'Organic Choices', 'Local Produce', 'Seasonal Best', 'Exotic Flavors', 'Fresh Salads', 'Citrus Blast', 'Berry Fresh', 'Root Veggies', 'Leafy Choices', 'Fresh Herbs', 'Veggie Delight', 'Fruit Basket'
+    Descriptions: 'Freshness in every bite', ""Nature's best produce"", 'Healthy & delicious', 'Fresh picks daily'
+
+4. Mliječni proizvodi i jaja - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: Dairy Products and Eggs section with a wide assortment of dairy goods.
+    Keywords: 'Dairy', 'Milk', 'Cheese', 'Eggs', 'Yogurt', 'Cream', 'Butter', 'Dairy Desserts', 'Organic Milk', 'Cheese Varieties', 'Free-Range Eggs', 'Greek Yogurt', 'Sour Cream', 'Margarine', 'Spreads'
+    Headlines: 'Dairy Delights', 'Milk Essentials', 'Cheese Galore', 'Egg Selection', 'Yogurt Treats', 'Creamy Rich', 'Butter Best', 'Sweet Dairy', 'Organic Milk', 'Cheese Choices', 'Eggcellent Eggs', 'Yogurt Variety', 'Cream Choices', 'Butter Spreads', 'Tasty Spreads'
+    Descriptions: 'Creamy dairy favorites', 'Milk for every need', 'Cheese for all tastes', 'Eggs from happy hens'
+
+5. Meso i riba - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/meso-i-riba
+    Summary: Meat and Fish section offering a selection of quality meats and seafood.
+    Keywords: 'Meat', 'Fish', 'Seafood', 'Fresh Meat', 'Quality Seafood', 'Poultry', 'Beef', 'Pork', 'Lamb', 'Fish Fillets', 'Shellfish', 'Marinated Meats', 'Smoked Fish', 'Sausages', 'Bacon'
+    Headlines: 'Meat Market', 'Fresh Seafood', 'Quality Meats', 'Fish Finds', 'Poultry Picks', 'Beef Cuts', 'Pork Pieces', 'Lamb Chops', 'Filleted Fish', 'Shellfish', 'Marinated Meats', 'Smoked Delights', 'Sausage Variety', 'Bacon Strips', 'Seafood Special'
+    Descriptions: 'Quality meats here', 'Seafood variety', 'Fresh cuts daily', 'Delicious fish & meat'
+"
+14,2024-01-01 00:00:02,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,147.19877195358276,DONE,True,"Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services that interact with event streams, offering a unified API for multiple message brokers and features like Pydantic validation, automatic documentation, and full-typed editor support.
+
+Relevant Pages:
+
+1. Features - FastStream:
+    URL: https://faststream.airt.ai/latest/faststream/
+    Summary: Details the features of FastStream, including multiple broker support, Pydantic validation, automatic docs, and more.
+    Keywords: 'Features', 'Brokers', 'Validation', 'Documentation', 'Editor Support', 'Dependency Injection', 'Testing', 'Extensibility', 'Integrations', 'Code Generation'
+    Headlines: 'Unified API', 'Pydantic Validation', 'Auto Docs', 'Editor Support', 'Dependency System', 'In-Memory Tests', 'Extensible', 'HTTP Integrations', 'Code Generation', 'Community Feedback', 'NATS.io Endorsement', 'Reddit Discussions', 'Django Integration', 'Modern Microservices', 'Data-Centric Services'
+    Descriptions: 'Support for Kafka, RabbitMQ, NATS, Redis', 'Leverage Pydantic for message validation', 'Automatic AsyncAPI documentation', 'Smooth development with full-typed support'
+
+2. Getting Started - FastStream:
+    URL: https://faststream.airt.ai/latest/getting-started/
+    Summary: Provides a quick start guide and basic usage instructions for FastStream.
+    Keywords: 'Getting Started', 'Quick Start', 'Installation', 'Basic Usage', 'Tutorial', 'Docker', 'Broker Containers', 'Publishing', 'Subscriptions', 'Routing', 'Dependencies', 'Context', 'Serialization'
+    Headlines: 'Quick Start Guide', 'Install FastStream', 'Basic App Code', 'Service Testing', 'Run Application', 'Project Docs', 'Manage Dependencies', 'Framework Integrations', 'CLI Commands', 'Logging', 'Config Management', 'Task Scheduling', 'Project Template', 'Manual Run', 'Tool Integrations'
+    Descriptions: 'Step-by-step installation guide', 'Create a basic FastStream app', 'Test your FastStream service', 'Run your FastStream application'
+
+3. Reference - Code API - FastStream:
+    URL: https://faststream.airt.ai/latest/api/
+    Summary: Reference documentation for FastStream's code API.
+    Keywords: 'Code API', 'Reference', 'Documentation', 'Classes', 'Functions', 'Parameters', 'Attributes', 'FastAPI', 'Middleware', 'Context', 'Depends', 'Header', 'Path', 'TestApp'
+    Headlines: 'API Reference Guide', 'FastStream Classes', 'Function Documentation', 'API Parameters', 'Middleware Details', 'Context Usage', 'Dependency Functions', 'Header Management', 'Path Operations', 'Testing Applications', 'Type Application', 'AsyncAPI Schema', 'Confluent Kafka', 'NATS AckPolicy', 'RabbitMQ Exchange'
+    Descriptions: 'Comprehensive code API reference', 'Learn FastStream through API', 'Classes and functions explained', 'Middleware and context documentation'
+"
+15,2024-01-01 00:00:03,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,328.17165994644165,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of furniture and home furnishing products suitable for every room, style, and budget. The website features categories such as furniture, kitchens, bedrooms, living rooms, and smart home devices, as well as services like planning, delivery, assembly, and IKEA for Business. New collections and offers are regularly updated, providing customers with fresh ideas and affordable options.
+
+Relevant Pages:
+
+1. Furniture:
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: IKEA offers a variety of furniture for every room, including storage solutions, sofas, tables, and more.
+    Keywords: 'Furniture', 'Home Decor', 'Storage', 'Sofas', 'Tables', 'Chairs', 'Beds', 'Wardrobes', 'IKEA'
+    Headlines: 'Stylish Sofas', 'Comfy Chairs', 'Elegant Tables', 'Cozy Beds', 'Spacious Storage', 'Modern Decor', 'Chic Wardrobes', 'Office Desks', 'Dining Sets', ""Kids' Furniture"", 'Outdoor Seating', 'Room Dividers', 'TV Stands', 'Bookcases', 'Nightstands'
+    Descriptions: 'Find your perfect sofa', 'Chairs for every style', 'Dine in elegance', 'Sleep in comfort', 'Solve storage needs'
+
+2. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: IKEA provides complete kitchen solutions, including cabinets, appliances, and countertops.
+    Keywords: 'Kitchens', 'Cabinets', 'Appliances', 'Countertops', 'Design', 'IKEA'
+    Headlines: 'Modern Kitchens', 'Cabinet Choices', 'Smart Appliances', 'Durable Counters', 'Design Services', 'Easy Install', 'Kitchen Islands', 'Faucets & Sinks', 'Storage Solutions', 'Kitchen Lighting', 'Wall Organization', 'Kitchen Textiles', 'Cookware', 'Tableware', 'Recycling Bins'
+    Descriptions: 'Design your dream kitchen', 'Cabinets for all tastes', 'Appliances that last', 'Countertops for cooks', 'Kitchen design made easy'
+
+3. Bedroom:
+    URL: https://www.ikea.com/gb/en/rooms/bedroom/
+    Summary: IKEA offers bedroom furniture and ideas, including beds, mattresses, and storage.
+    Keywords: 'Bedroom', 'Beds', 'Mattresses', 'Storage', 'Furniture', 'IKEA'
+    Headlines: 'Comfy Mattresses', 'Stylish Beds', 'Bedroom Storage', 'Cozy Bedding', 'Room Decor', 'Mirrors', 'Dressers', 'Nightstands', 'Wardrobes', 'Sleep Well', ""Kids' Rooms"", 'Guest Beds', 'Bed Frames', 'Pillows & Duvets', 'Bedroom Lighting'
+    Descriptions: 'Sleep in style and comfort', 'Find the perfect bed', 'Organize with ease', 'Dress up your bedroom', 'Create your sanctuary'
+
+4. Living Room:
+    URL: https://www.ikea.com/gb/en/rooms/living-room/
+    Summary: Explore living room furniture and ideas for various styles and tastes.
+    Keywords: 'Living Room', 'Sofas', 'Armchairs', 'TV Stands', 'Living Room Storage', 'IKEA'
+    Headlines: 'Lounge in Luxury', 'Sofa Selection', 'Armchair Comfort', 'Entertainment Units', 'Living Storage', 'Coffee Tables', 'Side Tables', 'Shelving Units', 'Rugs & Textiles', 'Room Lighting', 'Decor Accents', 'Curtains & Blinds', 'Picture Frames', 'Plant Life', 'Room Layouts'
+    Descriptions: 'Relax in your living room', 'Sofas for every space', 'Armchairs to unwind', 'Stylish TV stands', 'Clutter-free living'
+
+5. Smart Home:
+    URL: https://www.ikea.com/gb/en/cat/smart-home-hs001/
+    Summary: IKEA's smart home devices offer convenience and efficiency for modern living.
+    Keywords: 'Smart Home', 'Home Automation', 'Smart Lighting', 'Smart Blinds', 'IKEA'
+    Headlines: 'Smart Lighting', 'Automated Blinds', 'Home Control', 'Smart Speakers', 'Tech Integration', 'App Connectivity', 'Voice Control', 'Smart Plugs', 'Climate Control', 'Security Cameras', 'Wireless Charging', 'Remote Access', 'Energy Saving', 'Smart Locks', 'Home Safety'
+    Descriptions: 'Control lights with ease', 'Automate your blinds', 'Smart home solutions', 'Enhance with technology', 'Efficient modern living'
+"
+16,2024-01-01 00:00:03,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,191.79115509986875,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney, Marvel, Pixar, and Star Wars merchandise, including toys, fancy dress, collectibles, and more. The store features new arrivals, exclusive collections, and special offers. Customers can benefit from free delivery over 60€ and free returns, as well as Click & Collect locations.
+
+Relevant Pages:
+
+1. New In Products:
+    URL: https://www.disneystore.eu/new
+    Summary: Latest Disney, Marvel, Pixar, and Star Wars products.
+    Keywords: 'New Arrivals', 'Disney', 'Marvel', 'Pixar', 'Star Wars', 'Latest Collections', 'Exclusive', 'Merchandise', 'Toys', 'Apparel', 'Accessories', 'Home Decor', 'Collectibles', 'Gifts'
+    Headlines: 'New Disney Magic', 'Fresh Marvel Gear', 'Pixar Finds', 'Star Wars Goods', 'Latest Arrivals', 'Just Released', 'New Exclusives', 'Trending Now', 'Hot Picks', 'New Must-Haves', 'Just Dropped', 'Latest Toys', 'New Apparel', 'Fresh Accessories', 'New Home Decor'
+    Descriptions: 'Discover the latest Disney products', 'New Marvel merchandise available', 'Explore fresh Pixar arrivals', 'Get the latest Star Wars toys'
+
+2. Special Offers:
+    URL: https://www.disneystore.eu/offers
+    Summary: Discounts and promotions on Disney merchandise.
+    Keywords: 'Special Offers', 'Discounts', 'Promotions', 'Deals', 'Savings', 'Disney Sale', 'Marvel Deals', 'Pixar Savings', 'Star Wars Offers', 'Clearance', 'Bargains', 'Reduced Prices', 'Limited Time Offers', 'Exclusive Deals', 'Seasonal Sales'
+    Headlines: 'Disney Deals', 'Marvel Discounts', 'Pixar Promos', 'Star Wars Sales', 'Save Big', 'Limited Offers', 'Exclusive Deals', 'Seasonal Sales', 'Clearance Finds', 'Bargain Buys', 'Reduced Prices', 'Special Savings', 'Hot Deals', 'Promo Alert', 'Sale Now On'
+    Descriptions: 'Save on Disney favorites', 'Exclusive deals on Marvel', 'Special offers on Pixar', 'Discounted Star Wars toys'
+
+3. Star Wars Collection:
+    URL: https://www.disneystore.eu/characters-and-movies/star-wars/products
+    Summary: Star Wars themed toys, gifts, and figures.
+    Keywords: 'Star Wars', 'The Force', 'Jedi', 'Sith', 'Galaxy', 'Figures', 'Toys', 'Gifts', 'Collectibles', 'Lightsabers', 'Apparel', 'Accessories', 'Home Decor', 'Star Wars Day', 'May the Fourth'
+    Headlines: 'Star Wars Gear', 'Jedi Toys', 'Sith Collectibles', 'Galactic Finds', 'The Force Gifts', 'Star Wars Figures', 'Lightsaber Toys', 'Rebel Deals', 'Empire Savings', 'Droid Toys', 'Wookiee Gifts', 'Starfighter Models', 'Jedi Apparel', 'Sith Accessories', 'Galactic Decor'
+    Descriptions: 'Explore Star Wars toys', 'Gifts for every Jedi', 'Sith themed collectibles', 'Galactic figures and more'
+"
+17,2024-01-01 00:00:03,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,767.150552034378,DONE,True,"Here is a summary of the information you requested:
+
+Hamleys offers a wide range of toys and games, categorized by price points, types, and age groups. They feature popular brands like LEGO and Playmobil, and offer various types of toys including soft toys, educational preschool toys, action figures, dolls, games, puzzles, and sports playsets.
+
+Relevant Pages:
+
+1. LEGO Construction Toys:
+    URL: https://www.hamleys.com/shop-toys/construction/lego
+    Summary: A selection of LEGO construction sets for various age groups.
+    Keywords: 'LEGO', 'Construction', 'Building', 'Toys', 'Sets', 'Creative', 'Play'
+    Headlines: 'Build Your World', 'LEGO Adventures', 'Brick by Brick', 'LEGO Fun', 'Creative Builds', 'LEGO Sets', 'Master Builders', 'LEGO Magic', 'Brick Creations', 'LEGO Universe', 'Construct Play', 'LEGO Kits', 'Build Together', 'LEGO Dreams', 'Invent & Build'
+    Descriptions: 'Endless creativity with LEGO', 'Iconic building sets for all', 'Explore, build, and play', 'LEGO sets for every age'
+
+2. Hamleys Soft Toys:
+    URL: https://www.hamleys.com/shop-toys/soft-toys/hamleys
+    Summary: Exclusive range of Hamleys branded soft toys.
+    Keywords: 'Soft Toys', 'Plush', 'Cuddly', 'Stuffed Animals', 'Hamleys', 'Teddy Bears', 'Comfort'
+    Headlines: 'Cuddle Companions', 'Soft & Snuggly', 'Plush Pals', 'Hug a Hamleys', 'Teddy Treasures', 'Snuggle Time', 'Plush Playtime', 'Soft Toy Joy', 'Furry Friends', 'Cuddly Critters', 'Plush Perfection', ""Teddy's Tea Party"", 'Soft Embrace', 'Cuddle Corner', 'Plush Love'
+    Descriptions: 'Soft toys for warm hugs', ""Your child's plush friend"", ""Hamleys' cuddly collection"", 'Teddy bears for timeless joy'
+
+3. Board Games:
+    URL: https://www.hamleys.com/shop-toys/games-puzzles/board-games
+    Summary: Board games for family fun and learning.
+    Keywords: 'Board Games', 'Family', 'Strategy', 'Fun', 'Puzzles', 'Play', 'Interactive'
+    Headlines: 'Game Night Fun', 'Puzzle Masters', 'Strategy & Play', 'Family Game Time', 'Board Battle', 'Puzzle Play', 'Fun & Games', 'Play & Win', 'Game On', 'Board Triumph', 'Puzzle Pieces', 'Strategic Moves', 'Family Faceoff', 'Game Quest', 'Puzzle Solving'
+    Descriptions: 'Exciting games for all', 'Strategic fun for everyone', 'Puzzles to challenge minds', 'Family favorites to enjoy'
+"
+18,2024-01-01 00:00:03,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,219.92387413978577,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a comprehensive grocery retailer featuring a wide array of products including outdoor equipment, private label brands, fresh produce, dairy, and more. The website offers a user-friendly shopping experience with categories for various needs.
+
+Relevant Pages:
+
+1. Naslovnica - Konzum:
+    URL: https://www.konzum.hr/
+    Summary: Main homepage showcasing a variety of product categories and current promotions.
+    Keywords: 'Grocery', 'Supermarket', 'Konzum', 'Shopping', 'Croatia', 'Food', 'Beverages', 'Household', 'Personal Care'
+    Headlines: 'Shop Essentials', 'Fresh Groceries', 'Daily Deals', 'Home Delivery', 'Quality Products', 'Local Produce', 'Online Offers', 'Private Labels', 'Outdoor Range', 'Healthy Choices', 'Bakery Fresh', 'Dairy Selection', ""Butcher's Best"", 'Seafood Specials', 'Snack Favorites'
+    Descriptions: 'Your one-stop shop', 'Quality meets convenience', 'Freshness delivered daily', 'Variety at great prices'
+
+2. Naše robne marke - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: Showcases Konzum's exclusive private label brands.
+    Keywords: 'Private Label', 'K Plus', 'Active Zone', 'Gelatissimo', 'Exclusive Brands', 'Quality Assurance', 'Value for Money'
+    Headlines: 'Exclusive Brands', 'K Plus Range', 'Active Lifestyle', 'Gelatissimo Joy', 'Quality Promise', 'Smart Shopping', 'Trusted Quality', 'Budget Friendly', 'Local Favorites', 'Taste the Quality', 'Everyday Savings', 'Unique Selection', 'Customer Choice', 'Satisfaction Plus', 'Konzum Quality'
+    Descriptions: 'Exclusive to Konzum', 'Quality you can trust', 'Savings on every item', 'Discover local favorites'
+
+3. Voće i povrće - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: Features a selection of fresh fruits and vegetables.
+    Keywords: 'Fresh Produce', 'Organic Options', 'Seasonal Fruits', 'Vegetables', 'Healthy Eating', 'Farm to Table', 'Natural Goodness'
+    Headlines: 'Fresh Picks', 'Organic Choices', ""Season's Best"", 'Natural Produce', 'Healthy & Fresh', 'Garden Fresh', 'Fruitful Finds', 'Veggie Delights', 'Crisp & Tasty', 'Eat Fresh', 'Green Goodness', 'Farm Favorites', 'Juicy Selection', 'Leafy Greens', 'Berry Bliss'
+    Descriptions: ""Nature's finest produce"", 'Freshness in every bite', 'Healthy choices made easy', 'From farm to your table'
+
+4. Mliječni proizvodi i jaja - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: Offers a variety of dairy products and eggs.
+    Keywords: 'Dairy', 'Milk', 'Cheese', 'Eggs', 'Yogurt', 'Butter', 'Fresh Dairy', 'Quality Eggs', 'Dairy Essentials'
+    Headlines: 'Dairy Delights', 'Creamy Milk', 'Cheese Galore', 'Egg-cellent Choice', 'Yogurt Variety', 'Butter & Spreads', 'Dairy Deals', 'Breakfast Staples', 'Quality Eggs', 'Lactose-Free', 'Cheese Platters', 'Milk & More', 'Dairy Freshness', 'Egg Essentials', 'Buttery Best'
+    Descriptions: 'Dairy for every diet', 'Eggs for every meal', 'Cheese for connoisseurs', 'Milk - the wholesome way'
+"
+19,2024-01-01 00:00:03,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,289.24427604675293,DONE,False,"FAILED: Could not retrieve the information from the web page.
+We had the following error:
+
+
+This is the best we could do: TERMINATE"
+20,2024-01-01 00:00:04,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,204.6601960659027,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of home furnishing products including furniture, outdoor living items, beds and mattresses, kitchens, smart home devices, and decoration. They also provide services to support customer needs and have a dedicated section for business solutions.
+
+Relevant Pages:
+
+1. Shop Products:
+    URL: https://www.ikea.com/gb/en/cat/product-products/
+    Summary: Overview of IKEA's product categories.
+    Keywords: 'Furniture', 'Home Decor', 'Storage', 'Outdoor', 'Lighting', 'Textiles', 'Kitchenware', 'Smart Home', 'Rugs', 'Home Improvement'
+    Headlines: 'Furnish Your Home', 'Outdoor Elegance', 'Light Up Your Life', 'Cozy Textiles', 'Smart Living', 'Stylish Rugs', 'Decor Delights', 'Kitchen Essentials', 'Organize with Ease', 'Home DIY'
+    Descriptions: 'Find furniture for every room.', 'Elevate your outdoor space.', 'Lighting solutions for all.', 'Textiles to warm any area.', 'Tech for smarter living.'
+
+2. Offers:
+    URL: https://www.ikea.com/gb/en/offers/
+    Summary: Current offers and discounts at IKEA.
+    Keywords: 'Discounts', 'Deals', 'Savings', 'Special Offers', 'Limited Time', 'Sale', 'Price Cuts', 'Bargains', 'Promotions', 'Clearance'
+    Headlines: 'Save Big Now', 'Deals Galore', 'IKEA Discounts', 'Bargain Finds', 'Limited Offers', 'Sale Season', 'Price Cuts', 'Promo Picks', 'Clearance Deals', 'Special Savings'
+    Descriptions: 'Unbeatable deals await.', 'Discounts on top items.', 'Save on IKEA products.', 'Special offers in-store.'
+
+3. IKEA for Business:
+    URL: https://www.ikea.com/gb/en/ikea-business/
+    Summary: IKEA's solutions for business customers.
+    Keywords: 'Business Solutions', 'Office Furniture', 'Commercial', 'B2B', 'Workspaces', 'Corporate Sales', 'Bulk Purchase', 'Business Account', 'Professional', 'Custom Solutions'
+    Headlines: 'Business Interiors', 'Office Upgrades', 'B2B Solutions', 'Bulk Buys', 'Workplace Style', 'Corporate Deals', 'Pro Furnishings', 'Custom Office', 'Business Accounts', 'Workspace Wins'
+    Descriptions: 'Furnish your business.', 'Office solutions for you.', 'Corporate purchasing.', 'Professional space design.'
+"
+21,2024-01-01 00:00:04,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,206.7549030780792,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney, Marvel, Pixar, and Star Wars merchandise including toys, figures, costumes, and more. The store features new arrivals, special offers, and a variety of collections for different franchises.
+
+Relevant Pages:
+
+1. New In Products:
+    URL: https://www.disneystore.eu/new
+    Summary: Latest Disney, Marvel, Pixar, and Star Wars products.
+    Keywords: 'New Arrivals', 'Disney', 'Marvel', 'Pixar', 'Star Wars'
+    Headlines: 'Latest Disney Gear', 'New Marvel Finds', ""Pixar's Newest"", 'Star Wars Arrivals', 'Fresh Disney Magic', 'Marvel Must-Haves', 'Pixar Picks', 'Galactic Goodies', 'Disney Delights', 'Superhero Supplies', 'Pixar Pleasures', 'Star Wars Stuff', 'Newest Disney Fun', 'Marvel Essentials', 'Pixar Surprises'
+    Descriptions: 'Explore the latest Disney merchandise', 'New Marvel products just in', 'Discover new Pixar arrivals', 'Get the latest Star Wars toys'
+
+2. Special Offers:
+    URL: https://www.disneystore.eu/offers
+    Summary: Discounts and promotions on Disney products.
+    Keywords: 'Discounts', 'Promotions', 'Deals', 'Disney Offers', 'Savings'
+    Headlines: 'Disney Deals', 'Marvel Markdowns', 'Pixar Promos', 'Star Wars Sales', 'Save on Disney', 'Marvel Discounts', 'Pixar Price Cuts', 'Galactic Deals', 'Disney Bargains', 'Super Savings', 'Pixar Specials', 'Star Wars Offers', 'Disney Discounts', 'Heroic Deals', 'Animated Offers'
+    Descriptions: 'Save on Disney favorites', 'Exclusive Marvel offers', 'Special Pixar promotions', 'Star Wars deals await'
+
+3. Star Wars Collection:
+    URL: https://www.disneystore.eu/characters-and-movies/star-wars/products
+    Summary: Star Wars themed toys, gifts, and figures.
+    Keywords: 'Star Wars', 'Gifts', 'Figures', 'Collectibles', 'Toys'
+    Headlines: 'Jedi Treasures', 'Sith Specials', 'Droid Deals', 'Galactic Toys', 'Force Favorites', 'Rebel Gear', 'Empire Exclusives', 'Star Wars Figures', 'Jedi Gear', 'Sith Surprises', 'Droid Delights', 'Galactic Gifts', 'Force Finds', 'Rebel Rewards', 'Empire Essentials'
+    Descriptions: 'Find Star Wars figures', 'Gifts for every Jedi', 'Sith-approved collectibles', 'Toys from across the galaxy'
+"
+22,2024-01-01 00:00:04,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,368.567645072937,DONE,True,"Here is a summary of the information you requested:
+
+Hamleys offers a diverse range of toys and games, categorized by price points and interests, including LEGO and construction sets, soft toys, educational preschool toys, action figures and vehicles, dolls and fashion items, board games and puzzles, sports and outdoor playsets, and lifestyle toys like batteries and school supplies.
+
+Relevant Pages:
+
+1. Shop Toys:
+    URL: https://www.hamleys.com/shop-toys
+    Summary: Overview of all toy categories and price points.
+    Keywords: 'Toys', 'Games', 'Children', 'Educational', 'Fun', 'Playtime', 'Gifts', 'Quality', 'Variety', 'Entertainment', 'Learning', 'Creativity', 'Family', 'Kids', 'Play'
+    Headlines: 'Toys Galore', 'Play & Learn', 'Gifts for Kids', 'Fun for All', 'Creative Play', 'Quality Toys', ""Kids' Favorites"", 'Toy Wonderland', 'Imaginative Play', 'Educational Fun', 'Family Games', 'Preschool Toys', 'Action Figures', 'Dolls & Fashion', 'Puzzles & Games'
+    Descriptions: 'Find the perfect toy', 'Educational and fun', ""Gifts they'll love"", 'Quality playtime'
+
+2. LEGO & Construction Toys:
+    URL: https://www.hamleys.com/shop-toys/construction
+    Summary: Range of construction toys including LEGO and Playmobil.
+    Keywords: 'LEGO', 'Construction', 'Building', 'Playmobil', 'Creative', 'Structures', 'Models', 'Engineering', 'Blocks', 'Bricks', 'Sets', 'Kids', 'Play', 'Design', 'Architecture'
+    Headlines: 'LEGO Sets', 'Build & Play', 'Creative Blocks', 'Playmobil Fun', 'Model Making', 'Brick Building', 'Construction Kits', 'Future Engineers', 'Architect Play', 'Building Blocks', 'Creative Minds', 'Structural Fun', 'Design & Build', 'Toy Blueprints', 'Build Creativity'
+    Descriptions: 'Endless building', 'LEGO adventures', 'Playmobil worlds', 'Creative construction'
+
+3. Games & Puzzles:
+    URL: https://www.hamleys.com/shop-toys/games-puzzles
+    Summary: Collection of board games and puzzles for children and families.
+    Keywords: 'Games', 'Puzzles', 'Board Games', 'Family', 'Fun', 'Strategy', 'Trivia', 'Problem Solving', 'Kids', 'Play', 'Educational', 'Jigsaws', 'Brain Teasers', 'Interactive', 'Entertainment'
+    Headlines: 'Puzzle Time', 'Board Game Fun', 'Family Night', 'Brain Games', 'Strategy Play', 'Trivia Challenge', 'Puzzle Pieces', 'Game Night', 'Mind Benders', 'Interactive Play', 'Educational Games', 'Jigsaw Puzzles', 'Problem Solving', ""Kids' Games"", 'Play & Think'
+    Descriptions: 'Family game night', 'Puzzles for brains', 'Strategic gameplay', 'Fun and learning'
+"
+23,2024-01-01 00:00:04,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,377.9334981441498,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a comprehensive grocery and household goods retailer offering a wide range of products across various categories. The website features private label brands, fresh produce, dairy products, meat and fish, outdoor items, promotional catalogs, and a customer loyalty program called MultiPlusCard.
+
+Relevant Pages:
+
+1. Naše robne marke - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: Showcases Konzum's private label products across various categories.
+    Keywords: 'Private Label', 'Konzum Brands', 'Quality Products', 'Exclusive Brands'
+    Headlines: ""Konzum's Own"", 'Exclusive Brands', 'Quality Goods', 'Private Selection', 'Trusted Quality', 'K Plus Range', 'Active Zone', 'Gelatissimo', 'Adria Mare', 'Ocean Fresh', 'Bio Zone', 'Garden Good', 'Rise&Smile', 'Minute Meals', 'Hrusty Snacks', 'Finesse Care', 'Sunny Products', 'Sweet Chef', 'Spice Chef', 'Lumpi Kids'
+    Descriptions: 'Exclusive Konzum brands', 'Quality at great prices', 'Wide range of products', 'From food to care items'
+
+2. Voće i povrće - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: Details the fresh produce offerings including fruits, vegetables, and herbs.
+    Keywords: 'Fresh Produce', 'Fruits', 'Vegetables', 'Organic Options'
+    Headlines: 'Fresh Fruits', 'Crisp Veggies', 'Organic Choices', 'Seasonal Picks', 'Healthy Snacks', 'Exotic Varieties', 'Local Produce', 'Daily Freshness', 'Fruit Selection', 'Veggie Delights', 'Herb Garden', 'Dried Nuts', 'Frozen Options', 'Berry Good', 'Green Goodness'
+    Descriptions: 'Daily fresh produce', 'A variety of greens', 'Seasonal fruits & veg', 'Healthy & delicious'
+
+3. Mliječni proizvodi i jaja - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: Presents a variety of dairy products and eggs available at Konzum.
+    Keywords: 'Dairy', 'Milk', 'Cheese', 'Eggs'
+    Headlines: 'Dairy Essentials', 'Fresh Milk', 'Cheese Galore', 'Egg Selection', 'Yogurt Varieties', 'Creamy Delights', 'Butter & Spreads', 'Dessert Treats', 'Quality Eggs', 'Milk for All', 'Cheese Platters', 'Yogurt Snacks', 'Cream & More', 'Butter Up', 'Spread Joy'
+    Descriptions: 'Quality dairy products', 'Cheeses for every taste', 'Fresh eggs daily', 'Dairy for health'
+
+4. Meso i riba - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/meso-i-riba
+    Summary: Highlights the meat and seafood options, including ready-to-grill products.
+    Keywords: 'Meat', 'Fish', 'Seafood', 'Grilling'
+    Headlines: 'Meat Selection', 'Fresh Seafood', 'Grill Ready', 'Poultry Picks', 'Beef Cuts', 'Pork Products', 'Fish Variety', 'BBQ Favorites', 'Turkey Choices', 'Catch of the Day', 'Steak Night', 'Grilling Essentials', 'Sea Delights', 'Chicken Meals', 'Savory Seafood'
+    Descriptions: 'Quality meats & fish', 'Seafood fresh daily', 'BBQ essentials here', 'Meat for every meal'
+
+5. Na otvorenom - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/na-otvorenom
+    Summary: Features seasonal outdoor products and equipment.
+    Keywords: 'Outdoor', 'Garden', 'Pools', 'Grilling'
+    Headlines: 'Outdoor Fun', 'Garden Gear', 'Pool Party', 'BBQ Time', 'Patio Sets', 'Garden Tools', 'Summer Ready', 'Grill & Chill', 'Outdoor Games', 'Lawn Care', 'Pool Accessories', 'Outdoor Dining', 'Yard Maintenance', 'BBQ Essentials', 'Outdoor Living'
+    Descriptions: 'Gear up for outdoors', 'Garden & pool items', 'BBQ and grilling', 'Outdoor enjoyment'
+
+6. Katalozi - Konzum:
+    URL: https://www.konzum.hr/katalozi
+    Summary: Contains links to current catalogs and promotions.
+    Keywords: 'Catalogs', 'Promotions', 'Deals', 'Savings'
+    Headlines: 'New Catalogs', 'Hot Deals', 'Save More', 'Weekly Offers', 'Big Savings', 'Deal Alerts', 'Promo Packs', 'Discount Days', 'Catalog Savings', 'Special Offers', 'Budget Buys', 'Price Cuts', 'Shop & Save', 'Bargain Finds', 'Sale Season'
+    Descriptions: 'Latest Konzum deals', 'Catalogs for savings', 'Promotions on offer', 'Deals to not miss'
+
+7. MultiPlusCard - Konzum:
+    URL: https://www.konzum.hr/multipluscard
+    Summary: Details the benefits of the MultiPlusCard loyalty program.
+    Keywords: 'Loyalty Program', 'Rewards', 'MultiPlusCard', 'Membership'
+    Headlines: 'Earn Points', 'Member Perks', 'Card Rewards', 'Bonus Points', 'Loyalty Benefits', 'Exclusive Deals', 'Point System', 'Card Savings', 'VIP Offers', 'Reward Yourself', 'Join & Save', 'Extra Points', 'Member Exclusives', 'Loyalty Pays', 'Card Advantages'
+    Descriptions: 'Loyalty program perks', 'Earn rewards easily', 'Exclusive member deals', 'Save with every shop'
+"
+24,2024-01-01 00:00:04,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,218.42223596572876,DONE,True,"Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services with event streams, offering a unified API for multiple message brokers and features like Pydantic validation, automatic AsyncAPI documentation, and full-typed editor support.
+
+Relevant Pages:
+
+1. Features - FastStream:
+    URL: https://faststream.airt.ai/latest/faststream/
+    Summary: Overview of FastStream features including multiple broker support, Pydantic validation, automatic documentation, and more.
+    Keywords: 'FastStream', 'Asynchronous Services', 'Event Streams', 'Message Brokers', 'Pydantic Validation', 'Automatic Documentation', 'Dependency Injection', 'In-Memory Testing', 'Extensibility', 'HTTP Framework Compatibility', 'Code Generation', 'GPT', 'Llama', 'Microservices'
+    Headlines: 'Unified API', 'Pydantic Validation', 'Auto Documentation', 'Editor Support', 'Dependency System', 'In-Memory Tests', 'Framework Extensibility', 'HTTP Frameworks', 'Code Generation', 'Modern Microservices', 'Community Feedback', 'Twitter Endorsements', 'Reddit Discussions', 'Open-Source Framework', 'Event Stream Interaction'
+    Descriptions: 'Support for multiple brokers', 'Validation with Pydantic', 'Automatic AsyncAPI docs', 'Smooth development experience'
+
+2. Getting Started - FastStream:
+    URL: https://faststream.airt.ai/latest/getting-started/
+    Summary: Instructions and tips for getting started with FastStream, including installation and basic usage.
+    Keywords: 'Getting Started', 'FastStream Tutorial', 'Installation Guide', 'Basic Usage', 'Event Stream Integration', 'Message Queue', 'Service Testing', 'Application Running', 'Project Documentation', 'FastStream Installation'
+    Headlines: 'Quick Start Guide', 'Installation Tips', 'Basic App Creation', 'Service Testing', 'Run Your App', 'Project Docs', 'Message Queue Setup', 'FastStream Setup', ""Beginner's Tutorial"", 'Integration Guide', 'Testing Services', 'Running Services', 'Documentation Help', 'FastStream Basics', 'First Steps with FastStream'
+    Descriptions: 'Guide to start FastStream', 'Tips for FastStream setup', 'Creating basic FastStream app', 'Testing your FastStream service'
+
+3. Kafka Routing - FastStream:
+    URL: https://faststream.airt.ai/latest/kafka/kafka/
+    Summary: Details on Kafka routing within FastStream, including key concepts and library support.
+    Keywords: 'Kafka Routing', 'FastStream Kafka', 'Event Streaming', 'Publish-Subscribe Model', 'Kafka Topics', 'Message Queues', 'Kafka Concepts', 'Kafka Library Support', 'AIOKafka', 'Confluent Kafka'
+    Headlines: 'Kafka Integration', 'Publish-Subscribe', 'Kafka Topics', 'Kafka in FastStream', 'Library Support', 'AIOKafka Library', 'Confluent Client', 'Kafka Concepts', 'Event Streaming', 'Kafka Message Queues', 'Kafka Routing Rules', 'Kafka Data Streams', 'Kafka Fault Tolerance', 'Real-Time Data', 'Kafka Scalability'
+    Descriptions: 'Integrate Kafka with FastStream', 'Understand Kafka topics', 'Support for Kafka libraries', ""Kafka's publish-subscribe model""
+
+4. Rabbit Routing - FastStream:
+    URL: https://faststream.airt.ai/latest/rabbit/
+    Summary: Information on RabbitMQ routing with FastStream, including advantages and basic concepts.
+    Keywords: 'RabbitMQ Routing', 'FastStream RabbitMQ', 'Message Routing', 'RabbitMQ Advantages', 'RabbitMQ Concepts', 'Message Prioritization', 'RabbitMQ Performance', 'Complex Routing Logic', 'RabbitMQ Entities', 'RabbitMQ Exchange', 'RabbitMQ Queue', 'RabbitMQ Binding'
+    Headlines: 'RabbitMQ Integration', 'Flexible Routing', 'Message Prioritization', 'RabbitMQ Performance', 'Routing Logic', 'RabbitMQ Entities', 'Exchange Points', 'Queue Management', 'Binding Relationships', 'RabbitMQ Basics', 'RabbitMQ Advantages', 'Performance Insights', 'Routing Scenarios', 'RabbitMQ Overview', 'RabbitMQ with FastStream'
+    Descriptions: 'Flexible routing with RabbitMQ', 'Advantages of RabbitMQ', 'Basic concepts of RabbitMQ', 'Complex routing with RabbitMQ'
+
+5. NATS - FastStream:
+    URL: https://faststream.airt.ai/latest/nats/
+    Summary: Overview of NATS support in FastStream, including advantages, disadvantages, and routing rules.
+    Keywords: 'NATS Messaging', 'FastStream NATS', 'High-Performance Broker', 'NATS Advantages', 'NATS Disadvantages', 'NATS JetStream', 'Message Broker', 'NATS Routing Rules', 'NATS Subjects', 'Queue Groups', 'NATS Scalability', 'NATS RPC', 'NATS Overview', 'NATS Integration', 'NATS with FastStream'
+    Headlines: 'NATS Integration', 'High-Performance MQ', 'NATS Advantages', 'NATS Disadvantages', 'NATS JetStream', 'Simple Routing', 'NATS Subjects', 'Queue Group Scaling', 'NATS Scalability', 'RPC over MQ', 'NATS Overview', 'NATS Support', 'NATS Implementation', 'NATS Features', 'NATS in FastStream'
+    Descriptions: 'NATS messaging with FastStream', 'Advantages of using NATS', 'NATS JetStream features', 'Routing rules in NATS'
+
+6. Redis Broker - FastStream:
+    URL: https://faststream.airt.ai/latest/redis/
+    Summary: Details on Redis broker usage in FastStream, including overview and key concepts.
+    Keywords: 'Redis Broker', 'FastStream Redis', 'In-Memory Data Store', 'Redis Database', 'Message Broker', 'Redis Data Structures', 'Redis Pub/Sub', 'Redis Lists', 'Redis Streams', 'Redis Replication', 'Redis Scripting', 'Redis Transactions', 'Redis High Availability', 'Redis Partitioning', 'Redis Cluster'
+    Headlines: 'Redis Integration', 'In-Memory Data Store', 'Redis as Database', 'Message Broker Redis', 'Data Structures', 'Redis Pub/Sub', 'Redis Lists', 'Redis Streams', 'Redis Replication', 'Lua Scripting', 'Redis Transactions', 'High Availability', 'Redis Partitioning', 'Redis Cluster', 'Redis with FastStream'
+    Descriptions: 'Redis as a message broker', 'Redis data structures', 'Redis Pub/Sub mechanism', 'Advanced Redis Streams'
+
+7. Reference - Code API - FastStream:
+    URL: https://faststream.airt.ai/latest/api/
+    Summary: Comprehensive code API reference for FastStream, detailing classes, functions, and usage.
+    Keywords: 'Code API', 'FastStream Reference', 'API Documentation', 'FastStream Classes', 'FastStream Functions', 'API Usage', 'FastStream Parameters', 'FastStream Attributes', 'FastAPI Integration', 'Middleware Documentation', 'API Reference Guide', 'FastStream API', 'Developer Resources', 'API Details', 'FastStream Development'
+    Headlines: 'API Reference', 'FastStream Classes', 'Function Details', 'API Usage Guide', 'Parameter Information', 'Attribute Overview', 'FastAPI Integration', 'Middleware Docs', 'API Guide', 'FastStream API', 'Developer Resources', 'API Documentation', 'Code API Details', 'FastStream Dev', 'API for FastStream'
+    Descriptions: 'Reference for FastStream API', 'Classes and functions in API', 'Guide to using FastStream API', 'Details on API parameters'
+"
+25,2024-01-01 00:00:05,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,315.473680973053,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of home furnishing products including furniture, kitchens, beds and mattresses, smart home devices, and outdoor living items. They also have a dedicated section for business customers and provide various services to enhance the shopping experience.
+
+Relevant Pages:
+
+1. Furniture:
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: A variety of home furniture for all rooms.
+    Keywords: 'Sofas', 'Chairs', 'Tables', 'Storage', 'Office Furniture', 'Bedroom Sets', 'Living Room', 'Dining', ""Children's Furniture"", 'Modern', 'Traditional', 'Scandinavian Design', 'Affordable', 'Quality', 'Sustainable'
+    Headlines: 'Comfy Sofas', 'Ergonomic Chairs', 'Stylish Tables', 'Ample Storage', 'Work Desks', 'Cozy Beds', 'Chic Decor', 'Dine in Style', ""Kids' Picks"", 'Modern Looks', 'Classic Charm', 'Scandi Style', 'Budget-Friendly', 'Lasting Quality', 'Eco-Friendly'
+    Descriptions: 'Seating for every room', 'Supportive office chairs', 'Tables for all occasions', 'Solutions for clutter', 'Desks for productivity', 'Restful sleep starts here'
+
+2. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: Complete kitchen solutions and products.
+    Keywords: 'Kitchen Units', 'Cabinets', 'Appliances', 'Countertops', 'Kitchen Accessories', 'Kitchen Storage', 'Modern Kitchens', 'Traditional Kitchens', 'Custom Kitchens', 'Kitchen Planning', 'Installation Services', 'Kitchen Lighting', 'Kitchen Textiles', 'Cookware', 'Sustainable Kitchens'
+    Headlines: 'Modern Kitchens', 'Cabinet Choices', 'Top Appliances', 'Sleek Surfaces', 'Kitchen Extras', 'Organize Spaces', 'Classic Designs', 'Customize Now', 'Plan Your Kitchen', 'Installation Help', 'Bright Lights', 'Stylish Textiles', ""Chef's Essentials"", 'Green Kitchens', 'IKEA Quality'
+    Descriptions: 'Stylish kitchen designs', 'Cabinets for every taste', 'Appliances that last', 'Countertops for cooks', 'Accessories for tasks', 'Smart storage solutions'
+
+3. Offers:
+    URL: https://www.ikea.com/gb/en/offers/
+    Summary: Special deals and discounts on IKEA products.
+    Keywords: 'Discounts', 'Deals', 'Sales', 'Limited Offers', 'Clearance', 'Promotions', 'Bargains', 'Seasonal Sales', 'Member Discounts', 'Special Buys', 'Price Cuts', 'Bundle Offers', 'Online Specials', 'Last Chance', 'Affordable Prices'
+    Headlines: 'Hot Deals', 'Big Savings', 'Sale Now On', 'Limited Offers', 'Clearance Finds', 'Promo Picks', 'Super Bargains', 'Seasonal Deals', 'IKEA Family', 'Special Buys', 'Price Drops', 'Bundle & Save', 'Online Exclusives', 'Last Chance', 'Budget Buys'
+    Descriptions: 'Save on favorites', ""Deals you can't miss"", 'Sales happening now', 'Offers for a steal', 'Clearance must-haves', 'Exclusive promotions'
+
+4. Smart Home:
+    URL: https://www.ikea.com/gb/en/cat/smart-home-hs001/
+    Summary: Smart home devices for a connected life.
+    Keywords: 'Smart Lighting', 'Smart Speakers', 'Home Automation', 'Smart Blinds', 'Wireless Charging', 'Smart Plugs', 'Smart Home Security', 'Voice Control', 'App Control', 'Smart Home Hub', 'Connected Home', 'Tech Gadgets', 'Home Integration', 'Energy Saving', 'Smart Living'
+    Headlines: 'Smart Lights', 'Sound & Vision', 'Automate Home', 'Smart Blinds', 'Charge Wirelessly', 'Plug Smartly', 'Secure Home', 'Voice Commands', 'Control via App', 'Home Hub', 'Stay Connected', 'Tech Gadgets', 'Seamless Living', 'Save Energy', 'Smart Lifestyle'
+    Descriptions: 'Lighting gets smarter', 'Speakers for all', 'Home at your command', 'Blinds that listen', 'Charging made easy', 'Smart plugs for all'
+
+5. New:
+    URL: https://www.ikea.com/gb/en/new/
+    Summary: Latest products and collections from IKEA.
+    Keywords: 'New Arrivals', 'Latest Collections', 'New Products', 'Just Launched', 'New In Store', 'Trending Now', 'Latest Trends', 'New Season', 'Fresh Finds', 'Just Added', 'New Releases', 'Updated Range', 'Modern Designs', 'Innovative Products', 'Latest IKEA'
+    Headlines: 'Just Arrived', 'New Collections', 'Latest Products', 'Fresh Launches', 'Shop New', 'Trending Picks', 'Latest Looks', 'New Season', 'Fresh Finds', 'Just Added', 'New at IKEA', 'Updated Choices', 'Modern Designs', 'Innovations', ""IKEA's Latest""
+    Descriptions: 'Discover new arrivals', 'Collections just in', 'Latest IKEA products', 'New and exciting', ""Find what's new"", 'Trends to watch'
+
+6. Outdoor Living:
+    URL: https://www.ikea.com/gb/en/cat/outdoor-living-od001/
+    Summary: Outdoor furniture and garden products.
+    Keywords: 'Patio Furniture', 'Garden Accessories', 'Outdoor Dining', 'Outdoor Lounge', 'Garden Decor', 'Outdoor Lighting', 'Planters', 'Outdoor Textiles', 'BBQs', 'Outdoor Storage', 'Balcony Furniture', 'Weatherproof', 'Sustainable Outdoors', 'Outdoor Entertaining', 'Summer Essentials'
+    Headlines: 'Patio Picks', 'Garden Gear', 'Dine Outdoors', 'Lounge Outside', 'Garden Style', 'Light Up Night', 'Grow Green', 'Outdoor Fabrics', 'Grill & Chill', 'Storage Solutions', 'Balcony Bliss', 'All-Weather', 'Eco Outdoors', 'Party Outside', 'Summer Musts'
+    Descriptions: 'Furniture for patios', 'Accessorize gardens', 'Al fresco dining', 'Relax in the sun', 'Decor for outdoors', 'Illuminate gardens'
+
+7. Beds & Mattresses:
+    URL: https://www.ikea.com/gb/en/cat/beds-mattresses-bm001/
+    Summary: A range of beds and mattresses for restful sleep.
+    Keywords: 'Bed Frames', 'Mattresses', 'Pillows', 'Bedding', 'Bedroom Furniture', 'Sleep Solutions', 'Comfortable Sleep', 'Quality Mattresses', 'Bedroom Decor', 'Storage Beds', ""Children's Beds"", 'Guest Beds', 'Ergonomic Sleep', 'Sleep Technology', 'Bedroom Essentials'
+    Headlines: 'Dreamy Beds', 'Mattress Magic', 'Pillow Talk', 'Cozy Bedding', 'Bedroom Finds', 'Sleep Well', 'Restful Nights', 'Quality Sleep', 'Decor Dreams', 'Storage Beds', ""Kids' Sleep"", 'Guest Comfort', 'Ergo Sleep', 'Tech for Rest', 'Bedroom Musts'
+    Descriptions: 'Beds for sweet dreams', 'Mattresses for all', 'Pillows for comfort', 'Bedding to love', 'Furnish your bedroom', 'Solutions for sleep'
+
+8. Decoration:
+    URL: https://www.ikea.com/gb/en/cat/decoration-de001/
+    Summary: Decorative items to enhance any room.
+    Keywords: 'Home Accents', 'Wall Art', 'Mirrors', 'Vases', 'Candles', 'Picture Frames', 'Decorative Lighting', 'Seasonal Decor', 'Plant Pots', 'Ornaments', 'Room Fragrance', 'Decorative Storage', 'Table Decor', 'Window Dressing', 'Personal Touch'
+    Headlines: 'Accent Pieces', 'Artful Walls', 'Reflect Style', 'Vase Variety', 'Candle Glow', 'Frame Moments', 'Light Decor', 'Seasonal Style', 'Pot Plants', 'Chic Ornaments', 'Scent Space', 'Store Decor', 'Table Style', 'Dress Windows', 'Personal Decor'
+    Descriptions: 'Accents for rooms', 'Art for walls', 'Stylish mirrors', 'Vases for blooms', 'Candles for ambiance', 'Frames for memories'
+
+9. IKEA for Business:
+    URL: https://www.ikea.com/gb/en/ikea-business/
+    Summary: Business solutions for various industries.
+    Keywords: 'Business Furniture', 'Office Design', 'Commercial Interiors', 'Business Solutions', 'Workspace Planning', 'Retail Furniture', 'Hospitality Furnishings', 'Bulk Orders', 'Business Discounts', 'Corporate Sales', 'Custom Solutions', 'Professional Services', 'Business Account', 'Industry Solutions', 'B2B Services'
+    Headlines: 'Biz Furniture', 'Office Styles', 'Commercial Decor', 'Biz Solutions', 'Workspace Plans', 'Retail Sets', 'Hospitality Picks', 'Bulk Buys', 'Biz Discounts', 'Corporate Deals', 'Custom Biz', 'Pro Services', 'Biz Accounts', 'Industry Fits', 'B2B Expertise'
+    Descriptions: 'Furniture for business', 'Design your office', 'Interiors for commerce', 'Solutions for business', 'Plan your workspace', 'Furnishings for guests'
+
+10. Our Services:
+    URL: https://www.ikea.com/gb/en/customer-service/services/
+    Summary: Additional services to support IKEA customers.
+    Keywords: 'Delivery Services', 'Assembly Services', 'Planning Tools', 'Installation Services', 'Finance Options', 'Product Guarantees', 'Return Policy', 'Customer Support', 'Shopping Services', 'Order Tracking', 'Product Recalls', 'Gift Cards', 'FAQs', 'Store Services', 'Online Shopping'
+    Headlines: 'Delivery Help', 'Assembly Aid', 'Plan with Ease', 'Install Services', 'Finance Buys', 'Guaranteed Quality', 'Easy Returns', 'Support Line', 'Shop with Help', 'Track Orders', 'Safety Recalls', 'Gift Choices', 'Questions Answered', 'In-Store Help', 'Shop Online'
+    Descriptions: 'Get it delivered', ""We'll assemble it"", 'Tools for planning', 'Professional installs', 'Finance your purchase', 'Guarantees for peace'
+"
+26,2024-01-01 00:00:05,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,,nan,,
+27,2024-01-01 00:00:05,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,651.8599381446838,DONE,True,"Here is a summary of the information you requested:
+
+Hamleys offers a wide range of toys and games for children, including options for various age groups and interests. Products include soft toys, LEGO and construction sets, action figures, dolls, games, puzzles, and more.
+
+Relevant Pages:
+
+1. Soft Toys:
+    URL: https://www.hamleys.com/shop-toys/soft-toys
+    Summary: A selection of soft toys including branded Hamleys toys, animals, teddy bears, and plush figures.
+    Keywords: 'Soft Toys', 'Stuffed Animals', 'Teddy Bears', 'Plush Toys'
+    Headlines: 'Cuddle Up with Toys', 'Soft Toy Adventures', 'Plush Pals Await', 'Teddy Bear Hugs', 'Snuggle Time', 'Furry Friends', 'Plush Playtime', 'Soft & Snuggly', 'Huggable Bears', 'Animal Buddies', 'Teddy Companions', 'Soft Toy Joy', 'Plush Comfort', 'Cute & Cuddly', 'Soft Toy Magic'
+    Descriptions: 'Find the perfect soft companion for your child.', 'Explore our range of adorable teddy bears.', 'Discover the joy of plush, huggable friends.', 'Create magical moments with soft toys.'
+
+2. Action Toys & Vehicles:
+    URL: https://www.hamleys.com/shop-toys/action-toys-vehicles
+    Summary: Action figures, toy vehicle sets, and remote control toys for interactive play.
+    Keywords: 'Action Figures', 'Toy Vehicles', 'RC Toys', 'Playsets'
+    Headlines: 'Action-Packed Fun', 'Drive Into Play', 'RC Thrills Await', 'Heroic Adventures', 'Vehicle Excitement', 'Action Figure Mania', 'Remote Control Zoom', 'Epic Battles', 'Speedy Racers', 'Toy Car Joy', 'Robotic Fun', 'Playset Stories', 'Adventure Awaits', 'Dynamic Playtime', 'Imaginative Action'
+    Descriptions: 'Unleash creativity with action figures.', 'Zoom into fun with toy vehicles.', 'Take control with remote control toys.', 'Engage in epic play with dynamic sets.'
+
+3. Games & Puzzles:
+    URL: https://www.hamleys.com/shop-toys/games-puzzles
+    Summary: Board games, puzzles, and other games for family fun and educational play.
+    Keywords: 'Board Games', 'Puzzles', 'Educational Games', 'Family Fun'
+    Headlines: 'Puzzle Solving', 'Game Night Picks', 'Brain Teasers', 'Family Board Games', 'Puzzle Play', 'Strategic Fun', 'Trivia Challenges', 'Classic Puzzles', 'Learning Games', 'Team Play', 'Mind Games', 'Board Game Fun', 'Puzzle Pieces', 'Game Mastery', 'Play & Learn'
+    Descriptions: 'Enjoy the challenge of our puzzles.', 'Gather round for exciting board games.', 'Learn and play with educational games.', 'Create memories with family game nights.'
+"
+28,2024-01-01 00:00:05,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,246.9387562274933,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including their own brands such as K Plus, Active Zone, Gelatissimo, Adria Mare, Ocean, and Bio Zone. They provide a variety of food products, outdoor equipment, and household items.
+
+Relevant Pages:
+
+1. K Plus:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke/k-plus
+    Summary: K Plus offers a range of grocery products including dairy, bakery, and pantry items.
+    Keywords: 'K Plus', 'Groceries', 'Dairy', 'Bakery', 'Pantry'
+    Headlines: 'Fresh Dairy Goods', 'Bakery Favorites', 'Pantry Essentials', 'Quality Meats', 'Snack Selection', 'Beverage Choices', 'Frozen Foods', 'Healthy Options', 'Confectionery', 'Canned Goods', 'Breakfast Foods', 'Cooking Staples', 'Pet Care', 'Household Needs', 'Baby Products'
+    Descriptions: 'Quality products for everyday', 'Wide range of pantry staples', 'Affordable prices, great value', 'Trusted brand for groceries'
+
+2. Active Zone:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke/active-zone
+    Summary: Active Zone specializes in sports and fitness-related products.
+    Keywords: 'Active Zone', 'Sports', 'Fitness', 'Equipment', 'Nutrition'
+    Headlines: 'Fitness Gear', 'Sports Apparel', 'Workout Essentials', 'Athletic Equipment', 'Health Supplements', 'Outdoor Activities', 'Gym Accessories', 'Running Essentials', 'Cycling Gear', 'Swimwear', 'Yoga Mats', 'Protein Products', 'Energy Boosters', 'Recovery Aids', 'Training Tech'
+    Descriptions: 'Gear up for fitness goals', 'Quality sports equipment', 'Nutrition for athletes', 'Active lifestyle essentials'
+
+3. Gelatissimo:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke/gelatissimo
+    Summary: Gelatissimo offers a variety of frozen desserts including ice cream and sorbets.
+    Keywords: 'Gelatissimo', 'Ice Cream', 'Sorbets', 'Frozen Desserts', 'Sweet Treats'
+    Headlines: 'Creamy Ice Cream', 'Refreshing Sorbets', 'Sweet Indulgences', 'Frozen Delights', 'Dessert Time', 'Flavor Variety', 'Dairy-Free Options', 'Fruit Flavors', 'Chocolate Treats', 'Party Desserts', 'Family Packs', 'Single Serves', 'Gourmet Selection', 'Seasonal Specials', 'After-Dinner Sweets'
+    Descriptions: 'Indulge in frozen treats', 'Delicious variety of flavors', 'Perfect for any occasion', 'Sweet treats for everyone'
+
+4. Adria Mare:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke/adria-mare
+    Summary: Adria Mare provides a selection of seafood products, from fresh fish to canned seafood.
+    Keywords: 'Adria Mare', 'Seafood', 'Fresh Fish', 'Canned Seafood', 'Marine Delicacies'
+    Headlines: 'Fresh Seafood', 'Canned Fish', 'Sea Delights', 'Marine Flavors', 'Fish Fillets', 'Shellfish Variety', 'Seafood Meals', 'Quick Seafood', 'Gourmet Fish', 'Sustainable Seafood', 'Seafood Platters', 'Smoked Delicacies', 'Seafood Spreads', 'Cooking Seafood', ""Ocean's Bounty""
+    Descriptions: 'Fresh from the sea', 'Sustainable and delicious', 'Seafood for every taste', 'Convenient canned options'
+
+5. Ocean:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke/ocean
+    Summary: Ocean offers a range of fish and seafood products, emphasizing quality and freshness.
+    Keywords: 'Ocean', 'Fish', 'Seafood', 'Fresh Produce', 'Quality Seafood'
+    Headlines: 'Ocean Freshness', 'Quality Seafood', 'Fish Favorites', 'Seafood Variety', 'Fresh Catch', 'Tasty Shrimp', 'Seafood Dinners', 'Easy Seafood', 'Fish Fillets', 'Seafood Snacks', 'Grilled Seafood', 'Seafood Delights', 'Marine Cuisine', 'Seafood Staples', 'Fish & Chips'
+    Descriptions: 'Enjoy ocean freshness', 'Quality fish and seafood', 'Delicious marine flavors', 'Convenient seafood meals'
+
+6. Bio Zone:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke/bio-zone
+    Summary: Bio Zone focuses on organic and health-conscious food products for a healthier lifestyle.
+    Keywords: 'Bio Zone', 'Organic', 'Healthy', 'Natural', 'Eco-Friendly'
+    Headlines: 'Organic Choices', 'Healthy Eating', 'Natural Products', 'Eco-Friendly Food', 'Organic Snacks', 'Health Foods', 'Natural Ingredients', 'Organic Meals', 'Eco Snacks', 'Healthy Options', 'Organic Grains', 'Natural Sweets', 'Eco Produce', 'Health Boosters', 'Organic Dairy'
+    Descriptions: 'Organic food selection', 'Natural and healthy eats', 'Eco-friendly product range', 'Healthy lifestyle choices'
+"
+29,2024-01-01 00:00:05,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,260.59484004974365,DONE,True,"Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services that interact with event streams. It provides a unified API to work with multiple message brokers like Kafka, RabbitMQ, NATS, and Redis. Key features include Pydantic validation, automatic AsyncAPI documentation, full-typed editor support, a powerful dependency injection system, support for in-memory tests, and compatibility with any HTTP framework, especially FastAPI. FastStream is also optimized for automatic code generation using models like GPT and Llama.
+
+Relevant Pages:
+
+1. Features - FastStream:
+    URL: https://faststream.airt.ai/latest/faststream/
+    Summary: Overview of FastStream features including unified API, validation, documentation, and compatibility.
+    Keywords: 'FastStream', 'Asynchronous', 'Event Streams', 'Unified API', 'Pydantic Validation', 'AsyncAPI', 'Dependency Injection', 'In-Memory Tests', 'HTTP Frameworks', 'Code Generation', 'GPT', 'Llama'
+    Headlines: 'Unified Messaging API', 'Pydantic Validation', 'Auto AsyncAPI Docs', 'Full-Typed Support', 'Dependency Injection', 'In-Memory Testing', 'HTTP Frameworks', 'Code Generation', 'GPT & Llama Opt', 'Event Stream Integ', 'Async Web Services', 'Flexible Messaging', 'Modern Microservices', 'FastAPI Compatible', 'Streamline Workflow'
+    Descriptions: 'Unified API for brokers', 'Validate messages easily', 'Automatic documentation', 'Catch errors early on'
+
+2. Getting Started - FastStream:
+    URL: https://faststream.airt.ai/latest/getting-started/
+    Summary: Instructions for installing FastStream and setting up a basic application.
+    Keywords: 'Getting Started', 'FastStream Installation', 'Basic Application', 'Event Stream', 'Message Broker', 'Kafka', 'RabbitMQ', 'NATS', 'Redis', 'Docker', 'Python Package', 'pip install'
+    Headlines: 'Install FastStream', 'Setup Basic App', 'Event Stream Setup', 'Broker Configuration', 'Kafka Integration', 'RabbitMQ Support', 'NATS Messaging', 'Redis Broker', 'Docker Containers', 'Python Package', 'pip Installation', 'Quick Start Guide', 'Messaging Basics', 'Streamline Dev', 'FastStream Tutorial'
+    Descriptions: 'Easy FastStream setup', 'Configure message brokers', 'Start with Docker', 'Quick pip installation'
+
+3. Kafka Routing - FastStream:
+    URL: https://faststream.airt.ai/latest/kafka/kafka/
+    Summary: Details on Kafka integration with FastStream, including routing and library support.
+    Keywords: 'Kafka', 'FastStream', 'Message Routing', 'Library Support', 'AIOKafka', 'Confluent', 'Publish-Subscribe', 'Topics', 'Partitions', 'Data Streaming', 'Real-Time', 'Fault-Tolerant', 'High-Throughput'
+    Headlines: 'Kafka Integration', 'Message Routing', 'AIOKafka Support', 'Confluent Library', 'Publish-Subscribe', 'Kafka Topics', 'Data Streaming', 'Real-Time Kafka', 'Fault-Tolerant', 'High-Throughput', 'Kafka Concepts', 'Stream Platform', 'Kafka in FastStream', 'Flexible Messaging', 'Kafka Overview'
+    Descriptions: 'Integrate Kafka easily', 'Support for AIOKafka', 'Confluent library usage', 'Real-time data streams'
+
+4. Rabbit Routing - FastStream:
+    URL: https://faststream.airt.ai/latest/rabbit/
+    Summary: Information on RabbitMQ support in FastStream, advantages, and basic concepts.
+    Keywords: 'RabbitMQ', 'FastStream', 'Message Routing', 'aio-pika', 'Message Prioritization', 'Performance', 'Routing Logic', 'Message Processing', 'Queue Management', 'Exchange', 'Binding', 'RabbitMQ Performance'
+    Headlines: 'RabbitMQ Support', 'Flexible Routing', 'aio-pika Integration', 'Message Prioritization', 'Queue Management', 'Exchange Binding', 'RabbitMQ Advantages', 'Complex Routing', 'Performance Insights', 'Message Tracking', 'RabbitMQ Entities', 'Routing Rules', 'RabbitMQ Basics', 'RabbitMQ Overview', 'FastStream RabbitMQ'
+    Descriptions: 'Support for RabbitMQ', 'Complex routing logic', 'Manage queues easily', 'Optimize performance'
+
+5. NATS - FastStream:
+    URL: https://faststream.airt.ai/latest/nats/
+    Summary: Details on NATS support in FastStream, including advantages, disadvantages, and JetStream.
+    Keywords: 'NATS', 'FastStream', 'nats-py', 'High-Performance', 'Message Broker', 'Golang', 'RPC over MQ', 'JetStream', 'Message Delivery', 'Key-Value Storage', 'Object Storage', 'Subscription Changes', 'Scalability'
+    Headlines: 'NATS Integration', 'High-Performance', 'nats-py Support', 'RPC over MQ', 'JetStream Features', 'Message Guarantees', 'Key-Value Storage', 'Object Storage', 'NATS Advantages', 'Simple Routing', 'NATS Disadvantages', 'NATS Overview', 'FastStream NATS', 'Scalable Messaging', 'NATS JetStream'
+    Descriptions: 'Easy NATS integration', 'High-performance broker', 'JetStream persistence', 'Scalable message broker'
+
+6. Redis Broker - FastStream:
+    URL: https://faststream.airt.ai/latest/redis/
+    Summary: Information on Redis integration with FastStream, including Pub/Sub, List, and Streams.
+    Keywords: 'Redis', 'FastStream', 'Message Broker', 'Pub/Sub', 'List', 'Streams', 'In-Memory Store', 'Data Structures', 'Message Handling', 'Consumer Groups', 'Scalability', 'Persistence', 'Ordered Processing'
+    Headlines: 'Redis Integration', 'Pub/Sub Mechanism', 'List Data Structure', 'Redis Streams', 'In-Memory Broker', 'Data Structures', 'Message Handling', 'Consumer Groups', 'Redis Scalability', 'Redis Persistence', 'Ordered Processing', 'Redis Overview', 'FastStream Redis', 'Flexible Messaging', 'Redis Concepts'
+    Descriptions: 'Integrate Redis easily', 'Pub/Sub messaging', 'List for FIFO queues', 'Advanced Redis Streams'
+
+7. Reference - Code API - FastStream:
+    URL: https://faststream.airt.ai/latest/api/
+    Summary: Code API reference for FastStream, including classes, functions, and application parts.
+    Keywords: 'Code API', 'FastStream', 'Reference', 'Classes', 'Functions', 'Parameters', 'Attributes', 'FastAPI', 'Application Development', 'Source Code', 'Python Environment', 'Development Experience'
+    Headlines: 'Code API Reference', 'FastStream Classes', 'Function Details', 'Parameter Info', 'Attribute Guide', 'FastAPI Support', 'App Development', 'Source Code Use', 'Python Environment', 'Dev Experience', 'API Documentation', 'FastStream Parts', 'Learn FastStream', 'API Overview', 'Code Reference'
+    Descriptions: 'Complete API reference', 'Details on functions', 'Guide to attributes', 'Enhance dev experience'
+
+8. Development - FastStream:
+    URL: https://faststream.airt.ai/latest/getting-started/contributing/CONTRIBUTING/
+    Summary: Guidelines for setting up a development environment and contributing to FastStream.
+    Keywords: 'Development', 'FastStream', 'Contributing', 'Environment Setup', 'Virtual Environment', 'Dependencies', 'Running Tests', 'Pytest', 'Local FastStream', 'Source Code', 'Python File', 'CLI Commands'
+    Headlines: 'Dev Environment', 'Contribute to FastStream', 'Virtual Environment', 'Install Dependencies', 'Run Tests', 'Use Pytest', 'Local FastStream', 'Source Code Testing', 'Python CLI', 'Contribution Guide', 'Setup Guidelines', 'Testing Commands', 'Dev Setup', 'FastStream Testing', 'Contribution Steps'
+    Descriptions: 'Set up dev environment', 'Contribute effectively', 'Run tests with Pytest', 'Use local FastStream'
+
+9. Release Notes - FastStream:
+    URL: https://faststream.airt.ai/latest/release/
+    Summary: Release notes for FastStream, detailing changes, improvements, and contributions.
+    Keywords: 'Release Notes', 'FastStream', 'Updates', 'Improvements', 'Contributions', 'Version History', 'Change Log', 'New Features', 'Bug Fixes', 'Performance Enhancements', 'Documentation Updates', 'Contributor Acknowledgments', 'Software Releases'
+    Headlines: 'FastStream Releases', 'Update Details', 'Improvement Notes', 'Contributor Credits', 'Version History', 'Change Log', 'New Features', 'Bug Fixes', 'Performance Boosts', 'Docs Updated', 'Acknowledgments', 'Release Summary', 'Software Updates', 'Feature Additions', 'Release Overview'
+    Descriptions: 'Latest release notes', 'Details on updates', 'Acknowledgments to contributors', 'Overview of changes'
+"
+30,2024-01-01 00:00:06,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,310.7109990119934,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of home furnishing products including furniture, kitchens, smart home devices, outdoor living items, decorations, and beds & mattresses. They provide solutions for both home and business needs, along with a variety of services to support their customers.
+
+Relevant Pages:
+
+1. Furniture:
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: A variety of furniture for every room in the home.
+    Keywords: 'Sofas', 'Chairs', 'Tables', 'Storage', 'Office Furniture', 'Bedroom Sets', 'Living Room', 'Dining', ""Children's Furniture"", 'Bookcases', 'Wardrobes', 'TV Stands', 'Desks', 'Drawers', 'Shelves'
+    Headlines: 'Cozy Sofas', 'Ergonomic Chairs', 'Stylish Tables', 'Ample Storage', 'Work Desks', 'Comfy Beds', 'Chic Dressers', 'Modern TV Units', ""Kids' Room"", 'Dining Sets', 'Book Lovers', 'Wardrobe Wonders', 'Study Desks', 'Drawer Deals', 'Shelving Solutions'
+    Descriptions: 'Find your perfect sofa', 'Chairs for any style', 'Tables for all spaces', 'Solve your storage needs', 'Desks for productivity'
+
+2. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: Complete kitchen solutions and products.
+    Keywords: 'Kitchen Units', 'Appliances', 'Cabinets', 'Countertops', 'Kitchen Accessories', 'Sinks', 'Taps', 'Kitchen Storage', 'Kitchen Lighting', 'Kitchen Tables', 'Kitchen Chairs', 'Kitchenware', 'Cookware', 'Kitchen Textiles', 'Kitchen Organizers'
+    Headlines: 'Modern Kitchens', 'Appliance Range', 'Cabinet Choices', 'Durable Counters', 'Accessories Galore', 'Stylish Sinks', 'Designer Taps', 'Storage Options', 'Bright Lights', 'Eat-In Kitchens', 'Comfy Seating', 'Cooking Essentials', 'Bake & Cook', 'Textile Touches', 'Organize It All'
+    Descriptions: 'Explore kitchen designs', 'Appliances for chefs', 'Cabinets for order', 'Countertops to love', 'Kitchen extras'
+
+3. Smart Home:
+    URL: https://www.ikea.com/gb/en/cat/smart-home-hs001/
+    Summary: Smart home devices for a connected life.
+    Keywords: 'Smart Lighting', 'Smart Speakers', 'Home Automation', 'Smart Blinds', 'Smart Plugs', 'Smart Home Kits', 'Remote Controls', 'Smart Sensors', 'Smart Alarms', 'Smart Locks', 'Smart Thermostats', 'Smart Cameras', 'Voice Assistants', 'Smart Apps', 'Wireless Charging'
+    Headlines: 'Lighting Solutions', 'Sound & Vision', 'Home Automated', 'Smart Blinds', 'Plug & Play', 'Home Kits', 'Remote Access', 'Sense It All', 'Safe & Sound', 'Lock & Key', 'Climate Control', 'Watchful Eyes', 'Voice Commands', 'App Control', 'Charge Up'
+    Descriptions: 'Smart lights for home', 'Speakers for sound', 'Automate your space', 'Control your blinds', 'Easy smart plugs'
+
+4. Offers:
+    URL: https://www.ikea.com/gb/en/offers/?itm_content=Nav&itm_element=Top&itm_campaign=offers
+    Summary: Special offers and discounts on IKEA products.
+    Keywords: 'Discounts', 'Deals', 'Sales', 'Special Offers', 'Clearance', 'Limited Time Offers', 'Price Cuts', 'Bargains', 'Promotions', 'Savings', 'Value Packs', 'Bundle Deals', 'Markdowns', 'Economical Shopping', 'Budget-Friendly'
+    Headlines: 'Hot Discounts', 'Deal Alerts', 'Sale Season', 'Special Offers', 'Clearance Finds', 'Time-Limited', 'Price Drops', 'Super Bargains', 'Promo Picks', 'Big Savings', 'Value Packs', 'Bundle Up', 'Markdowns', 'Shop & Save', 'Budget Buys'
+    Descriptions: 'Save on IKEA items', 'Deals to grab', 'Sales happening now', 'Exclusive offers', 'Clearance deals'
+
+5. New:
+    URL: https://www.ikea.com/gb/en/new/?itm_content=Nav&itm_element=Top&itm_campaign=news
+    Summary: Latest products and collections at IKEA.
+    Keywords: 'New Arrivals', 'Latest Collections', 'New Products', 'Just Launched', 'New In Store', 'Latest Designs', 'New Season', 'Fresh Finds', 'New Additions', 'Just In', 'Brand New', 'New Releases', 'Latest Offers', 'New Trends', 'New Selection'
+    Headlines: 'Just Arrived', 'Latest & Greatest', 'Newly Launched', 'Fresh on Shelves', 'New In', 'Latest Styles', ""Season's New"", 'Fresh Finds', 'New Additions', 'Just In', 'Brand New', 'New Releases', 'Latest Deals', 'Trending Now', 'New Picks'
+    Descriptions: 'Check out new items', 'Latest IKEA collections', 'New products available', ""Discover what's new"", 'Fresh IKEA finds'
+
+6. IKEA for Business:
+    URL: https://www.ikea.com/gb/en/ikea-business/
+    Summary: Furnishing solutions for businesses of all sizes.
+    Keywords: 'Business Interiors', 'Office Furniture', 'Retail Solutions', 'Hospitality Furniture', 'Business Services', 'Bulk Orders', 'Commercial Spaces', 'Workplace Design', 'Business Accounts', 'Corporate Purchases', 'Custom Solutions', 'Business Discounts', 'Professional Planning', 'Business Delivery', 'Assembly Services'
+    Headlines: 'Biz Interiors', 'Office Styles', 'Retail Ready', 'Hospitality Range', 'Biz Services', 'Bulk Buys', 'Commercial Fit', 'Workplace Decor', 'Biz Accounts', 'Corp Purchases', 'Custom Biz', 'Biz Discounts', 'Pro Planning', 'Biz Delivery', 'Assembly Help'
+    Descriptions: 'Business interior ideas', 'Office furniture range', 'Retail furnishing', 'Furniture for hospitality', 'Services for businesses'
+
+7. Our Services:
+    URL: https://www.ikea.com/gb/en/customer-service/services/?itm_content=Menu&itm_element=Burger&itm_campaign=Nav_Services-all
+    Summary: A range of services to enhance the IKEA shopping experience.
+    Keywords: 'Delivery Services', 'Assembly Services', 'Planning Services', 'Installation Services', 'Finance Options', 'Return Policy', 'Product Guarantees', 'Click & Collect', 'Recycling Services', 'Home Consultation', 'Order Tracking', 'Customer Support', 'Spare Parts', 'Gift Cards', 'Shopping Tools'
+    Headlines: 'Delivery Options', 'Assembly Help', 'Planning Aid', 'Install Services', 'Finance Choices', 'Easy Returns', 'Guarantees', 'Click & Collect', 'Recycle with Us', 'Home Consults', 'Track Orders', 'Support Desk', 'Spare Parts', 'Gift Cards', 'Shop Smarter'
+    Descriptions: 'Delivery made easy', 'Assembly services', 'Planning your space', 'Professional installation', 'Finance your purchases'
+
+8. Outdoor Living:
+    URL: https://www.ikea.com/gb/en/cat/outdoor-living-od001/
+    Summary: Outdoor furniture and accessories for the perfect garden space.
+    Keywords: 'Patio Furniture', 'Garden Accessories', 'Outdoor Dining', 'Outdoor Seating', 'Garden Decor', 'Outdoor Lighting', 'Planters', 'Outdoor Textiles', 'BBQ Grills', 'Outdoor Storage', 'Sun Loungers', 'Outdoor Rugs', 'Garden Tools', 'Outdoor Play', 'Balcony Furniture'
+    Headlines: 'Patio Picks', 'Garden Accents', 'Al Fresco Dining', 'Outdoor Seats', 'Garden Style', 'Bright Outdoors', 'Plant Pots', 'Outdoor Textiles', 'BBQ Time', 'Storage Solutions', 'Loungers', 'Outdoor Rugs', 'Garden Gear', 'Play Outside', 'Balcony Sets'
+    Descriptions: 'Patio furniture finds', 'Garden accessories', 'Dine outdoors', 'Seating for gardens', 'Decorate your garden'
+
+9. Decoration:
+    URL: https://www.ikea.com/gb/en/cat/decoration-de001/
+    Summary: Decorative items to add personality to your home.
+    Keywords: 'Home Decor', 'Wall Art', 'Candles & Holders', 'Vases & Bowls', 'Decorative Accessories', 'Picture Frames', 'Mirrors', 'Clocks', 'Room Fragrance', 'Plants & Flowers', 'Seasonal Decor', 'Decorative Lighting', 'Cushions & Throws', 'Rugs & Mats', 'Decorative Storage'
+    Headlines: 'Decor Delights', 'Artistic Walls', 'Candle Glow', 'Vases & Bowls', 'Accent Pieces', 'Frame It Up', 'Reflect Style', 'Tick Tock', 'Scented Spaces', 'Green Touch', 'Seasonal Style', 'Light Decor', 'Cozy Accents', 'Floor Fashion', 'Stylish Storage'
+    Descriptions: 'Home decor variety', 'Wall art options', 'Candles for ambiance', 'Vases for decor', 'Decorative touches'
+
+10. Beds & Mattresses:
+    URL: https://www.ikea.com/gb/en/cat/beds-mattresses-bm001/
+    Summary: A wide selection of beds and mattresses for a good night's sleep.
+    Keywords: 'Bed Frames', 'Mattresses', 'Pillows', 'Duvets', 'Bed Linen', ""Children's Beds"", 'Guest Beds', 'Day Beds', 'Bedroom Furniture', 'Mattress Toppers', 'Mattress Protectors', 'Sleeping Accessories', 'Bedside Tables', 'Headboards', 'Bed Storage'
+    Headlines: 'Dreamy Beds', 'Mattress Magic', 'Pillow Talk', 'Duvet Days', 'Linen Luxe', ""Kids' Sleep"", 'Guest Sleep', 'Day Bed Deals', 'Bedroom Sets', 'Topper Comfort', 'Protect & Sleep', 'Sleep Well', 'Bedside Style', 'Headboard Hues', 'Underbed Space'
+    Descriptions: 'Beds for all', 'Mattresses for rest', 'Pillows for comfort', 'Duvets for warmth', 'Stylish bed linen'
+"
+31,2024-01-01 00:00:06,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,197.8222668170929,DONE,True,"Here is a summary of the information you requested:
+
+Disney Store EU offers a wide range of Disney, Marvel, Pixar, and Star Wars merchandise including toys, fancy dress, soft toys, action figures, collectibles, and home accessories. The store provides free delivery over 60€ and free returns, with hundreds of Click & Collect locations.
+
+Relevant Pages:
+
+1. New In Products:
+    URL: https://www.disneystore.eu/new
+    Summary: Latest Disney, Marvel, Pixar, and Star Wars products.
+    Keywords: 'New Arrivals', 'Latest Collection', 'Disney Merchandise', 'Marvel Gear', 'Pixar Toys', 'Star Wars Products', 'New Disney', 'Fresh Finds', 'Just In', 'New Releases', 'Latest Disney', 'New Marvel', 'Pixar New', 'Star Wars New', 'Disney Store New'
+    Headlines: 'New Disney Magic', 'Fresh Marvel Finds', ""Pixar's Latest"", 'New Star Wars', 'Just Arrived!', 'Latest & Greatest', 'New Collection!', 'Shop Disney New', ""Marvel's Newest"", 'Pixar Just In', 'Star Wars Gear', 'New Arrivals!', 'Disney Store Fresh', 'Latest Merch', 'Newest Toys'
+    Descriptions: 'Discover the latest Disney toys and apparel.', 'Explore new Marvel merchandise.', 'Find the newest Pixar toys.', 'Get the latest Star Wars gear.'
+
+2. Disney Offers:
+    URL: https://www.disneystore.eu/offers
+    Summary: Discounts and promotions on Disney products.
+    Keywords: 'Disney Deals', 'Special Offers', 'Promotions', 'Discounts', 'Sale', 'Disney Savings', 'Bargain', 'Disney Discounts', 'Markdowns', 'Clearance', 'Disney Sale', 'Offer Zone', 'Promo Deals', 'Save on Disney', 'Disney Bargains'
+    Headlines: 'Disney Deals', 'Special Offers', 'Promo Savings', 'Disney Discounts', 'Sale Now On', 'Save Big!', 'Disney Markdowns', 'Clearance Finds', 'Bargain Buys', 'Offer Zone', 'Disney on Sale', 'Shop Savings', 'Promo Deals', 'Disney Cuts', 'Bargain Disney'
+    Descriptions: 'Save on Disney merchandise with offers.', 'Shop Disney deals and discounts.', 'Enjoy promotions on Disney favorites.', 'Find Disney bargains and savings.'
+
+3. Toys & Fancy Dress:
+    URL: https://www.disneystore.eu/toys-and-fancy-dress
+    Summary: Disney toys, action figures, costumes, and more.
+    Keywords: 'Disney Toys', 'Fancy Dress', 'Action Figures', 'Disney Costumes', 'Soft Toys', 'Play Sets', 'Dolls', 'Disney Dress-Up', 'Toy Store', 'Costume Shop', 'Disney Figures', 'Plush Toys', 'Disney Playtime', 'Dress-Up Fun', 'Toy Collection'
+    Headlines: 'Disney Playtime', 'Costume Fun', 'Action Figures', 'Dress-Up Magic', 'Soft Toy Cuddles', 'Play Sets Galore', 'Disney Dolls', 'Fancy Dress-Up', 'Toy Wonderland', 'Costume Corner', 'Figure Fantasy', 'Plush Pals', 'Disney Dressing', 'Playtime Adventures', 'Costume Party'
+    Descriptions: 'Explore Disney toys for all ages.', 'Find the perfect Disney costume.', 'Shop action figures and more.', 'Discover soft toys and plush.'
+"
+32,2024-01-01 00:00:06,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,,nan,,
+33,2024-01-01 00:00:06,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,278.1663348674774,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including fresh produce, dairy, meat, fish, and items for outdoor activities. They feature a variety of private label brands and emphasize local Croatian products. Customers can benefit from the MultiPlusCard loyalty program.
+
+Relevant Pages:
+
+1. Naše robne marke:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: Konzum's private label brands offer a range of quality products at competitive prices.
+    Keywords: 'Private Label', 'K Plus', 'Active Zone', 'Gelatissimo', 'Adria Mare'
+    Headlines: 'Quality Own Brands', 'Exclusive K Plus', 'Active Lifestyle', 'Gelato Delights', 'Seafood Specials', 'Bio Zone Organics', 'Garden Essentials', 'Rise & Smile', 'Minute Meals', 'Hrusty Snacks', 'Finesse Care', 'Sunny Selection', 'Sweet Chef Bakes', 'Spice Chef Flavors', 'Lumpi for Kids'
+    Descriptions: 'Discover Konzum brands.', 'From pantry to plate.', 'Organic and fresh.', 'Delicious, quick meals.'
+
+2. Voće i povrće:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: A variety of fresh fruits and vegetables, including organic and locally sourced options.
+    Keywords: 'Fresh Produce', 'Fruits', 'Vegetables', 'Organic', 'Local'
+    Headlines: 'Fresh Fruits Daily', 'Veggie Freshness', 'Organic Choices', 'Local Produce', 'Seasonal Picks', 'Berry Selection', 'Exotic Fruits', 'Green Vegetables', 'Root Veggies', 'Salad Staples', 'Herb Garden', 'Citrus Variety', 'Stone Fruits', 'Tropical Flavors', 'Healthy Snacks'
+    Descriptions: ""Nature's best produce."", 'Crisp veggies & fruits.', 'Organic for health.', 'Local farm freshness.'
+
+3. Mliječni proizvodi i jaja:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: A wide selection of dairy products and eggs, including milk, cheese, yogurts, and more.
+    Keywords: 'Dairy', 'Milk', 'Cheese', 'Eggs', 'Yogurt'
+    Headlines: 'Dairy Delights', 'Cheese Varieties', 'Fresh Milk Daily', 'Egg-cellent Choice', 'Creamy Yogurts', 'Butter & Margarine', 'Dairy Desserts', 'Healthy Options', 'Cottage Cheese', 'Sour Cream', 'Dairy Spreads', 'Protein Packed', 'Calcium Rich', 'Lactose-Free', 'Dairy Snacks'
+    Descriptions: 'Creamy dairy goodness.', 'Cheese for every taste.', 'Eggs for nutrition.', 'Yogurts for health.'
+
+4. Meso i riba:
+    URL: https://www.konzum.hr/web/t/kategorije/meso-i-riba
+    Summary: Offers a variety of meat and fish options, from fresh cuts to ready-to-cook meals.
+    Keywords: 'Meat', 'Fish', 'Seafood', 'Poultry', 'Beef'
+    Headlines: 'Meat Selection', 'Fresh Fish', 'Seafood Choices', 'Poultry Products', 'Quality Beef', 'Pork Cuts', 'Ready Meals', 'Grilling Favorites', 'Fish Fillets', 'Shellfish Range', 'Smoked Delicacies', 'Marinated Meats', 'Sausages & Bacon', 'Organic Meat', ""Butcher's Best""
+    Descriptions: 'Meat for every meal.', 'Seafood freshness.', 'Poultry for health.', 'Grill-ready cuts.'
+
+5. Na otvorenom:
+    URL: https://www.konzum.hr/web/t/kategorije/na-otvorenom
+    Summary: Outdoor products including garden furniture, tools, and accessories for grilling and outdoor activities.
+    Keywords: 'Outdoor', 'Garden', 'Grilling', 'Furniture', 'Tools'
+    Headlines: 'Garden Furniture', 'BBQ Essentials', 'Outdoor Fun', 'Gardening Tools', 'Pool Accessories', 'Patio Sets', 'Garden Decor', 'Grill & Chill', 'Outdoor Games', 'Lawn Care', 'Planting Supplies', 'Outdoor Lighting', 'Picnic Gear', 'Camping Must-Haves', 'Beach Time'
+    Descriptions: 'Enjoy the outdoors.', 'Garden & grill.', 'Outdoor living.', 'Fun under the sun.'
+
+6. Katalozi:
+    URL: https://www.konzum.hr/katalozi
+    Summary: Current catalogs showcasing the latest offers and discounts available at Konzum.
+    Keywords: 'Catalogs', 'Offers', 'Discounts', 'Deals', 'Savings'
+    Headlines: 'Latest Offers', 'Super Savings', 'Discount Deals', 'Weekly Specials', 'Catalog Savings', 'Bargain Finds', 'Price Cuts', 'Special Buys', 'Deal Alerts', 'Budget Shopping', 'Promo Catalogs', 'Seasonal Sales', 'Clearance Items', 'Value Packs', 'Member Exclusives'
+    Descriptions: 'Browse our deals.', 'Save big every week.', 'Deals to love.', 'Shop and save.'
+
+7. MultiPlusCard:
+    URL: https://www.konzum.hr/multipluscard
+    Summary: Konzum's loyalty program offering points, discounts, and special offers to members.
+    Keywords: 'Loyalty Program', 'Rewards', 'Points', 'Discounts', 'Membership'
+    Headlines: 'Earn Points', 'Member Discounts', 'Loyalty Rewards', 'Exclusive Offers', 'Bonus Points', 'Card Benefits', 'Point Redemption', 'Special Deals', 'VIP Shopping', 'Loyalty Perks', 'Membership Club', 'Savings Card', 'Reward Yourself', 'Shop & Earn', 'Join & Save'
+    Descriptions: 'Join our loyalty club.', 'Rewards with every buy.', 'Exclusive member perks.', 'Save as you shop.'
+
+8. Najbolje iz Hrvatske:
+    URL: https://www.konzum.hr/najbolje-iz-hrvatske
+    Summary: A selection of the best products from Croatia, highlighting local producers and specialties.
+    Keywords: 'Local Products', 'Croatian', 'Specialties', 'Producers', 'Authentic'
+    Headlines: 'Croatian Specials', 'Local Delicacies', 'Authentic Taste', 'Homegrown Goods', 'Croatian Pride', 'Local Favorites', 'Traditional Foods', 'Native Products', 'Culinary Heritage', 'Crafted in Croatia', 'Regional Flavors', 'Local Crafts', 'Artisan Selection', 'Croatian Quality', 'Hometown Specials'
+    Descriptions: 'Taste of Croatia.', 'Local quality goods.', 'Authentic Croatian.', 'Discover local gems.'
+"
+34,2024-01-01 00:00:06,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,178.57630491256714,DONE,True,"Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services that interact with event streams. It provides a unified API across multiple message brokers like Kafka, RabbitMQ, NATS, and Redis, and features Pydantic validation, automatic AsyncAPI documentation, and a powerful dependency injection system. FastStream is compatible with any HTTP framework, especially FastAPI, and is optimized for automatic code generation.
+
+Relevant Pages:
+
+1. Features:
+    URL: https://faststream.airt.ai/latest/faststream/
+    Summary: Overview of FastStream features including multiple broker support, Pydantic validation, automatic documentation, and more.
+    Keywords: 'FastStream', 'Asynchronous', 'Event Streams', 'API', 'Kafka', 'RabbitMQ', 'NATS', 'Redis', 'Pydantic', 'AsyncAPI', 'Dependency Injection', 'HTTP Frameworks', 'Code Generation', 'Open Source'
+    Headlines: 'Unified API Access', 'Pydantic Validation', 'Auto AsyncAPI Docs', 'Dependency Injection', 'HTTP Frameworks', 'Code Generation', 'Open Source', 'Event Stream Support', 'Multiple Brokers', 'Intuitive Design', 'Powerful Extensions', 'Testable Framework', 'Extensible System', 'FastAPI Compatible', 'Modern Microservices'
+    Descriptions: 'Connect with multiple brokers', 'Validate messages with Pydantic', 'Generate documentation automatically', 'Manage service dependencies easily'
+
+2. Getting Started:
+    URL: https://faststream.airt.ai/latest/getting-started/
+    Summary: Instructions on how to get started with FastStream, including installation and basic usage.
+    Keywords: 'Getting Started', 'FastStream', 'Installation', 'Basic Usage', 'Tutorial', 'Setup Guide', 'Quick Start', 'Event Stream', 'Message Broker', 'Asynchronous Services', 'Framework Setup', 'FastStream Guide', ""Beginner's Guide"", 'Developer Resources'
+    Headlines: 'Quick Installation', 'Start with FastStream', 'Easy Setup Guide', ""Beginner's Tutorial"", 'Framework Quick Start', 'Install FastStream', 'Basic Usage Tips', 'Developer Resources', 'Setup FastStream', 'Streamline Services', 'Asynchronous Setup', 'Message Broker Intro', 'Event Stream Guide', 'FastStream Basics', 'Service Initialization'
+    Descriptions: 'Install FastStream quickly', 'Beginner-friendly setup guide', 'Learn basic FastStream usage', 'Access developer resources'
+
+3. Reference - Code API:
+    URL: https://faststream.airt.ai/latest/api/
+    Summary: Comprehensive API reference for FastStream, detailing classes, functions, and usage.
+    Keywords: 'Code API', 'Reference', 'FastStream', 'API Documentation', 'Classes', 'Functions', 'Middleware', 'API Usage', 'Developer Tools', 'Framework API', 'API Guide', 'Technical Documentation', 'API Reference', 'FastStream Details', 'Programming Interface'
+    Headlines: 'API Documentation', 'Reference Guide', 'Middleware Details', 'FastStream Classes', 'Function Usage', 'Developer API Tools', 'Framework API Guide', 'Technical Docs', 'API Overview', 'Middleware Functions', 'Class References', 'API for Developers', 'FastStream API', 'Detailed API Info', 'Programming Interface'
+    Descriptions: 'Explore API documentation', 'Detailed reference guide', 'Understand middleware usage', 'Access technical API details'
+"
+35,2024-01-01 00:00:07,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,959.8240621089936,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of home furnishing products including furniture, kitchens, smart home devices, outdoor living items, decorations, lighting, and textiles. They provide solutions for every room and cater to both individual customers and businesses. Unique selling points include a variety of styles, affordable prices, and a focus on sustainability and design.
+
+Relevant Pages:
+
+1. Furniture:
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: A wide range of furniture for every room in the home.
+    Keywords: 'Sofas', 'Chairs', 'Tables', 'Beds', 'Storage', 'Office Furniture', ""Children's Furniture"", 'Outdoor Furniture', 'Living Room', 'Bedroom', 'Dining', 'Workspace'
+    Headlines: 'Cozy Sofas', 'Ergonomic Chairs', 'Stylish Tables', 'Comfy Beds', 'Ample Storage', 'Work Desks', ""Kids' Furnishings"", 'Patio Sets', 'Living Essentials', 'Sleep Well', 'Dine in Style', 'Office Upgrade', 'Outdoor Elegance', 'Modern Designs', 'Space Savers'
+    Descriptions: 'Find the perfect sofa', 'Chairs for any style', 'Tables for all needs', 'Beds for sweet dreams', 'Solve your storage woes', 'Desks for productivity', ""Fun and safe kids' furniture"", 'Enjoy the outdoors', 'Elevate your living room', 'Restful bedroom furniture', 'Dining furniture for every taste', 'Upgrade your workspace', 'Chic outdoor solutions', 'Contemporary furniture designs', 'Maximize your space'
+
+2. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: Complete kitchen solutions and products.
+    Keywords: 'Kitchen Cabinets', 'Kitchen Appliances', 'Countertops', 'Kitchen Storage', 'Kitchen Accessories', 'Kitchen Lighting', 'Modern Kitchens', 'Traditional Kitchens', 'Kitchen Design', 'Sustainable Kitchens'
+    Headlines: 'Cabinet Choices', 'Appliance Options', 'Countertop Styles', 'Storage Solutions', 'Kitchen Extras', 'Bright Lighting', 'Modern Kitchen', 'Classic Kitchens', 'Design Your Kitchen', 'Eco-Friendly Kitchens', 'Cooking Made Easy', 'Kitchen Upgrades', 'Space-Saving Kitchens', 'Kitchen Decor', 'Functional Kitchens'
+    Descriptions: 'Cabinets for every kitchen', 'Appliances for chefs', 'Durable countertops', 'Organize your kitchen', 'Accessories for functionality', 'Illuminate your kitchen', 'Sleek modern kitchens', 'Timeless kitchen designs', 'Customize your kitchen space', 'Sustainable kitchen choices', 'Simplify your cooking', 'Elevate your kitchen', 'Kitchens for small spaces', 'Decorate your kitchen', 'Kitchens that work for you'
+
+3. Smart Home:
+    URL: https://www.ikea.com/gb/en/cat/smart-home-hs001/
+    Summary: Smart home devices for a connected living experience.
+    Keywords: 'Smart Lighting', 'Smart Speakers', 'Home Automation', 'Smart Blinds', 'Smart Plugs', 'Smart Home Security', 'Wireless Charging', 'Smart Home Integration', 'Smart Home Control'
+    Headlines: 'Smart Lights', 'Wireless Audio', 'Home Automation', 'Automated Blinds', 'Plug Smartly', 'Secure Home', 'Charge Up', 'Home Integration', 'Control Smartly', 'Connected Home', 'Smart Living', 'Tech Home', 'Smart Accessories', 'Effortless Control', 'Tech Convenience'
+    Descriptions: 'Control lights easily', 'Speakers for smart homes', 'Automate your home', 'Smart blinds for ease', 'Smart plugs for devices', 'Secure your home smartly', 'Wireless charging solutions', 'Integrate your smart home', 'Easy smart home control', 'Enjoy a connected lifestyle', 'Live smarter with tech', 'Upgrade to a tech-savvy home', 'Accessories for smart living', 'Control your home effortlessly', 'Convenient smart tech'
+
+4. Offers:
+    URL: https://www.ikea.com/gb/en/offers/
+    Summary: Special deals and discounts on IKEA products.
+    Keywords: 'Discounts', 'Deals', 'Sales', 'Special Offers', 'Limited Time Offers', 'Clearance', 'Promotions', 'Bargains', 'Savings', 'Price Cuts'
+    Headlines: 'Hot Discounts', 'Deals Galore', 'IKEA Sales', 'Special Offers', 'Limited Deals', 'Clearance Finds', 'Promo Alerts', 'Bargain Buys', 'Save More', 'Cut Prices', 'Shop & Save', 'Budget-Friendly', 'Exclusive Offers', 'Member Deals', 'Seasonal Sales'
+    Descriptions: 'Save on IKEA products', ""Deals you can't miss"", 'Sales happening now', 'Offers for a limited time', 'Deals for quick shoppers', 'Clearance items on sale', 'Stay alert for promotions', 'Bargains to grab', 'Savings on furniture', 'Prices slashed on select items', 'Shop and save big', 'Furnish on a budget', 'Exclusive offers inside', 'Special deals for members', 'Sales for every season'
+
+5. New:
+    URL: https://www.ikea.com/gb/en/new/
+    Summary: The latest products and collections from IKEA.
+    Keywords: 'New Arrivals', 'Latest Collections', 'New Products', 'Recent Launches', 'Latest IKEA Designs', 'New Furniture', 'New Home Decor', 'New Kitchen Products', 'New Lighting', 'New Textiles'
+    Headlines: 'New Arrivals', 'Latest Finds', 'Fresh Collections', 'New at IKEA', 'Latest Designs', 'New Furniture', 'Decor Just In', 'Kitchen Novelties', 'Bright New Lighting', 'Textile Additions', 'Just Launched', 'Newest Selections', ""IKEA's Latest"", 'Fresh IKEA Looks', 'New Home Trends'
+    Descriptions: 'Check out new arrivals', 'Discover the latest', 'Fresh collections await', ""What's new at IKEA"", 'Explore the latest designs', 'Furniture just released', 'New decor to explore', 'Latest in kitchen products', 'New lighting solutions', 'Additions to IKEA textiles', 'Just launched products', 'Browse the newest selections', 'The latest from IKEA', 'Fresh looks to love', 'Trends in home furnishing'
+
+6. IKEA for Business:
+    URL: https://www.ikea.com/gb/en/ikea-business/
+    Summary: Business solutions and services for various industries.
+    Keywords: 'Business Solutions', 'Office Furniture', 'Retail Fixtures', 'Hospitality Furnishings', 'Business Services', 'Custom Planning', 'Bulk Orders', 'Business Discounts', 'Commercial Interiors', 'Workspace Design'
+    Headlines: 'Biz Solutions', 'Office Styles', 'Retail Fixtures', 'Hospitality Decor', 'Biz Services', 'Plan It Out', 'Bulk Buys', 'Biz Discounts', 'Commercial Spaces', 'Workspace Plans', 'Business Interiors', 'Corporate Furnishing', 'Industry Solutions', 'Business Perks', 'Design for Work'
+    Descriptions: 'Solutions for businesses', 'Furniture for offices', 'Fixtures for retail', 'Furnishings for hospitality', 'Services for businesses', 'Custom planning available', 'Orders in bulk', 'Discounts for businesses', 'Interiors for commercial use', 'Designs for workspaces', 'Interiors that mean business', 'Furnishing for corporate needs', 'Solutions across industries', 'Perks for your business', 'Work design made easy'
+
+7. Outdoor Living:
+    URL: https://www.ikea.com/gb/en/cat/outdoor-living-od001/
+    Summary: A range of outdoor furniture and garden products.
+    Keywords: 'Patio Furniture', 'Garden Accessories', 'Outdoor Decor', 'Outdoor Lighting', 'Planters', 'Outdoor Textiles', 'BBQ Grills', 'Outdoor Storage', 'Balcony Furniture', 'Sustainable Outdoor'
+    Headlines: 'Patio Picks', 'Garden Gear', 'Outdoor Style', 'Bright Outdoors', 'Plant Pots', 'Outdoor Fabrics', 'Grill & Chill', 'Storage Outside', 'Balcony Seats', 'Eco Outdoor', 'Al Fresco Dining', 'Garden Comfort', 'Outdoor Oasis', 'Porch Decor', 'Backyard Finds'
+    Descriptions: 'Furniture for patios', 'Accessories for gardens', 'Decor for outdoors', 'Light up your garden', 'Stylish planters', 'Textiles for outdoors', 'BBQs for summer', 'Outdoor storage options', 'Furniture for balconies', 'Sustainable outdoor choices', 'Dine outside in style', 'Comfort for your garden', 'Create an outdoor oasis', 'Decorate your porch', 'Find backyard treasures'
+
+8. Decoration:
+    URL: https://www.ikea.com/gb/en/cat/decoration-de001/
+    Summary: Decorative items to personalize your home.
+    Keywords: 'Home Accents', 'Wall Art', 'Decorative Lighting', 'Candles & Holders', 'Vases & Bowls', 'Picture Frames', 'Mirrors', 'Clocks', 'Room Decor', 'Seasonal Decorations'
+    Headlines: 'Accent Pieces', 'Artful Walls', 'Decor Lights', 'Candles Galore', 'Vases & Bowls', 'Frame It Up', 'Reflect Style', 'Tick Tock Decor', 'Room Accents', 'Seasonal Decor', 'Chic Decor', 'Home Aesthetics', 'Decorative Touch', 'Mirror Magic', 'Time for Decor'
+    Descriptions: 'Accents for your home', 'Wall art to impress', 'Lighting with style', 'Candles for ambiance', 'Vases for elegance', 'Frames for memories', 'Stylish mirrors', 'Decorative clocks', 'Personalize your room', 'Decor for every season', 'Chic decorative items', ""Elevate your home's look"", 'Touches that make a home', 'Magic with mirrors', ""It's time to decorate""
+
+9. Lighting:
+    URL: https://www.ikea.com/gb/en/cat/lighting-li001/
+    Summary: Lighting options for every room and purpose.
+    Keywords: 'Ceiling Lights', 'Table Lamps', 'Floor Lamps', 'Wall Lights', 'LED Lighting', 'Smart Lighting', 'Outdoor Lighting', ""Children's Lighting"", 'Bathroom Lighting', 'Work Lamps'
+    Headlines: 'Ceiling Glow', 'Table Illumination', 'Floor Lamp Finds', 'Wall Brightness', 'LED Options', 'Smart Glow', 'Outdoor Lights', ""Kids' Lighting"", 'Bathroom Bright', 'Work Lamps', 'Lighting Variety', 'Bright Ideas', 'Illuminating Decor', 'Functional Lights', 'Light Up Life'
+    Descriptions: 'Ceiling lights for rooms', 'Lamps for tables', 'Floor lamps for ambiance', 'Wall lights for accents', 'Energy-saving LED', 'Control lights smartly', 'Illuminate your garden', 'Fun lights for kids', 'Bathroom lighting solutions', 'Lamps for workspaces', 'Variety in lighting', 'Ideas that shine', 'Decor that illuminates', 'Functional lighting options', 'Bring light to your life'
+
+10. Textiles:
+    URL: https://www.ikea.com/gb/en/cat/textiles-tl001/
+    Summary: A wide selection of textiles to add warmth and comfort to your home.
+    Keywords: 'Cushions', 'Curtains', 'Rugs', 'Bed Linen', 'Towels', 'Table Linen', 'Throws', 'Fabrics', 'Blinds', ""Children's Textiles"", 'Textile Accessories', 'Bathroom Textiles', 'Kitchen Textiles', 'Outdoor Textiles', 'Sustainable Textiles'
+    Headlines: 'Comfy Cushions', 'Curtain Choices', 'Rug Selection', 'Bedding Bliss', 'Towel Sets', 'Table Textiles', 'Cozy Throws', 'Fab Fabrics', 'Blind Styles', ""Kids' Textiles"", 'Textile Extras', 'Bath Textiles', 'Kitchen Cloths', 'Outdoor Fabrics', 'Eco Textiles'
+    Descriptions: 'Cushions for comfort', 'Curtains for privacy', 'Rugs for every room', 'Blissful bed linen', 'Soft towel sets', 'Textiles for tables', 'Throws for warmth', 'Fabrics for projects', 'Styles of blinds', 'Textiles for children', 'Accessories in textiles', 'Textiles for the bathroom', 'Cloths for the kitchen', 'Fabrics for outdoor use', 'Sustainable textile options'
+"
+36,2024-01-01 00:00:07,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,89.56278395652771,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney merchandise including soft toys, clothing, collectible pins, and more, featuring popular characters like Stitch. They provide free delivery over a certain amount and have special offers like free shipping with a promo code on orders above a specified value.
+
+Relevant Pages:
+
+1. Easter Gifts & Toys:
+    URL: https://www.disneystore.eu/easter?srule=newest
+    Summary: A collection of Easter-themed Disney gifts and toys.
+    Keywords: 'Easter', 'Disney', 'Gifts', 'Toys', 'Books', 'Soft Toys'
+    Headlines: 'Easter Fun Awaits', 'Disney Easter Gifts', 'Hop into Easter', 'Bunny-ful Surprises', 'Springtime Magic', 'Egg-citing Toys', 'Festive Disney Finds', 'Easter Basket Joy', 'Plush Pals Galore', 'Storytime Treasures', 'Easter Adventure', 'Soft Toy Delights', 'Easter with Disney', 'Gifts for Little Ones', 'Easter Book Bonanza'
+    Descriptions: 'Celebrate with Disney toys', 'Easter gifts for all ages', 'Soft toys for spring cuddles', 'Books to spark imagination'
+
+2. Disney Pins & Badges:
+    URL: https://www.disneystore.co.uk/toys-and-fancy-dress/collectibles/pins?srule=newest
+    Summary: Exclusive collectible Disney pins and badges.
+    Keywords: 'Disney Pins', 'Collectibles', 'Badges', 'Disney Store', 'Pin Trading'
+    Headlines: 'Pin Your Disney Love', 'Collectible Disney Pins', 'Badge of Disney Honor', 'Pin Trading Fun', 'Wearable Disney Art', 'Exclusive Pin Sets', 'Disney Flair', ""Pin Collector's Dream"", 'Adorn Your Bags', 'Disney Pin Magic', 'Enamel Pin Wonders', 'Disney Badge Bliss', 'Pin & Badge Galore', 'Accessorize with Pins', 'Disney Pin Keepsakes'
+    Descriptions: 'Decorate with Disney pins', 'Exclusive badge collections', 'Perfect for Disney fans', 'Collect, trade, and enjoy'
+
+3. Stitch Merchandise:
+    URL: https://www.disneystore.co.uk/characters-and-movies/popular-characters/stitch?srule=newest
+    Summary: A variety of Stitch-themed merchandise including toys and clothing.
+    Keywords: 'Stitch', 'Disney', 'Soft Toys', 'Clothing', 'Mugs', 'Merchandise'
+    Headlines: 'Stitch Cuddles Await', 'Stitch Gear Here', 'Ohana Means Family', 'Stitch Toys Galore', ""Lilo's Pal Stitch"", 'Stitch Mugs & More', 'Alien Fun for All', 'Stitch Apparel', 'Hawaiian Roller Coaster', 'Stitch Plush Pals', 'Out of This World', ""Stitch's Adventures"", 'Stitch Collectibles', 'Get Stitched Up', 'Stitch for Everyone'
+    Descriptions: 'Find Stitch favorites', 'Toys and apparel with Stitch', 'Stitch-themed merchandise', 'Gifts for Stitch lovers'
+"
+37,2024-01-01 00:00:07,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,179.40786719322205,DONE,True,"Here is a summary of the information you requested:
+
+Hamleys offers a diverse range of toys and games for children of all ages, featuring categories such as construction toys, soft toys, preschool learning toys, action toys and vehicles, dolls and fashion, games and puzzles, and sports and leisure playsets.
+
+Relevant Pages:
+
+1. Construction Toys For Children:
+    URL: https://www.hamleys.com/shop-toys/construction
+    Summary: A variety of construction toys including LEGO and Playmobil.
+    Keywords: 'LEGO', 'Construction', 'Playmobil', 'Building Sets', 'Creative Play'
+    Headlines: 'Build Your World', 'LEGO Adventures', 'Playmobil Fun', 'Creative Sets', 'Construct & Play', 'Building Blocks', 'Imaginative Build', 'Toy Architects', 'Brick Creations', 'Model Making', 'Construct Kits', 'Build & Imagine', 'DIY Toy Sets', 'Crafting Blocks', 'Assembly Play'
+    Descriptions: 'Explore LEGO sets', 'Playmobil for creativity', 'Endless building fun', 'Creative construction toys'
+
+2. Children's Soft Toys:
+    URL: https://www.hamleys.com/shop-toys/soft-toys
+    Summary: Soft toys including teddy bears and plush figures.
+    Keywords: 'Soft Toys', 'Teddy Bears', 'Plush Toys', 'Cuddly Toys', 'Stuffed Animals'
+    Headlines: 'Cuddle Companions', 'Soft & Snuggly', 'Plush Pals', 'Teddy Treasures', 'Huggable Bears', 'Soft Toy Safari', 'Plush Playtime', 'Snuggle Buddies', 'Furry Friends', 'Cuddly Critters', 'Teddy Collection', 'Soft Embrace', 'Plush Love', 'Stuffed Delights', 'Cozy Animals'
+    Descriptions: 'Soft teddies to love', 'Plush toys for all', 'Cuddly animal friends', 'Find your plush pal'
+
+3. PreSchool Children's Toys:
+    URL: https://www.hamleys.com/shop-toys/preschool
+    Summary: Educational and developmental toys for preschoolers.
+    Keywords: 'Preschool Toys', 'Educational Toys', 'Learning Toys', 'Bath Toys', 'Toys for Babies'
+    Headlines: 'Learn Through Play', 'Preschool Fun', 'Bath Time Toys', ""Baby's First Toy"", 'Early Learning', 'Educational Play', 'Toddler Toys', 'Play & Learn', 'Smart Start', 'Learning Games', 'Skill Development', 'Interactive Play', 'Cognitive Growth', 'Sensory Toys', 'Developmental Fun'
+    Descriptions: 'Toys for early learning', 'Educational fun for tots', 'Grow with playful toys', 'Smart toys for preschool'
+"
+38,2024-01-01 00:00:07,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,135.06471610069275,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including special offers, private label brands, fresh produce, dairy, and meat & fish. The website features a user-friendly layout with categories for easy navigation.
+
+Relevant Pages:
+
+1. Posebne ponude - Konzum:
+    URL: https://www.konzum.hr/web/posebne-ponude
+    Summary: Special offers page with current promotions and deals.
+    Keywords: 'Special Offers', 'Discounts', 'Deals', 'Promotions', 'Savings', 'Weekly Ads', 'Bargains', 'Sale', 'Limited Time', 'Exclusive Offers', 'Supermarket Deals', 'Grocery Savings', 'Price Cuts', 'Clearance', 'Value Packs'
+    Headlines: 'Hot Deals', 'Save Big', 'Weekly Sale', 'Mega Offers', 'Price Drops', 'Super Savings', 'Deal Alert', 'Flash Sale', 'Budget Buys', 'Discount Days', 'Promo Picks', 'Bargain Hunt', 'Sale Specials', 'Offer Zone', 'Savings Spot'
+    Descriptions: 'Unbeatable deals await', 'Your savings start here', 'Exclusive offers this week', 'Shop and save big now'
+
+2. Naše robne marke - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: Our Brands category showcasing Konzum's private label products.
+    Keywords: 'Private Label', 'Our Brands', 'Exclusive', 'Quality Products', 'Konzum Brand', 'Local Brands', 'Trusted Quality', 'Value for Money', 'Customer Favorites', 'Signature Series', 'Premium Selection', 'Home Brands', 'K Plus', 'Active Zone', 'Gelatissimo'
+    Headlines: 'Exclusive Brands', 'Konzum Quality', 'Signature Picks', 'Local Favorites', 'Trusted Choice', 'Premium Range', 'Quality Assured', 'Smart Buy', 'Brand Specials', 'Unique Finds', ""Shopper's Choice"", 'Quality & Value', 'Home Essentials', 'Must-Haves', 'Top Picks'
+    Descriptions: 'Discover our own brands', 'Quality meets value', 'Exclusive to Konzum', 'Your trusted brands'
+
+3. Voće i povrće - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: Fruits and Vegetables category with a variety of fresh produce.
+    Keywords: 'Fresh Produce', 'Fruits', 'Vegetables', 'Organic', 'Healthy', 'Seasonal Picks', 'Farm Fresh', 'Nutritious Choices', 'Exotic Fruits', 'Garden Fresh', 'Local Produce', 'Freshness Guaranteed', 'Daily Delivery', 'Healthy Snacking', 'Green Eating'
+    Headlines: 'Fresh Harvest', 'Healthy Greens', 'Fruit Galore', 'Veggie Delight', 'Organic Picks', ""Season's Best"", 'Farm to Table', ""Nature's Finest"", 'Fresh Daily', 'Green Goodness', 'Juicy Selection', 'Eat Fresh', ""Nature's Bounty"", 'Crisp & Fresh', 'Garden Variety'
+    Descriptions: ""Nature's best produce"", 'Freshness in every bite', 'Healthy choices made easy', 'From farm to your table'
+
+4. Mliječni proizvodi i jaja - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: Dairy Products and Eggs category with a wide selection of items.
+    Keywords: 'Dairy', 'Milk', 'Cheese', 'Eggs', 'Yogurt', 'Butter', 'Cream', 'Desserts', 'Organic Dairy', 'Lactose-Free', 'Probiotics', 'Fresh Eggs', 'Artisan Cheeses', 'Dairy Alternatives', 'Healthy Dairy'
+    Headlines: 'Dairy Delights', 'Cheese Corner', 'Egg Essentials', 'Milk Must-Haves', 'Yogurt Yummies', 'Butter Bests', 'Creamy Treats', 'Dessert Time', 'Organic Dairy', 'Lactose-Free', 'Probiotic Plus', 'Fresh & Natural', 'Cheese Pleasers', 'Dairy Picks', 'Egg Favorites'
+    Descriptions: 'Creamy dairy goodness', 'Cheese for every taste', 'Eggs for nutrition', 'Dairy for health'
+
+5. Meso i riba - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/meso-i-riba
+    Summary: Meat and Fish category with a selection of quality meats and seafood.
+    Keywords: 'Meat', 'Fish', 'Seafood', 'Quality Cuts', 'Fresh Fish', ""Butcher's Choice"", 'Sea Delights', 'Poultry', 'Beef', 'Pork', 'Lamb', 'Organic Meat', 'Sustainable Seafood', 'Grill Ready', 'Seafood Specials'
+    Headlines: 'Meat Market', 'Fish Finds', 'Seafood Spread', ""Butcher's Best"", 'Fresh Catch', 'Grill Favorites', 'Quality Meats', 'Poultry Picks', 'Beef Bites', 'Pork Picks', 'Lamb Selection', 'Organic Choices', 'Sustainable Sea', 'BBQ Ready', 'Sea Treats'
+    Descriptions: 'Quality meats selected', ""Fresh fish, ocean's best"", ""Butcher's finest cuts"", 'Seafood for every dish'
+"
+39,2024-01-01 00:00:07,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,212.51194190979004,DONE,True,"Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services that interact with event streams. It provides a unified API to work with multiple message brokers like Kafka, RabbitMQ, NATS, and Redis. Key features include Pydantic validation, automatic AsyncAPI documentation, full-typed editor support, a powerful dependency injection system, support for in-memory tests, and compatibility with any HTTP framework, especially FastAPI. FastStream is also optimized for automatic code generation using advanced models like GPT and Llama.
+
+Relevant Pages:
+
+1. Features - FastStream:
+    URL: https://faststream.airt.ai/latest/faststream/
+    Summary: Details the features of FastStream, including effortless event stream integration, unified API, and support for multiple message brokers.
+    Keywords: 'Event Stream Integration', 'Unified API', 'Message Brokers', 'Pydantic Validation', 'AsyncAPI Documentation', 'Full-typed Editor Support', 'Dependency Injection', 'In-memory Tests', 'HTTP Framework Compatibility', 'Code Generation'
+    Headlines: 'Streamline Integration', 'Unified Messaging API', 'Broker Flexibility', 'Validate with Pydantic', 'Auto Documentation', 'Editor Friendly', 'Dependency Management', 'Test with Confidence', 'HTTP Framework Ready', 'Codegen Optimized', 'FastAPI Compatible', 'GPT & Llama Support', 'Async Service Building', 'Event-driven Design', 'Microservice Ready'
+    Descriptions: 'Build async web services.', 'Work across multiple brokers.', 'Automatic AsyncAPI docs.', 'Optimized for codegen.'
+
+2. Getting Started - FastStream:
+    URL: https://faststream.airt.ai/latest/getting-started/
+    Summary: Provides a quick start guide for installing FastStream and setting up a new project.
+    Keywords: 'Getting Started', 'Installation Guide', 'Quick Start', 'FastStream Setup', 'New Project', 'Install FastStream', 'Broker Containers', 'Basic Application', 'FastStream Installation', 'Project Setup'
+    Headlines: 'Quick Installation', 'Start New Projects', 'Easy Setup Guide', 'Install with Pip', 'Broker Setup', 'Basic App Code', 'FastStream Quickstart', 'Project Initialization', ""Beginner's Guide"", 'Setup with Docker', 'FastStream Pip Install', 'Run Broker Container', 'Create Basic App', 'FastStream for Newbies', 'Project Kickstart'
+    Descriptions: 'Install FastStream easily.', 'Guidance for new projects.', 'Set up with Docker.', 'Create your first app.'
+
+3. Kafka Routing - FastStream:
+    URL: https://faststream.airt.ai/latest/kafka/kafka/
+    Summary: Explains Kafka routing, key concepts, and how to use Kafka with FastStream.
+    Keywords: 'Kafka Routing', 'Kafka Concepts', 'Kafka with FastStream', 'Publish-Subscribe Model', 'Kafka Topics', 'Kafka Streams', 'Kafka Integration', 'Kafka Message Broker', 'Kafka Event Streaming', 'Kafka Real-time Data', 'Kafka Fault-tolerant', 'Kafka High-throughput', 'Kafka Data Pipelines', 'Kafka Streaming Apps', 'Kafka Partitioning'
+    Headlines: 'Kafka Event Routing', 'Understand Kafka', 'Kafka & FastStream', 'Pub-Sub Messaging', 'Kafka Topic Guide', 'Stream with Kafka', 'Kafka Integration', 'Real-time Kafka Data', 'Fault-tolerant Kafka', 'High-throughput Kafka', 'Kafka Data Handling', 'Kafka for Streaming', 'Kafka Pipelines', 'Kafka App Streaming', 'Kafka Partitions'
+    Descriptions: 'Route events with Kafka.', 'Learn Kafka concepts.', 'Integrate Kafka easily.', 'Handle streams in Kafka.'
+"
+40,2024-01-01 00:00:08,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,277.6703760623932,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of home furnishing products including furniture, beds & mattresses, kitchens, decorations, lighting, textiles, kitchenware & tableware, laundry & cleaning supplies, and bathroom products. The brand is known for its affordable, modern design and flat-pack furniture that customers can assemble themselves.
+
+Relevant Pages:
+
+1. Furniture:
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: A variety of home furniture for living room, bedroom, office, and more.
+    Keywords: 'Sofas', 'Chairs', 'Tables', 'Wardrobes', 'Storage', 'Office Furniture', 'Bedroom Sets', 'Living Room Essentials', 'Modern Design', 'Affordable Prices', 'Flat-Pack', 'DIY Assembly', 'Scandinavian Style', 'Home Decor', 'Functional'
+    Headlines: 'Cozy Sofas', 'Chic Tables', 'Comfy Chairs', 'Stylish Storage', 'Modern Wardrobes', 'Office Desks', 'Dining Sets', 'Sleek Shelves', 'TV Units', 'Coffee Tables', 'Bed Frames', 'Nightstands', 'Bookcases', 'Room Dividers', 'Drawer Units'
+    Descriptions: 'Find your perfect sofa', 'Dine in style with IKEA', 'Sit back and relax', 'Organize with ease', 'Sleep in comfort', 'Work from home solutions'
+
+2. Beds & Mattresses:
+    URL: https://www.ikea.com/gb/en/cat/beds-mattresses-bm001/
+    Summary: Comfortable beds and mattresses for a good night's sleep.
+    Keywords: 'Beds', 'Mattresses', 'Bed Frames', 'Mattress Toppers', 'Pillows', 'Bedding', ""Children's Beds"", 'Guest Beds', 'Memory Foam', 'Spring Mattresses', 'Sleep Comfort', 'Bedroom Furniture', 'Duvets', 'Sleep Quality', 'Bedroom Essentials'
+    Headlines: 'Dreamy Mattresses', 'Sturdy Bed Frames', ""Kids' Bunk Beds"", 'Guest Sleepovers', 'Memory Foam', 'Quality Sleep', 'Cozy Bedding', 'Pillows & Duvets', 'Bedroom Makeover', 'Sleep Well', 'Night Comfort', 'Bedroom Style', 'Restful Nights', 'Sleep Solutions', 'Chic Headboards'
+    Descriptions: 'Sleep in comfort', 'Stylish bed frames', 'Perfect mattresses', 'Bedding for all'
+
+3. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: Complete kitchen solutions and furniture for home kitchens.
+    Keywords: 'Kitchen Cabinets', 'Kitchen Appliances', 'Countertops', 'Kitchen Islands', 'Kitchen Storage', 'Sinks', 'Faucets', 'Kitchen Accessories', 'Modern Kitchens', 'Kitchen Design', 'Functional Kitchens', 'Kitchen Planning', 'Cookware', 'Dinnerware', 'Kitchen Upgrade'
+    Headlines: 'Modern Kitchens', 'Cabinet Collections', 'Stylish Counters', 'Kitchen Islands', 'Smart Storage', 'Sinks & Faucets', 'Appliance Range', 'Cooking Essentials', 'Dining In Style', 'Kitchen Decor', 'Design Your Kitchen', 'Efficient Layouts', 'Kitchen Accessories', 'Quality Appliances', 'Kitchen Makeovers'
+    Descriptions: 'Explore kitchen range', 'Cabinets for all', 'Design your kitchen', 'Kitchen storage solutions'
+
+4. Decoration:
+    URL: https://www.ikea.com/gb/en/cat/decoration-de001/
+    Summary: Home decor items to personalize your living spaces.
+    Keywords: 'Picture Frames', 'Vases', 'Candles', 'Mirrors', 'Wall Art', 'Decorative Accessories', 'Plant Pots', 'Holiday Decor', 'Room Accents', 'Photo Frames', 'Artificial Plants', 'Home Aesthetics', 'Interior Design', 'Table Decorations', 'Ornaments'
+    Headlines: 'Chic Vases', 'Elegant Mirrors', 'Artful Wall Decor', 'Cozy Candles', 'Stylish Frames', 'Decor Accents', 'Plant Pots', 'Seasonal Decor', 'Table Ornaments', 'Photo Memories', 'Room Enhancers', 'Decorative Vases', 'Mirror Reflections', 'Candle Ambiance', 'Artistic Touches'
+    Descriptions: 'Accentuate your home', 'Decor for every room', 'Mirror decor', 'Candles for ambiance'
+
+5. Lighting:
+    URL: https://www.ikea.com/gb/en/cat/lighting-li001/
+    Summary: Lighting solutions for every room in your home.
+    Keywords: 'Ceiling Lights', 'Lamps', 'LED Lighting', 'Wall Lights', 'Smart Lighting', 'Decorative Lighting', 'Table Lamps', 'Floor Lamps', 'Outdoor Lighting', 'Bathroom Lighting', 'Kitchen Lights', 'Bedroom Lamps', 'Light Bulbs', 'Lighting Design', 'Energy Efficient'
+    Headlines: 'Bright LEDs', 'Ceiling Fixtures', 'Lamp Variety', 'Wall Lighting', 'Smart Lights', 'Glowing Decor', 'Table Lamps', 'Floor Illumination', 'Outdoor Lights', 'Bathroom Brightness', 'Kitchen Lighting', 'Cozy Bedroom', 'Energy Saving', 'Modern Lighting', 'Light Accents'
+    Descriptions: 'Illuminate your home', 'Stylish lighting options', 'Smart lighting solutions', 'Energy-efficient LEDs'
+
+6. Textiles:
+    URL: https://www.ikea.com/gb/en/cat/textiles-tl001/
+    Summary: Soft furnishings and textiles for every room.
+    Keywords: 'Curtains', 'Rugs', 'Cushions', 'Bed Linen', 'Towels', 'Throws', 'Table Linen', 'Fabric', 'Curtain Rods', 'Pillowcases', 'Blankets', 'Bathroom Textiles', 'Kitchen Textiles', 'Upholstery', 'Decorative Textiles'
+    Headlines: 'Cozy Throws', 'Soft Towels', 'Elegant Curtains', 'Plush Rugs', 'Comfy Cushions', 'Quality Bed Linen', 'Warm Blankets', 'Table Linens', 'Textile Variety', 'Bathroom Textiles', 'Kitchen Fabrics', 'Curtain Choices', 'Pillow Comfort', 'Decorative Throws', 'Fabric Selections'
+    Descriptions: 'Textiles for comfort', 'Curtains for style', 'Rugs in every size', 'Towels for every need'
+
+7. Kitchenware & Tableware:
+    URL: https://www.ikea.com/gb/en/cat/kitchenware-tableware-kt001/
+    Summary: A wide range of kitchenware and tableware.
+    Keywords: 'Cookware', 'Dinnerware', 'Glassware', 'Cutlery', 'Serving Dishes', 'Kitchen Utensils', 'Pots and Pans', 'Food Storage', 'Table Settings', 'Coffee and Tea', 'Baking Tools', 'Kitchen Gadgets', 'Dishware', 'Table Accessories', 'Meal Prep'
+    Headlines: 'Cooking Pots', 'Dining Sets', 'Glass Collections', 'Cutlery Sets', 'Serving Platters', 'Utensil Options', 'Pan Selection', 'Food Containers', 'Elegant Tableware', 'Tea Time', 'Baking Essentials', 'Kitchen Tools', 'Dinner Plates', 'Table Enhancements', 'Prep & Serve'
+    Descriptions: 'Equip your kitchen', 'Dine in elegance', 'Glassware for all', 'Cutlery for meals'
+
+8. Laundry & Cleaning:
+    URL: https://www.ikea.com/gb/en/cat/laundry-cleaning-lc001/
+    Summary: Products for laundry and cleaning needs.
+    Keywords: 'Laundry Baskets', 'Cleaning Supplies', 'Ironing Boards', 'Drying Racks', 'Waste Bins', 'Cleaning Tools', 'Laundry Care', 'Storage Solutions', 'Organizers', 'Vacuum Bags', 'Mops and Buckets', 'Recycling Bins', 'Laundry Detergent', 'Stain Removers', 'Household Essentials'
+    Headlines: 'Laundry Helpers', 'Clean & Tidy', 'Ironing Ease', 'Drying Solutions', 'Waste Sorting', 'Cleaning Kits', 'Laundry Storage', 'Organizing Aids', 'Vacuum Storage', 'Mop Sets', 'Recycle Bins', 'Cleaning Agents', 'Stain Solutions', 'Household Care', 'Tidy Spaces'
+    Descriptions: 'Laundry made easy', 'Cleaning essentials', 'Ironing convenience', 'Organize your space'
+
+9. Bathroom Products:
+    URL: https://www.ikea.com/gb/en/cat/bathroom-products-ba001/
+    Summary: A range of products for the bathroom.
+    Keywords: 'Bathroom Furniture', 'Shower Curtains', 'Bath Mats', 'Bathroom Storage', 'Towel Rails', 'Bathroom Mirrors', 'Bathroom Accessories', 'Toilet Brushes', 'Soap Dispensers', 'Bath Towels', 'Shower Organizers', 'Bathroom Scales', 'Bathrobes', 'Toothbrush Holders', 'Bathroom Decor'
+    Headlines: 'Bath Storage', 'Shower Curtains', 'Soft Bath Mats', 'Mirror Reflections', 'Towel Racks', 'Bathroom Sets', 'Accessory Choices', 'Soap Pumps', 'Cozy Towels', 'Shower Caddies', 'Bathroom Scales', 'Comfy Robes', 'Toothbrush Stands', 'Bathroom Style', 'Decor Accents'
+    Descriptions: 'Bathroom organization', 'Shower essentials', 'Bathroom mirrors', 'Towel selections'
+"
+41,2024-01-01 00:00:08,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,90.50328588485718,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney merchandise including toys, collectibles, clothing, and accessories. The store features products from various Disney franchises such as Star Wars, Marvel, and Pixar, as well as classic Disney characters. Unique selling points include free delivery over a certain amount, free returns, and multiple Click & Collect locations. Seasonal collections like Easter gifts and toys are highlighted, along with collectible items such as Disney pins and Stitch merchandise.
+
+Relevant Pages:
+
+1. Easter Gifts & Toys:
+    URL: https://www.disneystore.eu/easter?srule=newest
+    Summary: Seasonal collection featuring Easter-themed Disney merchandise.
+    Keywords: 'Easter', 'Disney', 'Gifts', 'Toys', 'Books', 'Soft Toys'
+    Headlines: 'Easter Fun Awaits', 'Springtime Magic', 'Bunny-ful Surprises', 'Egg-citing Toys', ""Hoppin' Good Gifts"", 'Disney Easter Joy', 'Spring Surprises', 'Easter Adventures', 'Baskets of Fun', 'Egg-stra Special', 'Hop to the Magic', 'Bunny Hugs', 'Easter Delights', 'Festive Finds', 'Springtime Smiles'
+    Descriptions: 'Disney toys for Easter', 'Gifts with Disney charm', 'Easter joy with Disney', 'Spring delights await'
+
+2. Disney Pins & Badges:
+    URL: https://www.disneystore.co.uk/toys-and-fancy-dress/collectibles/pins?srule=newest
+    Summary: A collection of collectible Disney pins and badges.
+    Keywords: 'Disney Pins', 'Collectibles', 'Badges', 'Disney Store'
+    Headlines: 'Pin Your Dreams', 'Badge of Fun', 'Collect Them All', 'Disney Pin Magic', 'Wearable Wonders', 'Pin-tastic Finds', 'Badge Bliss', 'Pin Your Faves', 'Disney Flair', 'Pin-worthy', 'Badge Bonanza', 'Pin Parade', 'Flair to Share', 'Pin-tastic Joy', 'Badge Beauties'
+    Descriptions: 'Disney pins galore', 'Collectible Disney flair', 'Pin your Disney faves', 'Badges of Disney magic'
+
+3. Stitch Merchandise:
+    URL: https://www.disneystore.co.uk/characters-and-movies/popular-characters/stitch?srule=newest
+    Summary: Merchandise featuring the popular character Stitch.
+    Keywords: 'Stitch', 'Disney', 'Toys', 'Clothing', 'Mugs'
+    Headlines: 'Stitch Galore', 'Ohana Means Fun', 'Stitch Stuff', 'Alien Cuddles', 'Stitch Style', ""Lilo's Pal"", 'Stitch Picks', 'Blue Cuteness', 'Stitch Mania', 'Hawaiian Charm', 'Stitch Treasures', 'Space Surprises', ""Stitch's World"", 'Alien Adventures', 'Stitch Delights'
+    Descriptions: 'Find Stitch favorites', 'Stitch toys and more', 'Stitch for all ages', 'Cuddle with Stitch'
+"
+42,2024-01-01 00:00:08,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,,nan,,
+43,2024-01-01 00:00:08,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,105.1364061832428,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including their own brands, fresh produce, and dairy items. The website features special sections for their private labels, fruits and vegetables, and dairy products, which are likely candidates for promotion in a Google Ads campaign.
+
+Relevant Pages:
+
+1. Naše robne marke:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: A section dedicated to Konzum's private label products, featuring a variety of in-house brands.
+    Keywords: 'Private Label', 'K Plus', 'Active Zone', 'Gelatissimo', 'Adria Mare', 'Bio Zone'
+    Headlines: 'Exclusive Brands', 'Quality Assured', 'Local Favorites', 'Taste the Quality', 'Trusted Products', 'K Plus Delights', 'Active Lifestyle', 'Gelato Treats', 'Seafood Specials', 'Organic Choices', 'Garden Fresh', 'Morning Boost', 'Snack Time', 'Culinary Spices', 'Pet Care'
+    Descriptions: 'Discover our exclusive brands', 'Quality products at great prices', 'From our family to yours', 'Everyday essentials covered'
+
+2. Voće i povrće:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: This section offers a wide selection of fresh fruits and vegetables, including organic and locally sourced options.
+    Keywords: 'Fresh Produce', 'Organic', 'Local', 'Fruits', 'Vegetables'
+    Headlines: 'Fresh Picks', 'Organic Goodness', 'Local Harvest', 'Fruitful Choices', 'Veggie Delights', 'Healthy Snacks', 'Juicy Selection', 'Garden Fresh', ""Season's Best"", 'Nutritious Bites', 'Exotic Flavors', 'Berry Special', 'Leafy Greens', 'Root Staples', 'Herbal Aroma'
+    Descriptions: 'Enjoy our fresh produce', 'Organic options available', 'Sourced from local farms', 'A variety of fruits and veggies'
+
+3. Mliječni proizvodi i jaja:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: A diverse range of dairy products and eggs, including milk, cheese, yogurts, and more.
+    Keywords: 'Dairy', 'Milk', 'Cheese', 'Eggs', 'Yogurt'
+    Headlines: 'Dairy Essentials', 'Cheese Galore', 'Egg-cellent Choice', 'Creamy Yogurts', 'Butter & Spreads', 'Dessert Treats', 'Fresh Milk Daily', 'Artisan Cheeses', 'Breakfast Ready', 'Healthy Options', 'Indulgent Creams', 'Sweet Temptations', 'Cooking Basics', 'Spread the Joy', 'Protein Packed'
+    Descriptions: 'Quality dairy products', 'Wide selection of cheeses', 'Fresh eggs for your table', 'Delicious yogurts and desserts'
+"
+44,2024-01-01 00:00:08,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,200.5792510509491,DONE,True,"Here is a summary of the information you requested:
+
+Unable to access detailed product/service information due to website navigation issues and invalid URL errors. The homepage indicates FastStream is an open-source framework for building asynchronous web services with event streams, offering features like multiple broker support, Pydantic validation, and automatic documentation.
+
+Relevant Pages:
+
+1. FastStream Overview:
+    URL: https://faststream.airt.ai/latest/
+    Summary: Introduces FastStream as an open-source framework for asynchronous web services.
+    Keywords: 'Open-source', 'Asynchronous', 'Event Streams', 'Web Services', 'Message Queues', 'Pydantic Validation', 'Automatic Documentation', 'Dependency Injection', 'In-memory Testing', 'Extensible', 'HTTP Framework Compatibility', 'Code Generation', 'GPT', 'Llama'
+    Headlines: 'Async Services', 'Unified API', 'Pydantic Support', 'Auto Docs', 'Editor Friendly', 'DI System', 'Testable Code', 'Extensible', 'HTTP Compatible', 'Code Gen Ready', 'FastAPI Ready', 'Message Queues', 'Workflow Boost', 'Community Loved', 'Framework Power'
+    Descriptions: 'Build async web services', 'Simplify message handling', 'Validate with Pydantic', 'Enjoy automatic docs'
+
+2. FastStream Features:
+    URL: https://faststream.airt.ai/latest/#features
+    Summary: Details the features of FastStream, including broker support and validation.
+    Keywords: 'Features', 'Brokers', 'Validation', 'Documentation', 'Dependency Injection', 'Testing', 'Extensibility', 'Integrations', 'Code Generation', 'Community Feedback'
+    Headlines: 'Feature Rich', 'Broker Support', 'Validate Easily', 'Docs Made Easy', 'Smooth Editing', 'DI Simplified', 'Testing Support', 'Extend Features', 'Integrate HTTP', 'Auto Code Gen', 'Community Praise', 'Async Services', 'Queue Management', 'Rapid Development', 'Open-source Win'
+    Descriptions: 'Explore rich features', 'Multiple broker support', 'Automatic documentation', 'Seamless integrations'
+
+3. Community Feedback:
+    URL: https://faststream.airt.ai/latest/#community-feedback
+    Summary: Showcases community feedback and endorsements for FastStream.
+    Keywords: 'Community', 'Feedback', 'Endorsements', 'Testimonials', 'User Reviews', 'Twitter Mentions', 'Reddit Comments', 'Developer Support', 'Open-source', 'Framework', 'Asynchronous', 'Web Services', 'Event Streams', 'Message Queues', 'Validation'
+    Headlines: 'User Endorsements', 'Positive Feedback', 'Community Support', 'Real Testimonials', 'Twitter Shoutouts', 'Reddit Reviews', 'Developer Love', 'Open-source Buzz', 'Service Praise', 'Queue Solutions', 'Async Praise', 'Streamline Queues', 'Validation Wins', 'Docs Appreciated', 'Framework Kudos'
+    Descriptions: 'Community loves us', 'Real user testimonials', 'Endorsed by developers', 'Praised for ease of use'
+"
+45,2024-01-01 00:00:09,websurfer,https://www.ikea.com/gb/en/,10,gpt3-5,gpt4,gpt4,212.31350088119507,DONE,True,"Here is a summary of the information you requested:
+
+IKEA UK offers a wide range of home furnishing products including smart home devices, outdoor furniture, beds and mattresses, kitchen solutions, decorative items, and lighting. They provide affordable solutions for home and business, with a focus on design and sustainability.
+
+Relevant Pages:
+
+1. Shop Products:
+    URL: https://www.ikea.com/gb/en/cat/product-products/
+    Summary: Overview of IKEA's product categories.
+    Keywords: 'Furniture', 'Home Accessories', 'Storage', 'Outdoor', 'Textiles', 'Lighting', 'Decoration', 'Kitchens', 'Smart Home'
+    Headlines: 'Furnish Your Home', 'Stylish Storage', 'Outdoor Oasis', 'Cozy Textiles', 'Brighten Spaces', 'Decor Delights', 'Kitchen Dreams', 'Smart Living', 'IKEA Essentials'
+    Descriptions: 'Find furniture for every room', 'Solutions for clutter-free homes', 'Enjoy outdoor living with IKEA', 'Textiles to comfort and decorate', 'Lighting options for every need'
+
+2. Offers:
+    URL: https://www.ikea.com/gb/en/offers/?itm_content=Nav&itm_element=Top&itm_campaign=offers
+    Summary: Current deals and discounts at IKEA.
+    Keywords: 'Discounts', 'Deals', 'Savings', 'Special Offers', 'Limited Time', 'Bargains', 'Sale'
+    Headlines: 'IKEA Discounts', 'Hot Deals', 'Save More', 'Special Offers', 'IKEA Bargains'
+    Descriptions: 'Exclusive IKEA offers', 'Deals to save you more', 'Special discounts available', ""Shop IKEA's sale items""
+
+3. IKEA for Business:
+    URL: https://www.ikea.com/gb/en/ikea-business/
+    Summary: IKEA's solutions for business customers.
+    Keywords: 'Business Solutions', 'Office Furniture', 'Corporate Discounts', 'Business Planning', 'Workspace Design'
+    Headlines: 'Business Interiors', 'Office Essentials', 'Corporate Deals', 'Workspace Style', 'Business Planning'
+    Descriptions: 'Furnish your business with IKEA', 'Office solutions for every budget', 'Design your ideal workspace', 'IKEA for every business need'
+"
+46,2024-01-01 00:00:09,websurfer,https://www.disneystore.eu,10,gpt3-5,gpt4,gpt4,180.09467816352844,DONE,True,"Here is a summary of the information you requested:
+
+The Disney Store EU offers a wide range of Disney, Marvel, Pixar, and Star Wars merchandise including toys, fancy dress, collectibles, and gifts. The store features new arrivals, special offers, and a variety of products for fans of all ages. Unique selling points include free delivery over 60€, free returns, and numerous click & collect locations.
+
+Relevant Pages:
+
+1. New In Products:
+    URL: https://www.disneystore.eu/new
+    Summary: Latest Disney, Marvel, Pixar, and Star Wars products.
+    Keywords: 'New Arrivals', 'Disney', 'Marvel', 'Pixar', 'Star Wars', 'Latest Merchandise', 'New Collection', 'Gifts', 'Toys', 'Apparel', 'Accessories', 'Home Decor', 'Collectibles', 'Entertainment', 'Shopping'
+    Headlines: 'New Disney Arrivals', 'Latest Marvel Gear', 'Pixar New Finds', 'New Star Wars Toys', 'Fresh Disney Styles', 'Marvel Must-Haves', 'Pixar Picks', 'Star Wars Gifts', 'Disney Treasures', 'Marvel Newcomers', 'Pixar Surprises', 'Star Wars Latest', 'Disney Delights', 'Marvel Magic', 'Pixar Pleasures'
+    Descriptions: 'Discover the latest Disney products', 'Shop the newest Marvel merchandise', 'Find new Pixar treasures today', 'Explore the latest Star Wars toys'
+
+2. Special Offers:
+    URL: https://www.disneystore.eu/offers
+    Summary: Discounts and promotions on Disney merchandise.
+    Keywords: 'Disney Offers', 'Discounts', 'Promotions', 'Deals', 'Savings', 'Sale', 'Special Offers', 'Bargains', 'Reduced Prices', 'Clearance', 'Value Deals', 'Exclusive Offers', 'Limited Time', 'Seasonal Sale', 'Merchandise Deals'
+    Headlines: 'Disney Deals', 'Marvel Savings', 'Pixar Promos', 'Star Wars Sales', 'Special Offers', 'Disney Discounts', 'Marvel Bargains', 'Pixar Specials', 'Star Wars Offers', 'Shop Deals', 'Save Big', 'Promo Alert', 'Sale Season', 'Clearance Finds', 'Exclusive Deals'
+    Descriptions: 'Save on Disney favorites now', 'Marvel merchandise at discounts', 'Special Pixar promotions', 'Star Wars toys on sale'
+
+3. Toys & Fancy Dress:
+    URL: https://www.disneystore.eu/toys-and-fancy-dress
+    Summary: A variety of Disney-themed toys and costumes.
+    Keywords: 'Disney Toys', 'Fancy Dress', 'Costumes', 'Play Sets', 'Action Figures', 'Dolls', 'Dress Up', 'Role Play', 'Kids Toys', 'Collectible Toys', 'Disney Costumes', 'Character Outfits', 'Toy Deals', 'Gift Ideas', 'Imaginative Play'
+    Headlines: 'Disney Playtime', 'Costume Corner', 'Toy Treasures', 'Dress-Up Fun', 'Action Figures', 'Disney Dolls', 'Fancy Dress', 'Play Sets', 'Role Play', ""Kids' Favorites"", 'Collectibles', 'Toy Sale', 'Dress Like Disney', 'Costume Deals', 'Play & Pretend'
+    Descriptions: 'Explore Disney toys and games', 'Find the perfect costume', 'Action figures for playtime', 'Dress up as your favorite character'
+"
+47,2024-01-01 00:00:09,websurfer,https://www.hamleys.com/,10,gpt3-5,gpt4,gpt4,816.8801116943359,DONE,True,"Here is a summary of the information you requested:
+
+Hamleys offers a wide range of toys and games, including LEGO and construction toys, soft toys, preschool learning toys, action toys and vehicles, dolls and fashion, games and puzzles, sports and leisure toys, and budget-friendly options under £20. The store is known for its quality and variety, appealing to different age groups and interests.
+
+Relevant Pages:
+
+1. LEGO & Construction Toys:
+    URL: https://www.hamleys.com/shop-toys/construction
+    Summary: A variety of construction toys including LEGO and Playmobil.
+    Keywords: 'LEGO', 'Construction', 'Playmobil', 'Building Sets', 'Creative Play'
+    Headlines: 'Build Your World', 'LEGO Adventures', 'Playmobil Fun', 'Construct Creativity', 'Building Dreams', 'Creative Blocks', 'Brick by Brick', 'Play to Build', 'Master Builders', 'Construct & Play', 'Imagination Built', 'Block by Block', 'Build & Imagine', 'Creative Structures', 'Endless Building'
+    Descriptions: 'Explore LEGO sets', 'Creative construction toys', 'Playmobil for imaginative play', 'Building fun for all ages'
+
+2. Soft Toys:
+    URL: https://www.hamleys.com/shop-toys/soft-toys
+    Summary: Soft toys from Hamleys and other brands, including teddy bears and plush figures.
+    Keywords: 'Soft Toys', 'Plush', 'Teddy Bears', 'Cuddly', 'Hamleys'
+    Headlines: 'Cuddle Companions', 'Soft & Snuggly', 'Plush Pals', 'Teddy Treasures', 'Huggable Bears', 'Snuggle Time', 'Plush Playmates', 'Soft Toy Safari', 'Cuddly Critters', 'Huggable Hamleys', ""Teddy's Tea Party"", 'Plush Perfection', 'Cuddle Corner', 'Soft & Safe', 'Furry Friends'
+    Descriptions: 'Discover soft toys', 'Find the perfect teddy', 'Soft toys for cozy times', 'Hamleys plush collection'
+
+3. Preschool Learning Toys:
+    URL: https://www.hamleys.com/shop-toys/preschool
+    Summary: Educational toys for early learning, including bath toys and toys for babies.
+    Keywords: 'Preschool', 'Educational', 'Learning Toys', 'Bath Toys', 'Babies'
+    Headlines: 'Learn Through Play', 'Early Education', 'Bath Time Fun', ""Baby's First Toy"", 'Play & Learn', 'Smart Start', 'Learning Adventure', 'Educational Play', 'Preschool Puzzles', 'Fun Learning', 'Grow & Learn', 'Smart Play', 'Learn & Laugh', 'Bath Toy Splash', 'Baby Playtime'
+    Descriptions: 'Toys for early learning', 'Educational toys for tots', 'Make bath time fun', 'Toys to grow with'
+
+4. Budget-Friendly Toys:
+    URL: https://www.hamleys.com/shop-toys/by-price-point/20-and-under
+    Summary: A selection of toys priced at £20 and under, suitable for gift-giving on a budget.
+    Keywords: 'Affordable', 'Budget Toys', 'Under £20', 'Gift Ideas', 'Value'
+    Headlines: 'Toys on a Budget', 'Affordable Fun', 'Gifts Under £20', 'Save & Play', 'Budget-Friendly', 'Value Playtime', 'Cheap Thrills', 'Economical Toys', 'Smart Savings', 'Pennywise Play', 'Inexpensive Gifts', 'Budget Buys', 'Value Gifts', 'Economical Fun', 'Savvy Shopping'
+    Descriptions: 'Toys for every budget', ""Gifts that won't break"", 'Affordable toy range', 'Quality toys for less'
+"
+48,2024-01-01 00:00:09,websurfer,https://www.konzum.hr,10,gpt3-5,gpt4,gpt4,156.97168707847595,DONE,True,"Here is a summary of the information you requested:
+
+Konzum is a Croatian supermarket chain offering a wide range of products including special offers, private label brands, fresh produce, dairy, meat, and fish. The website features a user-friendly layout with categories for easy navigation.
+
+Relevant Pages:
+
+1. Posebne ponude - Konzum:
+    URL: https://www.konzum.hr/web/posebne-ponude
+    Summary: Special offers section featuring current promotions and deals.
+    Keywords: 'Special Offers', 'Discounts', 'Deals', 'Promotions', 'Savings', 'Weekly Ads', 'Bargains', 'Sale', 'Limited Time', 'Exclusive Offers', 'Clearance', 'Markdowns', 'Value Packs', 'Combo Deals', 'Seasonal Sales'
+    Headlines: 'Hot Deals Now', 'Save Big Today', 'Weekly Specials', 'Deals Galore', 'Super Savings', 'Discount Delight', 'Bargain Buys', 'Sale Spotlight', 'Promo Picks', 'Budget-Friendly', 'Price Drops', 'Clearance Finds', 'Value Deals', 'Flash Sale', 'Offer Ends Soon'
+    Descriptions: 'Unbeatable prices on top items', 'Your favorite products for less', ""Exclusive deals you can't miss"", 'Shop and save with Konzum'
+
+2. Naše robne marke - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/nase-robne-marke
+    Summary: Our Brands section showcasing Konzum's private label products.
+    Keywords: 'Private Label', 'Our Brands', 'Exclusive', 'Quality Products', 'Konzum Brand', 'Local Brands', 'Trusted Quality', 'Customer Favorites', 'Signature Selection', 'Premium Choice', 'Home Brand', 'Store Brands', 'Unique Finds', 'Konzum Exclusive', 'Branded Goods'
+    Headlines: 'Exclusive Brands', 'Konzum Quality', 'Signature Picks', 'Trusted Choices', 'Local Favorites', 'Premium Goods', 'Brand Spotlight', 'Quality Finds', 'Exclusive Range', 'Our Best', 'Home Essentials', 'Unique Selection', 'Quality First', 'Branded Best', ""Konzum's Finest""
+    Descriptions: 'Quality meets affordability', ""Exclusive brands you'll love"", 'Discover our premium selection', ""Konzum's trusted quality""
+
+3. Voće i povrće - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/voce-i-povrce
+    Summary: Fruits and Vegetables category with a variety of fresh produce.
+    Keywords: 'Fresh Produce', 'Fruits', 'Vegetables', 'Organic Options', 'Seasonal Picks', 'Healthy Choices', 'Freshness Guaranteed', 'Local Produce', 'Exotic Fruits', 'Garden Fresh', 'Salad Staples', 'Fruit Baskets', 'Veggie Variety', 'Green Goods', 'Farm to Table'
+    Headlines: 'Fresh Fruits', 'Veggie Fresh', 'Organic Picks', ""Season's Best"", 'Healthy Produce', 'Local Harvest', 'Exotic Flavors', 'Salad Ready', 'Fresh Daily', ""Nature's Best"", 'Garden Variety', 'Fruitful Finds', 'Veg Out', 'Fresh Bites', 'Eco Choices'
+    Descriptions: ""Nature's freshest flavors"", 'Healthy options every day', 'From farm to your table', 'Freshness in every bite'
+
+4. Mliječni proizvodi i jaja - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/mlijecni-proizvodi-i-jaja
+    Summary: Dairy and Eggs section with a wide range of products.
+    Keywords: 'Dairy Products', 'Milk', 'Cheese', 'Eggs', 'Yogurt', 'Butter', 'Cream', 'Dairy Alternatives', 'Organic Dairy', 'Lactose-Free', 'Cheese Varieties', 'Fresh Eggs', 'Dairy Essentials', 'Cultured Dairy', 'Dairy Delights'
+    Headlines: 'Creamy Dairy', 'Egg Essentials', 'Cheese Choices', 'Milk Must-Haves', 'Yogurt Yum', 'Butter Best', 'Cream Delights', 'Dairy Deals', 'Organic Milk', 'Lactose-Free', 'Cheese Galore', 'Egg-cellent', 'Dairy Fresh', 'Cultured Picks', 'Dairy Variety'
+    Descriptions: 'Dairy delights for all', 'Eggs-cellent choices daily', 'Cheese for every taste', 'Fresh dairy every day'
+
+5. Meso i riba - Konzum:
+    URL: https://www.konzum.hr/web/t/kategorije/meso-i-riba
+    Summary: Meat and Fish category offering a selection of quality products.
+    Keywords: 'Fresh Meat', 'Seafood', 'Fish', 'Poultry', 'Beef', 'Pork', 'Lamb', 'Organic Meat', 'Fresh Catch', 'Sea Delights', ""Butcher's Choice"", 'Quality Cuts', 'Marine Harvest', 'Meat Market', ""Fishmonger's Pick""
+    Headlines: 'Meat Market', 'Seafood Fresh', 'Poultry Picks', 'Beef Bites', 'Pork Portions', 'Lamb Luxe', 'Organic Meats', 'Catch of the Day', 'Sea Specials', ""Butcher's Best"", 'Prime Cuts', 'Fish Finds', 'Meat Treats', 'Ocean Eats', 'Fresh Fillets'
+    Descriptions: 'Quality meats, great taste', 'Seafood at its freshest', 'Poultry for every plate', 'Delicious meats and fish'
+"
+49,2024-01-01 00:00:09,websurfer,https://faststream.airt.ai,10,gpt3-5,gpt4,gpt4,198.1804051399231,DONE,True,"Here is a summary of the information you requested:
+
+Unable to retrieve detailed information for a Google Ads campaign due to all relevant links on the FastStream website returning a 404 error. The only accessible content was the homepage, which provided an overview of FastStream's capabilities and community feedback.
+
+Relevant Pages:
+
+1. FastStream Homepage:
+    URL: https://faststream.airt.ai/
+    Summary: FastStream is an open-source framework for building asynchronous web services that interact with event streams.
+    Keywords: 'Open-source', 'Asynchronous', 'Web services', 'Event streams', 'Message brokers', 'API', 'Pydantic', 'AsyncAPI', 'Documentation', 'Dependency Injection', 'Testing', 'Extensible', 'HTTP framework compatibility', 'Code generation', 'Community feedback'
+    Headlines: 'Async Services Framework', 'Unified Messaging API', 'Pydantic Message Validation', 'Auto AsyncAPI Docs', 'Smooth Dev Experience', 'Built-in DI System', 'In-memory Testing Support', 'Framework Extensibility', 'HTTP Frameworks Compatible', 'Code Generation Optimized', 'Community Endorsed', 'Kafka, RabbitMQ Support', 'NATS, Redis Integration', 'FastAPI Optimization', 'Open-source Innovation'
+    Descriptions: 'Framework for async services.', 'Supports multiple brokers.', 'Validates messages effectively.', 'Generates AsyncAPI docs automatically.'
+
+2. FastStream Community Feedback:
+    URL: https://faststream.airt.ai/
+    Summary: Community feedback on FastStream's framework and its impact on asynchronous service development.
+    Keywords: 'Community', 'Feedback', 'User testimonials', 'Twitter mentions', 'Reddit comments', 'Developer experiences', 'Service development', 'Python community', 'NATS.io endorsement', 'Project interest', 'Framework reviews', 'User opinions', 'Social media', 'Community contributions', 'Developer insights'
+    Headlines: 'Community Feedback', 'User Testimonials', 'Twitter Endorsements', 'Reddit Developer Insights', 'Positive Reviews', 'NATS.io Approval', 'Project Anticipation', 'Framework Praise', 'User Experiences', 'Social Media Buzz', 'Developer Opinions', 'Community Contributions', 'Framework Discussions', 'User Interest', 'Developer Recommendations'
+    Descriptions: 'Endorsed by the community.', 'Positive developer feedback.', 'Highlighted in social media.', 'Community-driven insights.'
+
+3. FastStream Error Pages:
+    URL: https://faststream.airt.ai/
+    Summary: Multiple 404 error pages encountered while attempting to access FastStream's detailed product and service information.
+    Keywords: '404 error', 'Page not found', 'Access issues', 'Website errors', 'Technical difficulties', 'Broken links', 'Navigation problems', 'User experience', 'Website maintenance', 'Error reporting', 'Technical support', 'Website reliability', 'Link verification', 'Troubleshooting', 'Service accessibility'
+    Headlines: '404 Error Encountered', 'Pages Not Found', 'Access Issues', 'Website Errors', 'Technical Difficulties', 'Broken Links Found', 'Navigation Problems', 'User Experience Issue', 'Maintenance Required', 'Error Reporting', 'Technical Support', 'Website Reliability', 'Verify Links', 'Troubleshooting', 'Service Accessibility'
+    Descriptions: 'Encountered 404 errors.', 'Issues accessing pages.', 'Broken links on website.', 'Technical support needed.'
+"

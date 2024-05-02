@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import autogen
 import requests
+from annotated_types import Len
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import Annotated
@@ -51,15 +52,15 @@ class WebPageSummary(BaseModel):
     url: HttpUrl
     title: str
     page_summary: str
-    keywords: List[str]
-    headlines: List[str]
-    descriptions: List[str]
+    keywords: Annotated[List[str], Len(min_length=1)]
+    headlines: Annotated[List[str], Len(min_length=3, max_length=15)]
+    descriptions: Annotated[List[str], Len(min_length=2, max_length=4)]
 
 
 class Summary(BaseModel):
     type: Literal["SUMMARY"] = "SUMMARY"
     summary: str
-    relevant_pages: List[WebPageSummary]
+    relevant_pages: Annotated[List[WebPageSummary], Len(min_length=1)]
 
 
 example = Summary(
@@ -336,10 +337,9 @@ VERY IMPORTANT:
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
 
-If you are NOT able to retrieve ANY information from the web page, your last message needs to start with "FAILED:" and then you need to write the reason why you failed.
+If you are NOT able to retrieve ANY information from the web page, your last message needs to start with "I GIVE UP:" and then you need to write the reason why you gave up.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
-If you are able to retrieve any information, create a summary and do NOT return FAILED message!
-A message should NEVER contain both "FAILED:" and "SUMMARY:"!
+If you are able to retrieve any information, create a summary and do NOT return "I GIVE UP" message!
 """
 
 
@@ -376,6 +376,7 @@ def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         or content.startswith('{"type": "SUMMARY"')
         or "TERMINATE" in content
         or "```json" in content
+        or "I GIVE UP" in content
     )
 
 
@@ -431,10 +432,12 @@ def get_get_info_from_the_web_page(
         elif status_code < 200 or status_code >= 400:
             return f"FAILED: The URL returned status code {status_code}. Please provide a valid URL."
 
-        last_message = ""
-        failure_message = ""
+        last_message: str = ""
+        failure_message: str = ""
         min_relevant_pages_msg = f"The summary must include AT LEAST {min_relevant_pages} or more relevant pages."
         for _ in range(outer_retries):
+            last_message = ""
+            failure_message = ""
             try:
                 web_surfer = WebSurferAgent(
                     "web_surfer",
@@ -466,6 +469,9 @@ The JSON-encoded summary must contain at least {min_relevant_pages} relevant pag
                 for _ in range(inner_retries):
                     last_message = str(web_surfer_navigator.last_message()["content"])
                     try:
+                        if "I GIVE UP" in last_message:
+                            failure_message = ""
+                            break
                         if (
                             "TERMINATE" in last_message
                             and "```json" not in last_message
