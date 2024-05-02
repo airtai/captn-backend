@@ -195,7 +195,7 @@ def run_tests(
     if "BENCHMARKING_AZURE_API_ENDPOINT" in os.environ:
         os.environ["AZURE_API_ENDPOINT"] = os.environ["BENCHMARKING_AZURE_API_ENDPOINT"]
     if "BENCHMARKING_AZURE_API_KEY" in os.environ:
-        os.environ["AZURE_API_KEY"] = os.environ["BENCHMARKING_AZURE_API_KEY"]
+        os.environ["AZURE_OPENAI_API_KEY"] = os.environ["BENCHMARKING_AZURE_API_KEY"]
 
     from .websurfer import benchmark_websurfer
 
