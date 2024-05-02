@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -7,7 +7,8 @@ from typing_extensions import Annotated
 from ..teams._team import Team
 from ..toolboxes import Toolbox
 from ._functions import (
-    get_info_from_the_web_page,
+    LAST_MESSAGE_BEGINNING,
+    get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client,
     reply_to_client_description,
@@ -20,6 +21,7 @@ class Context:
     conv_id: int
     initial_brief: str
     function_call_counter: Dict[str, bool] = field(default_factory=dict)
+    get_info_from_web_page_result: Optional[str] = None
 
 
 class DelegateTask(BaseModel):
@@ -34,14 +36,26 @@ class DelegateTask(BaseModel):
 You must fill in all the fields. NEVER write [Insert client's business]!! You are responsible for filling in the information!""",
         ),
     ]
-    summary_from_web_page: Annotated[
-        str,
-        Field(
-            ...,
-            min_length=30,
-            description="The summary of the web page content which will be used to complete the task.",
-        ),
-    ]
+
+
+_get_info_from_the_web_page_original = get_get_info_from_the_web_page()
+
+
+def _change_the_team_and_start_new_chat(
+    user_id: int, conv_id: int, final_task: str, team_class: Type[Team]
+) -> str:
+    # Remove the user_id-conv_id pair from the team so that the new team can be created
+    Team.pop_team(user_id=user_id, conv_id=conv_id)
+    team = team_class(  # type: ignore
+        task=final_task,
+        user_id=user_id,
+        conv_id=conv_id,
+    )
+
+    team.initiate_chat()
+    # the last message is TeamResponse in json encoded string
+    last_message = team.get_last_message(add_prefix=False)
+    return last_message
 
 
 def create_brief_creation_team_toolbox(
@@ -97,6 +111,10 @@ Here is a template for the customer brief you will need to create:
         ],
         context: Context,
     ) -> str:
+        get_info_from_web_page_result = context.get_info_from_web_page_result
+        if get_info_from_web_page_result is None:
+            return "You need to scrape the web page first by using the get_info_from_the_web_page command."
+
         user_id = context.user_id
         conv_id = context.conv_id
 
@@ -104,24 +122,35 @@ Here is a template for the customer brief you will need to create:
             task_and_context_to_delegate.team_name
         )
 
-        final_task = f"Here is the customer brief:\n{task_and_context_to_delegate.customers_business_brief}\n\nAdditional info from the web page:\n{task_and_context_to_delegate.summary_from_web_page}\n\nAnd the task is following:\n{task_and_context_to_delegate.task}"
+        final_task = f"""Here is the customer brief:
+{task_and_context_to_delegate.customers_business_brief}
 
-        # Remove the user_id-conv_id pair from the team so that the new team can be created
-        Team.pop_team(user_id=user_id, conv_id=conv_id)
-        team = team_class(  # type: ignore
-            task=final_task,
+Additional info from the web page:
+{get_info_from_web_page_result}
+
+And the task is following:
+{task_and_context_to_delegate.task}
+"""
+
+        last_message = _change_the_team_and_start_new_chat(
             user_id=user_id,
             conv_id=conv_id,
+            final_task=final_task,
+            team_class=team_class,
         )
-
-        team.initiate_chat()
-        # the last message is TeamResponse in json encoded string
-        last_message = team.get_last_message(add_prefix=False)
         return last_message
 
-    toolbox.add_function(get_info_from_the_web_page_description)(
-        get_info_from_the_web_page
-    )
+    @toolbox.add_function(get_info_from_the_web_page_description)
+    def get_info_from_the_web_page(
+        url: Annotated[str, "The url of the web page which needs to be summarized"],
+        context: Context,
+    ) -> str:
+        result = _get_info_from_the_web_page_original(url)
+
+        if LAST_MESSAGE_BEGINNING in result:
+            context.get_info_from_web_page_result = result
+
+        return result
 
     toolbox.add_function(reply_to_client_description)(reply_to_client)
 

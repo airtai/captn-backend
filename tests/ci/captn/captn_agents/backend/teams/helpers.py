@@ -97,7 +97,7 @@ def get_client_response(
             else "No conversation yet."
         )
 
-        message = f"This is the whole conversation between the team:\n\n{team_chat_history}\n\nYou must answer the following question:\n\n{message_for_client}"
+        message = f"This is the whole conversation between the team:\n\n{team_chat_history}\n\nYou must answer the following question/last message from the team:\n\n{message_for_client}"
 
         sender.initiate_chat(client, message=message, cache=cache)
         # last_message is the last message sent by the client

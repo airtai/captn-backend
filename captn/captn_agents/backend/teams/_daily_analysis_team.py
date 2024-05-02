@@ -22,6 +22,8 @@ from ....google_ads.client import (
     list_accessible_customers,
 )
 from ..tools._daily_analysis_team_tools import create_daily_analysis_team_toolbox
+from ..tools._functions import get_webpage_status_code
+from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND
 from ._team import Team
 
 __all__ = ("DailyAnalysisTeam",)
@@ -396,15 +398,8 @@ def get_web_status_code_report_for_campaign(
         for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
             final_urls = ad_group_ad["final_urls"]
             for final_url in final_urls:
-                if "http" not in final_url:
-                    final_url = f"https://{final_url}"
-                try:
-                    status_code = requests.head(
-                        final_url, allow_redirects=True, timeout=10
-                    ).status_code
-                except requests.ConnectionError:
-                    status_code = 0
-                if status_code < 200 or status_code >= 400:
+                status_code = get_webpage_status_code(url=final_url)
+                if status_code is None or status_code < 200 or status_code >= 400:
                     send_warning_message_for_campaign = True
                     final_url_link = (
                         f"<a href='{final_url}' target='_blank'>{final_url}</a>"
@@ -788,7 +783,7 @@ Try to figure out as much as possible before sending the email to the client. If
 
     @property
     def _commands(self) -> str:
-        return """## Commands
+        return f"""## Commands
 Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
@@ -796,9 +791,7 @@ All team members have access to the following command:
 1. send_email: Send email to the client, params: (proposed_user_actions: List[str]])
 Each message in the 'proposed_user_actions' parameter must contain all information useful to the client, because the client does not see your team's conversation
 As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
-2. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
-It should be used only for the clients web page(s), final_url(s) etc.
-This command should be used for retrieving the information from clients web page.
+2. {GET_INFO_FROM_THE_WEB_COMMAND}
 
 ONLY Google ads specialist can suggest following commands:
 1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
@@ -818,7 +811,7 @@ SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criter
 
 NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
 You can execute the provided queries ONLY by using the 'execute_query' command!
-"""
+"""  # nosec: [B608]
 
 
 def _create_final_html_message(

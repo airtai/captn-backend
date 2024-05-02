@@ -7,7 +7,7 @@ It is VERY important that you use the 'smart_suggestions' parameter!
 Use it so the client can easily choose between multiple options and make a quick reply by clicking on the suggestion.
 e.g.:"""
 
-GET_INFO_FROM_THE_WEB_COMMAND = """'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
+GET_INFO_FROM_THE_WEB_COMMAND = """'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string)
 It should be used only for the clients web page(s), final_url(s) etc.
 This command should be used for retrieving the information from clients web page.
 If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc."""

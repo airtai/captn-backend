@@ -21,6 +21,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
+from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_IKEA
 from .helpers import helper_test_init
 
 
@@ -88,7 +89,9 @@ class TestCampaignCreationTeam:
     @pytest.mark.campaign_creation_team
     def test_end2end(self, setup_ad_group_with_ad_and_keywords: None) -> None:
         def ask_client_for_permission_mock(*args, **kwargs) -> str:
-            customer_to_update = "We propose changes for the following customer: 'airt technologies d.o.o' (ID: 1111)"
+            customer_to_update = (
+                "We propose changes for the following customer: 'IKEA' (ID: 1111)"
+            )
             assert "resource_details" in kwargs, f"{kwargs.keys()=}"
             assert "proposed_changes" in kwargs, f"{kwargs.keys()=}"
             message = f"{customer_to_update}\n\n{kwargs['resource_details']}\n\n{kwargs['proposed_changes']}"
@@ -101,18 +104,17 @@ class TestCampaignCreationTeam:
             return clients_answer
 
         task = """Here is the customer brief:
-Business: airt.ai
-Goal: The goal of the Google Ads campaign is to increase brand awareness and boost sales for airt.ai.
+Business: IKEA
+Goal: The goal of the Google Ads campaign is to increase brand awareness and boost sales for https://www.ikea.com/gb/en.
 Current Situation: The client is currently running digital marketing campaigns.
-Website: The website for airt.ai is [airt.ai](https://airt.ai).
-Digital Marketing Objectives: The objectives of the Google Ads campaign are to increase brand awareness and drive website traffic for airt.ai.
+Website: The website for https://www.ikea.com/gb/en is [https://www.ikea.com/gb/en](https://https://www.ikea.com/gb/en).
+Digital Marketing Objectives: The objectives of the Google Ads campaign are to increase brand awareness and drive website traffic for https://www.ikea.com/gb/en.
 Any Other Information Related to Customer Brief: N/A
-Additional info from the web page:
-airt.ai is a website that offers an AI-powered framework for streaming app development. They provide a fast and efficient framework for creating, testing, and managing microservices for streaming data. They also use bleeding-edge technology and deep learning to drive impact in their solutions. The website offers various products and tools for developers to explore, including the FastStream framework, Monotonic Neural Networks, and Material for nbdev. Users can also find news and information about the company on the website.
 And the task is following:
 For customer with ID 1111 I have already created campaign with ID: 1212.
 The currency set for that campaign is EUR.
 Create new ad groups with ad and keywords for the campaign.
+- create ONLY ad groups for "IKEA for Business" and "Beds & Mattresses"
 
 DO NOT ask client for feedback while you are planning or executing the task. You can ask for feedback only after you
 have all information needed to ask for the final approval by calling 'ask_client_for_permission' function. Only after
@@ -125,28 +127,6 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 conv_id=456,
                 task=task,
             )
-
-            get_info_from_the_web_page_return_value = """SUMMARY:
-
-Page content: The website is for a company called "airt" that offers an AI-powered framework for streaming app development. They provide a FastStream framework for creating, testing, and managing microservices for streaming data. They also have tools like Monotonic Neural Networks and Material for nbdev. The company focuses on driving impact with deep learning and incorporates a GPT-based model for predicting future events to be streamed. They have a community section and offer various products and tools. The website provides information about the company, news, and contact details.
-
-Relevant links:
-- FastStream framework: https://faststream.airt.ai
-- Monotonic Neural Networks: https://monotonic.airt.ai
-- Material for nbdev: https://nbdev-mkdocs.airt.ai
-- News: /news
-- About Us: /about-us
-- Company information: /company-information
-- Contact Us: /contact-us
-
-Keywords: airt, AI-powered framework, streaming app development, FastStream framework, microservices, Monotonic Neural Networks, Material for nbdev, deep learning, GPT-based model
-
-Headlines (MAX 30 char each): airt, AI-powered framework, FastStream, microservices, Monotonic Neural Networks, deep learning, GPT-based model, community, news, contact
-
-Descriptions (MAX 90 char each): AI-powered framework for streaming app development, Create, test, and manage microservices for streaming data, Driving impact with deep learning, GPT-based model for predicting future events, Explore news and contact information
-
-Use these information to SUGGEST the next steps to the client, but do NOT make any permanent changes without the client's approval!
-"""
 
             with (
                 unittest.mock.patch.object(
@@ -174,7 +154,7 @@ Use these information to SUGGEST the next steps to the client, but do NOT make a
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,
                     "get_info_from_the_web_page",
-                    return_value=get_info_from_the_web_page_return_value,
+                    return_value=WEB_PAGE_SUMMARY_IKEA,
                 ),
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,

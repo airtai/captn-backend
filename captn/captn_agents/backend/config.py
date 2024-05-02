@@ -4,15 +4,12 @@ from typing import Dict, List
 import openai
 from autogen import __version__ as autogen_version
 from autogen.oai.openai_utils import filter_config
-from dotenv import load_dotenv
 
 __all__ = ("Config",)
 
 
 class Config:
     def __init__(self) -> None:
-        load_dotenv()
-
         api_key = os.getenv("AZURE_OPENAI_API_KEY")
         api_base = os.getenv("AZURE_API_ENDPOINT")
         gpt_4_model_name = os.getenv("AZURE_GPT4_MODEL")

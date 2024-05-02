@@ -578,7 +578,7 @@ async def _get_necessary_parameters(
 async def _get_existing_ad_group_criterion(
     user_id: int,
     customer_id: str,
-    criterion_id: str,
+    criterion_id: Optional[str],
 ) -> Any:
     query = f"""SELECT ad_group_criterion.status, ad_group_criterion.negative,
 ad_group_criterion.keyword.match_type, ad_group_criterion.keyword.text
@@ -1133,7 +1133,7 @@ async def add_negative_keywords_to_campaign(
 async def _get_existing_campaign_criterion(
     user_id: int,
     customer_id: str,
-    criterion_id: str,
+    criterion_id: Optional[str],
 ) -> Any:
     query = f"""SELECT campaign_criterion.keyword.match_type, campaign_criterion.keyword.text
 FROM campaign_criterion

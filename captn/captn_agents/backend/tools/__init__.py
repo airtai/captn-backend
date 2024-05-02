@@ -5,7 +5,7 @@ from ._campaign_creation_team_tools import (
 # todo: add others
 from ._functions import (
     ask_client_for_permission,
-    get_info_from_the_web_page,
+    get_get_info_from_the_web_page,
     reply_to_client,
     send_email,
 )
@@ -13,7 +13,7 @@ from ._functions import (
 __all__ = (
     "ask_client_for_permission",
     "create_campaign_creation_team_toolbox",
-    "get_info_from_the_web_page",
+    "get_get_info_from_the_web_page",
     "reply_to_client",
     "send_email",
 )
