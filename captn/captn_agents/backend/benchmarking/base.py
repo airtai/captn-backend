@@ -199,8 +199,10 @@ def run_tests(
         help="Path to the file with the tasks",
     ),
 ) -> None:
-    os.environ["AZURE_API_ENDPOINT"] = os.environ["BENCHMARKING_AZURE_API_ENDPOINT"]
-    os.environ["AZURE_OPENAI_API_KEY"] = os.environ["BENCHMARKING_AZURE_OPENAI_API_KEY"]
+    if "BENCHMARKING_AZURE_API_ENDPOINT" in os.environ:
+        os.environ["AZURE_API_ENDPOINT"] = os.environ["BENCHMARKING_AZURE_API_ENDPOINT"]
+    if "BENCHMARKING_AZURE_API_KEY" in os.environ:
+        os.environ["AZURE_API_KEY"] = os.environ["BENCHMARKING_AZURE_API_KEY"]
 
     _file_path: Path = Path(file_path)
     while True:
