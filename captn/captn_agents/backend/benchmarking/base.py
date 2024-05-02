@@ -2,6 +2,7 @@
 
 import datetime
 import itertools
+import os
 import random
 import time
 from contextlib import contextmanager
@@ -198,6 +199,9 @@ def run_tests(
         help="Path to the file with the tasks",
     ),
 ) -> None:
+    os.environ["AZURE_API_ENDPOINT"] = os.environ["BENCHMARKING_AZURE_API_ENDPOINT"]
+    os.environ["AZURE_OPENAI_API_KEY"] = os.environ["BENCHMARKING_AZURE_OPENAI_API_KEY"]
+
     _file_path: Path = Path(file_path)
     while True:
         row: pd.Series
