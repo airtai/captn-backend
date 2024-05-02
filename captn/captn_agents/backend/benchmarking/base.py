@@ -225,7 +225,7 @@ def run_tests(
         for k in COMMON_COLUMNS:
             kwargs.pop(k)
         try:
-            task = row["task"]
+            task = kwargs.pop("task")
             benchmark = benchmarks[task]
             result = run_test(benchmark=benchmark, **kwargs)
 
