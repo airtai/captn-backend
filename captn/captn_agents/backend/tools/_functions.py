@@ -343,10 +343,6 @@ VERY IMPORTANT:
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
 
-If you are NOT able to retrieve ANY information from the web page, your last message needs to start with "I GIVE UP:" and then you need to write the reason why you gave up.
-If some links are not working, try navigating to the previous page or the home page and continue with the task.
-If you are able to retrieve any information, create a summary and do NOT return "I GIVE UP" message!
-
 You MUST always reply to the last message from the web_surfer agent! Your reply can NOT be empty message!
 """
 
