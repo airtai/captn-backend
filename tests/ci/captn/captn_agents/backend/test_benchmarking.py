@@ -9,7 +9,7 @@ from pytest import MonkeyPatch
 from tabulate import tabulate
 from typer.testing import CliRunner
 
-import captn.captn_agents.backend.benchmarking.base
+import captn.captn_agents.backend.benchmarking.websurfer
 from captn.captn_agents.backend.benchmarking.base import (
     app,
 )
@@ -50,7 +50,7 @@ class TestWebsurfer:
                 raise RuntimeError("it's not ok")
 
         monkeypatch.setattr(
-            captn.captn_agents.backend.benchmarking.base,
+            captn.captn_agents.backend.benchmarking.websurfer,
             "benchmark_websurfer",
             functools.partial(benchmark_websurfer_success, success),
         )

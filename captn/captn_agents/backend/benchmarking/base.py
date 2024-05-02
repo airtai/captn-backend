@@ -8,14 +8,12 @@ import time
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterator, Literal, TypeAlias
+from typing import Any, Callable, Dict, Iterator, Literal, TypeAlias
 
 import pandas as pd
 import typer
 from filelock import FileLock
 from tabulate import tabulate
-
-from .websurfer import benchmark_websurfer
 
 
 class Models(str, Enum):
@@ -126,14 +124,9 @@ def generate_task_table_for_websurfer(
 
 
 def run_test(
-    task: tasks_types,
+    benchmark: Callable[..., Any],
     **kwargs: Any,
 ) -> Dict[str, Any]:
-    benchmarks = {
-        "websurfer": benchmark_websurfer,
-    }
-
-    benchmark = benchmarks[task]
     try:
         time_start = time.time()
         output = benchmark(**kwargs)
@@ -204,6 +197,12 @@ def run_tests(
     if "BENCHMARKING_AZURE_API_KEY" in os.environ:
         os.environ["AZURE_API_KEY"] = os.environ["BENCHMARKING_AZURE_API_KEY"]
 
+    from .websurfer import benchmark_websurfer
+
+    benchmarks = {
+        "websurfer": benchmark_websurfer,
+    }
+
     _file_path: Path = Path(file_path)
     while True:
         row: pd.Series
@@ -226,7 +225,9 @@ def run_tests(
         for k in COMMON_COLUMNS:
             kwargs.pop(k)
         try:
-            result = run_test(**kwargs)
+            task = row["task"]
+            benchmark = benchmarks[task]
+            result = run_test(benchmark=benchmark, **kwargs)
 
             with lock_file(_file_path):
                 df = pd.read_csv(_file_path, index_col=0)

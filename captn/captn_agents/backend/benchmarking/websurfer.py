@@ -1,16 +1,10 @@
 from ..tools._functions import (
     get_get_info_from_the_web_page,
-    llm_config_gpt_3_5,
-    llm_config_gpt_4,
+    get_llm_config_gpt_3_5,
+    get_llm_config_gpt_4,
 )
 
 __all__ = ["benchmark_websurfer"]
-
-
-_llm_configs = {
-    "gpt3-5": llm_config_gpt_3_5,
-    "gpt4": llm_config_gpt_4,
-}
 
 
 def benchmark_websurfer(
@@ -22,13 +16,18 @@ def benchmark_websurfer(
     navigator_llm: str = "gpt4",
     timestamp: str = "2024-01-01T00:00:0",
 ) -> str:
+    llm_configs = {
+        "gpt3-5": get_llm_config_gpt_3_5(),
+        "gpt4": get_llm_config_gpt_4(),
+    }
+
     get_info_from_the_web_page = get_get_info_from_the_web_page(
         outer_retries=outer_retries,
         inner_retries=inner_retries,
-        summarizer_llm_config=_llm_configs[summarizer_llm],
-        websurfer_llm_config=_llm_configs[llm],
+        summarizer_llm_config=llm_configs[summarizer_llm],
+        websurfer_llm_config=llm_configs[llm],
         timestamp=timestamp,
-        websurfer_navigator_llm_config=_llm_configs[navigator_llm],
+        websurfer_navigator_llm_config=llm_configs[navigator_llm],
     )
     # TODO: Fix type-ignore
     last_message = get_info_from_the_web_page(

@@ -249,19 +249,25 @@ Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
 Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
 
 
-config = Config()
+def get_llm_config_gpt_4() -> Dict[str, Any]:
+    config = Config()
 
-llm_config_gpt_4 = {
-    "timeout": 600,
-    "config_list": config.config_list_gpt_4,
-    "temperature": 0,
-}
+    return {
+        "timeout": 600,
+        "config_list": config.config_list_gpt_4,
+        "temperature": 0,
+    }
 
-llm_config_gpt_3_5 = {
-    "timeout": 600,
-    "config_list": config.config_list_gpt_3_5,
-    "temperature": 0,
-}
+
+def get_llm_config_gpt_3_5() -> Dict[str, Any]:
+    config = Config()
+
+    return {
+        "timeout": 600,
+        "config_list": config.config_list_gpt_3_5,
+        "temperature": 0,
+    }
+
 
 get_info_from_the_web_page_description = """Retrieve wanted information from the web page.
 There is no need to test this function (by sending url: https://www.example.com).
@@ -408,15 +414,26 @@ _task_guidelines = "Please provide a summary of the website, including the produ
 def get_get_info_from_the_web_page(
     outer_retries: int = 3,
     inner_retries: int = 10,
-    summarizer_llm_config: Dict[str, Any] = llm_config_gpt_3_5,
-    websurfer_llm_config: Dict[str, Any] = llm_config_gpt_4,
-    websurfer_navigator_llm_config: Dict[str, Any] = llm_config_gpt_4,
+    summarizer_llm_config: Optional[Dict[str, Any]] = None,
+    websurfer_llm_config: Optional[Dict[str, Any]] = None,
+    websurfer_navigator_llm_config: Optional[Dict[str, Any]] = None,
     timestamp: Optional[str] = None,
     min_relevant_pages: int = 3,
 ) -> Callable[[str], str]:
+    fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
+
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
     ) -> str:
+        summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config = fx
+
+        if summarizer_llm_config is None:
+            summarizer_llm_config = get_llm_config_gpt_3_5()
+        if websurfer_llm_config is None:
+            websurfer_llm_config = get_llm_config_gpt_4()
+        if websurfer_navigator_llm_config is None:
+            websurfer_navigator_llm_config = get_llm_config_gpt_4()
+
         timestamp_copy = timestamp
         web_surfer_navigator_system_message = (
             _create_web_surfer_navigator_system_message(
