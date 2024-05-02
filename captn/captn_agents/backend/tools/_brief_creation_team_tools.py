@@ -150,6 +150,11 @@ And the task is following:
         if LAST_MESSAGE_BEGINNING in result:
             context.get_info_from_web_page_result = result
 
+        result += """\n\nPlease use the rely_to_client to present what you have found on the web page to the client.
+
+Use smart suggestions with type 'manyOf' to ask the client in which pages they are interested in.
+Each relevant page should be one smart suggestion.
+"""
         return result
 
     toolbox.add_function(reply_to_client_description)(reply_to_client)

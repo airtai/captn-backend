@@ -323,10 +323,10 @@ Give up only if you get 40x error on ALL the pages which you tried to navigate t
 
 
 FINAL MESSAGE:
-If successful, your last message MUST be JSON-encoded summary according to the following JSON schema:
+Once you have retrieved he wanted information, you MUST create JSON-encoded string according to the following JSON schema:
 {example.model_json_schema()}
 
-You MUST not include any other text or formatting in the message, only JSON-encoded summary!
+You MUST not include any other text or formatting in the message, only JSON-encoded string!
 
 This is an example of correctly formatted JSON (unrelated to the task):
 ```json
@@ -346,6 +346,8 @@ We are interested ONLY in the products/services which the page is offering.
 If you are NOT able to retrieve ANY information from the web page, your last message needs to start with "I GIVE UP:" and then you need to write the reason why you gave up.
 If some links are not working, try navigating to the previous page or the home page and continue with the task.
 If you are able to retrieve any information, create a summary and do NOT return "I GIVE UP" message!
+
+You MUST always reply to the last message from the web_surfer agent! Your reply can NOT be empty message!
 """
 
 
@@ -401,14 +403,38 @@ In order to create the campaign, we need to understand the website and its produ
 Our task is to provide a summary of the website, including the products/services offered and any unique selling points.
 This is the first step in creating the Google Ads campaign so please gather as much information as possible.
 Visit the most likely pages to be advertised, such as the homepage, product pages, and any other relevant pages.
-Please provide a detailed summary of the website as JSON-encoded text as instructed in the guidelines.
+Please provide a detailed summary of the website as JSON-encoded string as instructed in the guidelines.
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
+e.g.
+"Here is a list of the links we will visit:
+1. Click the 'Products' link
+2. Click the 'Electronics' link
+3. Click the 'TVs' link
+
+Now, let's start with the task:
+Click no. 1 - Click the 'Products' link"
+
 You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
-When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones)" to the message.
+When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
 """
 
 _task_guidelines = "Please provide a summary of the website, including the products/services offered and any unique selling points."
+
+
+def _constuct_retry_message(
+    new_message: str,
+    give_up_message: str,
+    current_retries: int,
+    max_retires_before_give_up_message: int,
+) -> str:
+    if current_retries < max_retires_before_give_up_message:
+        return new_message
+
+    return f"""{new_message}
+
+{give_up_message}
+"""
 
 
 def get_get_info_from_the_web_page(
@@ -419,8 +445,14 @@ def get_get_info_from_the_web_page(
     websurfer_navigator_llm_config: Optional[Dict[str, Any]] = None,
     timestamp: Optional[str] = None,
     min_relevant_pages: int = 3,
+    max_retires_before_give_up_message: int = 7,
 ) -> Callable[[str], str]:
     fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
+
+    give_up_message = f"""ONLY if you are 100% sure that you can NOT retrieve any information for at least {min_relevant_pages} relevant pages,
+write 'I GIVE UP' and the reason why you gave up.
+
+But before giving up, please try to navigate to another page and continue with the task. Give up ONLY if you are sure that you can NOT retrieve any information!"""
 
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
@@ -478,13 +510,15 @@ def get_get_info_from_the_web_page(
                 initial_message += f"""
 URL: {url}
 TASK: {_task}
-The JSON-encoded summary must contain at least {min_relevant_pages} relevant pages!
+The JSON-encoded string must contain at least {min_relevant_pages} relevant pages!
 """
 
                 web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
 
-                for _ in range(inner_retries):
+                for i in range(inner_retries):
+                    print(f"Inner retry {i + 1}/{inner_retries}")
                     last_message = str(web_surfer_navigator.last_message()["content"])
+
                     try:
                         if "I GIVE UP" in last_message:
                             failure_message = ""
@@ -493,8 +527,14 @@ The JSON-encoded summary must contain at least {min_relevant_pages} relevant pag
                             "TERMINATE" in last_message
                             and "```json" not in last_message
                         ):
+                            retry_message = _constuct_retry_message(
+                                new_message=f"Before terminating, you must provide JSON-encoded string without any other text or formatting in a message. {min_relevant_pages_msg}",
+                                give_up_message=give_up_message,
+                                current_retries=i,
+                                max_retires_before_give_up_message=max_retires_before_give_up_message,
+                            )
                             web_surfer.send(
-                                f"Before terminating, you must provide JSON-encoded summary without any other text or formatting in a message. {min_relevant_pages_msg}",
+                                retry_message,
                                 recipient=web_surfer_navigator,
                             )
                             continue
@@ -506,19 +546,25 @@ The JSON-encoded summary must contain at least {min_relevant_pages} relevant pag
 
                         summary = Summary.model_validate_json(last_message)
                         if len(summary.relevant_pages) < min_relevant_pages:
+                            retry_message = _constuct_retry_message(
+                                new_message=f"FAILED: {min_relevant_pages_msg} You have provided only {len(summary.relevant_pages)} pages. Please try again.",
+                                give_up_message=give_up_message,
+                                current_retries=i,
+                                max_retires_before_give_up_message=max_retires_before_give_up_message,
+                            )
                             web_surfer.send(
-                                f"FAILED: {min_relevant_pages_msg} You have provided only {len(summary.relevant_pages)} pages. Please try again.",
+                                retry_message,
                                 recipient=web_surfer_navigator,
                             )
                             continue
                         last_message = _format_last_message(summary)
                         return last_message
                     except ValidationError as e:
-                        web_surfer.send(
-                            f"""FAILED to decode provided JSON:
+                        retry_message = _constuct_retry_message(
+                            new_message=f"""FAILED to decode provided JSON:
 {str(e.errors())}
 
-Please create a new JSON-encoded summary according to the following schema:
+Please create a new JSON-encoded string according to the following schema:
 {Summary.model_json_schema()}
 
 Example of correctly formatted JSON (unrelated to the task):
@@ -526,13 +572,23 @@ Example of correctly formatted JSON (unrelated to the task):
 {example.model_dump_json()}
 ```
 """,
+                            give_up_message=give_up_message,
+                            current_retries=i,
+                            max_retires_before_give_up_message=max_retires_before_give_up_message,
+                        )
+                        web_surfer.send(
+                            retry_message,
                             recipient=web_surfer_navigator,
                         )
 
                     except Exception as e:
-                        web_surfer.send(
-                            f"FAILED: {str(e)}", recipient=web_surfer_navigator
+                        retry_message = _constuct_retry_message(
+                            new_message=f"FAILED: {str(e)}",
+                            give_up_message=give_up_message,
+                            current_retries=i,
+                            max_retires_before_give_up_message=max_retires_before_give_up_message,
                         )
+                        web_surfer.send(retry_message, recipient=web_surfer_navigator)
             except Exception as e:
                 # todo: log the exception
                 failure_message = str(e)
