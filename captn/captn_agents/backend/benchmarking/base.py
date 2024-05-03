@@ -23,7 +23,7 @@ class Models(str, Enum):
 
 app = typer.Typer()
 
-tasks_types: TypeAlias = Literal["websurfer"]
+tasks_types: TypeAlias = Literal["websurfer", "brief_creation"]
 
 
 @contextmanager
@@ -164,17 +164,14 @@ def generate_task_table_for_brief_creation(
         # "https://www.hamleys.com/",
         # "https://www.konzum.hr",
         # "https://faststream.airt.ai",
-    ]
+    ] * repeat
 
-    timestamps = _create_timestamps(repeat=repeat)
     params_list = [
-        timestamps,
-        ["websurfer"],
+        ["brief_creation"],
         URLS,
         [llm],
     ]
     params_names = [
-        "timestamp",
         "task",
         "url",
         "llm",
@@ -258,10 +255,12 @@ def run_tests(
     if "BENCHMARKING_AZURE_API_KEY" in os.environ:
         os.environ["AZURE_OPENAI_API_KEY"] = os.environ["BENCHMARKING_AZURE_API_KEY"]
 
+    from .brief_creation_team import benchmark_brief_creation
     from .websurfer import benchmark_websurfer
 
     benchmarks = {
         "websurfer": benchmark_websurfer,
+        "brief_creation": benchmark_brief_creation,
     }
 
     _file_path: Path = Path(file_path)
@@ -288,7 +287,7 @@ def run_tests(
         try:
             task = kwargs.pop("task")
             benchmark = benchmarks[task]
-            result = run_test(benchmark=benchmark, **kwargs)
+            result = run_test(benchmark=benchmark, **kwargs)  # type: ignore[arg-type]
 
             with lock_file(_file_path):
                 df = pd.read_csv(_file_path, index_col=0)

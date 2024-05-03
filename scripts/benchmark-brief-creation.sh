@@ -12,8 +12,7 @@ echo "File name: $file_name"
 benchmark generate-task-table-for-brief-creation --output-dir $output_dir --file-name $file_name
 
 echo "File path: $output_dir/$file_name"
-# Run the tests three in parallel
-# benchmark run-tests --file-path "$output_dir/$file_name"
+benchmark run-tests --file-path "$output_dir/$file_name"
 
 end=`date +%s`
 echo Total execution time: $((end-start))s

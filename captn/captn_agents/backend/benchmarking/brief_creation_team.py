@@ -1,22 +1,26 @@
-import unittest
+import json
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 from typing import Any, Iterator, Tuple
+from unittest.mock import patch
 
 from autogen.cache import Cache
 
-from captn.captn_agents.backend.benchmarking.helpers import get_client_response
-from captn.captn_agents.backend.teams import (
+from ..teams import (
     BriefCreationTeam,
     Team,
 )
-
+from ..tools._brief_creation_team_tools import DelegateTask
 from .fixtures.brief_creation_team_fixtures import (
     BRIEF_CREATION_TEAM_RESPONSE,
     WEB_PAGE_SUMMARY_IKEA,
 )
+from .helpers import get_client_response
 
-__all__ = ("run_end2end_correct_team_choosed",)
+__all__ = (
+    "benchmark_brief_creation",
+    "run_end2end_correct_team_choosed",
+)
 
 
 url_web_page_summary_dict = {
@@ -32,22 +36,22 @@ def _patch_vars(
     cache: Cache,
 ) -> Iterator[Tuple[Any, Any, Any, Any]]:
     with (
-        unittest.mock.patch.object(  # type: ignore[attr-defined]
+        patch.object(
             team.toolbox.functions,
             "reply_to_client",
             wraps=get_client_response(
                 team=team, cache=cache, client_system_message=client_system_message
             ),
         ) as mock_reply_to_client,
-        unittest.mock.patch(  # type: ignore[attr-defined]
+        patch(
             "captn.captn_agents.backend.tools._brief_creation_team_tools._get_info_from_the_web_page_original",
             return_value=url_web_page_summary_dict[url],
         ) as mock_get_info_from_the_web_page,
-        unittest.mock.patch(  # type: ignore[attr-defined]
+        patch(
             "captn.captn_agents.backend.tools._brief_creation_team_tools._change_the_team_and_start_new_chat",
             return_value=BRIEF_CREATION_TEAM_RESPONSE,
         ) as mock_change_the_team_and_start_new_chat,
-        unittest.mock.patch.object(  # type: ignore[attr-defined]
+        patch.object(
             team.toolbox.functions,
             "get_brief_template",
             wraps=team.toolbox.functions.get_brief_template,  # type: ignore[attr-defined]
@@ -98,7 +102,7 @@ Yes
 def run_end2end_correct_team_choosed(
     url: str,
     team_name: str = "campaign_creation_team",
-) -> None:
+) -> str:
     user_id = 123
     conv_id = 234
     task = _get_task(url)
@@ -130,6 +134,40 @@ def run_end2end_correct_team_choosed(
                     )
                     assert team_class.get_registred_team_name() == team_name  # nosec: [B101]
 
+                    delegate_task_function_sugestion = team.get_messages()[-2]
+                    assert "tool_calls" in delegate_task_function_sugestion  # nosec: [B101]
+
+                    delegate_task_function_sugestion_function = (
+                        delegate_task_function_sugestion["tool_calls"][0]["function"]
+                    )
+                    assert (
+                        delegate_task_function_sugestion_function["name"]
+                        == "delagate_task"
+                    )  # nosec: [B101]
+
+                    assert "arguments" in delegate_task_function_sugestion_function  # nosec: [B101]
+                    assert (
+                        "task" in delegate_task_function_sugestion_function["arguments"]
+                    )  # nosec: [B101]
+
+                    arguments_json = json.loads(
+                        delegate_task_function_sugestion_function["arguments"]
+                    )
+                    delegate_task = DelegateTask(
+                        **arguments_json["task_and_context_to_delegate"]
+                    )
+
+                    return delegate_task.task
+
     finally:
         poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
         assert isinstance(poped_team, Team)  # nosec: [B101]
+
+
+def benchmark_brief_creation(
+    url: str,
+    llm: str,
+) -> str:
+    return run_end2end_correct_team_choosed(
+        url=url,
+    )
