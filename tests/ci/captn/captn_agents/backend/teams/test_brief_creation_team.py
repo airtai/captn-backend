@@ -3,7 +3,7 @@ from typing import Iterator
 import pytest
 
 from captn.captn_agents.backend.benchmarking.brief_creation_team import (
-    run_end2end_correct_team_choosed,
+    benchmark_brief_creation,
 )
 from captn.captn_agents.backend.teams import (
     BriefCreationTeam,
@@ -35,7 +35,7 @@ class TestBriefCreationTeam:
 
     def test_get_avaliable_teams_and_their_descriptions(self) -> None:
         avaliable_teams_and_their_descriptions = (
-            BriefCreationTeam._get_avaliable_team_names_and_their_descriptions()
+            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
         )
 
         # All teams except the BriefCreationTeam should be in the dictionary
@@ -54,7 +54,7 @@ class TestBriefCreationTeam:
     @pytest.mark.openai
     @pytest.mark.brief_creation_team
     def test_end2end_correct_team_choosed(self, team_name) -> None:
-        run_end2end_correct_team_choosed(
+        benchmark_brief_creation(
             url="https://www.ikea.com/gb/en/",
             team_name=team_name,
         )

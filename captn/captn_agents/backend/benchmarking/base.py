@@ -15,6 +15,9 @@ import typer
 from filelock import FileLock
 from tabulate import tabulate
 
+from ..teams._brief_creation_team import BriefCreationTeam
+from .brief_creation_team import URL_SUMMARY_DICT
+
 
 class Models(str, Enum):
     gpt3_5 = "gpt3-5"
@@ -105,14 +108,7 @@ def generate_task_table_for_websurfer(
         help="Output directory for the reports",
     ),
 ) -> None:
-    URLS = [
-        "https://www.ikea.com/gb/en/",
-        "https://www.disneystore.eu",
-        "https://www.hamleys.com/",
-        "https://www.konzum.hr",
-        "https://faststream.airt.ai",
-    ]
-
+    URLS = list(URL_SUMMARY_DICT.keys())
     timestamps = _create_timestamps(repeat=repeat)
     params_list = [
         timestamps,
@@ -160,19 +156,22 @@ def generate_task_table_for_brief_creation(
 ) -> None:
     URLS = [
         "https://www.ikea.com/gb/en/",
-        # "https://www.disneystore.eu",
-        # "https://www.hamleys.com/",
-        # "https://www.konzum.hr",
-        # "https://faststream.airt.ai",
-    ] * repeat
+    ]
+    URLS = list(URL_SUMMARY_DICT.keys())
+
+    team_names = (
+        BriefCreationTeam.get_avaliable_team_names_and_their_descriptions().keys()
+    )
 
     params_list = [
         ["brief_creation"],
-        URLS,
+        team_names,
+        URLS * repeat,
         [llm],
     ]
     params_names = [
         "task",
+        "team_name",
         "url",
         "llm",
     ]

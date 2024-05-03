@@ -1,4 +1,3 @@
-import json
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 from typing import Any, Iterator, Tuple
@@ -6,11 +5,11 @@ from unittest.mock import patch
 
 from autogen.cache import Cache
 
+from ..config import Config
 from ..teams import (
     BriefCreationTeam,
     Team,
 )
-from ..tools._brief_creation_team_tools import DelegateTask
 from .fixtures.brief_creation_team_fixtures import (
     BRIEF_CREATION_TEAM_RESPONSE,
     WEB_PAGE_SUMMARY_IKEA,
@@ -19,12 +18,16 @@ from .helpers import get_client_response
 
 __all__ = (
     "benchmark_brief_creation",
-    "run_end2end_correct_team_choosed",
+    "URL_SUMMARY_DICT",
 )
 
 
-url_web_page_summary_dict = {
+URL_SUMMARY_DICT = {
     "https://www.ikea.com/gb/en/": WEB_PAGE_SUMMARY_IKEA,
+    "https://www.disneystore.eu": "Disney Store",
+    "https://www.hamleys.com/": "Hamleys",
+    "https://www.konzum.hr": "Konzum",
+    "https://faststream.airt.ai": "Faststream",
 }
 
 
@@ -45,7 +48,7 @@ def _patch_vars(
         ) as mock_reply_to_client,
         patch(
             "captn.captn_agents.backend.tools._brief_creation_team_tools._get_info_from_the_web_page_original",
-            return_value=url_web_page_summary_dict[url],
+            return_value=URL_SUMMARY_DICT[url],
         ) as mock_get_info_from_the_web_page,
         patch(
             "captn.captn_agents.backend.tools._brief_creation_team_tools._change_the_team_and_start_new_chat",
@@ -99,14 +102,25 @@ Yes
 }
 
 
-def run_end2end_correct_team_choosed(
+def benchmark_brief_creation(
     url: str,
-    team_name: str = "campaign_creation_team",
+    team_name: str,
+    llm: str = "gpt3-5",
 ) -> str:
+    config = Config()
+    if llm == "gpt3-5":
+        config_list = config.config_list_gpt_3_5
+    elif llm == "gpt4":
+        config_list = config.config_list_gpt_4
+    else:
+        raise ValueError(f"llm {llm} not supported")
+
     user_id = 123
     conv_id = 234
     task = _get_task(url)
-    team = BriefCreationTeam(task=task, user_id=user_id, conv_id=conv_id)
+    team = BriefCreationTeam(
+        task=task, user_id=user_id, conv_id=conv_id, config_list=config_list
+    )
     client_system_message = _client_system_messages[team_name]
     try:
         with TemporaryDirectory() as cache_dir:
@@ -150,24 +164,7 @@ def run_end2end_correct_team_choosed(
                         "task" in delegate_task_function_sugestion_function["arguments"]
                     )  # nosec: [B101]
 
-                    arguments_json = json.loads(
-                        delegate_task_function_sugestion_function["arguments"]
-                    )
-                    delegate_task = DelegateTask(
-                        **arguments_json["task_and_context_to_delegate"]
-                    )
-
-                    return delegate_task.task
-
+                    return delegate_task_function_sugestion_function["arguments"]  # type: ignore[no-any-return]
     finally:
         poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
         assert isinstance(poped_team, Team)  # nosec: [B101]
-
-
-def benchmark_brief_creation(
-    url: str,
-    llm: str,
-) -> str:
-    return run_end2end_correct_team_choosed(
-        url=url,
-    )

@@ -43,6 +43,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
+        config_list: Optional[List[Dict[str, str]]] = None,
     ):
         self.task = task
         self.initial_brief = task
@@ -65,9 +66,12 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             use_user_proxy=True,
         )
 
-        config = Config()
+        if config_list is None:
+            config = Config()
+            config_list = config.config_list_gpt_3_5
+
         self.llm_config = BriefCreationTeam._get_llm_config(
-            seed=seed, temperature=temperature, config_list=config.config_list_gpt_3_5
+            seed=seed, temperature=temperature, config_list=config_list
         )
 
         self._create_members()
@@ -87,7 +91,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
                 self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @classmethod
-    def _get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:
+    def get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:
         return {
             name: team_class.get_capabilities()
             for name, team_class in Team._team_registry.items()
@@ -97,7 +101,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
     @classmethod
     def construct_team_names_and_descriptions_message(cls) -> str:
         avaliable_team_names_and_their_descriptions = (
-            BriefCreationTeam._get_avaliable_team_names_and_their_descriptions()
+            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
         )
         # Create a string from dict
         avaliable_team_names_and_their_descriptions_str = "\n".join(

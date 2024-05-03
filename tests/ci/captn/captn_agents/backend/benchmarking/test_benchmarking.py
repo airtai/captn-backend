@@ -1,5 +1,4 @@
 import functools
-import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable
@@ -31,7 +30,6 @@ class TestBase:
     def benchmark_success(success: bool, *args, **kwargs):
         print(f"success: {success}")
         if success:
-            time.sleep(0.001)
             return "it's ok"
         else:
             raise RuntimeError("it's not ok")
@@ -142,7 +140,7 @@ class TestBriefCreation:
         assert result.exit_code == 0, result.stdout
 
         df = pd.read_csv(Path(tmp_dir) / file_name)
-        assert len(df) == 10
+        assert len(df) == 100
 
     def test_generate_task_table_for_brief_creation_success(self):
         with TemporaryDirectory() as tmp_dir:
