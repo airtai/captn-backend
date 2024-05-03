@@ -1,7 +1,7 @@
 import functools
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Callable
+from typing import Any, Callable, List
 
 import pandas as pd
 import pytest
@@ -40,6 +40,7 @@ class TestBase:
         aggregated_csv_name: str,
         success: bool,
         generate_table_f: Callable[..., Any],
+        columns: List[str] = ["url", "success_rate", "avg_time"],  # noqa: B006
     ) -> None:
         with TemporaryDirectory() as tmp_dir:
             file_path = Path(tmp_dir) / file_name
@@ -67,7 +68,7 @@ class TestBase:
             assert aggregated_csv_path.exists()
 
             aggregated_df = pd.read_csv(aggregated_csv_path)
-            assert ["url", "success_rate", "avg_time"] == aggregated_df.columns.tolist()
+            assert columns == aggregated_df.columns.tolist()
 
 
 class TestWebsurfer:
@@ -116,7 +117,9 @@ class TestWebsurfer:
                 "execution_time": [1, 2, 3, 4, 5, 2],
             }
         )
-        report_ag_df = captn.captn_agents.backend.benchmarking.base.create_ag_report(df)
+        report_ag_df = captn.captn_agents.backend.benchmarking.base.create_ag_report(
+            df, ["url"]
+        )
 
         assert report_ag_df.shape == (3, 2)
 
@@ -164,4 +167,5 @@ class TestBriefCreation:
             aggregated_csv_name,
             success,
             generate_table_f=TestBriefCreation._generate_task_table_for_brief_creation,
+            columns=["Unnamed: 0", "success_rate", "avg_time"],
         )

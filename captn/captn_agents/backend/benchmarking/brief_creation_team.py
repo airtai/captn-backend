@@ -12,7 +12,11 @@ from ..teams import (
 )
 from .fixtures.brief_creation_team_fixtures import (
     BRIEF_CREATION_TEAM_RESPONSE,
+    WEB_PAGE_SUMMARY_DISNEY,
+    WEB_PAGE_SUMMARY_FASTSTREAM,
+    WEB_PAGE_SUMMARY_HAMLEYS,
     WEB_PAGE_SUMMARY_IKEA,
+    WEB_PAGE_SUMMARY_KONZUM,
 )
 from .helpers import get_client_response
 
@@ -24,10 +28,10 @@ __all__ = (
 
 URL_SUMMARY_DICT = {
     "https://www.ikea.com/gb/en/": WEB_PAGE_SUMMARY_IKEA,
-    "https://www.disneystore.eu": "Disney Store",
-    "https://www.hamleys.com/": "Hamleys",
-    "https://www.konzum.hr": "Konzum",
-    "https://faststream.airt.ai": "Faststream",
+    "https://www.disneystore.eu": WEB_PAGE_SUMMARY_DISNEY,
+    "https://www.hamleys.com/": WEB_PAGE_SUMMARY_HAMLEYS,
+    "https://www.konzum.hr": WEB_PAGE_SUMMARY_KONZUM,
+    "https://faststream.airt.ai": WEB_PAGE_SUMMARY_FASTSTREAM,
 }
 
 
@@ -136,6 +140,7 @@ def benchmark_brief_creation(
                     mock_change_the_team_and_start_new_chat,
                     mock_get_brief_template,
                 ):
+                    # return "it's ok"
                     team.initiate_chat(cache=cache)
 
                     mock_get_info_from_the_web_page.assert_called()

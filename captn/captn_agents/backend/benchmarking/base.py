@@ -154,9 +154,6 @@ def generate_task_table_for_brief_creation(
         help="Output directory for the reports",
     ),
 ) -> None:
-    URLS = [
-        "https://www.ikea.com/gb/en/",
-    ]
     URLS = list(URL_SUMMARY_DICT.keys())
 
     team_names = (
@@ -213,14 +210,14 @@ def get_random_nan_index(xs: pd.Series) -> Any:
     return xs_isnan.index[i]
 
 
-def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
+def create_ag_report(df: pd.DataFrame, groupby_list: List[str]) -> pd.DataFrame:
     df = df.dropna(subset=["success"])
-    group = df.groupby("url")["success"]
+    group = df.groupby(groupby_list)["success"]
     total = group.count()
     success = group.sum()
     success_rate = (success / total).rename("success_rate")
 
-    group = df.groupby("url")["execution_time"]
+    group = df.groupby(groupby_list)["execution_time"]
     avg_time = group.mean().rename("avg_time")
 
     ag_report_df = pd.concat([success_rate, avg_time], axis=1).sort_values(
@@ -240,6 +237,12 @@ def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
     ag_report_df = ag_report_df.round(2)
 
     return ag_report_df
+
+
+GROUP_BY_DICT = {
+    "websurfer": ["url"],
+    "brief_creation": ["url", "team_name"],
+}
 
 
 @app.command()
@@ -297,7 +300,7 @@ def run_tests(
 
                 df.to_csv(_file_path, index=True)
 
-                report_ag_df = create_ag_report(df)
+                report_ag_df = create_ag_report(df, groupby_list=GROUP_BY_DICT[task])
                 report_ag_path = _file_path.parent / f"{_file_path.stem}-aggregated.csv"
                 report_ag_df.to_csv(report_ag_path, index=True)
 
