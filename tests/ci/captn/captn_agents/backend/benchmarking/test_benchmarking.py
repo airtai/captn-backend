@@ -17,13 +17,16 @@ from captn.captn_agents.backend.benchmarking.base import (
 runner = CliRunner()
 
 
-class TestWebsurfer:
+class TestBase:
     def test_help(self):
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         assert "root [OPTIONS]" in result.stdout
         assert "generate-task-table-for-websurfer" in result.stdout
+        assert "generate-task-table-for-brief-creation" in result.stdout
 
+
+class TestWebsurfer:
     @staticmethod
     def _generate_task_table_for_websurfer(tmp_dir: TemporaryDirectory):
         result = runner.invoke(
@@ -105,3 +108,19 @@ class TestWebsurfer:
         assert report_ag_df.loc["url2", "avg_time"] == 3.0
         assert report_ag_df.loc["Total", "success_rate"] == 0.33
         assert report_ag_df.loc["Total", "avg_time"] == 2.83
+
+
+class TestBriefCreation:
+    @staticmethod
+    def _generate_task_table_for_brief_creation(tmp_dir: TemporaryDirectory):
+        result = runner.invoke(
+            app, ["generate-task-table-for-brief-creation", "--output-dir", tmp_dir]
+        )
+        assert result.exit_code == 0, result.stdout
+
+        df = pd.read_csv(Path(tmp_dir) / "brief-creation-benchmark-tasks.csv")
+        assert len(df) == 10
+
+    def test_generate_task_table_for_brief_creation_success(self):
+        with TemporaryDirectory() as tmp_dir:
+            TestBriefCreation._generate_task_table_for_brief_creation(tmp_dir)

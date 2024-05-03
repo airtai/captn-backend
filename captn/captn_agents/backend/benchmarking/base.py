@@ -8,7 +8,7 @@ import time
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, Literal, TypeAlias
+from typing import Any, Callable, Dict, Iterator, List, Literal, TypeAlias
 
 import pandas as pd
 import typer
@@ -54,6 +54,22 @@ def _add_common_columns_and_save(
     print(tabulate(df.iloc[:, 1:-4], headers="keys", tablefmt="simple"))
 
 
+def _create_timestamps(
+    repeat: int,
+) -> List[datetime.datetime]:
+    return [
+        datetime.datetime.fromisocalendar(year=2024, week=1, day=1)
+        + datetime.timedelta(seconds=i)
+        for i in range(repeat)
+    ]
+
+
+def _create_task_df(params_list: List[Any], params_names: List[str]) -> pd.DataFrame:
+    data = list(itertools.product(*params_list))
+    df = pd.DataFrame(data=data, columns=params_names)
+    return df
+
+
 @app.command()
 def generate_task_table_for_websurfer(
     inner_retries: int = typer.Option(
@@ -97,11 +113,7 @@ def generate_task_table_for_websurfer(
         "https://faststream.airt.ai",
     ]
 
-    timestamps = [
-        datetime.datetime.fromisocalendar(year=2024, week=1, day=1)
-        + datetime.timedelta(seconds=i)
-        for i in range(repeat)
-    ]
+    timestamps = _create_timestamps(repeat=repeat)
     params_list = [
         timestamps,
         ["websurfer"],
@@ -122,10 +134,53 @@ def generate_task_table_for_websurfer(
         "llm",
         "navigator_llm",
     ]
-    # TODO: Fix type-ignore
-    data = list(itertools.product(*params_list))  # type: ignore[call-overload]
-    df = pd.DataFrame(data=data, columns=params_names)
 
+    df = _create_task_df(params_list=params_list, params_names=params_names)
+    _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
+
+
+@app.command()
+def generate_task_table_for_brief_creation(
+    llm: Models = typer.Option(  # noqa: B008
+        Models.gpt3_5,
+        help="Model which will be used by all agents",
+    ),
+    file_name: str = typer.Option(
+        "brief-creation-benchmark-tasks.csv",
+        help="File name of the task list",
+    ),
+    repeat: int = typer.Option(
+        10,
+        help="Number of times to repeat each url",
+    ),
+    output_dir: str = typer.Option(  # noqa: B008
+        "./",
+        help="Output directory for the reports",
+    ),
+) -> None:
+    URLS = [
+        "https://www.ikea.com/gb/en/",
+        # "https://www.disneystore.eu",
+        # "https://www.hamleys.com/",
+        # "https://www.konzum.hr",
+        # "https://faststream.airt.ai",
+    ]
+
+    timestamps = _create_timestamps(repeat=repeat)
+    params_list = [
+        timestamps,
+        ["websurfer"],
+        URLS,
+        [llm],
+    ]
+    params_names = [
+        "timestamp",
+        "task",
+        "url",
+        "llm",
+    ]
+
+    df = _create_task_df(params_list=params_list, params_names=params_names)
     _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
 
 
