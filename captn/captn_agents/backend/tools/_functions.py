@@ -127,7 +127,10 @@ example = Summary(
 
 
 def reply_to_client(
-    message: Annotated[str, "Message for the client"],
+    message: Annotated[
+        str,
+        "Message for the client. The message MUST use the Markdown format for the text!",
+    ],
     completed: Annotated[
         bool, "Has the team completed the task or are they waiting for additional info"
     ],
@@ -178,7 +181,9 @@ If you want to modify the Ad Copy, you MUST provide the current Ad Copy details,
 The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are 'h1', 'h2' and 'h3'. The descriptions are 'd1' and 'd2'.
 
 If you want to modify the keywords, you MUST provide the current keywords details, e.g:
-Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'."""
+Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'.
+
+The message MUST use the Markdown format for the text!"""
 
 proposed_changes_description = """Explains which changes you want to make and why you want to make them.
 I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
@@ -190,7 +195,9 @@ e.g. for AdGroupAd:
 'final_url' will be set to 'https://my-web-page.com'
 Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
 
-Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
+Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.
+
+The message MUST use the Markdown format for the text!"""
 
 
 def ask_client_for_permission(
