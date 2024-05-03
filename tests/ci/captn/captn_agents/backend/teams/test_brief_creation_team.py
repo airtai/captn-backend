@@ -6,16 +6,17 @@ from typing import Iterator
 import pytest
 from autogen.cache import Cache
 
+from captn.captn_agents.backend.benchmarking.fixtures.brief_creation_team_fixtures import (
+    BRIEF_CREATION_TEAM_RESPONSE,
+    WEB_PAGE_SUMMARY_IKEA,
+)
+from captn.captn_agents.backend.benchmarking.helpers import get_client_response
 from captn.captn_agents.backend.teams import (
     BriefCreationTeam,
     Team,
 )
 
-from ..tools.test_brief_creation_team_tools import (
-    BRIEF_CREATION_TEAM_RESPONSE,
-)
-from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_IKEA
-from .helpers import get_client_response, helper_test_init
+from .helpers import helper_test_init
 
 
 class TestBriefCreationTeam:

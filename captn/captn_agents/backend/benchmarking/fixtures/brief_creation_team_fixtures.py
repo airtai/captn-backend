@@ -1,3 +1,10 @@
+__all__ = (
+    "BRIEF_CREATION_TEAM_RESPONSE",
+    "WEB_PAGE_SUMMARY_IKEA",
+)
+
+BRIEF_CREATION_TEAM_RESPONSE = r"""{"message":"Here is the list of all customer IDs accessible to you:\n- 7119828439\n- 7587037554","smart_suggestions":{"suggestions":[""],"type":""},"is_question":true,"status":"completed","terminate_groupchat":true}"""
+
 WEB_PAGE_SUMMARY_IKEA = """Here is a summary of the information you requested:
 
 IKEA UK offers a wide range of home furnishing products including furniture, beds & mattresses, kitchenware, textiles, and smart home products. They provide design inspiration, planning tools, and services like delivery and assembly. IKEA for Business caters to business customers with time and cost-saving solutions.
