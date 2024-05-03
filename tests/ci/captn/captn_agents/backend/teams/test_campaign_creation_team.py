@@ -21,7 +21,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
-from .fixtures.shared_descriptions import WEB_PAGE_SUMMARY_IKEA
+from .fixtures.tasks import campaign_creation_team_task
 from .helpers import helper_test_init
 
 
@@ -80,7 +80,7 @@ class TestCampaignCreationTeam:
         helper_test_init(
             team=campaign_creation_team,
             number_of_team_members=3,
-            number_of_functions=8,
+            number_of_functions=7,
             team_class=CampaignCreationTeam,
         )
 
@@ -103,29 +103,11 @@ class TestCampaignCreationTeam:
             context.clients_question_answer_list.append((message, clients_answer))
             return clients_answer
 
-        task = """Here is the customer brief:
-Business: IKEA
-Goal: The goal of the Google Ads campaign is to increase brand awareness and boost sales for https://www.ikea.com/gb/en.
-Current Situation: The client is currently running digital marketing campaigns.
-Website: The website for https://www.ikea.com/gb/en is [https://www.ikea.com/gb/en](https://https://www.ikea.com/gb/en).
-Digital Marketing Objectives: The objectives of the Google Ads campaign are to increase brand awareness and drive website traffic for https://www.ikea.com/gb/en.
-Any Other Information Related to Customer Brief: N/A
-And the task is following:
-For customer with ID 1111 I have already created campaign with ID: 1212.
-The currency set for that campaign is EUR.
-Create new ad groups with ad and keywords for the campaign.
-- create ONLY ad groups for "IKEA for Business" and "Beds & Mattresses"
-
-DO NOT ask client for feedback while you are planning or executing the task. You can ask for feedback only after you
-have all information needed to ask for the final approval by calling 'ask_client_for_permission' function. Only after
-you have the final approval, you can execute the task by calling 'create_ad_group_with_ad_and_keywords' function.
-"""
-
         try:
             campaign_creation_team = CampaignCreationTeam(
                 user_id=123,
                 conv_id=456,
-                task=task,
+                task=campaign_creation_team_task,
             )
 
             with (
@@ -153,14 +135,9 @@ you have the final approval, you can execute the task by calling 'create_ad_grou
                 ) as mock_create_ad_group_keyword,
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,
-                    "get_info_from_the_web_page",
-                    return_value=WEB_PAGE_SUMMARY_IKEA,
-                ),
-                unittest.mock.patch.object(
-                    campaign_creation_team.toolbox.functions,
                     "execute_query",
                     return_value=(
-                        "This method isn't implemented yet. So do NOT use it."
+                        "The currency code for the customer is 'EUR'.\nPlease do not use this command again.",
                     ),
                 ),
                 unittest.mock.patch.object(
