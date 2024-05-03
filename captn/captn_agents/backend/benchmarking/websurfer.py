@@ -15,6 +15,7 @@ def benchmark_websurfer(
     llm: str = "gpt4",
     navigator_llm: str = "gpt4",
     timestamp: str = "2024-01-01T00:00:0",
+    introduce_give_up_after: int = 7,
 ) -> str:
     llm_configs = {
         "gpt3-5": get_llm_config_gpt_3_5(),
@@ -28,6 +29,7 @@ def benchmark_websurfer(
         websurfer_llm_config=llm_configs[llm],
         timestamp=timestamp,
         websurfer_navigator_llm_config=llm_configs[navigator_llm],
+        max_retires_before_give_up_message=introduce_give_up_after,
     )
     # TODO: Fix type-ignore
     last_message = get_info_from_the_web_page(

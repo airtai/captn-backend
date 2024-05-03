@@ -80,6 +80,10 @@ def generate_task_table_for_websurfer(
         10,
         help="Number of times to repeat each url",
     ),
+    introduce_give_up_after: int = typer.Option(
+        7,
+        help="Number of retries before telling the LLM it is able to give up",
+    ),
     output_dir: str = typer.Option(  # noqa: B008
         "./",
         help="Output directory for the reports",
@@ -103,6 +107,7 @@ def generate_task_table_for_websurfer(
         ["websurfer"],
         URLS,
         [inner_retries],
+        [introduce_give_up_after],
         [summarizer_llm],
         [llm],
         [navigator_llm],
@@ -112,6 +117,7 @@ def generate_task_table_for_websurfer(
         "task",
         "url",
         "inner_retries",
+        "introduce_give_up_after",
         "summarizer_llm",
         "llm",
         "navigator_llm",
