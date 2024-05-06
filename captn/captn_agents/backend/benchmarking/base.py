@@ -6,24 +6,21 @@ import os
 import random
 import time
 from contextlib import contextmanager
-from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, Literal, TypeAlias
+from typing import Any, Callable, Dict, Iterator, List, Literal, TypeAlias
 
 import pandas as pd
 import typer
 from filelock import FileLock
 from tabulate import tabulate
 
-
-class Models(str, Enum):
-    gpt3_5 = "gpt3-5"
-    gpt4 = "gpt4"
-
+from ..teams._brief_creation_team import BriefCreationTeam
+from .brief_creation_team import URL_SUMMARY_DICT
+from .models import Models
 
 app = typer.Typer()
 
-tasks_types: TypeAlias = Literal["websurfer"]
+tasks_types: TypeAlias = Literal["websurfer", "brief_creation"]
 
 
 @contextmanager
@@ -52,6 +49,22 @@ def _add_common_columns_and_save(
     df.to_csv(report_all_runs_path, index=True)
     print(f"Task list saved to {report_all_runs_path.resolve()}")
     print(tabulate(df.iloc[:, 1:-4], headers="keys", tablefmt="simple"))
+
+
+def _create_timestamps(
+    repeat: int,
+) -> List[datetime.datetime]:
+    return [
+        datetime.datetime.fromisocalendar(year=2024, week=1, day=1)
+        + datetime.timedelta(seconds=i)
+        for i in range(repeat)
+    ]
+
+
+def _create_task_df(params_list: List[Any], params_names: List[str]) -> pd.DataFrame:
+    data = list(itertools.product(*params_list))
+    df = pd.DataFrame(data=data, columns=params_names)
+    return df
 
 
 @app.command()
@@ -89,19 +102,8 @@ def generate_task_table_for_websurfer(
         help="Output directory for the reports",
     ),
 ) -> None:
-    URLS = [
-        "https://www.ikea.com/gb/en/",
-        "https://www.disneystore.eu",
-        "https://www.hamleys.com/",
-        "https://www.konzum.hr",
-        "https://faststream.airt.ai",
-    ]
-
-    timestamps = [
-        datetime.datetime.fromisocalendar(year=2024, week=1, day=1)
-        + datetime.timedelta(seconds=i)
-        for i in range(repeat)
-    ]
+    URLS = list(URL_SUMMARY_DICT.keys())
+    timestamps = _create_timestamps(repeat=repeat)
     params_list = [
         timestamps,
         ["websurfer"],
@@ -122,10 +124,50 @@ def generate_task_table_for_websurfer(
         "llm",
         "navigator_llm",
     ]
-    # TODO: Fix type-ignore
-    data = list(itertools.product(*params_list))  # type: ignore[call-overload]
-    df = pd.DataFrame(data=data, columns=params_names)
 
+    df = _create_task_df(params_list=params_list, params_names=params_names)
+    _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
+
+
+@app.command()
+def generate_task_table_for_brief_creation(
+    llm: Models = typer.Option(  # noqa: B008
+        Models.gpt4,
+        help="Model which will be used by all agents",
+    ),
+    file_name: str = typer.Option(
+        "brief-creation-benchmark-tasks.csv",
+        help="File name of the task list",
+    ),
+    repeat: int = typer.Option(
+        10,
+        help="Number of times to repeat each url",
+    ),
+    output_dir: str = typer.Option(  # noqa: B008
+        "./",
+        help="Output directory for the reports",
+    ),
+) -> None:
+    URLS = list(URL_SUMMARY_DICT.keys())
+
+    team_names = (
+        BriefCreationTeam.get_avaliable_team_names_and_their_descriptions().keys()
+    )
+
+    params_list = [
+        ["brief_creation"],
+        team_names,
+        URLS * repeat,
+        [llm],
+    ]
+    params_names = [
+        "task",
+        "team_name",
+        "url",
+        "llm",
+    ]
+
+    df = _create_task_df(params_list=params_list, params_names=params_names)
     _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
 
 
@@ -162,14 +204,14 @@ def get_random_nan_index(xs: pd.Series) -> Any:
     return xs_isnan.index[i]
 
 
-def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
+def create_ag_report(df: pd.DataFrame, groupby_list: List[str]) -> pd.DataFrame:
     df = df.dropna(subset=["success"])
-    group = df.groupby("url")["success"]
+    group = df.groupby(groupby_list)["success"]
     total = group.count()
     success = group.sum()
     success_rate = (success / total).rename("success_rate")
 
-    group = df.groupby("url")["execution_time"]
+    group = df.groupby(groupby_list)["execution_time"]
     avg_time = group.mean().rename("avg_time")
 
     ag_report_df = pd.concat([success_rate, avg_time], axis=1).sort_values(
@@ -191,6 +233,12 @@ def create_ag_report(df: pd.DataFrame) -> pd.DataFrame:
     return ag_report_df
 
 
+GROUP_BY_DICT = {
+    "websurfer": ["url"],
+    "brief_creation": ["url", "team_name"],
+}
+
+
 @app.command()
 def run_tests(
     file_path: str = typer.Option(
@@ -203,10 +251,12 @@ def run_tests(
     if "BENCHMARKING_AZURE_API_KEY" in os.environ:
         os.environ["AZURE_OPENAI_API_KEY"] = os.environ["BENCHMARKING_AZURE_API_KEY"]
 
+    from .brief_creation_team import benchmark_brief_creation
     from .websurfer import benchmark_websurfer
 
     benchmarks = {
         "websurfer": benchmark_websurfer,
+        "brief_creation": benchmark_brief_creation,
     }
 
     _file_path: Path = Path(file_path)
@@ -233,7 +283,7 @@ def run_tests(
         try:
             task = kwargs.pop("task")
             benchmark = benchmarks[task]
-            result = run_test(benchmark=benchmark, **kwargs)
+            result = run_test(benchmark=benchmark, **kwargs)  # type: ignore[arg-type]
 
             with lock_file(_file_path):
                 df = pd.read_csv(_file_path, index_col=0)
@@ -244,7 +294,7 @@ def run_tests(
 
                 df.to_csv(_file_path, index=True)
 
-                report_ag_df = create_ag_report(df)
+                report_ag_df = create_ag_report(df, groupby_list=GROUP_BY_DICT[task])
                 report_ag_path = _file_path.parent / f"{_file_path.stem}-aggregated.csv"
                 report_ag_df.to_csv(report_ag_path, index=True)
 

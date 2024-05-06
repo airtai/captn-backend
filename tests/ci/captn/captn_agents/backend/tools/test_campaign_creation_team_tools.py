@@ -36,12 +36,11 @@ class TestTools:
         self.toolbox.add_to_agent(agent, user_proxy)
         llm_config = agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 8)
+        check_llm_config_total_tools(llm_config, 7)
         check_llm_config_descriptions(
             llm_config,
             {
                 "create_ad_group_with_ad_and_keywords": "Create an ad group with a single ad and a list of keywords",
-                "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
                 "reply_to_client": r"Respond to the client \(answer to his task or question for additional information\)",
                 "ask_client_for_permission": "Ask the client for permission to make the changes.",
                 "change_google_account": "This method should be used only when the client explicitly asks for the change of the Google account",

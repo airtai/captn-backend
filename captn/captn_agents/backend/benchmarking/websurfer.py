@@ -3,6 +3,7 @@ from ..tools._functions import (
     get_llm_config_gpt_3_5,
     get_llm_config_gpt_4,
 )
+from .models import Models
 
 __all__ = ["benchmark_websurfer"]
 
@@ -11,15 +12,15 @@ def benchmark_websurfer(
     url: str,
     outer_retries: int = 1,
     inner_retries: int = 10,
-    summarizer_llm: str = "gpt3-5",
-    llm: str = "gpt4",
-    navigator_llm: str = "gpt4",
+    summarizer_llm: str = Models.gpt3_5,
+    llm: str = Models.gpt4,
+    navigator_llm: str = Models.gpt4,
     timestamp: str = "2024-01-01T00:00:0",
     introduce_give_up_after: int = 7,
 ) -> str:
     llm_configs = {
-        "gpt3-5": get_llm_config_gpt_3_5(),
-        "gpt4": get_llm_config_gpt_4(),
+        Models.gpt3_5.value: get_llm_config_gpt_3_5(),
+        Models.gpt4.value: get_llm_config_gpt_4(),
     }
 
     get_info_from_the_web_page = get_get_info_from_the_web_page(

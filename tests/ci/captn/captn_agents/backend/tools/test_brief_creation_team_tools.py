@@ -4,6 +4,9 @@ from typing import Optional
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
+from captn.captn_agents.backend.benchmarking.fixtures.brief_creation_team_fixtures import (
+    BRIEF_CREATION_TEAM_RESPONSE,
+)
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.teams._google_ads_team import GoogleAdsTeam
 from captn.captn_agents.backend.teams._team import Team
@@ -15,8 +18,6 @@ from captn.captn_agents.backend.tools._brief_creation_team_tools import (
 from captn.captn_agents.backend.tools._functions import TeamResponse
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
-
-BRIEF_CREATION_TEAM_RESPONSE = r"""{"message":"Here is the list of all customer IDs accessible to you:\n- 7119828439\n- 7587037554","smart_suggestions":{"suggestions":[""],"type":""},"is_question":true,"status":"completed","terminate_groupchat":true}"""
 
 
 class TestTools:

@@ -1005,9 +1005,6 @@ def add_shared_functions(toolbox: Toolbox) -> None:
     toolbox.add_function(
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)
-    toolbox.add_function(get_info_from_the_web_page_description)(
-        get_get_info_from_the_web_page()
-    )
     toolbox.add_function(change_google_account_description)(change_google_account)
     toolbox.add_function(list_accessible_customers_description)(
         list_accessible_customers
@@ -1031,7 +1028,9 @@ def create_google_ads_team_toolbox(
     toolbox.set_context(context)
 
     add_shared_functions(toolbox)
-
+    toolbox.add_function(get_info_from_the_web_page_description)(
+        get_get_info_from_the_web_page()
+    )
     toolbox.add_function(create_keyword_for_ad_group_description)(
         create_keyword_for_ad_group
     )

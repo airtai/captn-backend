@@ -3,9 +3,8 @@ from tempfile import TemporaryDirectory
 import pytest
 from autogen.cache import Cache
 
+from captn.captn_agents.backend.benchmarking.helpers import get_client_response
 from captn.captn_agents.backend.teams import BriefCreationTeam
-
-from .helpers import get_client_response
 
 
 @pytest.mark.flaky
