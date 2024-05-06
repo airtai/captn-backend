@@ -61,7 +61,7 @@ lint = [
     "ruff==0.4.2",
     "pyupgrade-directories",
     "bandit==1.7.8",
-    "semgrep==1.70.0",
+    "semgrep==1.71.0",
     "pre-commit==3.7.0",
     "detect-secrets==1.4.0",
 ]
@@ -90,7 +90,7 @@ benchmarking = [
 ]
 
 agents = [
-    "fastapi==0.110.2",
+    "fastapi==0.111.0",
     "APScheduler==3.10.4",
     "prisma==0.13.1",
     "google-ads==23.1.0",
@@ -99,7 +99,7 @@ agents = [
     "python-dotenv==1.0.1",
     "pyautogen[websurfer,websockets]==0.2.27",
     "pandas>=2.1",
-    "fastcore==1.5.29",
+    "fastcore==1.5.33",
     "asyncer==0.0.5",
     "pydantic==2.7.1",
     "markdownify==0.12.1",
