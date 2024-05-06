@@ -1,8 +1,8 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from ..config import Config
 from ..tools._campaign_creation_team_tools import create_campaign_creation_team_toolbox
 from ._shared_prompts import (
-    GET_INFO_FROM_THE_WEB_COMMAND,
     MODIFICATION_FUNCTIONS_INSTRUCTIONS,
     REPLY_TO_CLIENT_COMMAND,
 )
@@ -47,6 +47,7 @@ sure it is understandable by non-experts.
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
+        config_list: Optional[List[Dict[str, str]]] = None,
     ):
         self.task = task
 
@@ -67,8 +68,12 @@ sure it is understandable by non-experts.
             use_user_proxy=True,
         )
 
+        if config_list is None:
+            config = Config()
+            config_list = config.config_list_gpt_4
+
         self.llm_config = CampaignCreationTeam._get_llm_config(
-            seed=seed, temperature=temperature
+            seed=seed, temperature=temperature, config_list=config_list
         )
 
         self._create_members()
@@ -238,13 +243,11 @@ You MUST use this before you make ANY permanent changes. ALWAYS use this command
 4. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
 Example of customer_ids parameter: ["12", "44", "111"]
 
-5. {GET_INFO_FROM_THE_WEB_COMMAND}
-
-6. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
+5. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
 Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
 
 {MODIFICATION_FUNCTIONS_INSTRUCTIONS}
-7. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
+6. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
 clients_approval_message: string, modification_question: str)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
@@ -281,7 +284,7 @@ Here is an example of correct 'proposed_changes' parameter:
     Do you approve the creation of this new campaign with the specified details and settings? To approve, please answer 'Yes'.
 
 
-8. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
+7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 
 """  # nosec: [B608]

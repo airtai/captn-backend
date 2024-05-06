@@ -1,7 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from captn.captn_agents.backend.config import Config
-
+from ..config import Config
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team

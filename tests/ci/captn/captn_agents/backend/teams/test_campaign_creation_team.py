@@ -1,6 +1,6 @@
+import random
 import unittest
 from tempfile import TemporaryDirectory
-from typing import Iterator, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,14 +11,11 @@ from captn.captn_agents.backend.teams._campaign_creation_team import (
     CampaignCreationTeam,
 )
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
-    AdGroupAdForCreation,
-    AdGroupCriterionForCreation,
-    AdGroupForCreation,
-    AdGroupWithAdAndKeywords,
     _create_ad_group,
     _create_ad_group_ad,
     _create_ad_group_keyword,
 )
+from captn.captn_agents.backend.tools._google_ads_team_tools import create_campaign
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
 from .fixtures.tasks import campaign_creation_team_task
@@ -26,50 +23,6 @@ from .helpers import helper_test_init
 
 
 class TestCampaignCreationTeam:
-    @pytest.fixture()
-    def setup_ad_group_with_ad_and_keywords(self) -> Iterator[None]:
-        ad_group_ad = AdGroupAdForCreation(
-            final_url="https://www.example.com",
-            headlines=["headline1", "headline2", "headline3"],
-            descriptions=["description1", "description2"],
-            status="ENABLED",
-        )
-
-        keyword1 = AdGroupCriterionForCreation(
-            keyword_text="keyword1",
-            keyword_match_type="EXACT",
-            status="ENABLED",
-        )
-        keyword2 = AdGroupCriterionForCreation(
-            keyword_text="keyword2",
-            keyword_match_type="EXACT",
-            status="ENABLED",
-        )
-
-        ad_group = AdGroupForCreation(
-            name="ad_group",
-            status="ENABLED",
-            ad_group_ad=ad_group_ad,
-            keywords=[keyword1, keyword2],
-        )
-
-        self.ad_group_with_ad_and_keywords: Optional[AdGroupWithAdAndKeywords] = None
-
-        self.ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
-            customer_id="1111",
-            campaign_id="1212",
-            ad_group=ad_group,
-            ad_group_ad=ad_group_ad,
-            keywords=[keyword1, keyword2],
-        )
-
-        Team._teams.clear()
-        try:
-            yield
-        finally:
-            # do some cleanup if needed
-            Team._teams.clear()
-
     def test_init(self) -> None:
         campaign_creation_team = CampaignCreationTeam(
             user_id=123,
@@ -87,7 +40,7 @@ class TestCampaignCreationTeam:
     @pytest.mark.flaky
     @pytest.mark.openai
     @pytest.mark.campaign_creation_team
-    def test_end2end(self, setup_ad_group_with_ad_and_keywords: None) -> None:
+    def test_end2end(self) -> None:
         def ask_client_for_permission_mock(*args, **kwargs) -> str:
             customer_to_update = (
                 "We propose changes for the following customer: 'IKEA' (ID: 1111)"
@@ -143,7 +96,11 @@ class TestCampaignCreationTeam:
                 unittest.mock.patch.object(
                     campaign_creation_team.toolbox.functions,
                     "create_campaign",
-                    return_value="Campaign with id 1212 has already been created.",
+                    wraps=create_campaign,
+                ) as mock_create_campaign,
+                unittest.mock.patch(
+                    "captn.captn_agents.backend.tools._google_ads_team_tools._get_customer_currency",
+                    return_value="EUR",
                 ),
                 unittest.mock.patch(
                     "captn.google_ads.client.get_login_url",
@@ -155,12 +112,16 @@ class TestCampaignCreationTeam:
                 ) as mock_requests_get,
             ):
                 mock_requests_get.return_value.ok = True
-                mock_requests_get.return_value.json.return_value = "Resource created!"
+                mock_requests_get.return_value.json.side_effect = [
+                    f"Resource with id: {random.randint(100, 1000)} created!"
+                    for _ in range(200)
+                ]
 
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
                         campaign_creation_team.initiate_chat(cache=cache)
 
+                mock_create_campaign.assert_called()
                 mock_ask_client_for_permission.assert_called()
                 mock_create_ad_group.assert_called()
                 mock_create_ad_group_ad.assert_called()
