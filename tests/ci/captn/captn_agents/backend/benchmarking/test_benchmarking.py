@@ -191,7 +191,7 @@ class TestCampaignCreation:
                 command=self.command,
                 file_name=self.file_name,
                 tmp_dir=tmp_dir,
-                no_rows=10,
+                no_rows=30,
             )
 
     @pytest.mark.parametrize("success", [True, False])
@@ -209,5 +209,5 @@ class TestCampaignCreation:
             file_name=self.file_name,
             aggregated_csv_name=self.aggregated_csv_name,
             success=success,
-            no_rows=10,
+            no_rows=30,
         )

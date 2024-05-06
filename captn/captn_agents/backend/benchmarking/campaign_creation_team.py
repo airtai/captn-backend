@@ -19,7 +19,11 @@ from ..tools._campaign_creation_team_tools import (
 )
 from ..tools._functions import Context
 from ..tools._google_ads_team_tools import create_campaign
-from .fixtures.campaign_creation_team_fixtures import CAMPAIGN_CREATION_IKEA
+from .fixtures.campaign_creation_team_fixtures import (
+    CAMPAIGN_CREATION_DISNEY,
+    CAMPAIGN_CREATION_FASTSTREAM,
+    CAMPAIGN_CREATION_IKEA,
+)
 from .models import Models
 
 
@@ -41,10 +45,10 @@ def _ask_client_for_permission_mock(*args: Any, **kwargs: Dict[str, Any]) -> str
 
 URL_TASK_DICT = {
     "https://www.ikea.com/gb/en/": CAMPAIGN_CREATION_IKEA,
-    # "https://www.disneystore.eu": "",
+    "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
     # "https://www.hamleys.com/": "",
     # "https://www.konzum.hr": "",
-    # "https://faststream.airt.ai": "",
+    "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
 }
 
 

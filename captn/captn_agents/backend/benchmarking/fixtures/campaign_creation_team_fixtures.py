@@ -1,6 +1,10 @@
-__all__ = ("CAMPAIGN_CREATION_IKEA",)
+__all__ = (
+    "CAMPAIGN_CREATION_IKEA",
+    "CAMPAIGN_CREATION_DISNEY",
+    "CAMPAIGN_CREATION_FASTSTREAM",
+)
 
-CAMPAIGN_CREATION_IKEA: str = """Here is the customer brief:
+CAMPAIGN_CREATION_IKEA = """Here is the customer brief:
 Based on the information gathered from the website, the client has chosen to focus on the Furniture category for the new campaign.
 
 Here is the customer brief for the Furniture campaign:
@@ -110,3 +114,105 @@ Descriptions: 'Storage for toiletries', 'Shower accessories', 'Mats for safety',
 And the task is following:
 Create a new Google Ads campaign for the Furniture category
 """
+
+CAMPAIGN_CREATION_DISNEY = """Here is the customer brief:
+Goals:
+- Boost sales
+- Increase brand awareness
+
+Current Situation:
+- Website: [Disney Store](https://www.disneystore.eu)
+
+Digital Marketing Objectives:
+- Highlight 'New In Products' section with the latest merchandise
+- Promote 'Easter Gifts & Toys' for seasonal offers
+
+Next Steps:
+- Develop ad creatives and keywords for the selected website sections
+
+Any Other Information Related to Customer Brief:
+- The customer is already running digital marketing campaigns using Google Ads.
+
+Budget:
+- Recommended 3 EUR per day
+
+Focus Pages:
+- New In Products: Showcases the latest products across various Disney franchises with keywords like 'New Arrivals', 'Latest Merchandise', and headlines such as 'Latest Disney Finds', 'New Marvel Gear'.
+- Easter Gifts & Toys: Features Easter-themed Disney gifts and toys with keywords like 'Easter', 'Disney Gifts', and headlines such as 'Easter Disney Fun', 'Springtime Surprises'.
+
+The campaign should utilize the provided keywords and headlines to create compelling ad copy that resonates with the target audience and drives traffic to the highlighted sections.
+
+Additional info from the web page:
+Here is a summary of the information you requested:
+
+Disney Store EU features a vast collection of Disney, Marvel, Pixar, and Star Wars merchandise, including new arrivals, seasonal gifts, and exclusive offers. Key selling points include free delivery on orders over 60€, free returns, and multiple click & collect options.
+
+Relevant Pages:
+
+1. New In Products:
+URL: https://www.disneystore.eu/new
+Summary: Showcases the latest products across various Disney franchises.
+Keywords: 'New Arrivals', 'Disney', 'Marvel', 'Pixar', 'Star Wars', 'Latest Merchandise', 'Exclusive Products'
+Headlines: 'Latest Disney Finds', 'New Marvel Gear', "Pixar's Newest", 'Star Wars Arrivals', 'Fresh Disney Magic', 'Just In: Disney', 'Marvel Must-Haves', 'Pixar Picks', 'Star Wars Selection', 'Newest Arrivals', 'Disney Delights', "Marvel's Best", "Pixar's Finest", 'Star Wars Treasures', "Disney's Latest"
+Descriptions: 'Explore the latest Disney merchandise and collectibles.', 'Discover new Marvel apparel and accessories.', 'Find the newest Pixar-themed items.', 'Get the latest Star Wars products.'
+
+2. Easter Gifts & Toys:
+URL: https://www.disneystore.eu/easter?srule=newest
+Summary: A selection of Easter-themed Disney gifts and toys.
+Keywords: 'Easter', 'Disney Gifts', 'Toys', 'Books', 'Soft Toys', 'Seasonal Offers', 'Themed Merchandise'
+Headlines: 'Easter Disney Fun', 'Springtime Surprises', 'Easter Toy Magic', 'Disney Easter Gifts', 'Bunny-Approved Toys', 'Easter Book Finds', 'Soft Toy Delights', 'Easter Basket Joy', 'Disney Spring Gifts', 'Easter Plush Pals', 'Festive Disney Toys', 'Easter Reads', 'Soft Toy Wonders', 'Easter Treasures', 'Spring Disney Picks'
+Descriptions: 'Fill your Easter with Disney books and soft toys.', 'Discover the perfect Disney Easter gifts for kids.', 'Hop into Easter with Disney-themed toys and books.', 'Celebrate Easter with delightful Disney soft toys.'
+
+3. Offers:
+URL: https://www.disneystore.eu/offers
+Summary: Current discounts and promotions on Disney merchandise.
+Keywords: 'Disney Offers', 'Discounts', 'Promotions', 'Deals', 'Special Offers', 'Savings', 'Exclusive Deals'
+Headlines: 'Disney Deals', 'Marvel Discounts', 'Pixar Promos', 'Star Wars Savings', 'Special Offers', 'Disney Bargains', 'Marvel Offers', 'Pixar Savings', 'Star Wars Deals', 'Exclusive Discounts', 'Disney Promotions', 'Marvel Savings', 'Pixar Deals', 'Star Wars Offers', 'Disney Specials'
+Descriptions: 'Save on Disney favorites with exclusive offers.', 'Get discounts on Marvel, Pixar, and Star Wars gear.', 'Discover promotions on a wide range of Disney products.', 'Enjoy special deals on Disney merchandise.'
+
+
+And the task is following:
+Create a new Google Ads campaign focusing on the 'New In Products' and 'Easter Gifts & Toys' sections of the Disney Store EU website.
+"""
+
+CAMPAIGN_CREATION_FASTSTREAM = """Here is the customer brief:
+Business: FastStream - an open-source framework for building asynchronous web services.
+Goal: Boost sales.
+Current Situation: Already running digital marketing campaigns.
+Website: [faststream.airt.ai](https://faststream.airt.ai)
+Digital Marketing Objectives: Create a new campaign to highlight the 'Features' and 'Getting Started' pages of FastStream, emphasizing its capabilities, integrations, and ease of use for new users.
+Next Steps: Develop ad creatives and keywords that align with the 'Features' and 'Getting Started' pages, and set up the campaign structure in Google Ads.
+Any Other Information Related to Customer Brief: The campaign should cater to developers and tech-savvy audiences interested in asynchronous web services and event streaming.
+Budget: Recommended €3 per day.
+
+Additional info from the web page:
+Here is a summary of the information you requested:
+
+FastStream is an open-source framework for building asynchronous web services that interact with event streams, offering a unified API for multiple message brokers and features like Pydantic validation, automatic documentation, and a powerful DI system.
+
+Relevant Pages:
+
+1. Features - FastStream:
+URL: https://faststream.airt.ai/latest/faststream/
+Summary: Details the features of FastStream, including multiple brokers support, Pydantic validation, and automatic AsyncAPI documentation.
+Keywords: 'FastStream', 'Asynchronous', 'Event Streams', 'API', 'Message Brokers', 'Pydantic', 'Documentation', 'Dependency Injection', 'Testing', 'Extensible', 'Integrations', 'Code Generation', 'GPT', 'Llama'
+Headlines: 'Unified API', 'Pydantic Support', 'Auto Documentation', 'DI System', 'In-Memory Tests', 'HTTP Integrations', 'Code Generation', 'Multiple Brokers', 'Testable Services', 'Extensible Framework', 'FastAPI Compatible', 'Modern Microservices', 'Async Services', 'Streamline Workflow', 'Community Driven'
+Descriptions: 'Build async web services', 'Validate messages easily', 'Generate docs automatically', 'Efficient dependency management'
+
+2. Getting Started - FastStream:
+URL: https://faststream.airt.ai/latest/getting-started/
+Summary: Provides a quick start guide and basic usage instructions for FastStream.
+Keywords: 'Getting Started', 'FastStream', 'Quick Start', 'Basic Usage', 'Installation', 'Tutorial', 'Setup Guide', 'Event Streaming', 'Message Brokers', 'Python', 'Framework', 'Asynchronous', 'Web Services', 'Documentation'
+Headlines: 'Quick Start', 'Install Guide', 'Basic Usage', 'Setup Tutorial', 'FastStream Setup', "Beginner's Guide", 'Quick Installation', 'Usage Instructions', 'Service Creation', 'Run Applications', 'Project Setup', 'Python Environment', 'Development Guide', 'Streaming Basics', 'Broker Containers'
+Descriptions: 'Start with FastStream', 'Easy installation steps', 'Learn basic FastStream usage', 'Set up your project quickly'
+
+3. Reference - Code API - FastStream:
+URL: https://faststream.airt.ai/latest/api/
+Summary: Contains the reference code API for FastStream, detailing classes, functions, and components.
+Keywords: 'Code API', 'Reference', 'FastStream', 'Documentation', 'Classes', 'Functions', 'Components', 'Framework', 'Asynchronous', 'Web Services', 'API Reference', 'Python', 'Developers', 'Technical Details', 'Source Code'
+Headlines: 'API Reference', 'Code Documentation', 'Framework Components', 'Class Details', 'Function Guide', 'API Components', 'Technical Reference', 'Source Code', 'Python Classes', 'Framework Functions', 'Developer Guide', 'Code Insights', 'API Overview', 'Component Specs', 'Code Examples'
+Descriptions: 'Detailed API documentation', 'Explore FastStream components', 'Technical reference for devs', "Guide to framework's API"
+
+
+And the task is following:
+Create a new Google Ads campaign focusing on the 'Features' and 'Getting Started' pages of the FastStream website."""
