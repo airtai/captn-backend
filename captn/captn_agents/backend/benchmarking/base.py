@@ -7,7 +7,7 @@ import random
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Literal, TypeAlias
+from typing import Any, Callable, Dict, Iterator, List
 
 import pandas as pd
 import typer
@@ -16,11 +16,10 @@ from tabulate import tabulate
 
 from ..teams._brief_creation_team import BriefCreationTeam
 from .brief_creation_team import URL_SUMMARY_DICT
+from .campaign_creation_team import URL_TASK_DICT
 from .models import Models
 
 app = typer.Typer()
-
-tasks_types: TypeAlias = Literal["websurfer", "brief_creation"]
 
 
 @contextmanager
@@ -171,6 +170,42 @@ def generate_task_table_for_brief_creation(
     _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
 
 
+@app.command()
+def generate_task_table_for_campaign_creation(
+    llm: Models = typer.Option(  # noqa: B008
+        Models.gpt4,
+        help="Model which will be used by all agents",
+    ),
+    file_name: str = typer.Option(
+        "campaign-creation-benchmark-tasks.csv",
+        help="File name of the task list",
+    ),
+    repeat: int = typer.Option(
+        10,
+        help="Number of times to repeat each url",
+    ),
+    output_dir: str = typer.Option(  # noqa: B008
+        "./",
+        help="Output directory for the reports",
+    ),
+) -> None:
+    URLS = list(URL_TASK_DICT.keys())
+
+    params_list = [
+        ["campaign_creation"],
+        URLS * repeat,
+        [llm],
+    ]
+    params_names = [
+        "task",
+        "url",
+        "llm",
+    ]
+
+    df = _create_task_df(params_list=params_list, params_names=params_names)
+    _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
+
+
 def run_test(
     benchmark: Callable[..., Any],
     **kwargs: Any,
@@ -236,6 +271,7 @@ def create_ag_report(df: pd.DataFrame, groupby_list: List[str]) -> pd.DataFrame:
 GROUP_BY_DICT = {
     "websurfer": ["url"],
     "brief_creation": ["url", "team_name"],
+    "campaign_creation": ["url"],
 }
 
 
@@ -252,11 +288,13 @@ def run_tests(
         os.environ["AZURE_OPENAI_API_KEY"] = os.environ["BENCHMARKING_AZURE_API_KEY"]
 
     from .brief_creation_team import benchmark_brief_creation
+    from .campaign_creation_team import benchmark_campaign_creation
     from .websurfer import benchmark_websurfer
 
     benchmarks = {
         "websurfer": benchmark_websurfer,
         "brief_creation": benchmark_brief_creation,
+        "campaign_creation": benchmark_campaign_creation,
     }
 
     _file_path: Path = Path(file_path)

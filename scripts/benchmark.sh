@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 team_name="brief-creation"
-avaliable_teams=("brief-creation" "websurfer")
+avaliable_teams=("brief-creation" "campaign-creation" "websurfer")
 
 while getopts ":t:" opt; do
     case ${opt} in
@@ -35,6 +35,8 @@ echo "File name: $file_name"
 # Generate the task table
 if [ "$team_name" == "brief-creation" ]; then
     benchmark generate-task-table-for-brief-creation --output-dir $output_dir --file-name $file_name
+elif [ "$team_name" == "campaign-creation" ]; then
+    benchmark generate-task-table-for-campaign-creation --output-dir $output_dir --file-name $file_name
 elif [ "$team_name" == "websurfer" ]; then
     benchmark generate-task-table-for-websurfer --output-dir $output_dir --file-name $file_name
 fi
