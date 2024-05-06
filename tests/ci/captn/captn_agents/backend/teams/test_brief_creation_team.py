@@ -5,6 +5,7 @@ import pytest
 from captn.captn_agents.backend.benchmarking.brief_creation_team import (
     benchmark_brief_creation,
 )
+from captn.captn_agents.backend.benchmarking.models import Models
 from captn.captn_agents.backend.teams import (
     BriefCreationTeam,
     Team,
@@ -57,4 +58,5 @@ class TestBriefCreationTeam:
         benchmark_brief_creation(
             url="https://www.ikea.com/gb/en/",
             team_name=team_name,
+            llm=Models.gpt3_5,
         )

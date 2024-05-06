@@ -68,7 +68,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
 
         if config_list is None:
             config = Config()
-            config_list = config.config_list_gpt_3_5
+            config_list = config.config_list_gpt_4
 
         self.llm_config = BriefCreationTeam._get_llm_config(
             seed=seed, temperature=temperature, config_list=config_list

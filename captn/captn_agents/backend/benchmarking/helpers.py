@@ -40,7 +40,7 @@ def get_client_response(
             is_termination_msg=lambda x: True,  # Once the client replies, the sender will terminate the conversation
         )
 
-        config_list = Config().config_list_gpt_3_5
+        config_list = Config().config_list_gpt_4
 
         client = AssistantAgent(
             name="client",

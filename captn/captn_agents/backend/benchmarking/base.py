@@ -6,7 +6,6 @@ import os
 import random
 import time
 from contextlib import contextmanager
-from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Literal, TypeAlias
 
@@ -17,12 +16,7 @@ from tabulate import tabulate
 
 from ..teams._brief_creation_team import BriefCreationTeam
 from .brief_creation_team import URL_SUMMARY_DICT
-
-
-class Models(str, Enum):
-    gpt3_5 = "gpt3-5"
-    gpt4 = "gpt4"
-
+from .models import Models
 
 app = typer.Typer()
 
@@ -138,7 +132,7 @@ def generate_task_table_for_websurfer(
 @app.command()
 def generate_task_table_for_brief_creation(
     llm: Models = typer.Option(  # noqa: B008
-        Models.gpt3_5,
+        Models.gpt4,
         help="Model which will be used by all agents",
     ),
     file_name: str = typer.Option(

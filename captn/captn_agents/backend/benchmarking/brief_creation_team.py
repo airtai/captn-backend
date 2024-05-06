@@ -19,6 +19,7 @@ from .fixtures.brief_creation_team_fixtures import (
     WEB_PAGE_SUMMARY_KONZUM,
 )
 from .helpers import get_client_response
+from .models import Models
 
 __all__ = (
     "benchmark_brief_creation",
@@ -109,12 +110,12 @@ Yes
 def benchmark_brief_creation(
     url: str,
     team_name: str,
-    llm: str = "gpt3-5",
+    llm: str = Models.gpt3_5,
 ) -> str:
     config = Config()
-    if llm == "gpt3-5":
+    if llm == Models.gpt3_5:
         config_list = config.config_list_gpt_3_5
-    elif llm == "gpt4":
+    elif llm == Models.gpt4:
         config_list = config.config_list_gpt_4
     else:
         raise ValueError(f"llm {llm} not supported")
