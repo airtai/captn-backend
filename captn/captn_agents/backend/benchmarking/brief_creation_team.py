@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from autogen.cache import Cache
 
-from ..config import Config
 from ..teams import (
     BriefCreationTeam,
     Team,
@@ -18,7 +17,7 @@ from .fixtures.brief_creation_team_fixtures import (
     WEB_PAGE_SUMMARY_IKEA,
     WEB_PAGE_SUMMARY_KONZUM,
 )
-from .helpers import get_client_response
+from .helpers import get_client_response, get_config_list
 from .models import Models
 
 __all__ = (
@@ -112,13 +111,7 @@ def benchmark_brief_creation(
     team_name: str,
     llm: str = Models.gpt3_5,
 ) -> str:
-    config = Config()
-    if llm == Models.gpt3_5:
-        config_list = config.config_list_gpt_3_5
-    elif llm == Models.gpt4:
-        config_list = config.config_list_gpt_4
-    else:
-        raise ValueError(f"llm {llm} not supported")
+    config_list = get_config_list(llm)
 
     user_id = 123
     conv_id = 234

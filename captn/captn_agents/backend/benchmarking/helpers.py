@@ -7,8 +7,23 @@ from autogen.cache import Cache
 from ..config import Config
 from ..teams import Team
 from ..tools._functions import reply_to_client
+from .models import Models
 
-__all__ = ("get_client_response",)
+__all__ = (
+    "get_client_response",
+    "get_config_list",
+)
+
+
+def get_config_list(llm: str) -> List[Dict[str, str]]:
+    config = Config()
+    if llm == Models.gpt3_5:
+        return config.config_list_gpt_3_5
+
+    if llm == Models.gpt4:
+        return config.config_list_gpt_4
+
+    raise ValueError(f"llm {llm} not supported")
 
 
 def get_client_response(

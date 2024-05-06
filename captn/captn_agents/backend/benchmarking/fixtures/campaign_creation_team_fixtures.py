@@ -1,6 +1,6 @@
-__all__ = ("campaign_creation_team_task",)
+__all__ = ("CAMPAIGN_CREATION_IKEA",)
 
-campaign_creation_team_task = """Here is the customer brief:
+CAMPAIGN_CREATION_IKEA: str = """Here is the customer brief:
 Based on the information gathered from the website, the client has chosen to focus on the Furniture category for the new campaign.
 
 Here is the customer brief for the Furniture campaign:
