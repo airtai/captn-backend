@@ -57,10 +57,11 @@ def benchmark_campaign_creation(
     llm: str = Models.gpt4,
 ) -> str:
     try:
+        task = URL_TASK_DICT[url]
         campaign_creation_team = CampaignCreationTeam(
             user_id=123,
             conv_id=456,
-            task=CAMPAIGN_CREATION_IKEA,
+            task=task,
         )
 
         with (

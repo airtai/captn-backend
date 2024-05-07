@@ -5,6 +5,7 @@ import itertools
 import os
 import random
 import time
+import traceback
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List
@@ -215,6 +216,8 @@ def run_test(
         output = benchmark(**kwargs)
         success = True
     except Exception as e:
+        traceback.print_stack()
+        traceback.print_exc()
         output = str(e)
         success = False
     finally:
