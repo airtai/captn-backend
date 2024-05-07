@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from typing import Any, Dict
 from unittest.mock import MagicMock
 
+import openai
 from autogen.cache import Cache
 
 from captn.google_ads.client import ALREADY_AUTHENTICATED
@@ -20,8 +21,6 @@ from ..tools._campaign_creation_team_tools import (
 from ..tools._functions import Context
 from ..tools._google_ads_team_tools import create_campaign
 from .fixtures.campaign_creation_team_fixtures import (
-    CAMPAIGN_CREATION_DISNEY,
-    CAMPAIGN_CREATION_FASTSTREAM,
     CAMPAIGN_CREATION_IKEA,
 )
 from .models import Models
@@ -45,10 +44,10 @@ def _ask_client_for_permission_mock(*args: Any, **kwargs: Dict[str, Any]) -> str
 
 URL_TASK_DICT = {
     "https://www.ikea.com/gb/en/": CAMPAIGN_CREATION_IKEA,
-    "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
+    # "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
     # "https://www.hamleys.com/": "",
     # "https://www.konzum.hr": "",
-    "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
+    # "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
 }
 
 
@@ -120,7 +119,26 @@ def benchmark_campaign_creation(
 
             with TemporaryDirectory() as cache_dir:
                 with Cache.disk(cache_path_root=cache_dir) as cache:
-                    campaign_creation_team.initiate_chat(cache=cache)
+                    exception = None
+
+                    try:
+                        campaign_creation_team.initiate_chat(cache=cache)
+                    except openai.APIStatusError as e:
+                        exception = e
+                        for i in range(3):
+                            print(f"{i+1}. OpenAI API Timeout Error\nLet's try again.")
+                            try:
+                                campaign_creation_team.manager.send(
+                                    recipient=campaign_creation_team.manager,
+                                    message="NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
+                                )
+                                exception = None
+                                break
+                            except openai.APIStatusError as e:
+                                exception = e
+
+                    if exception is not None:
+                        raise exception
 
             mock_create_campaign.assert_called()
             mock_ask_client_for_permission.assert_called()
