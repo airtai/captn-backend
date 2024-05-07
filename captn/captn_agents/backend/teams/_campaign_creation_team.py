@@ -1,7 +1,13 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..config import Config
-from ..tools._campaign_creation_team_tools import create_campaign_creation_team_toolbox
+from ..tools._campaign_creation_team_tools import (
+    AdGroupAdForCreation,
+    AdGroupCriterionForCreation,
+    AdGroupForCreation,
+    AdGroupWithAdAndKeywords,
+    create_campaign_creation_team_toolbox,
+)
 from ._shared_prompts import (
     MODIFICATION_FUNCTIONS_INSTRUCTIONS,
     REPLY_TO_CLIENT_COMMAND,
@@ -9,6 +15,40 @@ from ._shared_prompts import (
 from ._team import Team
 
 __all__ = ("CampaignCreationTeam",)
+
+
+ad_group_ad = AdGroupAdForCreation(
+    final_url="https://www.example.com",
+    headlines=["headline1", "headline2", "headline3"],
+    descriptions=["description1", "description2"],
+    status="ENABLED",
+)
+
+keyword1 = AdGroupCriterionForCreation(
+    keyword_text="keyword1",
+    keyword_match_type="EXACT",
+    status="ENABLED",
+)
+keyword2 = AdGroupCriterionForCreation(
+    keyword_text="keyword2",
+    keyword_match_type="EXACT",
+    status="ENABLED",
+)
+
+ad_group = AdGroupForCreation(
+    name="ad_group",
+    status="ENABLED",
+    ad_group_ad=ad_group_ad,
+    keywords=[keyword1, keyword2],
+)
+
+ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
+    customer_id="1111",
+    campaign_id="1212",
+    ad_group=ad_group,
+    ad_group_ad=ad_group_ad,
+    keywords=[keyword1, keyword2],
+)
 
 
 @Team.register_team("campaign_creation_team")
@@ -100,7 +140,7 @@ The client has sent you the task to create a digital campaign for them. And this
 
     @property
     def _guidelines(self) -> str:
-        return """## Guidelines
+        return f"""## Guidelines
 0. Never repeat yourself or previous messages.
 1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
 TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
@@ -149,51 +189,12 @@ Here is a list of things which you CAN do:
 You can NOT do anything else, so do not suggest changes which you can NOT perform.
 - e.g. you can NOT set Google ads targeting, negative keywords, ad extensions etc.
 
-here is an example of how to use the create_ad_group_with_ad_and_keywords command:
-ad_group_with_ad_and_keywords must be a json with the following structure:
-{
-  "customer_id": "1111",
-  "campaign_id": "1212",
-  "ad_group": {
-    "customer_id": null,
-    "status": "ENABLED",
-    "campaign_id": null,
-    "name": "ad_group",
-  },
-  "ad_group_ad": {
-    "customer_id": null,
-    "status": "ENABLED",
-    "ad_group_id": null,
-    "final_url": "https://www.example.com",
-    "headlines": [
-      "headline1",
-      "headline2",
-      "headline3"
-    ],
-    "descriptions": [
-      "description1",
-      "description2"
-    ],
-    "path1": null,
-    "path2": null
-  },
-  "keywords": [
-    {
-      "customer_id": null,
-      "status": "ENABLED",
-      "ad_group_id": null,
-      "keyword_text": "keyword1",
-      "keyword_match_type": "EXACT"
-    },
-    {
-      "customer_id": null,
-      "status": "ENABLED",
-      "ad_group_id": null,
-      "keyword_text": "keyword2",
-      "keyword_match_type": "EXACT"
-    }
-  ]
-}
+
+Example of the JSON input for the 'create_ad_group_with_ad_and_keywords' command:
+{ad_group_with_ad_and_keywords.model_dump_json()}
+
+When suggesting the JSON input, do NOT add \\n, \\t or any whitespaces to the JSON!!!
+
 and two additional parameters:
 - clients_approval_message: "yes"
 - modification_question: "Can I make the following changes to your account?"
@@ -204,10 +205,10 @@ Use smart suggestions to suggest keywords, headlines, descriptions etc. which ca
 Do NOT use smart suggestions for open ended questions or questions which require the clients input.
 
 When you ask the client for some suggestions (e.g. which headline should be added), you should also generate smart suggestions like:
-"smart_suggestions": {
+"smart_suggestions": {{
     "suggestions":["Add headline x", "Add headline y", "Add headline z"],
     "type":"manyOf"
-}
+}}
 
 
 VERY IMPORTANT NOTES:
@@ -220,11 +221,14 @@ The FIRST step should do is to analyze the received information about the client
 - The THIRD step is recommending and creating new ad groups with ads and keywords
 - Once you have created the campaign, ad groups, ads and keywords. Write a detailed summary about the campaign which you have created and tell the client that you have finished the task.
 - If the client wants to make some changes/updates, tell him to create a new chat by clicking on the "New chat" and to ask for the changes/updates there.
-"""
+"""  # nosec: [B608]
 
     @property
     def _commands(self) -> str:
         return f"""## Commands
+All of the command use JSON input, when generating the command, make sure that the JSON is properly formatted.
+Do NOT add \\n,\\t or any other whitespace characters in the JSON input. THIS IS THE MOST IMPORTANT THING!
+
 All team members have access to the following command:
 1. {REPLY_TO_CLIENT_COMMAND}
 "smart_suggestions": {{

@@ -1,10 +1,9 @@
 import random
 import unittest
 from tempfile import TemporaryDirectory
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from unittest.mock import MagicMock
 
-import openai
 from autogen.cache import Cache
 
 from captn.google_ads.client import ALREADY_AUTHENTICATED
@@ -12,6 +11,7 @@ from captn.google_ads.client import ALREADY_AUTHENTICATED
 from ..teams import Team
 from ..teams._campaign_creation_team import (
     CampaignCreationTeam,
+    ad_group_with_ad_and_keywords,
 )
 from ..tools._campaign_creation_team_tools import (
     _create_ad_group,
@@ -49,6 +49,30 @@ URL_TASK_DICT = {
     # "https://www.konzum.hr": "",
     # "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
 }
+
+
+def retry_func(campaign_creation_team: CampaignCreationTeam) -> Optional[Exception]:
+    exception = None
+    for i in range(3):
+        print(f"{i+1}. OpenAI API Timeout Error\nLet's try again.")
+        try:
+            # campaign_creation_team.members[0].send(
+            campaign_creation_team.manager.send(
+                recipient=campaign_creation_team.manager,
+                message=f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
+            )
+            print("We were able to recover from the error.")
+            last_message = campaign_creation_team.get_last_message()
+            print(f"Last message: {last_message}")
+            exception = None
+            break
+        # except openai.APIStatusError as e:
+        except Exception as e:
+            print("Inside retry_func")
+            print(f"Exception type: {type(e)}, {e}")
+            exception = e
+
+    return exception
 
 
 def benchmark_campaign_creation(
@@ -123,19 +147,27 @@ def benchmark_campaign_creation(
 
                     try:
                         campaign_creation_team.initiate_chat(cache=cache)
-                    except openai.APIStatusError as e:
-                        exception = e
-                        for i in range(3):
-                            print(f"{i+1}. OpenAI API Timeout Error\nLet's try again.")
-                            try:
-                                campaign_creation_team.manager.send(
-                                    recipient=campaign_creation_team.manager,
-                                    message="NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
-                                )
-                                exception = None
-                                break
-                            except openai.APIStatusError as e:
-                                exception = e
+                    # except openai.APIStatusError as e:
+                    except Exception as e:
+                        print("Outside retry_func")
+                        print(f"Exception type: {type(e)}, {e}")
+                        # exception = e
+                        # for i in range(3):
+                        #     print(f"{i+1}. OpenAI API Timeout Error\nLet's try again.")
+                        #     try:
+                        #         #campaign_creation_team.members[0].send(
+                        #         campaign_creation_team.manager.send(
+                        #             recipient=campaign_creation_team.manager,
+                        #             message="NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
+                        #         )
+                        #         print("We were able to recover from the error.")
+                        #         last_message = campaign_creation_team.get_last_message()
+                        #         print(f"Last message: {last_message}")
+                        #         exception = None
+                        #         break
+                        #     except openai.APIStatusError as e:
+                        #         exception = e
+                        exception = retry_func(campaign_creation_team)
 
                     if exception is not None:
                         raise exception

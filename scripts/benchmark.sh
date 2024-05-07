@@ -42,7 +42,8 @@ elif [ "$team_name" == "websurfer" ]; then
 fi
 
 echo "File path: $output_dir/$file_name"
-benchmark run-tests --file-path "$output_dir/$file_name"
+mkdir -p "$output_dir/logs"
+benchmark run-tests --file-path "$output_dir/$file_name" > "$output_dir/logs/$team_name-benchmark-result-$date.txt"
 
 end=`date +%s`
 echo Total execution time: $((end-start))s
