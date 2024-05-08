@@ -3,16 +3,12 @@ from datetime import datetime
 from typing import Callable, Dict
 
 import autogen
-import openai
 import pytest
 from autogen.io.websockets import IOWebsockets
-from httpx import Request, Response
-from openai import BadRequestError
 from websockets.sync.client import connect as ws_connect
 
 from captn.captn_agents.application import (
     ON_FAILURE_MESSAGE,
-    RETRY_MESSAGE,
     CaptnAgentRequest,
     _get_message,
     on_connect,
@@ -204,18 +200,8 @@ class TestConsoleIOWithWebsockets:
                 with unittest.mock.patch(
                     "captn.captn_agents.application.start_or_continue_conversation"
                 ) as mock_start_or_continue_conversation:
-                    b_r_error_message = "Bad Request"
-                    b_r_request = Request(
-                        method="POST",
-                        url="",
-                    )
-                    b_r_response = Response(status_code=400, request=b_r_request)
-
                     mock_start_or_continue_conversation.side_effect = [
                         Exception("Error"),
-                        BadRequestError(
-                            message=b_r_error_message, response=b_r_response, body=None
-                        ),
                         (None, "TERMINATE"),
                     ]
                     print(f" - Connected to server on {uri}", flush=True)
@@ -255,13 +241,6 @@ class TestConsoleIOWithWebsockets:
                     max_round=80,
                     registred_team_name="default_team",
                 ),
-                unittest.mock.call(
-                    user_id=1,
-                    conv_id=1,
-                    task=RETRY_MESSAGE,
-                    max_round=80,
-                    registred_team_name="default_team",
-                ),
             ]
         )
         assert success_dict["success"]
@@ -281,14 +260,8 @@ class TestConsoleIOWithWebsockets:
                         "captn.captn_agents.application.start_or_continue_conversation"
                     ) as mock_start_or_continue_conversation,
                     unittest.mock.patch(
-                        "captn.captn_agents.application.OPENAI_API_STATUS_ERROR"
-                    ) as mock_openai_api_status_error,
-                    unittest.mock.patch(
                         "captn.captn_agents.application.THREE_IN_A_ROW_EXCEPTIONS"
                     ) as mock_three_in_a_row_exceptions,
-                    unittest.mock.patch(
-                        "captn.captn_agents.application.BAD_REQUEST_ERRORS"
-                    ) as mock_bad_request_errors,
                     unittest.mock.patch(
                         "captn.captn_agents.application.REGULAR_EXCEPTIONS"
                     ) as mock_regular_exceptions,
@@ -299,28 +272,10 @@ class TestConsoleIOWithWebsockets:
                         "captn.captn_agents.application.RANDOM_EXCEPTIONS"
                     ) as mock_random_exceptions,
                 ):
-                    b_r_error_message = "The operation was timeout."
-                    b_r_request = Request(
-                        method="POST",
-                        url="",
-                    )
-                    b_r_response = Response(status_code=400, request=b_r_request)
-
-                    api_status_error = openai.APIStatusError(
-                        message=b_r_error_message,
-                        response=b_r_response,
-                        body={
-                            "error": {
-                                "code": "Timeout",
-                                "message": "The operation was timeout.",
-                            }
-                        },
-                    )
-
                     mock_start_or_continue_conversation.side_effect = (
-                        api_status_error,
-                        api_status_error,
-                        api_status_error,
+                        Exception("Error 1"),
+                        Exception("Error 2"),
+                        Exception("Error 3"),
                     )
 
                     print(f" - Connected to server on {uri}", flush=True)
@@ -345,10 +300,8 @@ class TestConsoleIOWithWebsockets:
 
                             break
 
-                    assert mock_openai_api_status_error.inc.call_count == 3
                     assert mock_three_in_a_row_exceptions.inc.call_count == 1
-                    mock_bad_request_errors.assert_not_called()
-                    mock_regular_exceptions.assert_not_called()
+                    assert mock_regular_exceptions.inc.call_count == 3
                     mock_invalid_message_in_iostream.assert_not_called()
                     mock_random_exceptions.assert_not_called()
 

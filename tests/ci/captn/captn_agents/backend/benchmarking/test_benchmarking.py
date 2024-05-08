@@ -1,7 +1,7 @@
 import functools
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, List
+from typing import List
 
 import pandas as pd
 import pytest
@@ -10,6 +10,7 @@ from tabulate import tabulate
 from typer.testing import CliRunner
 
 import captn.captn_agents.backend.benchmarking.brief_creation_team
+import captn.captn_agents.backend.benchmarking.campaign_creation_team
 import captn.captn_agents.backend.benchmarking.websurfer
 from captn.captn_agents.backend.benchmarking.base import (
     app,
@@ -25,6 +26,7 @@ class TestBase:
         assert "root [OPTIONS]" in result.stdout
         assert "generate-task-table-for-websurfer" in result.stdout
         assert "generate-task-table-for-brief-creation" in result.stdout
+        assert "generate-task-table-for-campaign-creation" in result.stdout
 
     @staticmethod
     def benchmark_success(success: bool, *args, **kwargs):
@@ -35,16 +37,35 @@ class TestBase:
             raise RuntimeError("it's not ok")
 
     @staticmethod
+    def generate_task_table(
+        command: str,
+        tmp_dir: TemporaryDirectory,
+        file_name: str,
+        no_rows: int = 50,
+    ):
+        result = runner.invoke(app, [command, "--output-dir", tmp_dir])
+        assert result.exit_code == 0, result.stdout
+
+        df = pd.read_csv(Path(tmp_dir) / file_name)
+        assert len(df) == no_rows
+
+    @staticmethod
     def run_tests_for_team_success(
         file_name: str,
+        command: str,
         aggregated_csv_name: str,
         success: bool,
-        generate_table_f: Callable[..., Any],
         columns: List[str] = ["url", "success_rate", "avg_time"],  # noqa: B006
+        no_rows: int = 50,
     ) -> None:
         with TemporaryDirectory() as tmp_dir:
             file_path = Path(tmp_dir) / file_name
-            generate_table_f(tmp_dir, file_name)
+            TestBase.generate_task_table(
+                command=command,
+                file_name=file_name,
+                tmp_dir=tmp_dir,
+                no_rows=no_rows,
+            )
 
             result = runner.invoke(
                 app,
@@ -72,21 +93,17 @@ class TestBase:
 
 
 class TestWebsurfer:
-    @staticmethod
-    def _generate_task_table_for_websurfer(
-        tmp_dir: TemporaryDirectory, file_name: str = "websurfer-benchmark-tasks.csv"
-    ):
-        result = runner.invoke(
-            app, ["generate-task-table-for-websurfer", "--output-dir", tmp_dir]
-        )
-        assert result.exit_code == 0, result.stdout
-
-        df = pd.read_csv(Path(tmp_dir) / file_name)
-        assert len(df) == 50
+    command = "generate-task-table-for-websurfer"
+    file_name = "websurfer-benchmark-tasks.csv"
+    aggregated_csv_name = "websurfer-benchmark-tasks-aggregated.csv"
 
     def test_generate_task_table_for_websurfer_success(self):
         with TemporaryDirectory() as tmp_dir:
-            TestWebsurfer._generate_task_table_for_websurfer(tmp_dir)
+            TestBase.generate_task_table(
+                command=self.command,
+                file_name=self.file_name,
+                tmp_dir=tmp_dir,
+            )
 
     @pytest.mark.parametrize("success", [True, False])
     def test_run_tests_for_websurfer_success(
@@ -98,14 +115,12 @@ class TestWebsurfer:
             functools.partial(TestBase.benchmark_success, success),
         )
 
-        file_name = "websurfer-benchmark-tasks.csv"
-        aggregated_csv_name = "websurfer-benchmark-tasks-aggregated.csv"
-
         TestBase.run_tests_for_team_success(
-            file_name,
-            aggregated_csv_name,
-            success,
-            generate_table_f=TestWebsurfer._generate_task_table_for_websurfer,
+            command=self.command,
+            file_name=self.file_name,
+            aggregated_csv_name=self.aggregated_csv_name,
+            success=success,
+            no_rows=50,
         )
 
     def test_create_ag_report(self):
@@ -132,22 +147,18 @@ class TestWebsurfer:
 
 
 class TestBriefCreation:
-    @staticmethod
-    def _generate_task_table_for_brief_creation(
-        tmp_dir: TemporaryDirectory,
-        file_name: str = "brief-creation-benchmark-tasks.csv",
-    ):
-        result = runner.invoke(
-            app, ["generate-task-table-for-brief-creation", "--output-dir", tmp_dir]
-        )
-        assert result.exit_code == 0, result.stdout
-
-        df = pd.read_csv(Path(tmp_dir) / file_name)
-        assert len(df) == 100
+    command = "generate-task-table-for-brief-creation"
+    file_name = "brief-creation-benchmark-tasks.csv"
+    aggregated_csv_name = "brief-creation-benchmark-tasks-aggregated.csv"
 
     def test_generate_task_table_for_brief_creation_success(self):
         with TemporaryDirectory() as tmp_dir:
-            TestBriefCreation._generate_task_table_for_brief_creation(tmp_dir)
+            TestBase.generate_task_table(
+                command=self.command,
+                file_name=self.file_name,
+                tmp_dir=tmp_dir,
+                no_rows=100,
+            )
 
     @pytest.mark.parametrize("success", [True, False])
     def test_run_tests_for_brief_creation_success(
@@ -159,13 +170,44 @@ class TestBriefCreation:
             functools.partial(TestBase.benchmark_success, success),
         )
 
-        file_name = "brief-creation-benchmark-tasks.csv"
-        aggregated_csv_name = "brief-creation-benchmark-tasks-aggregated.csv"
+        TestBase.run_tests_for_team_success(
+            command=self.command,
+            file_name=self.file_name,
+            aggregated_csv_name=self.aggregated_csv_name,
+            success=success,
+            no_rows=100,
+            columns=["Unnamed: 0", "success_rate", "avg_time"],
+        )
+
+
+class TestCampaignCreation:
+    command = "generate-task-table-for-campaign-creation"
+    file_name = "campaign-creation-benchmark-tasks.csv"
+    aggregated_csv_name = "campaign-creation-benchmark-tasks-aggregated.csv"
+
+    def test_generate_task_table_for_campaign_creation_success(self):
+        with TemporaryDirectory() as tmp_dir:
+            TestBase.generate_task_table(
+                command=self.command,
+                file_name=self.file_name,
+                tmp_dir=tmp_dir,
+                no_rows=30,
+            )
+
+    @pytest.mark.parametrize("success", [True, False])
+    def test_run_tests_for_campaign_creation_success(
+        self, success: bool, monkeypatch: MonkeyPatch
+    ):
+        monkeypatch.setattr(
+            captn.captn_agents.backend.benchmarking.campaign_creation_team,
+            "benchmark_campaign_creation",
+            functools.partial(TestBase.benchmark_success, success),
+        )
 
         TestBase.run_tests_for_team_success(
-            file_name,
-            aggregated_csv_name,
-            success,
-            generate_table_f=TestBriefCreation._generate_task_table_for_brief_creation,
-            columns=["Unnamed: 0", "success_rate", "avg_time"],
+            command=self.command,
+            file_name=self.file_name,
+            aggregated_csv_name=self.aggregated_csv_name,
+            success=success,
+            no_rows=30,
         )
