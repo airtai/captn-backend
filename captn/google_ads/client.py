@@ -152,6 +152,9 @@ IGNORE_FIELDS = [
     "update_existing_description_index",
     "resource_type",
     "location_ids",
+    "network_settings_target_google_search",
+    "network_settings_target_search_network",
+    "network_settings_target_content_network",
 ]
 FIELD_MAPPING = {
     "keyword_text": "keyword",
