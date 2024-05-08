@@ -21,6 +21,8 @@ from ..tools._campaign_creation_team_tools import (
 from ..tools._functions import Context
 from ..tools._google_ads_team_tools import create_campaign
 from .fixtures.campaign_creation_team_fixtures import (
+    CAMPAIGN_CREATION_DISNEY,
+    CAMPAIGN_CREATION_FASTSTREAM,
     CAMPAIGN_CREATION_IKEA,
 )
 from .models import Models
@@ -44,22 +46,28 @@ def _ask_client_for_permission_mock(*args: Any, **kwargs: Dict[str, Any]) -> str
 
 URL_TASK_DICT = {
     "https://www.ikea.com/gb/en/": CAMPAIGN_CREATION_IKEA,
-    # "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
+    "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
     # "https://www.hamleys.com/": "",
     # "https://www.konzum.hr": "",
-    # "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
+    "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
 }
 
 
 def retry_func(campaign_creation_team: CampaignCreationTeam) -> Optional[Exception]:
+    retry_messages = [
+        "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
+        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
+        "Please continue.",
+    ] * 2
+
     exception = None
-    for i in range(3):
+    for i in range(len(retry_messages)):
         print(f"{i+1}. OpenAI API Timeout Error\nLet's try again.")
         try:
             # campaign_creation_team.members[0].send(
             campaign_creation_team.manager.send(
                 recipient=campaign_creation_team.manager,
-                message=f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
+                message=retry_messages[i],
             )
             print("We were able to recover from the error.")
             last_message = campaign_creation_team.get_last_message()
