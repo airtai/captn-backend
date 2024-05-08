@@ -2,6 +2,8 @@ import json
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 import autogen
+import httpx
+import openai
 from fastcore.basics import patch
 
 from ..config import Config
@@ -44,6 +46,11 @@ class Team:
     _team_registry: Dict[str, Type["Team"]] = {}
 
     _inverse_team_registry: Dict[Type["Team"], str] = {}
+
+    _retry_messages = [
+        "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
+        "Please continue.",
+    ] * 3
 
     @classmethod
     def register_team(cls, name: str) -> Callable[[T], T]:
@@ -315,9 +322,6 @@ You operate within the following constraints:
     def get_brief_template(cls) -> str:
         raise NotImplementedError()
 
-    def initiate_chat(self, **kwargs: Any) -> None:
-        self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
-
     def get_messages(self) -> Any:
         return self.groupchat.messages
 
@@ -332,5 +336,38 @@ You operate within the following constraints:
 
         return last_message  # type: ignore
 
+    def retry_func(self) -> None:
+        exception = None
+        for i in range(len(self._retry_messages)):
+            print(f"Retry number {i+1}.")
+            try:
+                self.manager.send(
+                    recipient=self.manager,
+                    message=self._retry_messages[i],
+                )
+                return
+            except (openai.APIStatusError, httpx.ReadTimeout) as e:
+                print(f"Exception type: {type(e)}, {e}")
+                exception = e
+
+        if exception is not None:
+            raise exception
+
+    @staticmethod
+    def handle_exceptions(func: Callable[..., None]) -> Callable[..., None]:
+        def wrapper(self: "Team", *args: Any, **kwargs: Any) -> None:
+            try:
+                return func(self, *args, **kwargs)
+            except (openai.APIStatusError, httpx.ReadTimeout) as e:
+                print(f"Handling exception: {type(e)}, {e}")
+                self.retry_func()
+
+        return wrapper
+
+    @handle_exceptions
+    def initiate_chat(self, **kwargs: Any) -> None:
+        self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
+
+    @handle_exceptions
     def continue_chat(self, message: str) -> None:
         self.manager.send(recipient=self.manager, message=message)

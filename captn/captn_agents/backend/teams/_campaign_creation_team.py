@@ -77,6 +77,12 @@ sure it is understandable by non-experts.
         },
     ]
 
+    _retry_messages = [
+        "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
+        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
+        "Please continue.",
+    ] * 2
+
     def __init__(
         self,
         *,
