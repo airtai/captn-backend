@@ -10,10 +10,11 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupCriterionForCreation,
     AdGroupForCreation,
     AdGroupWithAdAndKeywords,
-    Context,
-    # create_ad_group_with_ad_and_keywords,
     create_campaign_creation_team_toolbox,
 )
+from captn.captn_agents.backend.tools._functions import Context
+
+from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
 class TestTools:
@@ -33,31 +34,21 @@ class TestTools:
         user_proxy = UserProxyAgent(name="user_proxy")
 
         self.toolbox.add_to_agent(agent, user_proxy)
-
-        # add_create_ad_group_with_ad_and_keywords_to_agent(
-        #     agent=agent,
-        #     user_id=1,
-        #     conv_id=1,
-        #     clients_question_answer_list=[("question", "yes")],
-        # )
-
         llm_config = agent.llm_config
-        # print(f"{llm_config=}")
-        assert "tools" in llm_config, f"{llm_config.keys()=}"
-        assert len(llm_config["tools"]) == 1, f"{llm_config['tools']=}"
-        assert (
-            llm_config["tools"][0]["type"] == "function"
-        ), f"{llm_config['tools'][0]['type']=}"
 
-        function_config = llm_config["tools"][0]["function"]
-
-        assert (
-            function_config["name"] == "create_ad_group_with_ad_and_keywords"
-        ), function_config
-        assert (
-            function_config["description"]
-            == "Create an ad group with a single ad and a list of keywords"
-        ), function_config["description"]
+        check_llm_config_total_tools(llm_config, 7)
+        check_llm_config_descriptions(
+            llm_config,
+            {
+                "create_ad_group_with_ad_and_keywords": "Create an ad group with a single ad and a list of keywords",
+                "reply_to_client": r"Respond to the client \(answer to his task or question for additional information\)",
+                "ask_client_for_permission": "Ask the client for permission to make the changes.",
+                "change_google_account": "This method should be used only when the client explicitly asks for the change of the Google account",
+                "list_accessible_customers": "List all the customers accessible to the user",
+                "execute_query": "Query the Google Ads API.",
+                "create_campaign": "Creates Google Ads Campaign. VERY IMPORTANT:",
+            },
+        )
 
     def test_create_ad_group_with_ad_and_keywords(self) -> None:
         ad_group_ad = AdGroupAdForCreation(

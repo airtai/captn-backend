@@ -1,8 +1,12 @@
 import json
+import traceback
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 import autogen
+import httpx
+import openai
 from fastcore.basics import patch
+from prometheus_client import Counter
 
 from ..config import Config
 
@@ -35,6 +39,15 @@ def create(
 T = TypeVar("T")
 
 
+OPENAI_API_STATUS_ERROR = Counter(
+    "openai_api_status_error", "Total count of openai api status errors"
+)
+
+BAD_REQUEST_ERRORS = Counter(
+    "bad_request_errors_total", "Total count of bad request errors"
+)
+
+
 class Team:
     _team_name_counter: int = 0
     _functions: Optional[List[Dict[str, Any]]] = None
@@ -44,6 +57,11 @@ class Team:
     _team_registry: Dict[str, Type["Team"]] = {}
 
     _inverse_team_registry: Dict[Type["Team"], str] = {}
+
+    _retry_messages = [
+        "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
+        "Please continue.",
+    ] * 3
 
     @classmethod
     def register_team(cls, name: str) -> Callable[[T], T]:
@@ -245,7 +263,14 @@ Do NOT try to finish the task until other team members give their opinion.
 
     @property
     def _first_section(self) -> str:
-        roles = ", ".join([str(member.name) for member in self.members])
+        # Do not mention user_proxy in the roles
+        roles = ", ".join(
+            [
+                str(member.name)
+                for member in self.members
+                if not isinstance(member, autogen.UserProxyAgent)
+            ]
+        )
         return f"""The team is consisting of the following roles: {roles}.
 
 
@@ -264,8 +289,7 @@ Play to your strengths as an LLM and pursue simple strategies with no legal comp
     def _constraints(self) -> str:
         return """## Constraints
 You operate within the following constraints:
-1. If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.
-2. The context size is limited so try to be as concise in discussinos as possible. Do NOT repeat yourself or others.
+1. The context size is limited so try to be as concise in discussinos as possible. Do NOT repeat yourself or others.
 """
 
     @property
@@ -273,20 +297,12 @@ You operate within the following constraints:
         raise NotImplementedError()
 
     @property
-    def _resources(self) -> str:
-        return """## Resources
-You can leverage access to the following resources:
-1. Command execution
-"""
-
-    @property
     def _best_practices(self) -> str:
         return """## Best practices
 1. Continuously review and analyze your actions to ensure you are performing to the best of your abilities.
 2. Constructively self-criticize your big-picture behavior constantly.
-3. Reflect on past decisions and strategies to refine your approach.
-4. Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.
-5. If you have some doubts, ask question.
+3. Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.
+4. If you have some doubts, ask question.
 """
 
     @property
@@ -304,8 +320,6 @@ You can leverage access to the following resources:
 
 {self._commands}
 
-{self._resources}
-
 {self._best_practices}
 
 {self._final_section}
@@ -318,9 +332,6 @@ You can leverage access to the following resources:
     @classmethod
     def get_brief_template(cls) -> str:
         raise NotImplementedError()
-
-    def initiate_chat(self, **kwargs: Any) -> None:
-        self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
 
     def get_messages(self) -> Any:
         return self.groupchat.messages
@@ -336,5 +347,51 @@ You can leverage access to the following resources:
 
         return last_message  # type: ignore
 
+    def retry_func(self) -> None:
+        exception: Optional[Exception] = None
+        for i in range(len(self._retry_messages)):
+            print(f"Retry number {i+1}.")
+
+            if isinstance(exception, openai.BadRequestError):
+                message = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
+            else:
+                message = self._retry_messages[i]
+
+            try:
+                self.manager.send(
+                    recipient=self.manager,
+                    message=message,
+                )
+                return
+            except openai.BadRequestError as e:
+                BAD_REQUEST_ERRORS.inc()
+                print(f"Exception type: {type(e)}, {e}")
+                exception = e
+            except (openai.APIStatusError, httpx.ReadTimeout) as e:
+                OPENAI_API_STATUS_ERROR.inc()
+                print(f"Exception type: {type(e)}, {e}")
+                exception = e
+
+        if exception is not None:
+            traceback.print_exc()
+            traceback.print_stack()
+            raise exception
+
+    @staticmethod
+    def handle_exceptions(func: Callable[..., None]) -> Callable[..., None]:
+        def wrapper(self: "Team", *args: Any, **kwargs: Any) -> None:
+            try:
+                return func(self, *args, **kwargs)
+            except (openai.APIStatusError, httpx.ReadTimeout) as e:
+                print(f"Handling exception: {type(e)}, {e}")
+                self.retry_func()
+
+        return wrapper
+
+    @handle_exceptions
+    def initiate_chat(self, **kwargs: Any) -> None:
+        self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
+
+    @handle_exceptions
     def continue_chat(self, message: str) -> None:
         self.manager.send(recipient=self.manager, message=message)

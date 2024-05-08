@@ -1,0 +1,12 @@
+,success_rate,avg_time
+"('https://faststream.airt.ai', 'campaign_creation_team')",1.0,44.27
+"('https://faststream.airt.ai', 'default_team')",1.0,58.94
+"('https://www.disneystore.eu', 'campaign_creation_team')",1.0,75.57
+"('https://www.disneystore.eu', 'default_team')",1.0,35.78
+"('https://www.hamleys.com/', 'campaign_creation_team')",1.0,47.58
+"('https://www.hamleys.com/', 'default_team')",1.0,58.77
+"('https://www.ikea.com/gb/en/', 'campaign_creation_team')",1.0,48.92
+"('https://www.ikea.com/gb/en/', 'default_team')",1.0,53.92
+"('https://www.konzum.hr', 'campaign_creation_team')",1.0,36.63
+"('https://www.konzum.hr', 'default_team')",1.0,61.51
+Total,1.0,52.19

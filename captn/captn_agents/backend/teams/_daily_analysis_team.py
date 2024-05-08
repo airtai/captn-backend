@@ -21,14 +21,9 @@ from ....google_ads.client import (
     get_user_ids_and_emails,
     list_accessible_customers,
 )
-from ..tools._function_configs import (
-    execute_query_config,
-    get_info_from_the_web_page_config,
-    list_accessible_customers_config,
-    send_email_config,
-)
-from ..tools._functions import get_info_from_the_web_page, send_email
-from ._google_ads_team import string_to_list
+from ..tools._daily_analysis_team_tools import create_daily_analysis_team_toolbox
+from ..tools._functions import get_webpage_status_code
+from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND
 from ._team import Team
 
 __all__ = ("DailyAnalysisTeam",)
@@ -403,15 +398,8 @@ def get_web_status_code_report_for_campaign(
         for ad_group_ad_id, ad_group_ad in ad_group["ad_group_ads"].items():
             final_urls = ad_group_ad["final_urls"]
             for final_url in final_urls:
-                if "http" not in final_url:
-                    final_url = f"https://{final_url}"
-                try:
-                    status_code = requests.head(
-                        final_url, allow_redirects=True, timeout=10
-                    ).status_code
-                except requests.ConnectionError:
-                    status_code = 0
-                if status_code < 200 or status_code >= 400:
+                status_code = get_webpage_status_code(url=final_url)
+                if status_code is None or status_code < 200 or status_code >= 400:
                     send_warning_message_for_campaign = True
                     final_url_link = (
                         f"<a href='{final_url}' target='_blank'>{final_url}</a>"
@@ -603,12 +591,7 @@ def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
 
 
 class DailyAnalysisTeam(Team):
-    _functions: List[Dict[str, Any]] = [
-        list_accessible_customers_config,
-        execute_query_config,
-        send_email_config,
-        get_info_from_the_web_page_config,
-    ]
+    _functions: List[Dict[str, Any]] = []
 
     _shared_system_message = (
         "You have a strong SQL knowledge (and very experienced with postgresql)."
@@ -660,11 +643,7 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        function_map: Dict[str, Callable[[Any], Any]] = _get_function_map(
-            user_id=user_id,
-            conv_id=conv_id,
-            work_dir=work_dir,
-        )
+        function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = DailyAnalysisTeam._default_roles
 
         super().__init__(
@@ -676,6 +655,7 @@ sure it is understandable by non-experts.
             max_round=max_round,
             seed=seed,
             temperature=temperature,
+            use_user_proxy=True,
         )
         self.task = task
         self.llm_config = DailyAnalysisTeam._get_llm_config(
@@ -683,7 +663,20 @@ sure it is understandable by non-experts.
         )
 
         self._create_members()
+
+        self._add_tools()
+
         self._create_initial_message()
+
+    def _add_tools(self) -> None:
+        self.toolbox = create_daily_analysis_team_toolbox(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+            clients_question_answer_list=self.clients_question_answer_list,
+        )
+        for agent in self.members:
+            if agent != self.user_proxy:
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
@@ -790,7 +783,7 @@ Try to figure out as much as possible before sending the email to the client. If
 
     @property
     def _commands(self) -> str:
-        return """## Commands
+        return f"""## Commands
 Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
@@ -798,9 +791,7 @@ All team members have access to the following command:
 1. send_email: Send email to the client, params: (proposed_user_actions: List[str]])
 Each message in the 'proposed_user_actions' parameter must contain all information useful to the client, because the client does not see your team's conversation
 As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
-2. 'get_info_from_the_web_page': Retrieve wanted information from the web page, params: (url: string, task: string, task_guidelines: string)
-It should be used only for the clients web page(s), final_url(s) etc.
-This command should be used for retrieving the information from clients web page.
+2. {GET_INFO_FROM_THE_WEB_COMMAND}
 
 ONLY Google ads specialist can suggest following commands:
 1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
@@ -820,28 +811,7 @@ SELECT campaign_criterion.criterion_id, campaign_criterion.type, campaign_criter
 
 NEVER USE 'JOIN' in your queries, otherwise you will be penalized!
 You can execute the provided queries ONLY by using the 'execute_query' command!
-"""
-
-
-def _get_function_map(user_id: int, conv_id: int, work_dir: str) -> Dict[str, Any]:
-    function_map = {
-        "list_accessible_customers": lambda: list_accessible_customers(
-            user_id=user_id, conv_id=conv_id, get_only_non_manager_accounts=True
-        ),
-        "execute_query": lambda customer_ids=None, query=None: execute_query(
-            user_id=user_id,
-            conv_id=conv_id,
-            customer_ids=string_to_list(customer_ids),
-            query=query,
-            work_dir=work_dir,
-        ),
-        "send_email": lambda proposed_user_actions: send_email(
-            proposed_user_actions=proposed_user_actions,
-        ),
-        "get_info_from_the_web_page": get_info_from_the_web_page,
-    }
-
-    return function_map
+"""  # nosec: [B608]
 
 
 def _create_final_html_message(
@@ -974,6 +944,68 @@ def _delete_chat_webhook(user_id: int, conv_id: int) -> None:
         print(e)
 
 
+def _create_task_message(
+    date: str, daily_reports: str, daily_report_message: str
+) -> str:
+    task = f"""
+You need to perform Google Ads Analysis for date: {date}.
+
+Check which ads have the highest cost and which have the highest number of conversions.
+If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
+At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
+- pause the ads with the highest cost and the lowest number of conversions.
+- keywords analysis (add negative keywords, add positive keywords, change match type etc).
+- ad copy analysis (change the ad copy, add more ads etc).
+
+I have prepared you a JSON file with the daily report for the wanted date. Use it to suggest the next steps to the client.
+{daily_reports}
+
+
+Here is also a HTML summary of the daily report which will be sent to the client:
+{daily_report_message}
+
+Please propose the next steps and send the email to the client.
+"""
+    return task
+
+
+def _validate_conversation_and_send_email(
+    daily_analysis_team: DailyAnalysisTeam,
+    conv_uuid: str,
+    email: str,
+    daily_report_message: str,
+    main_email_template: str,
+) -> None:
+    last_message = daily_analysis_team.get_last_message(add_prefix=False)
+
+    messages_list = daily_analysis_team.get_messages()
+    check_if_send_email = messages_list[-2]
+    if (
+        "tool_calls" in check_if_send_email
+        and check_if_send_email["tool_calls"][0]["function"]["name"] == "send_email"
+    ):
+        if len(messages_list) < 3:
+            messages = "[]"
+        else:
+            # Don't include the first message (task) and the last message (send_email)
+            messages = json.dumps(messages_list[1:-1])
+        last_message_json = json.loads(last_message)
+        _update_chat_message_and_send_email(
+            user_id=daily_analysis_team.user_id,
+            conv_id=daily_analysis_team.conv_id,
+            conv_uuid=conv_uuid,
+            client_email=email,
+            messages=messages,
+            initial_message_in_chat=daily_report_message,
+            main_email_template=main_email_template,
+            proposed_user_action=last_message_json["proposed_user_action"],
+        )
+    else:
+        raise ValueError(
+            f"Send email function is not called for user_id: {daily_analysis_team.user_id} - email {email}!"
+        )
+
+
 def execute_daily_analysis(
     send_only_to_emails: Optional[List[str]] = None,
     date: Optional[str] = None,
@@ -1025,25 +1057,7 @@ def execute_daily_analysis(
                     daily_reports=json.loads(daily_reports), date=date
                 )
 
-                task = f"""
-You need to perform Google Ads Analysis for date: {date}.
-
-Check which ads have the highest cost and which have the highest number of conversions.
-If for some reason thera are no recorded impressions/clicks/interactions/conversions for any of the ads across all campaigns try to identify the reason (bad positive/negative keywords etc).
-At the end of the analysis, you need to suggest the next steps to the client. Usually, the next steps are:
-- pause the ads with the highest cost and the lowest number of conversions.
-- keywords analysis (add negative keywords, add positive keywords, change match type etc).
-- ad copy analysis (change the ad copy, add more ads etc).
-
-I have prepared you a JSON file with the daily report for the wanted date. Use it to suggest the next steps to the client.
-{daily_reports}
-
-
-Here is also a HTML summary of the daily report which will be sent to the client:
-{daily_report_message}
-
-Please propose the next steps and send the email to the client.
-"""
+                task = _create_task_message(date, daily_reports, daily_report_message)
 
                 daily_analysis_team = DailyAnalysisTeam(
                     task=task,
@@ -1051,35 +1065,14 @@ Please propose the next steps and send the email to the client.
                     conv_id=conv_id,
                 )
                 daily_analysis_team.initiate_chat()
-                last_message = daily_analysis_team.get_last_message(add_prefix=False)
+                _validate_conversation_and_send_email(
+                    daily_analysis_team=daily_analysis_team,
+                    conv_uuid=conv_uuid,
+                    email=email,
+                    daily_report_message=daily_report_message,
+                    main_email_template=main_email_template,
+                )
 
-                messages_list = daily_analysis_team.get_messages()
-                check_if_send_email = messages_list[-2]
-                if (
-                    "tool_calls" in check_if_send_email
-                    and check_if_send_email["tool_calls"][0]["function"]["name"]
-                    == "send_email"
-                ):
-                    if len(messages_list) < 3:
-                        messages = "[]"
-                    else:
-                        # Don't include the first message (task) and the last message (send_email)
-                        messages = json.dumps(messages_list[1:-1])
-                    last_message_json = ast.literal_eval(last_message)
-                    _update_chat_message_and_send_email(
-                        user_id=user_id,
-                        conv_id=conv_id,
-                        conv_uuid=conv_uuid,
-                        client_email=email,
-                        messages=messages,
-                        initial_message_in_chat=daily_report_message,
-                        main_email_template=main_email_template,
-                        proposed_user_action=last_message_json["proposed_user_action"],
-                    )
-                else:
-                    raise ValueError(
-                        f"Send email function is not called for user_id: {user_id} - email {email}!"
-                    )
             except Exception as e:
                 print(
                     f"Daily analysis failed for user_id: {user_id} - email {email}.\nError: {e}"

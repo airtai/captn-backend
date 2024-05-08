@@ -1,7 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from captn.captn_agents.backend.config import Config
-
+from ..config import Config
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team
@@ -43,8 +42,10 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
+        config_list: Optional[List[Dict[str, str]]] = None,
     ):
         self.task = task
+        self.initial_brief = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
@@ -64,9 +65,12 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             use_user_proxy=True,
         )
 
-        config = Config()
+        if config_list is None:
+            config = Config()
+            config_list = config.config_list_gpt_4
+
         self.llm_config = BriefCreationTeam._get_llm_config(
-            seed=seed, temperature=temperature, config_list=config.config_list_gpt_3_5
+            seed=seed, temperature=temperature, config_list=config_list
         )
 
         self._create_members()
@@ -79,13 +83,14 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self.toolbox = create_brief_creation_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
+            initial_brief=self.initial_brief,
         )
         for agent in self.members:
             if agent != self.user_proxy:
                 self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @classmethod
-    def _get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:
+    def get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:
         return {
             name: team_class.get_capabilities()
             for name, team_class in Team._team_registry.items()
@@ -95,7 +100,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
     @classmethod
     def construct_team_names_and_descriptions_message(cls) -> str:
         avaliable_team_names_and_their_descriptions = (
-            BriefCreationTeam._get_avaliable_team_names_and_their_descriptions()
+            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
         )
         # Create a string from dict
         avaliable_team_names_and_their_descriptions_str = "\n".join(
@@ -139,7 +144,9 @@ If you fail to choose the appropriate team, you will be penalized!
 {self.construct_team_names_and_descriptions_message()}
 
 4. AFTER the client has told you if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task,
-use 'get_brief_template' command to get the template for the brief which you will send to the chosen team.
+use 'get_brief_template' command to get the template for the brief which you will need to fill out.
+Once you have the template, you are responsible for filling in all the fields. Do NOT ask the client to fill in the information for you, otherwise you will be penalized!
+
 
 5. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
 It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
@@ -148,6 +155,9 @@ If you are unable to retrieve the information, use the 'reply_to_client' command
 
 6. When you have gathered all the information, create a detailed brief.
 Team members should discuss and agree on the content of the brief before sending it to the chosen team.
+Do NOT mention to the client that you are creating a brief. This is your internal task and the client does not need to know that.
+Do NOT ask the client which information he wants to include in the brief.
+i.e. word 'brief' should NOT be mentioned to the client at all!
 
 7. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
 
@@ -186,6 +196,8 @@ Do NOT tell the client that your job is to create a brief. The client does not n
 
 5. Ensure that your responses are formatted using markdown syntax (except for the HTML anchor tags),
 as they will be featured on a webpage to ensure a user-friendly presentation.
+
+6. Do not suggest next steps to the client, these steps will be suggested by another team to whom you will delegate the task.
 """
 
     @property
@@ -203,10 +215,8 @@ All team members have access to the following command:
 3. 'get_brief_template': Get the TEMPLATE for the customer brief you will need to create. params: (team_name: string)
 Use this command ONLY after you have asked the client if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task!
 
-4. 'delagate_task': Delegate the task to the selected team. params: (team_name: string, task: string, customers_brief: string, summary_from_web_page: string)
-summary_from_web_page contains the summary retrieved from the clients web page by using the 'get_info_from_the_web_page' command.
+4. 'delagate_task': Delegate the task to the selected team. params: (team_name: string, task: string, customers_business_brief: string)
 
 5. NEVER ask the client questions like "Please provide the following information for the customer brief:..."
-It is your job to gather the information and create the brief. The client does not need to know that you are creating a brief.
 If you need additional information, use the 'reply_to_client' command and ask the client for the information you need, but ask him one question at a time.
 """

@@ -1,20 +1,14 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from ..tools._campaign_creation_team_tools import create_campaign_creation_team_toolbox
-from ..tools._function_configs import (
-    ask_client_for_permission_config,
-    change_google_account_config,
-    create_campaign_config,
-    execute_query_config,
-    get_info_from_the_web_page_config,
-    list_accessible_customers_config,
-    reply_to_client_2_config,
-)
-from ._google_ads_team import (
-    get_campaign_creation_team_shared_functions,
+from ..config import Config
+from ..tools._campaign_creation_team_tools import (
+    AdGroupAdForCreation,
+    AdGroupCriterionForCreation,
+    AdGroupForCreation,
+    AdGroupWithAdAndKeywords,
+    create_campaign_creation_team_toolbox,
 )
 from ._shared_prompts import (
-    GET_INFO_FROM_THE_WEB_COMMAND,
     MODIFICATION_FUNCTIONS_INSTRUCTIONS,
     REPLY_TO_CLIENT_COMMAND,
 )
@@ -23,17 +17,43 @@ from ._team import Team
 __all__ = ("CampaignCreationTeam",)
 
 
+ad_group_ad = AdGroupAdForCreation(
+    final_url="https://www.example.com",
+    headlines=["headline1", "headline2", "headline3"],
+    descriptions=["description1", "description2"],
+    status="ENABLED",
+)
+
+keyword1 = AdGroupCriterionForCreation(
+    keyword_text="keyword1",
+    keyword_match_type="EXACT",
+    status="ENABLED",
+)
+keyword2 = AdGroupCriterionForCreation(
+    keyword_text="keyword2",
+    keyword_match_type="EXACT",
+    status="ENABLED",
+)
+
+ad_group = AdGroupForCreation(
+    name="ad_group",
+    status="ENABLED",
+    ad_group_ad=ad_group_ad,
+    keywords=[keyword1, keyword2],
+)
+
+ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
+    customer_id="1111",
+    campaign_id="1212",
+    ad_group=ad_group,
+    ad_group_ad=ad_group_ad,
+    keywords=[keyword1, keyword2],
+)
+
+
 @Team.register_team("campaign_creation_team")
 class CampaignCreationTeam(Team):
-    _functions: List[Dict[str, Any]] = [
-        ask_client_for_permission_config,
-        change_google_account_config,
-        create_campaign_config,
-        execute_query_config,
-        get_info_from_the_web_page_config,
-        list_accessible_customers_config,
-        reply_to_client_2_config,
-    ]
+    _functions: List[Dict[str, Any]] = []
 
     _default_roles = [
         {
@@ -57,6 +77,12 @@ sure it is understandable by non-experts.
         },
     ]
 
+    _retry_messages = [
+        "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
+        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
+        "Please continue.",
+    ] * 2
+
     def __init__(
         self,
         *,
@@ -67,18 +93,12 @@ sure it is understandable by non-experts.
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
+        config_list: Optional[List[Dict[str, str]]] = None,
     ):
         self.task = task
 
         clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
-        function_map: Dict[str, Callable[[Any], Any]] = (
-            get_campaign_creation_team_shared_functions(
-                user_id=user_id,
-                conv_id=conv_id,
-                work_dir=work_dir,
-                clients_question_answer_list=clients_question_answer_list,
-            )
-        )
+        function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
         super().__init__(
@@ -91,10 +111,15 @@ sure it is understandable by non-experts.
             seed=seed,
             temperature=temperature,
             clients_question_answer_list=clients_question_answer_list,
+            use_user_proxy=True,
         )
 
+        if config_list is None:
+            config = Config()
+            config_list = config.config_list_gpt_4
+
         self.llm_config = CampaignCreationTeam._get_llm_config(
-            seed=seed, temperature=temperature
+            seed=seed, temperature=temperature, config_list=config_list
         )
 
         self._create_members()
@@ -110,13 +135,8 @@ sure it is understandable by non-experts.
             clients_question_answer_list=self.clients_question_answer_list,
         )
         for agent in self.members:
-            self.toolbox.add_to_agent(agent, agent)
-            # add_create_ad_group_with_ad_and_keywords_to_agent(
-            #     agent=agent,
-            #     user_id=self.user_id,
-            #     conv_id=self.conv_id,
-            #     clients_question_answer_list=self.clients_question_answer_list,
-            # )
+            if agent != self.user_proxy:
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
@@ -126,7 +146,7 @@ The client has sent you the task to create a digital campaign for them. And this
 
     @property
     def _guidelines(self) -> str:
-        return """## Guidelines
+        return f"""## Guidelines
 0. Never repeat yourself or previous messages.
 1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
 TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
@@ -135,7 +155,6 @@ proposing the ORIGINAL SOLUTION should take those considerations into account an
 Once the solution is modified, the team should REPEAT the process until the team reaches a CONSENSUS. The team should
 then move on to the next step. If the team is unable to reach a consensus, the account manager should make the final
 call. If you need additional information, use the 'reply_to_client' command to ask the client for it.
-Also, if a Website is provided, you can use the 'get_info_from_the_web_page' command to get the summary of the web page.
 2. Once you have all the information you need, you must create a detailed step-by-step plan on how to solve the task.
 3. If you receive a login url, forward it to the client by using the 'reply_to_client' function.
 Do NOT use smart suggestions when forwarding the login url to the client!
@@ -163,14 +182,10 @@ Use it only to retrieve the information about the currency and already existing 
 - MINIMUM 3 and MAXIMUM 15 headlines.
 - MINIMUM 2 and MAXIMUM 4 descriptions.
 It is recommended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
-36. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
-37. Use the 'get_info_from_the_web_page' command to get the summary of the web page. This command can be very useful for figuring out the clients business and what he wants to achieve.
-e.g. if you know the final_url, you can use this command to get the summary of the web page and find the relevant information for ad group (and its ad and keywords).
-You can find most of the information about the clients business from the provided web page(s). So instead of asking the client bunch of questions, ask only for his web page(s)
-and try get_info_from_the_web_page. Only if 'get_info_from_the_web_page' command does not provide you with enough information (or it fails), ask the client for the additional information about his business/web page etc.
-40. Before setting any kind of budget, check the default currency from the customer table and convert the budget to that currency.
+35. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
+36. Before setting any kind of budget, check the default currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
-42. Finally, ensure that your responses are formatted using markdown syntax (except for the HTML anchor tags),
+37. Finally, ensure that your responses are formatted using markdown syntax (except for the HTML anchor tags),
 as they will be featured on a webpage to ensure a user-friendly presentation.
 
 Here is a list of things which you CAN do:
@@ -180,51 +195,12 @@ Here is a list of things which you CAN do:
 You can NOT do anything else, so do not suggest changes which you can NOT perform.
 - e.g. you can NOT set Google ads targeting, negative keywords, ad extensions etc.
 
-here is an example of how to use the create_ad_group_with_ad_and_keywords command:
-ad_group_with_ad_and_keywords must be a json with the following structure:
-{
-  "customer_id": "1111",
-  "campaign_id": "1212",
-  "ad_group": {
-    "customer_id": null,
-    "status": "ENABLED",
-    "campaign_id": null,
-    "name": "ad_group",
-  },
-  "ad_group_ad": {
-    "customer_id": null,
-    "status": "ENABLED",
-    "ad_group_id": null,
-    "final_url": "https://www.example.com",
-    "headlines": [
-      "headline1",
-      "headline2",
-      "headline3"
-    ],
-    "descriptions": [
-      "description1",
-      "description2"
-    ],
-    "path1": null,
-    "path2": null
-  },
-  "keywords": [
-    {
-      "customer_id": null,
-      "status": "ENABLED",
-      "ad_group_id": null,
-      "keyword_text": "keyword1",
-      "keyword_match_type": "EXACT"
-    },
-    {
-      "customer_id": null,
-      "status": "ENABLED",
-      "ad_group_id": null,
-      "keyword_text": "keyword2",
-      "keyword_match_type": "EXACT"
-    }
-  ]
-}
+
+Example of the JSON input for the 'create_ad_group_with_ad_and_keywords' command:
+{ad_group_with_ad_and_keywords.model_dump_json()}
+
+When suggesting the JSON input, do NOT add \\n, \\t or any whitespaces to the JSON!!!
+
 and two additional parameters:
 - clients_approval_message: "yes"
 - modification_question: "Can I make the following changes to your account?"
@@ -235,10 +211,10 @@ Use smart suggestions to suggest keywords, headlines, descriptions etc. which ca
 Do NOT use smart suggestions for open ended questions or questions which require the clients input.
 
 When you ask the client for some suggestions (e.g. which headline should be added), you should also generate smart suggestions like:
-"smart_suggestions": {
+"smart_suggestions": {{
     "suggestions":["Add headline x", "Add headline y", "Add headline z"],
     "type":"manyOf"
-}
+}}
 
 
 VERY IMPORTANT NOTES:
@@ -246,16 +222,19 @@ The first and the MOST IMPORTANT thing is that you can NOT make any permanent ch
 Make sure that you explicitly tell the client which changes you want, which resource and attribute will be affected and wait for the permission!
 
 This is a template which you should follow when you are asked to optimize campaigns:
-If you did not receive the summary of the clients web page, the FIRST step should do is to retrieve the information about clients business by using 'get_info_from_the_web_page' command.
+The FIRST step should do is to analyze the received information about the client's business and his website.
 - The SECOND step is recommending and creating a new campaign
-- The THIRD step is recommending and creating new ad group with ad and keywords (create only ONE ad group with ad and keywords)
-- Once you have created the campaign, ad group, ad and keywords. Write a detailed summary about the campaign which you have created and tell the client that you have finished the task.
+- The THIRD step is recommending and creating new ad groups with ads and keywords
+- Once you have created the campaign, ad groups, ads and keywords. Write a detailed summary about the campaign which you have created and tell the client that you have finished the task.
 - If the client wants to make some changes/updates, tell him to create a new chat by clicking on the "New chat" and to ask for the changes/updates there.
-"""
+"""  # nosec: [B608]
 
     @property
     def _commands(self) -> str:
         return f"""## Commands
+All of the command use JSON input, when generating the command, make sure that the JSON is properly formatted.
+Do NOT add \\n,\\t or any other whitespace characters in the JSON input. THIS IS THE MOST IMPORTANT THING!
+
 All team members have access to the following command:
 1. {REPLY_TO_CLIENT_COMMAND}
 "smart_suggestions": {{
@@ -274,13 +253,11 @@ You MUST use this before you make ANY permanent changes. ALWAYS use this command
 4. 'execute_query': Query Google ads API for the campaign information. Both input parameters are optional. params: (customer_ids: Optional[List[str]], query: Optional[str])
 Example of customer_ids parameter: ["12", "44", "111"]
 
-5. {GET_INFO_FROM_THE_WEB_COMMAND}
-
-6. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
+5. 'change_google_account': Generates a new login URL for the Google Ads API, params: ()
 Use this command only if the client asks you to change the Google account. If there are some problems with the current account, first ask the client if he wants to use different account for his Google Ads.
 
 {MODIFICATION_FUNCTIONS_INSTRUCTIONS}
-7. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
+6. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
 clients_approval_message: string, modification_question: str)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
@@ -317,7 +294,7 @@ Here is an example of correct 'proposed_changes' parameter:
     Do you approve the creation of this new campaign with the specified details and settings? To approve, please answer 'Yes'.
 
 
-8. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
+7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 
 """  # nosec: [B608]
@@ -338,8 +315,7 @@ But if you want to optimize an existing campaign or make some changes this is NO
 
     @classmethod
     def get_brief_template(cls) -> str:
-        return """Here is a template for the customer brief:
-A structured customer brief, adhering to industry standards for a digital marketing campaign. You must fill in the following details based on the client's requirements:
+        return """A structured customer brief, adhering to industry standards for a digital marketing campaign. You must fill in the following details based on the client's requirements:
 
 Business:
 Goal:
@@ -356,5 +332,5 @@ Not needed info:
 - target audience
 - conversion tracking
 
-Please extract and represent relevant details from the conversation under these headings
+Now Let's get all the information from the clients web page and create a detailed plan for the campaign.
 """
