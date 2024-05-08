@@ -1,7 +1,7 @@
 import random
 import unittest
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from unittest.mock import MagicMock
 
 from autogen.cache import Cache
@@ -11,7 +11,6 @@ from captn.google_ads.client import ALREADY_AUTHENTICATED
 from ..teams import Team
 from ..teams._campaign_creation_team import (
     CampaignCreationTeam,
-    ad_group_with_ad_and_keywords,
 )
 from ..tools._campaign_creation_team_tools import (
     _create_ad_group,
@@ -25,6 +24,7 @@ from .fixtures.campaign_creation_team_fixtures import (
     CAMPAIGN_CREATION_FASTSTREAM,
     CAMPAIGN_CREATION_IKEA,
 )
+from .helpers import get_config_list
 from .models import Models
 
 
@@ -53,46 +53,18 @@ URL_TASK_DICT = {
 }
 
 
-def retry_func(campaign_creation_team: CampaignCreationTeam) -> Optional[Exception]:
-    retry_messages = [
-        "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
-        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
-        "Please continue.",
-    ] * 2
-
-    exception = None
-    for i in range(len(retry_messages)):
-        print(f"{i+1}. OpenAI API Timeout Error\nLet's try again.")
-        try:
-            # campaign_creation_team.members[0].send(
-            campaign_creation_team.manager.send(
-                recipient=campaign_creation_team.manager,
-                message=retry_messages[i],
-            )
-            print("We were able to recover from the error.")
-            last_message = campaign_creation_team.get_last_message()
-            print(f"Last message: {last_message}")
-            exception = None
-            break
-        # except openai.APIStatusError as e:
-        except Exception as e:
-            print("Inside retry_func")
-            print(f"Exception type: {type(e)}, {e}")
-            exception = e
-
-    return exception
-
-
 def benchmark_campaign_creation(
     url: str,
     llm: str = Models.gpt4,
 ) -> str:
     try:
         task = URL_TASK_DICT[url]
+        config_list = get_config_list(llm)
         campaign_creation_team = CampaignCreationTeam(
             user_id=123,
             conv_id=456,
             task=task,
+            config_list=config_list,
         )
 
         with (
@@ -151,34 +123,7 @@ def benchmark_campaign_creation(
 
             with TemporaryDirectory() as cache_dir:
                 with Cache.disk(cache_path_root=cache_dir) as cache:
-                    exception = None
-
-                    try:
-                        campaign_creation_team.initiate_chat(cache=cache)
-                    # except openai.APIStatusError as e:
-                    except Exception as e:
-                        print("Outside retry_func")
-                        print(f"Exception type: {type(e)}, {e}")
-                        # exception = e
-                        # for i in range(3):
-                        #     print(f"{i+1}. OpenAI API Timeout Error\nLet's try again.")
-                        #     try:
-                        #         #campaign_creation_team.members[0].send(
-                        #         campaign_creation_team.manager.send(
-                        #             recipient=campaign_creation_team.manager,
-                        #             message="NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
-                        #         )
-                        #         print("We were able to recover from the error.")
-                        #         last_message = campaign_creation_team.get_last_message()
-                        #         print(f"Last message: {last_message}")
-                        #         exception = None
-                        #         break
-                        #     except openai.APIStatusError as e:
-                        #         exception = e
-                        exception = retry_func(campaign_creation_team)
-
-                    if exception is not None:
-                        raise exception
+                    campaign_creation_team.initiate_chat(cache=cache)
 
             mock_create_campaign.assert_called()
             mock_ask_client_for_permission.assert_called()

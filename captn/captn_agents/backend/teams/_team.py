@@ -1,10 +1,12 @@
 import json
+import traceback
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 import autogen
 import httpx
 import openai
 from fastcore.basics import patch
+from prometheus_client import Counter
 
 from ..config import Config
 
@@ -35,6 +37,15 @@ def create(
 
 
 T = TypeVar("T")
+
+
+OPENAI_API_STATUS_ERROR = Counter(
+    "openai_api_status_error", "Total count of openai api status errors"
+)
+
+BAD_REQUEST_ERRORS = Counter(
+    "bad_request_errors_total", "Total count of bad request errors"
+)
 
 
 class Team:
@@ -337,20 +348,33 @@ You operate within the following constraints:
         return last_message  # type: ignore
 
     def retry_func(self) -> None:
-        exception = None
+        exception: Optional[Exception] = None
         for i in range(len(self._retry_messages)):
             print(f"Retry number {i+1}.")
+
+            if isinstance(exception, openai.BadRequestError):
+                message = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
+            else:
+                message = self._retry_messages[i]
+
             try:
                 self.manager.send(
                     recipient=self.manager,
-                    message=self._retry_messages[i],
+                    message=message,
                 )
                 return
+            except openai.BadRequestError as e:
+                BAD_REQUEST_ERRORS.inc()
+                print(f"Exception type: {type(e)}, {e}")
+                exception = e
             except (openai.APIStatusError, httpx.ReadTimeout) as e:
+                OPENAI_API_STATUS_ERROR.inc()
                 print(f"Exception type: {type(e)}, {e}")
                 exception = e
 
         if exception is not None:
+            traceback.print_exc()
+            traceback.print_stack()
             raise exception
 
     @staticmethod
