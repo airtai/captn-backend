@@ -129,6 +129,7 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
                     openai.APIStatusError,
                     httpx.ReadTimeout,
                     openai.BadRequestError,
+                    TimeoutError,
                 ):
                     iostream.print(ON_FAILURE_MESSAGE)
                     THREE_IN_A_ROW_EXCEPTIONS.inc()

@@ -2,7 +2,7 @@ import inspect
 import unittest
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable, Dict, Iterator
+from typing import Any, Callable, Dict, Iterator, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -84,8 +84,13 @@ class TestToolbox:
 
         mock = MagicMock(return_value=3.14)
 
-        def f(i: int, context: Any, s: str) -> float:
-            return mock(i, context, s)  # type: ignore[no-any-return]
+        def f(
+            i: int,
+            context: Any,
+            s: str,
+            oi: Optional[int] = None,
+        ) -> float:
+            return mock(i, context, s, oi)  # type: ignore[no-any-return]
 
         new_info = toolbox._inject_context(FunctionInfo(f, "function", "description"))
 
@@ -99,14 +104,14 @@ class TestToolbox:
         context = object()
 
         result = f(42, context, "hello")
-        mock.assert_called_once_with(42, context, "hello")
+        mock.assert_called_once_with(42, context, "hello", None)
         mock.reset_mock()
 
         toolbox.set_context(context)
-        result = new_function(42, "hello")
+        result = new_function(42, "hello", 43)
 
         assert result == mock.return_value
-        mock.assert_called_once_with(42, context, "hello")
+        mock.assert_called_once_with(42, context, "hello", 43)
 
     def test_add_function_with_simple_parameters(self) -> None:
         toolbox = Toolbox()
