@@ -118,11 +118,11 @@ class Toolbox:
                 return f(context=context, **new_kwargs)
 
             new_function = types.FunctionType(
-                wrapper.__code__,
-                wrapper.__globals__,
+                wrapper.__code__,  # type: ignore[attr-defined]
+                wrapper.__globals__,  # type: ignore[attr-defined]
                 f"{f.__name__}_injected",
-                wrapper.__defaults__,
-                wrapper.__closure__,
+                wrapper.__defaults__,  # type: ignore[attr-defined]
+                wrapper.__closure__,  # type: ignore[attr-defined]
             )
             new_function.__signature__ = new_signature  # type: ignore[attr-defined]
 
