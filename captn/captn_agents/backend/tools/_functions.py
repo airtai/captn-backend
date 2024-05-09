@@ -199,6 +199,27 @@ Do you approve the changes? To approve the changes, please answer 'Yes' and noth
 
 The message MUST use the Markdown format for the text!"""
 
+BENCHMARKING = False
+
+
+def _ask_client_for_permission_mock(
+    resource_details: str,
+    proposed_changes: str,
+    context: Context,
+) -> str:
+    print("Inside _ask_client_for_permission_mock")
+    customer_to_update = (
+        "We propose changes for the following customer: 'IKEA' (ID: 1111)"
+    )
+
+    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+
+    clients_answer = "yes"
+    # In real ask_client_for_permission, we would append (message, None)
+    # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
+    context.clients_question_answer_list.append((message, clients_answer))
+    return clients_answer
+
 
 def ask_client_for_permission(
     customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
@@ -206,6 +227,12 @@ def ask_client_for_permission(
     proposed_changes: Annotated[str, proposed_changes_description],
     context: Context,
 ) -> str:
+    if BENCHMARKING:
+        return _ask_client_for_permission_mock(
+            resource_details=resource_details,
+            proposed_changes=proposed_changes,
+            context=context,
+        )
     user_id = context.user_id
     conv_id = context.conv_id
     clients_question_answer_list = context.clients_question_answer_list
