@@ -181,7 +181,7 @@ class Team:
             "temperature": temperature,
             "tools": tools,
             "stream": True,
-            "timeout": 600,
+            # "timeout": 600,
         }
         return llm_config
 
@@ -367,7 +367,7 @@ You operate within the following constraints:
                 BAD_REQUEST_ERRORS.inc()
                 print(f"Exception type: {type(e)}, {e}")
                 exception = e
-            except (openai.APIStatusError, httpx.ReadTimeout) as e:
+            except (openai.APIStatusError, httpx.ReadTimeout, TimeoutError) as e:
                 OPENAI_API_STATUS_ERROR.inc()
                 print(f"Exception type: {type(e)}, {e}")
                 exception = e
@@ -382,7 +382,12 @@ You operate within the following constraints:
         def wrapper(self: "Team", *args: Any, **kwargs: Any) -> None:
             try:
                 return func(self, *args, **kwargs)
-            except (openai.APIStatusError, httpx.ReadTimeout) as e:
+            except (
+                openai.APIStatusError,
+                openai.BadRequestError,
+                httpx.ReadTimeout,
+                TimeoutError,
+            ) as e:
                 print(f"Handling exception: {type(e)}, {e}")
                 self.retry_func()
 

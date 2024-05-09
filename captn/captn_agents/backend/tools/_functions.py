@@ -287,7 +287,6 @@ def get_llm_config_gpt_4() -> Dict[str, Any]:
     config = Config()
 
     return {
-        "timeout": 600,
         "config_list": config.config_list_gpt_4,
         "temperature": 0,
     }
@@ -297,7 +296,6 @@ def get_llm_config_gpt_3_5() -> Dict[str, Any]:
     config = Config()
 
     return {
-        "timeout": 600,
         "config_list": config.config_list_gpt_3_5,
         "temperature": 0,
     }
