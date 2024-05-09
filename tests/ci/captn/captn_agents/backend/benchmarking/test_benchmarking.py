@@ -1,7 +1,7 @@
 import functools
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 import pytest
@@ -11,6 +11,7 @@ from typer.testing import CliRunner
 
 import captn.captn_agents.backend.benchmarking.brief_creation_team
 import captn.captn_agents.backend.benchmarking.campaign_creation_team
+import captn.captn_agents.backend.benchmarking.end2end
 import captn.captn_agents.backend.benchmarking.websurfer
 from captn.captn_agents.backend.benchmarking.base import (
     app,
@@ -42,8 +43,13 @@ class TestBase:
         tmp_dir: TemporaryDirectory,
         file_name: str,
         no_rows: int = 50,
+        additional_generate_task_table_parameters: Optional[List[str]] = None,
     ):
-        result = runner.invoke(app, [command, "--output-dir", tmp_dir])
+        final_command = [command, "--output-dir", tmp_dir]
+        if additional_generate_task_table_parameters is not None:
+            final_command += additional_generate_task_table_parameters
+
+        result = runner.invoke(app, final_command)
         assert result.exit_code == 0, result.stdout
 
         df = pd.read_csv(Path(tmp_dir) / file_name)
@@ -57,6 +63,7 @@ class TestBase:
         success: bool,
         columns: List[str] = ["url", "success_rate", "avg_time"],  # noqa: B006
         no_rows: int = 50,
+        additional_generate_task_table_parameters: Optional[List[str]] = None,
     ) -> None:
         with TemporaryDirectory() as tmp_dir:
             file_path = Path(tmp_dir) / file_name
@@ -65,6 +72,7 @@ class TestBase:
                 file_name=file_name,
                 tmp_dir=tmp_dir,
                 no_rows=no_rows,
+                additional_generate_task_table_parameters=additional_generate_task_table_parameters,
             )
 
             result = runner.invoke(
@@ -194,15 +202,23 @@ class TestCampaignCreation:
                 no_rows=30,
             )
 
+    @pytest.mark.parametrize("end2end_param", ["--end2end"])  # , "--no-end2end"])
     @pytest.mark.parametrize("success", [True, False])
     def test_run_tests_for_campaign_creation_success(
-        self, success: bool, monkeypatch: MonkeyPatch
+        self, success: bool, end2end_param: bool, monkeypatch: MonkeyPatch
     ):
-        monkeypatch.setattr(
-            captn.captn_agents.backend.benchmarking.campaign_creation_team,
-            "benchmark_campaign_creation",
-            functools.partial(TestBase.benchmark_success, success),
-        )
+        if end2end_param == "--end2end":
+            monkeypatch.setattr(
+                captn.captn_agents.backend.benchmarking.end2end,
+                "benchmark_end2end",
+                functools.partial(TestBase.benchmark_success, success),
+            )
+        else:
+            monkeypatch.setattr(
+                captn.captn_agents.backend.benchmarking.campaign_creation_team,
+                "benchmark_campaign_creation",
+                functools.partial(TestBase.benchmark_success, success),
+            )
 
         TestBase.run_tests_for_team_success(
             command=self.command,
@@ -210,4 +226,5 @@ class TestCampaignCreation:
             aggregated_csv_name=self.aggregated_csv_name,
             success=success,
             no_rows=30,
+            additional_generate_task_table_parameters=[end2end_param],
         )

@@ -18,7 +18,7 @@ from ..tools._campaign_creation_team_tools import (
     _create_ad_group_ad,
     _create_ad_group_keyword,
 )
-from ..tools._google_ads_team_tools import create_campaign
+from ..tools._google_ads_team_tools import _mock_create_campaign
 from .fixtures.campaign_creation_team_fixtures import (
     CAMPAIGN_CREATION_DISNEY,
     CAMPAIGN_CREATION_FASTSTREAM,
@@ -109,8 +109,8 @@ def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
         #     wraps=create_campaign,
         # ) as mock_create_campaign,
         unittest.mock.patch(
-            "captn.captn_agents.backend.tools._google_ads_team_tools.create_campaign",
-            wraps=create_campaign,
+            "captn.captn_agents.backend.tools._google_ads_team_tools._mock_create_campaign",
+            wraps=_mock_create_campaign,
         ) as mock_create_campaign,
         unittest.mock.patch(
             "captn.captn_agents.backend.tools._google_ads_team_tools._get_customer_currency",
