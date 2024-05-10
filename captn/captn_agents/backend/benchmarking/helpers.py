@@ -5,6 +5,7 @@ from autogen.cache import Cache
 
 from ..config import Config
 from ..teams import Team
+from ..tools._brief_creation_team_tools import DELEGATE_TASK_ERROR_MESSAGE
 from ..tools._functions import init_chat_and_get_last_message, reply_to_client
 from .models import Models
 
@@ -41,6 +42,10 @@ def get_client_response(
             completed=completed,
             smart_suggestions=smart_suggestions,
         )
+        # If the child team raises an error during the delegat_task, return the error message
+        # The test will finish here
+        if message == DELEGATE_TASK_ERROR_MESSAGE:
+            return message_for_client
 
         message_for_client_json = json.loads(message_for_client)
         # Remove the keys that are not relevant for the client

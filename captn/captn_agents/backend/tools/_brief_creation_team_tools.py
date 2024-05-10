@@ -4,6 +4,7 @@ from typing import Dict, Optional, Type
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
+from ...model import SmartSuggestions
 from ..teams._team import Team
 from ..toolboxes import Toolbox
 from ._functions import (
@@ -41,6 +42,9 @@ You must fill in all the fields. NEVER write [Insert client's business]!! You ar
 _get_info_from_the_web_page_original = get_get_info_from_the_web_page()
 
 
+DELEGATE_TASK_ERROR_MESSAGE = "An error occurred while trying to delegate the task to the selected team. Please try again."
+
+
 def _change_the_team_and_start_new_chat(
     user_id: int, conv_id: int, final_task: str, team_class: Type[Team]
 ) -> str:
@@ -52,7 +56,20 @@ def _change_the_team_and_start_new_chat(
         conv_id=conv_id,
     )
 
-    team.initiate_chat()
+    try:
+        team.initiate_chat()
+    except Exception as e:
+        print(
+            f"An error occurred while trying to execute delegate_task: {type(e)}, {e}"
+        )
+        smart_suggestions = SmartSuggestions(
+            suggestions=["Try again"], type="oneOf"
+        ).model_dump()
+        return reply_to_client(
+            message=DELEGATE_TASK_ERROR_MESSAGE,
+            completed=False,
+            smart_suggestions=smart_suggestions,
+        )
     # the last message is TeamResponse in json encoded string
     last_message = team.get_last_message(add_prefix=False)
     return last_message
