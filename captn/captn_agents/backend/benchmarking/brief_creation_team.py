@@ -47,7 +47,10 @@ def _patch_vars(
             team.toolbox.functions,
             "reply_to_client",
             wraps=get_client_response(
-                team=team, cache=cache, client_system_message=client_system_message
+                user_id=team.user_id,
+                conv_id=team.conv_id,
+                cache=cache,
+                client_system_message=client_system_message,
             ),
         ) as mock_reply_to_client,
         patch(

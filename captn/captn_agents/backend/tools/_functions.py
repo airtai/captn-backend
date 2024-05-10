@@ -1,4 +1,5 @@
 import ast
+import datetime
 import re
 import time
 from dataclasses import dataclass
@@ -7,7 +8,9 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 import autogen
 import requests
 from annotated_types import Len
+from autogen.agentchat import AssistantAgent
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
+from autogen.cache import Cache
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import Annotated
 
@@ -202,6 +205,34 @@ The message MUST use the Markdown format for the text!"""
 BENCHMARKING = False
 
 
+def init_chat_and_get_last_message(
+    client_system_message: str,
+    message: str,
+    cache: Optional[Cache] = None,
+) -> str:
+    # This agent is used only to send the message to the client
+    sender = AssistantAgent(
+        name="assistant",
+        is_termination_msg=lambda x: True,  # Once the client replies, the sender will terminate the conversation
+    )
+
+    config_list = Config().config_list_gpt_4
+
+    client = AssistantAgent(
+        name="client",
+        system_message=client_system_message,
+        llm_config={
+            "config_list": config_list,
+            "temperature": 0,
+        },
+    )
+
+    sender.initiate_chat(client, message=message, cache=cache)
+    # last_message is the last message sent by the client
+    last_message = client.chat_messages[sender][-1]["content"]
+    return last_message  # type: ignore[no-any-return]
+
+
 def _ask_client_for_permission_mock(
     resource_details: str,
     proposed_changes: str,
@@ -214,7 +245,18 @@ def _ask_client_for_permission_mock(
 
     message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
 
-    clients_answer = "yes"
+    client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
+We are in the middle of the process and we need your permission.
+
+If the proposed changes make sense, Please answer 'Yes' and nothing else.
+Otherwise, ask for more information or suggest changes.
+"""
+    # clients_answer = "yes"
+    clients_answer = init_chat_and_get_last_message(
+        client_system_message=client_system_message,
+        message=message,
+    )
+
     # In real ask_client_for_permission, we would append (message, None)
     # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
     context.clients_question_answer_list.append((message, clients_answer))
@@ -475,6 +517,8 @@ def get_get_info_from_the_web_page(
     min_relevant_pages: int = 3,
     max_retires_before_give_up_message: int = 7,
 ) -> Callable[[str], str]:
+    if timestamp is None:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
 
     give_up_message = f"""ONLY if you are 100% sure that you can NOT retrieve any information for at least {min_relevant_pages} relevant pages,
