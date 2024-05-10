@@ -14,6 +14,7 @@ from ..tools._brief_creation_team_tools import _change_the_team_and_start_new_ch
 from .brief_creation_team import _client_system_messages, _get_task
 from .campaign_creation_team import (
     _patch_campaign_creation_team_vars,
+    continue_conversation_until_finished,
     run_assertions_and_return_last_message,
 )
 from .helpers import get_client_response, get_config_list
@@ -74,6 +75,12 @@ def benchmark_end2end(
                         mock_create_campaign,
                     ):
                         team.initiate_chat(cache=cache)
+                        continue_conversation_until_finished(
+                            user_id=user_id,
+                            conv_id=conv_id,
+                            mock_create_ad_group_ad=mock_create_ad_group_ad,
+                            cache=cache,
+                        )
 
                         mock_change_the_team_and_start_new_chat.assert_called()
                         team_class: Team = (

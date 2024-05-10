@@ -250,6 +250,7 @@ We are in the middle of the process and we need your permission.
 
 If the proposed changes make sense, Please answer 'Yes' and nothing else.
 Otherwise, ask for more information or suggest changes.
+But do NOT answer with 'No' if you are not sure. Ask for more information instead.
 """
     # clients_answer = "yes"
     clients_answer = init_chat_and_get_last_message(
@@ -517,8 +518,6 @@ def get_get_info_from_the_web_page(
     min_relevant_pages: int = 3,
     max_retires_before_give_up_message: int = 7,
 ) -> Callable[[str], str]:
-    if timestamp is None:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
 
     give_up_message = f"""ONLY if you are 100% sure that you can NOT retrieve any information for at least {min_relevant_pages} relevant pages,
@@ -538,7 +537,11 @@ But before giving up, please try to navigate to another page and continue with t
         if websurfer_navigator_llm_config is None:
             websurfer_navigator_llm_config = get_llm_config_gpt_4()
 
-        timestamp_copy = timestamp
+        timestamp_copy = (
+            datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            if timestamp is None
+            else timestamp
+        )
         web_surfer_navigator_system_message = (
             _create_web_surfer_navigator_system_message(
                 task_guidelines=_task_guidelines

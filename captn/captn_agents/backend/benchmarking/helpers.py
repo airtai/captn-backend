@@ -26,6 +26,35 @@ def get_config_list(llm: str) -> List[Dict[str, str]]:
     raise ValueError(f"llm {llm} not supported")
 
 
+def get_client_response_for_the_team_conv(
+    user_id: int,
+    conv_id: int,
+    message: str,
+    cache: Cache,
+    client_system_message: str = "Just accept everything.",
+) -> str:
+    team = Team.get_team(user_id=user_id, conv_id=conv_id)
+    if not isinstance(team, Team):
+        raise ValueError(
+            f"Team with user_id {user_id} and conv_id {conv_id} not found."
+        )
+
+    # Get the conversation history of the team, excluding the first and last message
+    team_chat_history = (
+        team.get_messages()[1:-1]
+        if len(team.get_messages()) > 2
+        else "No conversation yet."
+    )
+
+    message = f"This is the whole conversation between the team:\n\n{team_chat_history}\n\nYou must answer the following question/last message from the team:\n\n{message}"
+
+    return init_chat_and_get_last_message(
+        client_system_message=client_system_message,
+        message=message,
+        cache=cache,
+    )
+
+
 def get_client_response(
     user_id: int,
     conv_id: int,
@@ -54,25 +83,33 @@ def get_client_response(
         message_for_client_json.pop("terminate_groupchat")
         message_for_client = json.dumps(message_for_client_json)
 
-        team = Team.get_team(user_id=user_id, conv_id=conv_id)
-        if not isinstance(team, Team):
-            raise ValueError(
-                f"Team with user_id {user_id} and conv_id {conv_id} not found."
-            )
-
-        # Get the conversation history of the team, excluding the first and last message
-        team_chat_history = (
-            team.get_messages()[1:-1]
-            if len(team.get_messages()) > 2
-            else "No conversation yet."
-        )
-
-        message = f"This is the whole conversation between the team:\n\n{team_chat_history}\n\nYou must answer the following question/last message from the team:\n\n{message_for_client}"
-
-        return init_chat_and_get_last_message(
-            client_system_message=client_system_message,
-            message=message,
+        return get_client_response_for_the_team_conv(
+            user_id=user_id,
+            conv_id=conv_id,
+            message=message_for_client,
             cache=cache,
+            client_system_message=client_system_message,
         )
+
+        # team = Team.get_team(user_id=user_id, conv_id=conv_id)
+        # if not isinstance(team, Team):
+        #     raise ValueError(
+        #         f"Team with user_id {user_id} and conv_id {conv_id} not found."
+        #     )
+
+        # # Get the conversation history of the team, excluding the first and last message
+        # team_chat_history = (
+        #     team.get_messages()[1:-1]
+        #     if len(team.get_messages()) > 2
+        #     else "No conversation yet."
+        # )
+
+        # message = f"This is the whole conversation between the team:\n\n{team_chat_history}\n\nYou must answer the following question/last message from the team:\n\n{message_for_client}"
+
+        # return init_chat_and_get_last_message(
+        #     client_system_message=client_system_message,
+        #     message=message,
+        #     cache=cache,
+        # )
 
     return clients_response

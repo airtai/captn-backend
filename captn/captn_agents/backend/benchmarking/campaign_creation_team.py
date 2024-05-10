@@ -24,7 +24,7 @@ from .fixtures.campaign_creation_team_fixtures import (
     CAMPAIGN_CREATION_FASTSTREAM,
     CAMPAIGN_CREATION_IKEA,
 )
-from .helpers import get_config_list
+from .helpers import get_client_response_for_the_team_conv, get_config_list
 from .models import Models
 
 # def _ask_client_for_permission_mock(*args: Any, **kwargs: Dict[str, Any]) -> str:
@@ -155,6 +155,47 @@ def run_assertions_and_return_last_message(
     return last_message
 
 
+_client_system_messages = """You are a client who wants to create a ne google ads campaign (with ads and keywords).
+You are in a conversation with a team of experts who will help you create a new google ads campaign.
+Use their smart suggestions to guide you through the process.
+
+Your answers should be short and to the point.
+e.g.
+I want to create new campaign.
+I accept the suggestion.
+Yes
+"""
+
+
+def continue_conversation_until_finished(
+    user_id: int,
+    conv_id: int,
+    mock_create_ad_group_ad: Any,
+    cache: Cache,
+) -> None:
+    while True:
+        current_team = Team.get_team(user_id=user_id, conv_id=456)
+        if not isinstance(current_team, Team):
+            raise ValueError(
+                f"Team with user_id {user_id} and conv_id {conv_id} not found."
+            )
+        num_messages = len(current_team.get_messages())
+        if (
+            num_messages < current_team.max_round
+            and mock_create_ad_group_ad.call_count == 0
+        ):
+            customers_response = get_client_response_for_the_team_conv(
+                user_id=user_id,
+                conv_id=conv_id,
+                message=current_team.get_last_message(),
+                cache=cache,
+                client_system_message=_client_system_messages,
+            )
+            current_team.continue_chat(message=customers_response)
+        else:
+            break
+
+
 def benchmark_campaign_creation(
     url: str,
     llm: str = Models.gpt4,
@@ -177,6 +218,13 @@ def benchmark_campaign_creation(
             with TemporaryDirectory() as cache_dir:
                 with Cache.disk(cache_path_root=cache_dir) as cache:
                     campaign_creation_team.initiate_chat(cache=cache)
+
+                    continue_conversation_until_finished(
+                        user_id=123,
+                        conv_id=456,
+                        mock_create_ad_group_ad=mock_create_ad_group_ad,
+                        cache=cache,
+                    )
 
             return run_assertions_and_return_last_message(
                 campaign_creation_team=campaign_creation_team,
