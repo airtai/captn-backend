@@ -3,11 +3,10 @@ from contextlib import asynccontextmanager
 from os import environ
 from typing import AsyncGenerator
 
-from apscheduler.schedulers.background import BackgroundScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
 from autogen.io.websockets import IOWebsockets
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse  # noqa: E402
 
 from captn.captn_agents.application import on_connect
 from captn.captn_agents.backend.teams._daily_analysis_team import execute_daily_analysis
@@ -26,11 +25,11 @@ OTLP_GRPC_ENDPOINT = environ.get("OTLP_GRPC_ENDPOINT", "http://tempo:4317")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(
-        execute_daily_analysis, "cron", hour="5", minute="15"
-    )  # second="*/59")
-    scheduler.start()
+    # scheduler = BackgroundScheduler()
+    # scheduler.add_job(
+    #     execute_daily_analysis, "cron", hour="5", minute="15"
+    # )  # second="*/59")
+    # scheduler.start()
 
     with IOWebsockets.run_server_in_thread(
         on_connect=on_connect,
@@ -67,44 +66,7 @@ class EndpointFilter(logging.Filter):
 logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Autogen websocket test</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = new WebSocket("ws://localhost:8080/ws");
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
 
-
-@app.get("/streaming")
-async def get() -> HTMLResponse:
-    return HTMLResponse(html)
 
 
 if __name__ == "__main__":

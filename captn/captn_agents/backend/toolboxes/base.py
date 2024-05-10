@@ -24,16 +24,14 @@ def _args_kwargs_to_kwargs(
     sig = inspect.signature(func)
     param_names = list(sig.parameters.keys())
 
-    if "context" in param_names:
-        if len(param_names) != len(args) + len(kwargs) + 1:
-            raise ValueError(
-                f"Wrong number of arguments for function '{func.__name__}' ({len(args) + len(kwargs)}), should be {len(param_names) - 1}."
-            )
-
     # Map `args` to their corresponding parameter names
     args_as_kwargs = {}
     i = 0
     for arg in args:
+        if i >= len(param_names):
+            raise ValueError(
+                f"Wrong number of arguments for function '{func.__name__}' ({len(args) + len(kwargs)}), should be {len(param_names) - 1}."
+            )
         if param_names[i] == "context":
             i += 1
         args_as_kwargs[param_names[i]] = arg
@@ -120,11 +118,11 @@ class Toolbox:
                 return f(context=context, **new_kwargs)
 
             new_function = types.FunctionType(
-                wrapper.__code__,
-                wrapper.__globals__,
+                wrapper.__code__,  # type: ignore[attr-defined]
+                wrapper.__globals__,  # type: ignore[attr-defined]
                 f"{f.__name__}_injected",
-                wrapper.__defaults__,
-                wrapper.__closure__,
+                wrapper.__defaults__,  # type: ignore[attr-defined]
+                wrapper.__closure__,  # type: ignore[attr-defined]
             )
             new_function.__signature__ = new_signature  # type: ignore[attr-defined]
 
