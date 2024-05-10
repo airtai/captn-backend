@@ -27,23 +27,6 @@ from .fixtures.campaign_creation_team_fixtures import (
 from .helpers import get_client_response_for_the_team_conv, get_config_list
 from .models import Models
 
-# def _ask_client_for_permission_mock(*args: Any, **kwargs: Dict[str, Any]) -> str:
-#     print("Inside _ask_client_for_permission_mock")
-#     customer_to_update = (
-#         "We propose changes for the following customer: 'IKEA' (ID: 1111)"
-#     )
-#     assert "resource_details" in kwargs, f"{kwargs.keys()=}"  # nosec: [B101]
-#     assert "proposed_changes" in kwargs, f"{kwargs.keys()=}"  # nosec: [B101]
-#     message = f"{customer_to_update}\n\n{kwargs['resource_details']}\n\n{kwargs['proposed_changes']}"
-
-#     clients_answer = "yes"
-#     # In real ask_client_for_permission, we would append (message, None)
-#     # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
-#     context: Context = kwargs["context"]  # type: ignore[assignment]
-#     context.clients_question_answer_list.append((message, clients_answer))
-#     return clients_answer
-
-
 URL_TASK_DICT = {
     "https://www.ikea.com/gb/en/": CAMPAIGN_CREATION_IKEA,
     "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,

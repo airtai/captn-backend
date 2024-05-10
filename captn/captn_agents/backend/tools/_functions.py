@@ -238,7 +238,6 @@ def _ask_client_for_permission_mock(
     proposed_changes: str,
     context: Context,
 ) -> str:
-    print("Inside _ask_client_for_permission_mock")
     customer_to_update = (
         "We propose changes for the following customer: 'IKEA' (ID: 1111)"
     )
