@@ -157,7 +157,7 @@ def continue_conversation_until_finished(
     cache: Cache,
 ) -> None:
     while True:
-        current_team = Team.get_team(user_id=user_id, conv_id=456)
+        current_team = Team.get_team(user_id=user_id, conv_id=conv_id)
         if not isinstance(current_team, Team):
             raise ValueError(
                 f"Team with user_id {user_id} and conv_id {conv_id} not found."
