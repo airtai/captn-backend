@@ -21,7 +21,10 @@ from captn.captn_agents.backend.teams._weekly_analysis_team import (
     KeywordMetrics,
     Metrics,
     WeeklyAnalysisTeam,
+    WeeklyCustomerReports,
+    WeeklyReport,
     _add_metrics_message,
+    _check_if_any_campaign_exists,
     _create_date_query,
     _create_task_message,
     _update_chat_message_and_send_email,
@@ -35,6 +38,7 @@ from captn.captn_agents.backend.teams._weekly_analysis_team import (
     get_web_status_code_report_for_campaign,
     get_weekly_ad_group_ads_report,
     get_weekly_keywords_report,
+    get_weekly_report,
     google_ads_api_call,
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
@@ -1392,6 +1396,65 @@ def test_create_date_query() -> None:
     last_week_query = _create_date_query(date, week="LAST")
     excepted = "segments.date BETWEEN '2024-05-02' AND '2024-05-08'"
     assert last_week_query == excepted
+
+
+def test_check_if_any_campaign_exists_returns_true() -> None:
+    campaign = Campaign(
+        id="1212",
+        name="abc",
+        ad_groups={},
+        metrics=Metrics(
+            impressions=1,
+            clicks=1,
+            interactions=1,
+            conversions=1,
+            cost_micros=1,
+        ),
+    )
+    customer_report = WeeklyCustomerReports(
+        customer_id="1",
+        currency="USD",
+        campaigns={"1": campaign},
+    )
+    weekly_report = WeeklyReport(weekly_customer_reports=[customer_report])
+
+    assert _check_if_any_campaign_exists(weekly_report)
+
+
+def test_check_if_any_campaign_exists_returns_false() -> None:
+    customer_report = WeeklyCustomerReports(
+        customer_id="1",
+        currency="USD",
+        campaigns={},
+    )
+    weekly_report = WeeklyReport(weekly_customer_reports=[customer_report])
+
+    assert _check_if_any_campaign_exists(weekly_report) is False
+
+
+def test_get_weekly_report_when_there_are_no_campaigns() -> None:
+    with (
+        unittest.mock.patch(
+            "captn.captn_agents.backend.teams._weekly_analysis_team.google_ads_api_call",
+            return_value=["111", "222"],
+        ),
+        unittest.mock.patch(
+            "captn.captn_agents.backend.teams._weekly_analysis_team.get_weekly_report_for_customer",
+        ) as mock_get_weekly_report_for_customer,
+    ):
+        mock_get_weekly_report_for_customer.side_effect = [
+            WeeklyCustomerReports(customer_id="111", currency="USD", campaigns={}),
+            WeeklyCustomerReports(customer_id="222", currency="USD", campaigns={}),
+        ]
+
+        assert (
+            get_weekly_report(
+                date="2024-05-15",
+                user_id=13,
+                conv_id=12,
+            )
+            is None
+        )
 
 
 class TestWeeklyAnalysisTeam:
