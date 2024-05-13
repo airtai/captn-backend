@@ -381,12 +381,12 @@ def get_weekly_report_for_customer(
     )
 
     last_week_query = _create_date_query(date, "LAST")
-    yesterday_campaigns_report = get_campaigns_report(
+    last_week_campaigns_report = get_campaigns_report(
         user_id, conv_id, customer_id, last_week_query
     )
 
     compared_campaigns_report = compare_reports(
-        campaigns_report, yesterday_campaigns_report
+        campaigns_report, last_week_campaigns_report
     )
 
     query = "SELECT customer.currency_code FROM customer"
@@ -511,7 +511,7 @@ def construct_weekly_report_email_from_template(
     customers_section = ""
 
     message = f"<h2>Weekly Google Ads Performance Report - {date}</h2>"
-    message += f"<p>We're here with your weekly analysis of your Google Ads campaigns for {date}. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p>"
+    message += "<p>We're here with your weekly analysis of your Google Ads campaigns. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p>"
     campaigns_report = weekly_reports["weekly_customer_reports"]
     for customer_report in campaigns_report:
         customer_report_template = CUSTOMER_REPORT_TEMPLATE
