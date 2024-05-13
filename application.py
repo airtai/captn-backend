@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from captn.captn_agents.application import on_connect
-from captn.captn_agents.backend.teams._daily_analysis_team import execute_weekly_analysis
+from captn.captn_agents.backend.teams._weekly_analysis_team import execute_weekly_analysis
 from captn.observability import PrometheusMiddleware, metrics, setting_otlp
 
 load_dotenv()

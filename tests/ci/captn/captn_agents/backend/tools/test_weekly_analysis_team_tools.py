@@ -4,7 +4,7 @@ import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
-from captn.captn_agents.backend.tools._daily_analysis_team_tools import (
+from captn.captn_agents.backend.tools._weekly_analysis_team_tools import (
     create_weekly_analysis_team_toolbox,
 )
 

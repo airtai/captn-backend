@@ -21,8 +21,8 @@ from ....google_ads.client import (
     get_user_ids_and_emails,
     list_accessible_customers,
 )
-from ..tools._daily_analysis_team_tools import create_weekly_analysis_team_toolbox
 from ..tools._functions import get_webpage_status_code
+from ..tools._weekly_analysis_team_tools import create_weekly_analysis_team_toolbox
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND
 from ._team import Team
 

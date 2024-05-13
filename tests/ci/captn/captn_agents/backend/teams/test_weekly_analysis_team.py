@@ -3,6 +3,7 @@ import re
 import unittest.mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Iterator
 
 import pytest
 from autogen.cache import Cache
@@ -11,7 +12,7 @@ from tenacity import RetryError
 from captn.captn_agents.backend.teams import (
     Team,
 )
-from captn.captn_agents.backend.teams._daily_analysis_team import (
+from captn.captn_agents.backend.teams._weekly_analysis_team import (
     REACT_APP_API_URL,
     AdGroup,
     AdGroupAd,
@@ -115,7 +116,7 @@ def test_keywords_metrics() -> None:
 
 def test_get_weekly_ad_group_ads_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {
@@ -295,7 +296,7 @@ def test_get_weekly_ad_group_ads_report() -> None:
 
 def test_get_weekly_keywords_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {
@@ -775,11 +776,11 @@ def test_compare_reports() -> None:
 
 def test_get_campaigns_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.execute_query"
     ) as mock_execute_query:
         # mock get_ad_groups_report
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team.get_ad_groups_report"
+            "captn.captn_agents.backend.teams._weekly_analysis_team.get_ad_groups_report"
         ) as mock_get_ad_groups_report:
             mock_execute_query.return_value = str(
                 {
@@ -1240,7 +1241,7 @@ def test_construct_weekly_report_email_from_template() -> None:
 def test_send_email() -> None:
     with unittest.mock.patch("requests.post") as mock_post:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team.send_email_infobip"
+            "captn.captn_agents.backend.teams._weekly_analysis_team.send_email_infobip"
         ) as mock_send_email_infobip:
             mock_post.return_value.status_code = 200
             mock_post.return_value.json = lambda: {"chatID": 239}
@@ -1277,10 +1278,10 @@ def test_send_email() -> None:
 
 def test_execute_weekly_analysis_with_incorrect_emails() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.get_user_ids_and_emails"
     ) as mock_get_user_ids_and_emails:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid"
+            "captn.captn_agents.backend.teams._weekly_analysis_team._get_conv_id_and_uuid"
         ) as mock_get_conv_id_and_uuid:
             mock_get_user_ids_and_emails.return_value = json.dumps(
                 {
@@ -1297,7 +1298,7 @@ def test_execute_weekly_analysis_with_incorrect_emails() -> None:
 
 def test_google_ads_api_call_reties_three_times() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.list_accessible_customers"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.list_accessible_customers"
     ) as mock_list_accessible_customers:
         mock_list_accessible_customers.side_effect = [
             ValueError("Error1"),
@@ -1316,7 +1317,7 @@ def test_google_ads_api_call_reties_three_times() -> None:
 
 def test_google_ads_api_call_reties_returns_result_in_second_attempt() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.list_accessible_customers"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.list_accessible_customers"
     ) as mock_list_accessible_customers:
         mock_list_accessible_customers.side_effect = [ValueError("Error1"), ["1", "2"]]
         result = google_ads_api_call(
@@ -1394,6 +1395,12 @@ def test_create_date_query() -> None:
 
 
 class TestDailyAnalysisTeam:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+        Team._teams.clear()
+        yield
+        Team._teams.clear()
+
     def test_init(self) -> None:
         weekly_analysis_team = WeeklyAnalysisTeam(
             user_id=123,
@@ -1411,33 +1418,33 @@ class TestDailyAnalysisTeam:
     def test_execute_weekly_analysis_workflow(self) -> None:
         with (
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.get_user_ids_and_emails",
                 return_value="""{"1": "robert@airt.ai"}""",
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid",
+                "captn.captn_agents.backend.teams._weekly_analysis_team._get_conv_id_and_uuid",
                 return_value=(
                     -1,
                     "f0d2e864-9fe2-4fa0-b9a7-e8381ed14ef9",
                 ),
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.get_login_url",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.get_login_url",
                 return_value={"login_url": ALREADY_AUTHENTICATED},
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.get_weekly_report"
+                "captn.captn_agents.backend.teams._weekly_analysis_team.get_weekly_report"
             ) as mock_get_weekly_report,
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email",
+                "captn.captn_agents.backend.teams._weekly_analysis_team._update_chat_message_and_send_email",
                 return_value=None,
             ) as mock_update_chat_message_and_send_email,
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.WeeklyAnalysisTeam.initiate_chat",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.WeeklyAnalysisTeam.initiate_chat",
                 return_value=None,
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.WeeklyAnalysisTeam.get_messages",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.WeeklyAnalysisTeam.get_messages",
             ) as mock_messages,
         ):
             fixtures_path = Path(__file__).resolve().parent / "fixtures"
@@ -1525,7 +1532,7 @@ class TestDailyAnalysisTeam:
                     wraps=weekly_analysis_team.toolbox.functions.send_email,  # type: ignore[attr-defined]
                 ) as mock_send_email,
                 unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email",
+                    "captn.captn_agents.backend.teams._weekly_analysis_team._update_chat_message_and_send_email",
                     return_value=None,
                 ) as mock_update_chat_message_and_send_email,
             ):
