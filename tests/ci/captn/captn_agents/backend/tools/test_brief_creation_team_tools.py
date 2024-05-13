@@ -1,5 +1,5 @@
 import unittest
-from typing import Optional
+from typing import Iterator, Optional
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
@@ -8,11 +8,16 @@ from captn.captn_agents.backend.benchmarking.fixtures.brief_creation_team_fixtur
     BRIEF_CREATION_TEAM_RESPONSE,
 )
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.teams._brief_creation_team import BriefCreationTeam
+from captn.captn_agents.backend.teams._campaign_creation_team import (
+    CampaignCreationTeam,
+)
 from captn.captn_agents.backend.teams._google_ads_team import GoogleAdsTeam
 from captn.captn_agents.backend.teams._team import Team
 from captn.captn_agents.backend.tools._brief_creation_team_tools import (
     Context,
     DelegateTask,
+    _change_the_team_and_start_new_chat,
     create_brief_creation_team_toolbox,
 )
 from captn.captn_agents.backend.tools._functions import TeamResponse
@@ -22,7 +27,7 @@ from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 class TestTools:
     @pytest.fixture(autouse=True)
-    def setup(self) -> None:
+    def setup(self) -> Iterator[None]:
         self.llm_config = {
             "config_list": Config().config_list_gpt_3_5,
         }
@@ -32,6 +37,9 @@ class TestTools:
             conv_id=67890,
             initial_brief="Initial brief. This is a test.",
         )
+
+        yield
+        Team._teams.clear()
 
     def test_llm_config(self) -> None:
         agent = AssistantAgent(name="agent", llm_config=self.llm_config)
@@ -47,6 +55,24 @@ class TestTools:
 
         check_llm_config_total_tools(llm_config, 4)
         check_llm_config_descriptions(llm_config, name_desc_dict)
+
+    def test_change_the_team_and_start_new_chat(self) -> None:
+        BriefCreationTeam(user_id=12345, conv_id=67890, task="Task to do.")
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.teams._team.Team.initiate_chat"
+        ) as mock_initiate_chat:
+            mock_initiate_chat.side_effect = Exception("Test exception.")
+            string_response = _change_the_team_and_start_new_chat(
+                user_id=12345,
+                conv_id=67890,
+                final_task="Final task.",
+                team_class=CampaignCreationTeam,
+            )
+
+            TeamResponse.model_validate_json(string_response)
+            current_team = Team.get_team(user_id=12345, conv_id=67890)
+            assert isinstance(current_team, CampaignCreationTeam)
 
     @pytest.mark.parametrize(
         "get_info_from_web_page_result",

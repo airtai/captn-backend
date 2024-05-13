@@ -243,6 +243,10 @@ def add_currency_check(
     return decorator
 
 
+def _mock_create_campaign() -> None:
+    pass
+
+
 @add_currency_check(micros_var_name="budget_amount_micros")
 def create_campaign(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
@@ -272,6 +276,7 @@ def create_campaign(
         "Whether ads will be served on specified placements in the Google Display Network. Placements are specified using the Placement criterion.",
     ] = None,
 ) -> Union[Dict[str, Any], str]:
+    _mock_create_campaign()
     user_id = context.user_id
     conv_id = context.conv_id
     clients_question_answer_list = context.clients_question_answer_list

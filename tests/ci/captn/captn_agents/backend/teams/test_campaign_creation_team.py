@@ -3,6 +3,7 @@ import pytest
 from captn.captn_agents.backend.benchmarking.campaign_creation_team import (
     benchmark_campaign_creation,
 )
+from captn.captn_agents.backend.benchmarking.end2end import benchmark_end2end
 from captn.captn_agents.backend.teams._campaign_creation_team import (
     CampaignCreationTeam,
 )
@@ -28,7 +29,15 @@ class TestCampaignCreationTeam:
     @pytest.mark.flaky
     @pytest.mark.openai
     @pytest.mark.campaign_creation_team
-    def test_end2end(self) -> None:
+    def test_campaign_creation_team_end2end(self) -> None:
         benchmark_campaign_creation(
+            url="https://www.ikea.com/gb/en/",
+        )
+
+    @pytest.mark.skip(reason="This takes too long")
+    @pytest.mark.flaky
+    @pytest.mark.openai
+    def test_real_end2end(self) -> None:
+        benchmark_end2end(
             url="https://www.ikea.com/gb/en/",
         )

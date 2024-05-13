@@ -201,8 +201,18 @@ class Team:
         manager_llm_config.pop("functions", None)
         manager_llm_config.pop("tools", None)
 
+        # list of all members except user_proxy (he is not an LLM)
+        # TODO: Try benchmarking allow_repeat_speaker=False - maybe the TimeOuts will be less
+        allow_repeat_speaker = [
+            member
+            for member in self.members
+            if not isinstance(member, autogen.UserProxyAgent)
+        ]
         self.groupchat = autogen.GroupChat(
-            agents=self.members, messages=[], max_round=self.max_round
+            agents=self.members,
+            messages=[],
+            max_round=self.max_round,
+            allow_repeat_speaker=allow_repeat_speaker,
         )
         self.manager = autogen.GroupChatManager(
             groupchat=self.groupchat,
