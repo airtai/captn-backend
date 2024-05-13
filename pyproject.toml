@@ -221,7 +221,7 @@ markers = [
     "brief_creation_team: maker test as end2end testing of the brief_creation_team",
     "campaign_creation_team: maker test as end2end testing of the campaign_creation_team",
     "google_ads_team: maker test as end2end testing of the google_ads_team",
-    "daily_analysis_team: maker test as end2end testing of the daily_analysis_team",
+    "weekly_analysis_team: maker test as end2end testing of the weekly_analysis_team",
     "get_info_from_the_web_page: maker test as end2end testing of the websurfer",
 ]
 
