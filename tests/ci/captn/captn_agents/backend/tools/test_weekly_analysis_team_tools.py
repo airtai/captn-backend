@@ -11,7 +11,7 @@ from captn.captn_agents.backend.tools._weekly_analysis_team_tools import (
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
-class TestDailyAnalysisTeamTools:
+class TestWeeklyAnalysisTeamTools:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         user_id = 1234

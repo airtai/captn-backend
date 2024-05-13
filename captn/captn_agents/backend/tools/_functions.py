@@ -694,7 +694,7 @@ def send_email(
     proposed_user_actions: Annotated[List[str], "List of proposed user actions"],
 ) -> Dict[str, Any]:
     return_msg = {
-        "subject": "Capt’n.ai Daily Analysis",
+        "subject": "Capt’n.ai Weekly Analysis",
         "email_content": "<html></html>",
         "proposed_user_action": proposed_user_actions,
         "terminate_groupchat": True,

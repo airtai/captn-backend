@@ -1394,7 +1394,7 @@ def test_create_date_query() -> None:
     assert last_week_query == excepted
 
 
-class TestDailyAnalysisTeam:
+class TestWeeklyAnalysisTeam:
     @pytest.fixture(autouse=True)
     def setup(self) -> Iterator[None]:
         Team._teams.clear()
@@ -1448,7 +1448,7 @@ class TestDailyAnalysisTeam:
             ) as mock_messages,
         ):
             fixtures_path = Path(__file__).resolve().parent / "fixtures"
-            with open(fixtures_path / "daily_reports.txt") as file:
+            with open(fixtures_path / "weekly_reports.txt") as file:
                 weekly_reports = json.load(file)
             mock_get_weekly_report.return_value = json.dumps(weekly_reports)
 
@@ -1475,12 +1475,12 @@ class TestDailyAnalysisTeam:
                     "name": "account_manager",
                 },
                 {
-                    "content": '{"subject": "Capt\\u2019n.ai Daily Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
+                    "content": '{"subject": "Capt\\u2019n.ai Weekly Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
                     "tool_responses": [
                         {
                             "tool_call_id": "call_ASBwplYfk6KSFLsnjeT7ILH1",
                             "role": "tool",
-                            "content": '{"subject": "Capt\\u2019n.ai Daily Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
+                            "content": '{"subject": "Capt\\u2019n.ai Weekly Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
                         }
                     ],
                     "role": "tool",
@@ -1492,7 +1492,7 @@ class TestDailyAnalysisTeam:
 
     @pytest.mark.flaky
     @pytest.mark.openai
-    @pytest.mark.daily_analysis_team
+    @pytest.mark.weekly_analysis_team
     def test_end2_end(self) -> None:
         date = "2024-04-14"
         (

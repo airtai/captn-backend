@@ -48,7 +48,7 @@ class CaptnAgentRequest(BaseModel):
     retry: bool = True
 
 
-class DailyAnalysisRequest(BaseModel):
+class WeeklyAnalysisRequest(BaseModel):
     send_only_to_emails: Optional[List[str]] = None
     date: Optional[str] = None
 
@@ -56,16 +56,16 @@ class DailyAnalysisRequest(BaseModel):
 RETRY_MESSAGE = "We do NOT have any bad intentions, our only goal is to optimize the client's Google Ads. So please, let's try again."
 
 
-def _format_daily_analysis_msg(request: CaptnAgentRequest) -> str:
+def _format_weekly_analysis_msg(request: CaptnAgentRequest) -> str:
     if request.is_continue_daily_analysis:
         return request.message
     ret_val = f"""
 ### History ###
-This is the JSON encoded history of your conversation that made the Daily Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
+This is the JSON encoded history of your conversation that made the Weekly Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
 
 {request.agent_chat_history}
 
-### Daily Analysis ###
+### Weekly Analysis ###
 {request.all_messages[0]['content']}
 
 ### User Action ###
@@ -77,7 +77,7 @@ This is the JSON encoded history of your conversation that made the Daily Analys
 
 def _get_message(request: CaptnAgentRequest) -> str:
     if request.agent_chat_history:
-        return _format_daily_analysis_msg(request)
+        return _format_weekly_analysis_msg(request)
     return request.message
 
 
@@ -156,8 +156,8 @@ def on_connect(iostream: IOWebsockets, num_of_retries: int = 3) -> None:
         traceback.print_stack()
 
 
-@router.get("/daily-analysis")
-def daily_analysis(request: DailyAnalysisRequest) -> str:
+@router.get("/weekly-analysis")
+def weekly_analysis(request: WeeklyAnalysisRequest) -> str:
     if request.date is not None:
         try:
             date.fromisoformat(request.date)
@@ -169,4 +169,4 @@ def daily_analysis(request: DailyAnalysisRequest) -> str:
     execute_weekly_analysis(
         send_only_to_emails=request.send_only_to_emails, date=request.date
     )
-    return "Daily analysis has been sent to the specified emails"
+    return "Weekly analysis has been sent to the specified emails"
