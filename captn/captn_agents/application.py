@@ -14,7 +14,7 @@ from ..observability.websocket_utils import (
     WEBSOCKET_REQUESTS,
     WEBSOCKET_TOKENS,
 )
-from .backend import Team, execute_daily_analysis, start_or_continue_conversation
+from .backend import Team, execute_weekly_analysis, start_or_continue_conversation
 
 router = APIRouter()
 
@@ -166,7 +166,7 @@ def daily_analysis(request: DailyAnalysisRequest) -> str:
                 status_code=400, detail="Invalid date format. Please use YYYY-MM-DD"
             ) from e
 
-    execute_daily_analysis(
+    execute_weekly_analysis(
         send_only_to_emails=request.send_only_to_emails, date=request.date
     )
     return "Daily analysis has been sent to the specified emails"
