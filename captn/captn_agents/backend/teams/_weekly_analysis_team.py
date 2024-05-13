@@ -255,9 +255,11 @@ def get_campaigns_report(
         query=query,
     )
     customer_result = ast.literal_eval(query_result)[customer_id]
+    campaigns: Dict[str, Campaign] = {}
+    if not customer_result:
+        return campaigns
 
     ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date_query)
-    campaigns: Dict[str, Campaign] = {}
     for campaign_result in customer_result:
         ad_groups = ad_groups_report.get(campaign_result["campaign"]["id"], {})
         campaign = Campaign(
