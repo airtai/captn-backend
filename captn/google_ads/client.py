@@ -79,6 +79,9 @@ def clean_error_response(content: bytes) -> str:
 
 
 AUTHENTICATION_ERROR = "Please try to execute the command again."
+ACCOUNT_NOT_ACTIVATED = (
+    "be accessed because it is not yet enabled or has been deactivated"
+)
 
 
 def execute_query(
@@ -106,6 +109,14 @@ def execute_query(
             content = AUTHENTICATION_ERROR
         else:
             content = clean_error_response(response.content)
+            if ACCOUNT_NOT_ACTIVATED in content:
+                content = f"""We have received the following error from Google Ads API:
+
+{content}
+
+If you have just created the account, please wait for a few hours before trying again.
+If the account has been active for a while, please check the account status in the Google Ads UI.
+"""
         raise ValueError(content)
 
     response_json = response.json()
