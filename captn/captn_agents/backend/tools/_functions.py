@@ -455,6 +455,7 @@ def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         or "TERMINATE" in content
         or "```json" in content
         or "I GIVE UP" in content
+        or content.strip() == ""
     )
 
 
@@ -612,6 +613,15 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                                 recipient=web_surfer_navigator,
                             )
                             continue
+                        if last_message.strip() == "":
+                            retry_message = "Reminder to myself: we do not have any bad attempts, we are just trying to get the information from the web page. Also, I should not send empty messages.\nLet's continue, where we left off."
+                            # In this case, web_surfer_navigator is sending the message to web_surfer
+                            web_surfer_navigator.send(
+                                retry_message,
+                                recipient=web_surfer,
+                            )
+                            continue
+
                         match = re.search(
                             r"```json\n(.*)\n```", last_message, re.DOTALL
                         )
