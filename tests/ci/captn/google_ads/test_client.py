@@ -1,15 +1,20 @@
+import unittest
 from typing import List, Optional, Tuple
 
 import pytest
 from pydantic import BaseModel
+from requests.models import Response
 
 from captn.google_ads.client import (
+    ALREADY_AUTHENTICATED,
+    AUTHENTICATION_ERROR,
     FIELDS_ARE_NOT_MENTIONED_ERROR_MSG,
     NOT_APPROVED,
     NOT_IN_QUESTION_ANSWER_LIST,
     _check_for_client_approval,
     check_fields_are_mentioned_to_the_client,
     clean_error_response,
+    execute_query,
     google_ads_create_update,
 )
 
@@ -143,3 +148,40 @@ def test_google_ads_create_update_raises_error() -> None:
         + "\n\n"
         + NOT_IN_QUESTION_ANSWER_LIST
     )
+
+
+@pytest.mark.parametrize(
+    "error_message", ["account_not_enabled", "authentication_error"]
+)
+def test_execute_query_when_google_ads_api_raises_error(error_message) -> None:
+    error_dict = {
+        "account_not_enabled": {
+            "content": b'{"detail":"(<_InactiveRpcError of RPC that terminated with:\\n\\tstatus = StatusCode.PERMISSION_DENIED\\n\\tdetails = \\"The caller does not have permission\\"\\n\\tdebug_error_string = \\"UNKNOWN:Error received from peer {created_time:\\"2024-05-14T10:33:11\\", grpc_status:7, grpc_message:\\"The caller does not have permission\\"}\\"\\n>, <_InactiveRpcError of RPC that terminated with:\\n\\tstatus = StatusCode.PERMISSION_DENIED\\n\\tdetails = \\"The caller does not have permission\\"\\n\\tdebug_error_string = \\"UNKNOWN:Error received from peer ipv4:142.250.184.138:443 {created_time:\\"2024-05-14T10:33:11\\", grpc_status:7, grpc_message:\\"The caller does not have permission\\"}\\"\\n>, errors {\\n  error_code {\\n    authorization_error: CUSTOMER_NOT_ENABLED\\n  }\\n  message: \\"The customer account can\\\\\'t be accessed because it is not yet enabled or has been deactivated.\\"})"}',
+            "excepted_substr": "If you have just created the account, please wait for a few hours before trying again.",
+        },
+        "authentication_error": {
+            "content": b'{"detail":"Please try to execute the command again."}',
+            "excepted_substr": AUTHENTICATION_ERROR,
+        },
+    }
+
+    with (
+        unittest.mock.patch(
+            "captn.google_ads.client.get_login_url",
+            return_value={"login_url": ALREADY_AUTHENTICATED},
+        ),
+        unittest.mock.patch(
+            "captn.google_ads.client.requests_get",
+        ) as mock_requests_get,
+    ):
+        response = Response()
+        response.status_code = 500
+        response._content = error_dict[error_message]["content"]
+        mock_requests_get.return_value = response
+
+        with pytest.raises(ValueError) as exc_info:
+            execute_query(user_id=-1, conv_id=-1)
+
+        assert (
+            error_dict[error_message]["excepted_substr"] in exc_info.value.args[0]
+        ), exc_info.value.args[0]
