@@ -255,9 +255,11 @@ def get_campaigns_report(
         query=query,
     )
     customer_result = ast.literal_eval(query_result)[customer_id]
+    campaigns: Dict[str, Campaign] = {}
+    if not customer_result:
+        return campaigns
 
     ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date_query)
-    campaigns: Dict[str, Campaign] = {}
     for campaign_result in customer_result:
         ad_groups = ad_groups_report.get(campaign_result["campaign"]["id"], {})
         campaign = Campaign(
@@ -591,7 +593,14 @@ def construct_weekly_report_email_from_template(
     return message, main_email_template
 
 
-def get_weekly_report(date: str, user_id: int, conv_id: int) -> str:
+def _check_if_any_campaign_exists(weekly_report: WeeklyReport) -> bool:
+    for weekly_customer_report in weekly_report.weekly_customer_reports:
+        if weekly_customer_report.campaigns:
+            return True
+    return False
+
+
+def get_weekly_report(date: str, user_id: int, conv_id: int) -> Optional[str]:
     customer_ids: List[str] = google_ads_api_call(
         function=list_accessible_customers,
         user_id=user_id,
@@ -604,11 +613,15 @@ def get_weekly_report(date: str, user_id: int, conv_id: int) -> str:
         )
         for customer_id in customer_ids
     ]
-    weekly_report = WeeklyReport(
-        weekly_customer_reports=weekly_customer_reports
-    ).model_dump_json(indent=2)
+    weekly_report = WeeklyReport(weekly_customer_reports=weekly_customer_reports)
 
-    return weekly_report
+    if not _check_if_any_campaign_exists(weekly_report):
+        print(
+            f"No campaigns found for the date {date}, user_id: {user_id}, conv_id: {conv_id}"
+        )
+        return None
+
+    return weekly_report.model_dump_json(indent=2)
 
 
 class WeeklyAnalysisTeam(Team):
@@ -1020,6 +1033,9 @@ def execute_weekly_analysis(
                 weekly_reports = get_weekly_report(
                     date=date, user_id=user_id, conv_id=conv_id
                 )
+                if weekly_reports is None:
+                    _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+                    continue
 
                 (
                     weekly_report_message,
