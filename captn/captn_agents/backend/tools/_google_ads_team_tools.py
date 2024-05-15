@@ -252,12 +252,6 @@ def create_campaign(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
     name: Annotated[str, "The name of the campaign"],
     budget_amount_micros: Annotated[int, budget_amount_micros_description],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     context: Context,
     *,
     status: Annotated[
@@ -285,8 +279,6 @@ def create_campaign(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=Campaign(
             customer_id=customer_id,
             name=name,
@@ -306,12 +298,6 @@ create_keyword_for_ad_group_description = f"Creates (regular and negative) keywo
 @add_currency_check()
 def create_keyword_for_ad_group(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_group_id: Annotated[str, properties_config["ad_group_id"]["description"]],
     keyword_text: Annotated[str, properties_config["keyword_text"]["description"]],
     keyword_match_type: Annotated[
@@ -340,8 +326,6 @@ def create_keyword_for_ad_group(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdGroupCriterion(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -362,12 +346,6 @@ update_ad_group_ad_description = f"Update Google Ad. {MODIFICATION_WARNING}"
 @add_currency_check()
 def update_ad_group_ad(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_group_id: Annotated[str, properties_config["ad_group_id"]["description"]],
     ad_id: Annotated[str, properties_config["ad_id"]["description"]],
     context: Context,
@@ -387,8 +365,6 @@ def update_ad_group_ad(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdGroupAd(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -408,12 +384,6 @@ update_ad_group_description = f"Update Google Ads Ad Group. {MODIFICATION_WARNIN
 @add_currency_check()
 def update_ad_group(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_group_id: Annotated[str, properties_config["ad_group_id"]["description"]],
     context: Context,
     *,
@@ -433,8 +403,6 @@ def update_ad_group(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdGroup(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -452,12 +420,6 @@ create_ad_group_description = f"Create Google Ads Ad Group. {MODIFICATION_WARNIN
 @add_currency_check()
 def create_ad_group(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
     context: Context,
     *,
@@ -477,8 +439,6 @@ def create_ad_group(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdGroup(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -498,12 +458,6 @@ ad_group_criterion_description = (
 @add_currency_check()
 def update_ad_group_criterion(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_group_id: Annotated[str, properties_config["ad_group_id"]["description"]],
     criterion_id: Annotated[str, "Id of the Ad group criterion"],
     context: Context,
@@ -529,8 +483,6 @@ def update_ad_group_criterion(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdGroupCriterion(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -557,12 +509,6 @@ Use this parameter ONLY when you want to modify existing description!"""
 
 def update_ad_copy(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_id: Annotated[str, properties_config["ad_id"]["description"]],
     context: Context,
     *,
@@ -601,8 +547,6 @@ def update_ad_copy(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdCopy(
             customer_id=customer_id,
             ad_id=ad_id,
@@ -624,12 +568,6 @@ update_campaign_description = f"Update Google Ads Campaign. {MODIFICATION_WARNIN
 
 def update_campaign(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
     context: Context,
     *,
@@ -647,8 +585,6 @@ def update_campaign(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=Campaign(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -667,12 +603,6 @@ This method should NOT be used for updating existing headlines or descriptions.
 
 def create_ad_copy_headline_or_description(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_id: Annotated[str, properties_config["ad_id"]["description"]],
     context: Context,
     *,
@@ -690,8 +620,6 @@ def create_ad_copy_headline_or_description(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdCopy(
             customer_id=customer_id,
             ad_id=ad_id,
@@ -716,12 +644,6 @@ Use this method only when the client approves the creation of the new Ad, ALL th
 
 def create_ad_group_ad(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_group_id: Annotated[str, properties_config["ad_group_id"]["description"]],
     headlines: Annotated[
         List[str],
@@ -749,8 +671,6 @@ def create_ad_group_ad(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdGroupAd(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -774,12 +694,6 @@ location_ids and location_names parameters are mutually exclusive and they can N
 
 def create_geo_targeting_for_campaign(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
     context: Context,
     *,
@@ -800,8 +714,6 @@ def create_geo_targeting_for_campaign(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=GeoTargetCriterion(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -820,12 +732,6 @@ create_negative_keyword_for_campaign_description = (
 
 def create_negative_keyword_for_campaign(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
     keyword_text: Annotated[str, properties_config["keyword_text"]["description"]],
     keyword_match_type: Annotated[
@@ -852,8 +758,6 @@ def create_negative_keyword_for_campaign(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=CampaignCriterion(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -880,12 +784,6 @@ ad and ad_group_criterion uses uses ad_group_id, campaign_criterion uses campaig
 
 def remove_google_ads_resource(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     resource_id: Annotated[str, "Id of the resource which will be removed"],
     resource_type: Annotated[str, resource_type_description],
     context: Context,
@@ -900,8 +798,6 @@ def remove_google_ads_resource(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=RemoveResource(
             customer_id=customer_id,
             resource_id=resource_id,
@@ -919,12 +815,6 @@ Use 'update_existing_headline_index' if you want to remove existing headline and
 
 def remove_ad_copy_headline_or_description(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     ad_id: Annotated[str, properties_config["ad_id"]["description"]],
     context: Context,
     *,
@@ -945,8 +835,6 @@ def remove_ad_copy_headline_or_description(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=AdCopy(
             customer_id=customer_id,
             ad_id=ad_id,
@@ -968,12 +856,6 @@ update_campaigns_negative_keywords_description = (
 
 def update_campaigns_negative_keywords(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
-    clients_approval_message: Annotated[
-        str, properties_config["clients_approval_message"]["description"]
-    ],
-    modification_question: Annotated[
-        str, properties_config["modification_question"]["description"]
-    ],
     campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
     criterion_id: Annotated[str, "Id of the Campaign criterion"],
     context: Context,
@@ -992,8 +874,6 @@ def update_campaigns_negative_keywords(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=CampaignCriterion(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -1021,7 +901,7 @@ def add_shared_functions(toolbox: Toolbox) -> None:
 def create_google_ads_team_toolbox(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
 ) -> Toolbox:
     toolbox = Toolbox()
 

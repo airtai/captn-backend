@@ -139,7 +139,7 @@ class Team:
         seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
+        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = [],  # noqa
         use_user_proxy: bool = False,
     ):
         self.user_id = user_id

@@ -47,7 +47,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self.task = task
         self.initial_brief = task
 
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
 
         roles: List[Dict[str, str]] = BriefCreationTeam._default_roles

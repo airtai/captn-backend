@@ -70,7 +70,7 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 

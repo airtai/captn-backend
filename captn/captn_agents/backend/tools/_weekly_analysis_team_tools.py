@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..toolboxes import Toolbox
 from ._functions import (
@@ -21,7 +21,7 @@ __all__ = ("create_weekly_analysis_team_toolbox",)
 def create_weekly_analysis_team_toolbox(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
 ) -> Toolbox:
     toolbox = Toolbox()
 

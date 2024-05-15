@@ -102,10 +102,8 @@ def _get_resource_id_from_response(response: str) -> str:
 def _create_ad_group(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
-    clients_approval_message: str,
-    modification_question: str,
 ) -> Union[Dict[str, Any], str]:
     ad_group = ad_group_with_ad_and_keywords.ad_group
     ad_group.customer_id = ad_group_with_ad_and_keywords.customer_id
@@ -115,8 +113,6 @@ def _create_ad_group(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=ad_group,
         endpoint="/create-ad-group",
         skip_fields_check=True,
@@ -128,10 +124,8 @@ def _create_ad_group(
 def _create_ad_group_ad(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
-    clients_approval_message: str,
-    modification_question: str,
     ad_group_id: str,
 ) -> Union[Dict[str, Any], str]:
     ad_group_ad = ad_group_with_ad_and_keywords.ad_group_ad
@@ -142,8 +136,6 @@ def _create_ad_group_ad(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=ad_group_ad,
         endpoint="/create-ad-group-ad",
         skip_fields_check=True,
@@ -154,10 +146,8 @@ def _create_ad_group_ad(
 def _create_ad_group_keyword(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
     ad_group_keyword: AdGroupCriterionForCreation,
-    clients_approval_message: str,
-    modification_question: str,
     ad_group_id: str,
     customer_id: str,
 ) -> Union[Dict[str, Any], str]:
@@ -167,8 +157,6 @@ def _create_ad_group_keyword(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
         ad=ad_group_keyword,
         endpoint="/add-keywords-to-ad-group",
         skip_fields_check=True,
@@ -179,10 +167,8 @@ def _create_ad_group_keyword(
 def _create_ad_group_keywords(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
-    clients_approval_message: str,
-    modification_question: str,
     ad_group_id: str,
 ) -> Union[Dict[str, Any], str]:
     response = ""
@@ -192,8 +178,6 @@ def _create_ad_group_keywords(
             conv_id=conv_id,
             clients_question_answer_list=clients_question_answer_list,
             ad_group_keyword=keyword,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
@@ -204,7 +188,7 @@ def _create_ad_group_keywords(
 def create_campaign_creation_team_toolbox(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
 ) -> Toolbox:
     toolbox = Toolbox()
 
@@ -257,8 +241,6 @@ def create_campaign_creation_team_toolbox(
             conv_id=conv_id,
             clients_question_answer_list=clients_question_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
         )
         if isinstance(ad_group_response, dict):
             return ad_group_response
@@ -270,8 +252,6 @@ def create_campaign_creation_team_toolbox(
             conv_id=conv_id,
             clients_question_answer_list=clients_question_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
             ad_group_id=ad_group_id,
         )
         response += f"Ad group ad: {ad_group_ad_response}\n"
@@ -281,8 +261,6 @@ def create_campaign_creation_team_toolbox(
             conv_id=conv_id,
             clients_question_answer_list=clients_question_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
             ad_group_id=ad_group_id,
         )
         response += ad_group_keywords_response  # type: ignore

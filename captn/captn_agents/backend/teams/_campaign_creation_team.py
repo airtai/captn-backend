@@ -97,7 +97,7 @@ sure it is understandable by non-experts.
     ):
         self.task = task
 
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
@@ -201,11 +201,6 @@ Example of the JSON input for the 'create_ad_group_with_ad_and_keywords' command
 
 When suggesting the JSON input, do NOT add \\n, \\t or any whitespaces to the JSON!!!
 
-and two additional parameters:
-- clients_approval_message: "yes"
-- modification_question: "Can I make the following changes to your account?"
-
-
 smart suggestions examples:
 Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
 Do NOT use smart suggestions for open ended questions or questions which require the clients input.
@@ -259,7 +254,7 @@ Use this command only if the client asks you to change the Google account. If th
 {MODIFICATION_FUNCTIONS_INSTRUCTIONS}
 6. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
-clients_approval_message: string, modification_question: str)
+clients_approval_message: string)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.

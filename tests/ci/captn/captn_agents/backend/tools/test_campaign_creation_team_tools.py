@@ -1,5 +1,5 @@
 import unittest
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
@@ -127,7 +127,7 @@ Keyword: {side_effect[3]}
 
 class TestContext:
     def test_context_objects_are_not_coppies(self):
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = []
         context = Context(
             user_id=12345,
             conv_id=67890,

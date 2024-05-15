@@ -1,5 +1,6 @@
 import ast
 import datetime
+import json
 import re
 import time
 from dataclasses import dataclass
@@ -167,7 +168,7 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 class Context:
     user_id: int
     conv_id: int
-    clients_question_answer_list: List[Tuple[str, Optional[str]]]
+    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]]
     get_only_non_manager_accounts: bool = False
 
 
@@ -236,13 +237,16 @@ def init_chat_and_get_last_message(
 def _ask_client_for_permission_mock(
     resource_details: str,
     proposed_changes: str,
+    modification_function_parameters: Annotated[
+        Dict[str, Any], "Parameters for the modification function"
+    ],
     context: Context,
 ) -> str:
     customer_to_update = (
         "We propose changes for the following customer: 'IKEA' (ID: 1111)"
     )
 
-    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
 We are in the middle of the process and we need your permission.
@@ -259,7 +263,9 @@ But do NOT answer with 'No' if you are not sure. Ask for more information instea
 
     # In real ask_client_for_permission, we would append (message, None)
     # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
-    context.clients_question_answer_list.append((message, clients_answer))
+    context.clients_question_answer_list.append(
+        (modification_function_parameters, clients_answer)
+    )
     return clients_answer
 
 
@@ -267,12 +273,16 @@ def ask_client_for_permission(
     customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
     resource_details: Annotated[str, resource_details_description],
     proposed_changes: Annotated[str, proposed_changes_description],
+    modification_function_parameters: Annotated[
+        Dict[str, Any], "Parameters for the modification function"
+    ],
     context: Context,
 ) -> str:
     if BENCHMARKING:
         return _ask_client_for_permission_mock(
             resource_details=resource_details,
             proposed_changes=proposed_changes,
+            modification_function_parameters=modification_function_parameters,
             context=context,
         )
     user_id = context.user_id
@@ -288,9 +298,9 @@ def ask_client_for_permission(
     ]
 
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
-    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
 
-    clients_question_answer_list.append((message, None))
+    clients_question_answer_list.append((modification_function_parameters, None))
 
     return reply_to_client(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
