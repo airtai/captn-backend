@@ -397,10 +397,8 @@ Give up only if you get 40x error on ALL the pages which you tried to navigate t
 
 
 FINAL MESSAGE:
-Once you have retrieved he wanted information, you MUST create JSON-encoded string according to the following JSON schema:
-{example.model_json_schema()}
-
-You MUST not include any other text or formatting in the message, only JSON-encoded string!
+Once you have retrieved he wanted information, you MUST create JSON-encoded string.
+You MUST not include any other text or formatting in the message, only JSON-encoded summary!
 
 This is an example of correctly formatted JSON (unrelated to the task):
 ```json
@@ -416,8 +414,6 @@ VERY IMPORTANT:
 - if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
-
-You MUST always reply to the last message from the web_surfer agent! Your reply can NOT be empty message!
 """
 
 
@@ -477,15 +473,6 @@ Visit the most likely pages to be advertised, such as the homepage, product page
 Please provide a detailed summary of the website as JSON-encoded string as instructed in the guidelines.
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
-e.g.
-"Here is a list of the links we will visit:
-1. Click the 'Products' link
-2. Click the 'Electronics' link
-3. Click the 'TVs' link
-
-Now, let's start with the task:
-Click no. 1 - Click the 'Products' link"
-
 You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
 When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
 """
