@@ -4,7 +4,7 @@ from annotated_types import Len
 from pydantic import BaseModel, Field, StringConstraints
 from typing_extensions import Annotated
 
-from ....google_ads.client import google_ads_create_update
+from ....google_ads.client import check_for_client_approval, google_ads_create_update
 from ..toolboxes import Toolbox
 from ._functions import (
     Context,
@@ -115,7 +115,7 @@ def _create_ad_group(
         clients_question_answer_list=clients_question_answer_list,
         ad=ad_group,
         endpoint="/create-ad-group",
-        skip_fields_check=True,
+        already_checked_clients_approval=True,
     )
 
     return ad_group_response
@@ -138,7 +138,7 @@ def _create_ad_group_ad(
         clients_question_answer_list=clients_question_answer_list,
         ad=ad_group_ad,
         endpoint="/create-ad-group-ad",
-        skip_fields_check=True,
+        already_checked_clients_approval=True,
     )
     return ad_group_ad_response
 
@@ -159,7 +159,7 @@ def _create_ad_group_keyword(
         clients_question_answer_list=clients_question_answer_list,
         ad=ad_group_keyword,
         endpoint="/add-keywords-to-ad-group",
-        skip_fields_check=True,
+        already_checked_clients_approval=True,
     )
     return keyword_response
 
@@ -223,6 +223,17 @@ def create_campaign_creation_team_toolbox(
         user_id = context.user_id
         conv_id = context.conv_id
         clients_question_answer_list = context.clients_question_answer_list
+
+        modification_function_parameters = {}
+        modification_function_parameters["ad_group_with_ad_and_keywords"] = (
+            ad_group_with_ad_and_keywords.model_dump()
+        )
+        error_msg = check_for_client_approval(
+            modification_function_parameters=modification_function_parameters,
+            clients_question_answer_list=clients_question_answer_list,
+        )
+        if error_msg:
+            raise ValueError(error_msg)
 
         ad_group_response = _create_ad_group(
             user_id=user_id,

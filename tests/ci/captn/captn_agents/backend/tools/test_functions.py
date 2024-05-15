@@ -8,6 +8,7 @@ from captn.captn_agents.backend.tools._functions import (
     Summary,
     WebPageSummary,
     WebUrl,
+    _find_value_in_nested_dict,
     get_get_info_from_the_web_page,
     get_webpage_status_code,
 )
@@ -129,3 +130,9 @@ class TestWebSurfer:
         timestamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
         result = benchmark_websurfer(url=url, outer_retries=3, timestamp=timestamp)
         print(result)
+
+
+def test_find_value_in_nested_dict() -> None:
+    example = {"customer": "222", "nested": {"find_this": "value"}}
+    assert _find_value_in_nested_dict(example, "find_this") == "value"
+    assert _find_value_in_nested_dict(example, "not_here") is None

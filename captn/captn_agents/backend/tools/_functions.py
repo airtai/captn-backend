@@ -173,7 +173,7 @@ class Context:
 
 
 ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'proposed_changes' to describe the changes which you want to make.
+Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'modification_function_parameters'.
 Do NOT use this method before you have all the information about the resource and the changes which you want to make!
 This method should ONLY be used when you know the exact resource and exact changes which you want to make and NOT for the general questions like: 'Do you want to update keywords?'.
 Also, propose one change at a time. If you want to make multiple changes, ask the client for the permission for each change separately i.e. before each modification, use this method to ask the client for the permission.
@@ -186,20 +186,6 @@ The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are '
 
 If you want to modify the keywords, you MUST provide the current keywords details, e.g:
 Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'.
-
-The message MUST use the Markdown format for the text!"""
-
-proposed_changes_description = """Explains which changes you want to make and why you want to make them.
-I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
-You MUST also tell about all the fields which will be effected by the changes, e.g.:
-'status' will be changed from 'ENABLED' to 'PAUSED'
-Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '2000000')
-
-e.g. for AdGroupAd:
-'final_url' will be set to 'https://my-web-page.com'
-Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
-
-Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.
 
 The message MUST use the Markdown format for the text!"""
 
@@ -234,19 +220,30 @@ def init_chat_and_get_last_message(
     return last_message  # type: ignore[no-any-return]
 
 
+def _find_value_in_nested_dict(dictionary: Dict[str, Any], key: str) -> Any:
+    for k, v in dictionary.items():
+        if k == key:
+            return v
+        elif isinstance(v, dict):
+            return _find_value_in_nested_dict(v, key)
+    return None
+
+
 def _ask_client_for_permission_mock(
     resource_details: str,
-    proposed_changes: str,
     modification_function_parameters: Annotated[
         Dict[str, Any], "Parameters for the modification function"
     ],
     context: Context,
 ) -> str:
+    customer_id = _find_value_in_nested_dict(
+        dictionary=modification_function_parameters, key="customer_id"
+    )
     customer_to_update = (
-        "We propose changes for the following customer: 'IKEA' (ID: 1111)"
+        f"We propose changes for the following customer: '{customer_id}'"
     )
 
-    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
+    message = f"{customer_to_update}\n\n{resource_details}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
 We are in the middle of the process and we need your permission.
@@ -269,19 +266,34 @@ But do NOT answer with 'No' if you are not sure. Ask for more information instea
     return clients_answer
 
 
+# These parameters are not needed for the Google Ads API, but only for our inner checks
+REMOVE_FROM_MODIFICATION_PARAMETERS = ["local_currency"]
+modification_function_parameters_description = """Parameters for the modification function. Key 'customer_id' is mandatory in the dictionary!
+These parameters will be used ONLY for ONE function call. Do NOT send a list of parameters for multiple function calls!"""
+
+
 def ask_client_for_permission(
-    customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
     resource_details: Annotated[str, resource_details_description],
-    proposed_changes: Annotated[str, proposed_changes_description],
     modification_function_parameters: Annotated[
-        Dict[str, Any], "Parameters for the modification function"
+        Dict[str, Any],
+        modification_function_parameters_description,
     ],
     context: Context,
 ) -> str:
+    customer_id = _find_value_in_nested_dict(
+        dictionary=modification_function_parameters, key="customer_id"
+    )
+    if customer_id is None:
+        raise ValueError(
+            "The 'customer_id' parameter is missing in the 'modification_function_parameters'."
+        )
+
+    for key in REMOVE_FROM_MODIFICATION_PARAMETERS:
+        modification_function_parameters.pop(key, None)
+
     if BENCHMARKING:
         return _ask_client_for_permission_mock(
             resource_details=resource_details,
-            proposed_changes=proposed_changes,
             modification_function_parameters=modification_function_parameters,
             context=context,
         )
@@ -298,7 +310,7 @@ def ask_client_for_permission(
     ]
 
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
-    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
+    message = f"{customer_to_update}\n\n{resource_details}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
 
     clients_question_answer_list.append((modification_function_parameters, None))
 
@@ -321,18 +333,6 @@ The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are '
 
 If you want to modify the keywords, you MUST provide the current keywords details, e.g:
 Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'."""
-
-proposed_changes_description = """Explains which changes you want to make and why you want to make them.
-I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
-You MUST also tell about all the fields which will be effected by the changes, e.g.:
-'status' will be changed from 'ENABLED' to 'PAUSED'
-Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '2000000')
-
-e.g. for AdGroupAd:
-'final_url' will be set to 'https://my-web-page.com'
-Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
-
-Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
 
 
 def get_llm_config_gpt_4() -> Dict[str, Any]:

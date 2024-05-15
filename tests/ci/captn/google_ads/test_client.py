@@ -8,10 +8,10 @@ from captn.google_ads.client import (
     AUTHENTICATION_ERROR,
     NOT_APPROVED,
     NOT_IN_QUESTION_ANSWER_LIST,
-    _check_for_client_approval,
+    check_for_client_approval,
     clean_error_response,
+    clean_nones,
     execute_query,
-    remove_none_values,
 )
 
 
@@ -25,7 +25,36 @@ def test_clean_error_response() -> None:
 def test_remove_none_values() -> None:
     original = {"ad_id": None, "ad_name": "test", "status": None}
     expected = {"ad_name": "test"}
-    assert remove_none_values(original) == expected
+    assert clean_nones(original) == expected
+
+
+def test_remove_none_values_nested() -> None:
+    original = {
+        "ad_group": {
+            "name": "Sofas",
+            "ad_group_id": None,
+        },
+        "customer_id": None,
+        "keywords": [
+            {
+                "ad_group_id": None,
+                "keyword_match_type": "BROAD",
+            },
+        ],
+    }
+
+    expected = {
+        "ad_group": {
+            "name": "Sofas",
+        },
+        "keywords": [
+            {
+                "keyword_match_type": "BROAD",
+            },
+        ],
+    }
+
+    assert clean_nones(original) == expected
 
 
 def test_check_for_client_approval_not_in_qa_list() -> None:
@@ -34,8 +63,8 @@ def test_check_for_client_approval_not_in_qa_list() -> None:
         ({"ad_name": "test2"}, "No"),
         ({"ad_name": "test3"}, "Yes"),
     ]
-    error_msg = _check_for_client_approval(
-        input_parameters=input_parameters,
+    error_msg = check_for_client_approval(
+        modification_function_parameters=input_parameters,
         clients_question_answer_list=clients_question_answer_list,
     )
     assert NOT_IN_QUESTION_ANSWER_LIST in error_msg
@@ -47,8 +76,8 @@ def test_check_for_client_approval_client_did_not_approve() -> None:
         ({"ad_name": "test"}, "No"),
         ({"ad_name": "test3"}, "No"),
     ]
-    error_msg = _check_for_client_approval(
-        input_parameters=input_parameters,
+    error_msg = check_for_client_approval(
+        modification_function_parameters=input_parameters,
         clients_question_answer_list=clients_question_answer_list,
     )
     assert error_msg.strip() == NOT_APPROVED
@@ -57,11 +86,12 @@ def test_check_for_client_approval_client_did_not_approve() -> None:
 def test_check_for_client_approval_client_approved_second_time() -> None:
     input_parameters = {"ad_name": "test"}
     clients_question_answer_list = [
+        ({"ad_name": "test8"}, "No"),
         ({"ad_name": "test"}, "No"),
         ({"ad_name": "test"}, "Yes"),
     ]
-    error_msg = _check_for_client_approval(
-        input_parameters=input_parameters,
+    error_msg = check_for_client_approval(
+        modification_function_parameters=input_parameters,
         clients_question_answer_list=clients_question_answer_list,
     )
     assert error_msg is None

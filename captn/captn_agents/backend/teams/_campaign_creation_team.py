@@ -43,7 +43,7 @@ ad_group = AdGroupForCreation(
 )
 
 ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
-    customer_id="1111",
+    customer_id="2222",
     campaign_id="1212",
     ad_group=ad_group,
     ad_group_ad=ad_group_ad,
@@ -238,8 +238,7 @@ All team members have access to the following command:
 }}
 
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (customer_id: str, resource_details: str, proposed_changes: str)
-'proposed_changes' parameter must contain info about each field which you want to modify and it MUST reference it by the EXACT name as the one you are going to use in the modification method.
+params: (resource_details: str, modification_function_parameters: Dict[str, Any])
 
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
@@ -260,34 +259,16 @@ You can use the following query for retrieving the local currency: SELECT custom
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
 If the client specifies the 'budget_amount_micros' in another currency, you must convert it to the local currency!
 Otherwise, incorrect budget will be set for the campaign!
-When asking the client for the approval, you must explicitly tell him about the parameters which you are going to set,
-i.e. it is mandatory that the 'proposed_changes' parameter contains ALL the parameters which will be used:
-- name
-- status
-- budget_amount_micros (if not told differently, suggest small budget, e.g. 3 EUR)
-- network_settings_target_google_search
-- network_settings_target_search_network
-- network_settings_target_content_network
+When asking the client for the approval, you must explicitly tell him about the parameters which you are going to set by using the 'modification_function_parameters'
 Otherwise, we will NOT be able to create a new campaign!
 
-Here is an example of correct 'proposed_changes' parameter:
-    We are planning to create a new campaign for airt technologies d.o.o. with the following details:
-
+Here is an example of correct 'resource_details' parameter:
     Campaign name: xyz
     Daily budget: 3 EUR (budget_amount_micros will be set to 3000000)
     Currency: EUR
     Status: Enabled
     Targeting: Google Search Network and Google Display Network
     The campaign will focus on promoting your AI-powered framework and products such as FastStream and Monotonic Neural Networks.
-
-    We apologize for the oversight. In addition to the previously mentioned details, the campaign will have the following settings:
-
-    'budget_amount_micros' will be set to 3000000
-    'network_settings_target_google_search' will be set to true
-    'network_settings_target_search_network' will be set to true
-    'network_settings_target_content_network' will be set to true
-    Do you approve the creation of this new campaign with the specified details and settings? To approve, please answer 'Yes'.
-
 
 7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set

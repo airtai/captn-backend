@@ -13,6 +13,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     create_campaign_creation_team_toolbox,
 )
 from captn.captn_agents.backend.tools._functions import Context
+from captn.google_ads.client import clean_nones
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
@@ -95,10 +96,15 @@ class TestTools:
             ]
             mock_google_ads_create_update.side_effect = side_effect
 
+            modification_function_params = clean_nones(
+                {
+                    "ad_group_with_ad_and_keywords": ad_group_with_ad_and_keywords.model_dump()
+                }
+            )
             context = Context(
                 user_id=1,
                 conv_id=1,
-                clients_question_answer_list=[("question", "yes")],
+                clients_question_answer_list=[(modification_function_params, "yes")],
             )
             create_ad_group_with_ad_and_keywords = self.toolbox.get_function(
                 "create_ad_group_with_ad_and_keywords"

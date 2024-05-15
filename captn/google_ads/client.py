@@ -140,7 +140,7 @@ def get_user_ids_and_emails() -> str:
     return response.json()  # type: ignore[no-any-return]
 
 
-NOT_IN_QUESTION_ANSWER_LIST = "You must ask the client for the permission first by using the 'ask_client_for_permission' function by the same input parameters: "
+NOT_IN_QUESTION_ANSWER_LIST = "You must ask the client for the permission first by using the 'ask_client_for_permission' function by the same 'modification_function_parameters': "
 NOT_APPROVED = (
     "The client did not approve the modification. The client must approve the modification by answering 'Yes' to the question."
     "If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else."
@@ -170,25 +170,44 @@ FIELD_MAPPING = {
 }
 
 
-def remove_none_values(original: Dict[str, Any]) -> Dict[str, Any]:
-    return {k: v for k, v in original.items() if v is not None}
+def clean_nones(value: Any) -> Any:
+    """
+    Recursively remove all None values from dictionaries and lists, and returns
+    the result as a new dictionary or list.
+    """
+    if isinstance(value, list):
+        return [clean_nones(x) for x in value if x is not None]
+    elif isinstance(value, dict):
+        return {key: clean_nones(val) for key, val in value.items() if val is not None}
+    else:
+        return value
 
 
-def _check_for_client_approval(
-    input_parameters: Dict[str, Any],
+def check_for_client_approval(
+    modification_function_parameters: Dict[str, Any],
     clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
 ) -> Optional[str]:
-    input_parameters = remove_none_values(input_parameters)
+    modification_function_parameters = clean_nones(modification_function_parameters)
 
     clients_question_list = [x[0] for x in clients_question_answer_list]
-    if input_parameters not in clients_question_list:
-        error_msg = NOT_IN_QUESTION_ANSWER_LIST + json.dumps(input_parameters, indent=2)
+
+    print("modification_function_parameters")
+    print(modification_function_parameters)
+    print("clients_question_list")
+    print(clients_question_list)
+    if modification_function_parameters not in clients_question_list:
+        error_msg = NOT_IN_QUESTION_ANSWER_LIST + json.dumps(
+            modification_function_parameters, indent=2
+        )
         return error_msg
 
     for client_question, client_answer in clients_question_answer_list:
-        if client_question == input_parameters:
-            if client_answer is not None and client_answer.strip().lower() == "yes":
-                return None
+        if (
+            client_question == modification_function_parameters
+            and client_answer is not None
+            and client_answer.strip().lower() == "yes"
+        ):
+            return None
 
     return NOT_APPROVED
 
@@ -199,14 +218,15 @@ def google_ads_create_update(
     ad: BaseModel,
     clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
     endpoint: str = "/update-ad-group-ad",
-    skip_fields_check: bool = False,
+    already_checked_clients_approval: bool = False,
 ) -> Union[Dict[str, Any], str]:
-    error_msg = _check_for_client_approval(
-        input_parameters=ad.model_dump(),
-        clients_question_answer_list=clients_question_answer_list,
-    )
-    if error_msg:
-        raise ValueError(error_msg)
+    if not already_checked_clients_approval:
+        error_msg = check_for_client_approval(
+            modification_function_parameters=ad.model_dump(),
+            clients_question_answer_list=clients_question_answer_list,
+        )
+        if error_msg:
+            raise ValueError(error_msg)
 
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
