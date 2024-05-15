@@ -254,7 +254,7 @@ Use this command only if the client asks you to change the Google account. If th
 {MODIFICATION_FUNCTIONS_INSTRUCTIONS}
 6. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
-clients_approval_message: string)
+)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
@@ -289,7 +289,7 @@ Here is an example of correct 'proposed_changes' parameter:
     Do you approve the creation of this new campaign with the specified details and settings? To approve, please answer 'Yes'.
 
 
-7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
+7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 
 """  # nosec: [B608]

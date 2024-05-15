@@ -87,8 +87,6 @@ class TestGoogleAdsTeamTools:
             "customer_id",
             "name",
             "budget_amount_micros",
-            "clients_approval_message",
-            "modification_question",
             "status",
             "network_settings_target_google_search",
             "network_settings_target_search_network",
@@ -103,8 +101,6 @@ class TestGoogleAdsTeamTools:
             "customer_id": "123",
             "name": "cool campaign",
             "budget_amount_micros": 1000,
-            "clients_approval_message": "yes",
-            "modification_question": "may I?",
             "status": "ENABLED",
             "network_settings_target_google_search": True,
             "network_settings_target_search_network": False,
@@ -214,8 +210,6 @@ class TestGoogleAdsTeamTools:
 
             default_kwargs = {
                 "customer_id": "123",
-                "clients_approval_message": "yes",
-                "modification_question": "may I?",
                 "status": "ENABLED",
                 "local_currency": "EUR",
             }
@@ -229,8 +223,6 @@ class TestGoogleAdsTeamTools:
                 user_id=1234,
                 conv_id=5678,
                 clients_question_answer_list=[("whatsup?", "whatsup!")],
-                clients_approval_message="yes",
-                modification_question="may I?",
                 ad=params["model_class"](**kwargs_combined),
                 endpoint=params["endpoint"],
             )
@@ -268,8 +260,6 @@ class TestGoogleAdsTeamTools:
             "customer_id",
             "name",
             "budget_amount_micros",
-            "clients_approval_message",
-            "modification_question",
             "status",
             "network_settings_target_google_search",
             "network_settings_target_search_network",
@@ -424,8 +414,6 @@ Please convert the budget to the customer's currency and ask the client for the 
                 customer_id="234",
                 ad_id="345",
                 headline="headline",
-                clients_approval_message="yes",
-                modification_question="may I?",
                 context=context,
             )
 
@@ -437,8 +425,6 @@ Please convert the budget to the customer's currency and ask the client for the 
                 customer_id="234",
                 ad_id="345",
                 description="description",
-                clients_approval_message="yes",
-                modification_question="may I?",
                 context=context,
             )
 

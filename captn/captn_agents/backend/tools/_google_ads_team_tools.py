@@ -103,17 +103,6 @@ properties_config = {
         "type": "string",
         "description": "Id of the Ad",
     },
-    "clients_approval_message": {
-        "type": "string",
-        "description": """Clients approval message.
-The client can approve by answering 'Yes' to the question. If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else.
-NEVER create this message on your own, or modify clients message in ANY way!
-Faking the clients approval may resault with the LAWSUIT and you will get fired!!""",
-    },
-    "modification_question": {
-        "type": "string",
-        "description": """Make sure that the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same).""",
-    },
     "cpc_bid_micros": {
         "type": "integer",
         "description": "Cost per click bid micros",

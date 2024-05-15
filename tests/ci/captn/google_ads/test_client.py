@@ -1,20 +1,16 @@
 import unittest
-from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
-from pydantic import BaseModel
 from requests.models import Response
 
 from captn.google_ads.client import (
     ALREADY_AUTHENTICATED,
     AUTHENTICATION_ERROR,
-    FIELDS_ARE_NOT_MENTIONED_ERROR_MSG,
     NOT_APPROVED,
     NOT_IN_QUESTION_ANSWER_LIST,
     _check_for_client_approval,
     clean_error_response,
     execute_query,
-    google_ads_create_update,
     remove_none_values,
 )
 
@@ -69,34 +65,6 @@ def test_check_for_client_approval_client_approved_second_time() -> None:
         clients_question_answer_list=clients_question_answer_list,
     )
     assert error_msg is None
-
-
-class AdTest(BaseModel):
-    ad_id: Optional[int] = None
-    ad_name: str
-    status: str
-
-
-def test_google_ads_create_update_raises_error() -> None:
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = [
-        ("modification_question", "yes")
-    ]
-    ad = AdTest(ad_name="test", status="enabled")
-    with pytest.raises(ValueError) as e:
-        google_ads_create_update(
-            user_id=-1,
-            conv_id=-1,
-            ad=ad,
-            clients_question_answer_list=clients_question_answer_list,
-        )
-
-    assert e.value.args[0] == (
-        FIELDS_ARE_NOT_MENTIONED_ERROR_MSG
-        + "'ad_name' will be set to test (you MUST reference 'ad_name' in the 'proposed_changes' parameter!)\n"
-        + "'status' will be set to enabled (you MUST reference 'status' in the 'proposed_changes' parameter!)\n"
-        + "\n\n"
-        + NOT_IN_QUESTION_ANSWER_LIST
-    )
 
 
 @pytest.mark.parametrize(

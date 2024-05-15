@@ -199,21 +199,11 @@ def create_campaign_creation_team_toolbox(
     )
     toolbox.set_context(context)
 
-    clients_approval_message_desc = properties_config["clients_approval_message"][
-        "description"
-    ]
-
-    modification_question_desc = properties_config["modification_question"][
-        "description"
-    ]
-
     @toolbox.add_function("Create an ad group with a single ad and a list of keywords")
     def create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords: Annotated[
             AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
         ],
-        clients_approval_message: Annotated[str, clients_approval_message_desc],
-        modification_question: Annotated[str, modification_question_desc],
         # the context will be injected by the toolbox
         context: Context,
     ) -> Union[Dict[str, Any], str]:
@@ -221,8 +211,6 @@ def create_campaign_creation_team_toolbox(
 
         Args:
             ad_group_with_ad_and_keywords (AdGroupWithAdAndKeywords): The ad group with an ad and a list of keywords
-            clients_approval_message (str): The approval message from the client
-            modification_question (str): The question to ask the client for approval
             context (Context): The context. It will be injected by the toolbox and not available to the LLM proposing the code.
                 It should be set up prior to calling `ìnitialize_chat` or `send_message` by calling `toolbox.set_context` function.
 

@@ -106,8 +106,6 @@ class TestTools:
 
             response = create_ad_group_with_ad_and_keywords(
                 ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-                clients_approval_message="yes",
-                modification_question="question",
                 context=context,
             )
 
