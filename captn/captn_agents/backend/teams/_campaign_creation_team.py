@@ -281,7 +281,7 @@ Here is an example of correct 'resource_details' parameter:
 
 7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
-
+NOTE: ad does NOT have a 'final_urls' attribute, only 'final_url' attribute! Please make sure that you set the 'final_url' attribute for the ad!
 """  # nosec: [B608]
 
     @classmethod

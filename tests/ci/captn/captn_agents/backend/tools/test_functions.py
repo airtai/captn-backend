@@ -162,6 +162,38 @@ class TestAskClientForPermission:
                 },
                 None,
             ),
+            (
+                {
+                    "customer_id": "1111",
+                    "campaign_id": "847",
+                    "ad_group": {"status": "ENABLED", "name": "FastStream Features"},
+                    "ad_group_ad": {
+                        "status": "ENABLED",
+                        "final_url": "https://faststream.airt.ai/latest/faststream/",
+                        "headlines": [
+                            "FastAPI Compatible",
+                            "Modern Microservices",
+                            "Async Services",
+                            "Streamline Workflow",
+                            "Community Driven",
+                        ],
+                        "descriptions": [
+                            "Build async web services with ease.",
+                            "Validate messages with Pydantic.",
+                            "Generate docs automatically.",
+                            "Manage dependencies efficiently.",
+                        ],
+                    },
+                    "keywords": [
+                        {
+                            "status": "ENABLED",
+                            "keyword_text": "FastStream",
+                            "keyword_match_type": "EXACT",
+                        },
+                    ],
+                },
+                "parameter customer_id does not exist in create_ad_group_with_ad_and_keywords input parameters: odict_keys(['ad_group_with_ad_and_keywords'])",
+            ),
         ],
     )
     def test_validate_modification_parameters(

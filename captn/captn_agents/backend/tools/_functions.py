@@ -303,8 +303,10 @@ def _validate_modification_parameters(
     for param_name, param_value in modification_function_parameters.items():
         if param_name not in func_parameters:
             error_msg += (
-                f"parameter {param_name} not found in function {function_name}." + "\n"
+                f"parameter {param_name} does not exist in {function_name} input parameters: {func_parameters.keys()}"
+                + "\n"
             )
+            continue
 
         param_type = func_parameters[param_name].annotation
         if type(param_type) == _AnnotatedAlias:
