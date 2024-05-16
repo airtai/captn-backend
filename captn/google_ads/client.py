@@ -144,7 +144,8 @@ NOT_IN_QUESTION_ANSWER_LIST = """You must ask the client for the permission firs
 
 "modification_function_parameters": """
 NOT_APPROVED = (
-    "The client did not approve the modification. The client must approve the modification by answering 'Yes' to the question."
+    "The client did not approve the modification. The client must approve the modification by answering 'Yes' the message sent by the 'ask_client_for_permission' function!"
+    "If the message was sent by the 'reply_to_client' function, the modification will NOT be approved!"
     "If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else."
     "Please send a new message to the client (by using 'ask_client_for_permission') and ask for the permission again and tell him that only for answer 'Yes' the modification will be done."
 )
@@ -187,11 +188,13 @@ def clean_nones(value: Any) -> Any:
 
 def check_for_client_approval(
     modification_function_parameters: Dict[str, Any],
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
 ) -> Optional[str]:
     modification_function_parameters = clean_nones(modification_function_parameters)
 
-    clients_question_list = [x[0] for x in clients_question_answer_list]
+    clients_question_list = [x[0] for x in recommended_modifications_and_answer_list]
 
     print("modification_function_parameters")
     print(modification_function_parameters)
@@ -203,7 +206,7 @@ def check_for_client_approval(
         )
         return error_msg
 
-    for client_question, client_answer in clients_question_answer_list:
+    for client_question, client_answer in recommended_modifications_and_answer_list:
         if (
             client_question == modification_function_parameters
             and client_answer is not None
@@ -218,14 +221,16 @@ def google_ads_create_update(
     user_id: int,
     conv_id: int,
     ad: BaseModel,
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     endpoint: str = "/update-ad-group-ad",
     already_checked_clients_approval: bool = False,
 ) -> Union[Dict[str, Any], str]:
     if not already_checked_clients_approval:
         error_msg = check_for_client_approval(
             modification_function_parameters=ad.model_dump(),
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         )
         if error_msg:
             raise ValueError(error_msg)

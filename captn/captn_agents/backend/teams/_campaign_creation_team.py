@@ -103,7 +103,9 @@ sure it is understandable by non-experts.
     ):
         self.task = task
 
-        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = []
+        recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
@@ -116,7 +118,7 @@ sure it is understandable by non-experts.
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             use_user_proxy=True,
         )
 
@@ -138,7 +140,7 @@ sure it is understandable by non-experts.
         self.toolbox = create_campaign_creation_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
-            clients_question_answer_list=self.clients_question_answer_list,
+            recommended_modifications_and_answer_list=self.recommended_modifications_and_answer_list,
         )
         for agent in self.members:
             if agent != self.user_proxy:

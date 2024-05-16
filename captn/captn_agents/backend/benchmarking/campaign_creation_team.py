@@ -132,7 +132,7 @@ def run_assertions_and_return_last_message(
     mock_create_ad_group.assert_called()
     mock_create_ad_group_ad.assert_called()
     mock_create_ad_group_keyword.assert_called()
-    assert len(campaign_creation_team.clients_question_answer_list) > 0  # nosec: [B101]
+    assert len(campaign_creation_team.recommended_modifications_and_answer_list) > 0  # nosec: [B101]
 
     last_message = campaign_creation_team.get_last_message()
     return last_message

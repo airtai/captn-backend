@@ -28,7 +28,7 @@ class TestTools:
         self.toolbox = create_campaign_creation_team_toolbox(
             user_id=12345,
             conv_id=67890,
-            clients_question_answer_list=[],
+            recommended_modifications_and_answer_list=[],
         )
 
     def test_llm_config(self) -> None:
@@ -105,7 +105,9 @@ class TestTools:
             context = Context(
                 user_id=1,
                 conv_id=1,
-                clients_question_answer_list=[(modification_function_params, "yes")],
+                recommended_modifications_and_answer_list=[
+                    (modification_function_params, "yes")
+                ],
                 toolbox=Toolbox(),
             )
             create_ad_group_with_ad_and_keywords = self.toolbox.get_function(
@@ -133,15 +135,17 @@ Keyword: {side_effect[3]}
 
 class TestContext:
     def test_context_objects_are_not_coppies(self):
-        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = []
+        recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
         context = Context(
             user_id=12345,
             conv_id=67890,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             toolbox=Toolbox(),
         )
-        clients_question_answer_list.append(("question", "answer"))
+        recommended_modifications_and_answer_list.append(("question", "answer"))
 
-        actual = context.clients_question_answer_list
+        actual = context.recommended_modifications_and_answer_list
         expected = [("question", "answer")]
         assert actual == expected, actual

@@ -27,7 +27,7 @@ class TestGoogleAdsTeamTools:
     def setup(self) -> None:
         user_id = 1234
         conv_id = 5678
-        self.clients_question_answer_list: List[
+        self.recommended_modifications_and_answer_list: List[
             Tuple[Dict[str, Any], Optional[str]]
         ] = []
 
@@ -38,7 +38,7 @@ class TestGoogleAdsTeamTools:
         self.toolbox = create_google_ads_team_toolbox(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=self.clients_question_answer_list,
+            recommended_modifications_and_answer_list=self.recommended_modifications_and_answer_list,
         )
 
         self.agent = AssistantAgent(name="agent", llm_config=self.llm_config)
@@ -207,7 +207,9 @@ class TestGoogleAdsTeamTools:
                 return_value="EUR",
             ) as mock_get_customer_currency,
         ):
-            self.clients_question_answer_list.append(("whatsup?", "whatsup!"))
+            self.recommended_modifications_and_answer_list.append(
+                ("whatsup?", "whatsup!")
+            )
 
             default_kwargs = {
                 "customer_id": "123",
@@ -223,7 +225,7 @@ class TestGoogleAdsTeamTools:
             mock_google_ads_create_update.assert_called_once_with(
                 user_id=1234,
                 conv_id=5678,
-                clients_question_answer_list=[("whatsup?", "whatsup!")],
+                recommended_modifications_and_answer_list=[("whatsup?", "whatsup!")],
                 ad=params["model_class"](**kwargs_combined),
                 endpoint=params["endpoint"],
             )
@@ -360,7 +362,7 @@ Please convert the budget to the customer's currency and ask the client for the 
             context = Context(
                 user_id=123,
                 conv_id=456,
-                clients_question_answer_list=[],
+                recommended_modifications_and_answer_list=[],
                 toolbox=Toolbox(),
             )
             kwargs = {
@@ -405,7 +407,7 @@ Please convert the budget to the customer's currency and ask the client for the 
         context = Context(
             user_id=123,
             conv_id=456,
-            clients_question_answer_list=[],
+            recommended_modifications_and_answer_list=[],
             toolbox=Toolbox(),
         )
 
@@ -439,7 +441,7 @@ Please convert the budget to the customer's currency and ask the client for the 
             context = Context(
                 user_id=123,
                 conv_id=456,
-                clients_question_answer_list=[],
+                recommended_modifications_and_answer_list=[],
                 toolbox=Toolbox(),
             )
             list_accessible_customers(context=context)

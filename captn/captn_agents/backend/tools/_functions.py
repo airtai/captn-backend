@@ -180,7 +180,9 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 class Context:
     user_id: int
     conv_id: int
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]]
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ]
     toolbox: Toolbox
     get_only_non_manager_accounts: bool = False
 
@@ -272,8 +274,8 @@ But do NOT answer with 'No' if you are not sure. Ask for more information instea
     )
 
     # In real ask_client_for_permission, we would append (message, None)
-    # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
-    context.clients_question_answer_list.append(
+    # and we would update the recommended_modifications_and_answer_list with the clients_answer in the continue_conversation function
+    context.recommended_modifications_and_answer_list.append(
         (modification_function_parameters, clients_answer)
     )
     return clients_answer
@@ -375,7 +377,9 @@ def ask_client_for_permission(
         )
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
     query_result = execute_query(
@@ -388,7 +392,9 @@ def ask_client_for_permission(
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
     message = f"{customer_to_update}\n\n{resource_details}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
 
-    clients_question_answer_list.append((modification_function_parameters, None))
+    recommended_modifications_and_answer_list.append(
+        (modification_function_parameters, None)
+    )
 
     return reply_to_client(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS

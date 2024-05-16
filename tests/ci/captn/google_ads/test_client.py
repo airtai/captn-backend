@@ -59,40 +59,40 @@ def test_remove_none_values_nested() -> None:
 
 def test_check_for_client_approval_not_in_qa_list() -> None:
     input_parameters = {"ad_name": "test"}
-    clients_question_answer_list = [
+    recommended_modifications_and_answer_list = [
         ({"ad_name": "test2"}, "No"),
         ({"ad_name": "test3"}, "Yes"),
     ]
     error_msg = check_for_client_approval(
         modification_function_parameters=input_parameters,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
     )
     assert NOT_IN_QUESTION_ANSWER_LIST in error_msg
 
 
 def test_check_for_client_approval_client_did_not_approve() -> None:
     input_parameters = {"ad_name": "test"}
-    clients_question_answer_list = [
+    recommended_modifications_and_answer_list = [
         ({"ad_name": "test"}, "No"),
         ({"ad_name": "test3"}, "No"),
     ]
     error_msg = check_for_client_approval(
         modification_function_parameters=input_parameters,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
     )
     assert error_msg.strip() == NOT_APPROVED
 
 
 def test_check_for_client_approval_client_approved_second_time() -> None:
     input_parameters = {"ad_name": "test"}
-    clients_question_answer_list = [
+    recommended_modifications_and_answer_list = [
         ({"ad_name": "test8"}, "No"),
         ({"ad_name": "test"}, "No"),
         ({"ad_name": "test"}, "Yes"),
     ]
     error_msg = check_for_client_approval(
         modification_function_parameters=input_parameters,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
     )
     assert error_msg is None
 

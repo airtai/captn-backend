@@ -262,12 +262,14 @@ def create_campaign(
     _mock_create_campaign()
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=Campaign(
             customer_id=customer_id,
             name=name,
@@ -310,11 +312,13 @@ def create_keyword_for_ad_group(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdGroupCriterion(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -349,11 +353,13 @@ def update_ad_group_ad(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdGroupAd(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -387,11 +393,13 @@ def update_ad_group(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdGroup(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -423,11 +431,13 @@ def create_ad_group(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdGroup(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -467,11 +477,13 @@ def update_ad_group_criterion(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdGroupCriterion(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -531,11 +543,13 @@ def update_ad_copy(
 
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdCopy(
             customer_id=customer_id,
             ad_id=ad_id,
@@ -568,12 +582,14 @@ def update_campaign(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=Campaign(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -604,11 +620,13 @@ def create_ad_copy_headline_or_description(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdCopy(
             customer_id=customer_id,
             ad_id=ad_id,
@@ -654,12 +672,14 @@ def create_ad_group_ad(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdGroupAd(
             customer_id=customer_id,
             ad_group_id=ad_group_id,
@@ -698,11 +718,13 @@ def create_geo_targeting_for_campaign(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=GeoTargetCriterion(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -741,12 +763,14 @@ def create_negative_keyword_for_campaign(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=CampaignCriterion(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -781,12 +805,14 @@ def remove_google_ads_resource(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=RemoveResource(
             customer_id=customer_id,
             resource_id=resource_id,
@@ -818,12 +844,14 @@ def remove_ad_copy_headline_or_description(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=AdCopy(
             customer_id=customer_id,
             ad_id=ad_id,
@@ -861,11 +889,13 @@ def update_campaigns_negative_keywords(
 ) -> Union[Dict[str, Any], str]:
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
     return google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=CampaignCriterion(
             customer_id=customer_id,
             campaign_id=campaign_id,
@@ -894,14 +924,16 @@ def add_shared_functions(toolbox: Toolbox) -> None:
 def create_google_ads_team_toolbox(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
 ) -> Toolbox:
     toolbox = Toolbox()
 
     context = Context(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         toolbox=toolbox,
     )
     toolbox.set_context(context)

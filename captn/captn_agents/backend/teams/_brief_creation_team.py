@@ -47,7 +47,9 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self.task = task
         self.initial_brief = task
 
-        clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]] = []
+        recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
 
         roles: List[Dict[str, str]] = BriefCreationTeam._default_roles
@@ -61,7 +63,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             use_user_proxy=True,
         )
 

@@ -79,7 +79,7 @@ def start_or_continue_conversation(
 
 
 def continue_conversation(team: Team, message: str) -> str:
-    team.update_clients_question_answer_list(message.strip())
+    team.update_recommended_modifications_and_answer_list(message.strip())
 
     team.continue_chat(message=message)
 

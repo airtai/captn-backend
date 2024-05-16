@@ -102,7 +102,9 @@ def _get_resource_id_from_response(response: str) -> str:
 def _create_ad_group(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
 ) -> Union[Dict[str, Any], str]:
     ad_group = ad_group_with_ad_and_keywords.ad_group
@@ -112,7 +114,7 @@ def _create_ad_group(
     ad_group_response = google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group,
         endpoint="/create-ad-group",
         already_checked_clients_approval=True,
@@ -124,7 +126,9 @@ def _create_ad_group(
 def _create_ad_group_ad(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
     ad_group_id: str,
 ) -> Union[Dict[str, Any], str]:
@@ -135,7 +139,7 @@ def _create_ad_group_ad(
     ad_group_ad_response = google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group_ad,
         endpoint="/create-ad-group-ad",
         already_checked_clients_approval=True,
@@ -146,7 +150,9 @@ def _create_ad_group_ad(
 def _create_ad_group_keyword(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_keyword: AdGroupCriterionForCreation,
     ad_group_id: str,
     customer_id: str,
@@ -156,7 +162,7 @@ def _create_ad_group_keyword(
     keyword_response = google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group_keyword,
         endpoint="/add-keywords-to-ad-group",
         already_checked_clients_approval=True,
@@ -167,7 +173,9 @@ def _create_ad_group_keyword(
 def _create_ad_group_keywords(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
     ad_group_id: str,
 ) -> Union[Dict[str, Any], str]:
@@ -176,7 +184,7 @@ def _create_ad_group_keywords(
         keyword_response = _create_ad_group_keyword(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_keyword=keyword,
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
@@ -188,14 +196,16 @@ def _create_ad_group_keywords(
 def create_campaign_creation_team_toolbox(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
 ) -> Toolbox:
     toolbox = Toolbox()
 
     context = Context(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         toolbox=toolbox,
     )
     toolbox.set_context(context)
@@ -223,7 +233,9 @@ def create_campaign_creation_team_toolbox(
 
         user_id = context.user_id
         conv_id = context.conv_id
-        clients_question_answer_list = context.clients_question_answer_list
+        recommended_modifications_and_answer_list = (
+            context.recommended_modifications_and_answer_list
+        )
 
         modification_function_parameters = {}
         modification_function_parameters["ad_group_with_ad_and_keywords"] = (
@@ -231,7 +243,7 @@ def create_campaign_creation_team_toolbox(
         )
         error_msg = check_for_client_approval(
             modification_function_parameters=modification_function_parameters,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         )
         if error_msg:
             raise ValueError(error_msg)
@@ -239,7 +251,7 @@ def create_campaign_creation_team_toolbox(
         ad_group_response = _create_ad_group(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
         )
         if isinstance(ad_group_response, dict):
@@ -250,7 +262,7 @@ def create_campaign_creation_team_toolbox(
         ad_group_ad_response = _create_ad_group_ad(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
             ad_group_id=ad_group_id,
         )
@@ -259,7 +271,7 @@ def create_campaign_creation_team_toolbox(
         ad_group_keywords_response = _create_ad_group_keywords(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
             ad_group_id=ad_group_id,
         )
