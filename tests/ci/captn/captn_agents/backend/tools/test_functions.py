@@ -4,11 +4,18 @@ import pytest
 from pydantic_core._pydantic_core import ValidationError
 
 from captn.captn_agents.backend.benchmarking.websurfer import benchmark_websurfer
+from captn.captn_agents.backend.teams._campaign_creation_team import (
+    ad_group_with_ad_and_keywords,
+)
+from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
+    AdGroupWithAdAndKeywords,
+)
 from captn.captn_agents.backend.tools._functions import (
     Summary,
     WebPageSummary,
     WebUrl,
     _find_value_in_nested_dict,
+    _validate_modification_parameters,
     get_get_info_from_the_web_page,
     get_webpage_status_code,
 )
@@ -132,7 +139,50 @@ class TestWebSurfer:
         print(result)
 
 
-def test_find_value_in_nested_dict() -> None:
-    example = {"customer": "222", "nested": {"find_this": "value"}}
-    assert _find_value_in_nested_dict(example, "find_this") == "value"
-    assert _find_value_in_nested_dict(example, "not_here") is None
+class TestAskClientForPermission:
+    def test_find_value_in_nested_dict(self) -> None:
+        example = {"customer": "222", "nested": {"find_this": "value"}}
+        assert _find_value_in_nested_dict(example, "find_this") == "value"
+        assert _find_value_in_nested_dict(example, "not_here") is None
+
+    @pytest.mark.parametrize(
+        "modification_function_parameters, expected_output",
+        [
+            (
+                {"ad_group_with_ad_and_keywords": "not_a_model_dump"},
+                "argument after ** must be a mapping, not str",
+            ),
+            (
+                {"ad_group_with_ad_and_keywords": {"ad_group": "not_a_model_dump"}},
+                "5 validation errors",
+            ),
+            (
+                {
+                    "ad_group_with_ad_and_keywords": ad_group_with_ad_and_keywords.model_dump()
+                },
+                None,
+            ),
+        ],
+    )
+    def test_validate_modification_parameters(
+        self, modification_function_parameters, expected_output
+    ) -> None:
+        def create_ad_group_with_ad_and_keywords(
+            ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+        ) -> None:
+            pass
+
+        if expected_output is None:
+            _validate_modification_parameters(
+                func=create_ad_group_with_ad_and_keywords,
+                function_name="create_ad_group_with_ad_and_keywords",
+                modification_function_parameters=modification_function_parameters,
+            )
+        else:
+            with pytest.raises(ValueError) as e:
+                _validate_modification_parameters(
+                    func=create_ad_group_with_ad_and_keywords,
+                    function_name="create_ad_group_with_ad_and_keywords",
+                    modification_function_parameters=modification_function_parameters,
+                )
+            assert expected_output in str(e._excinfo[1])
