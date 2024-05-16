@@ -377,7 +377,7 @@ This command can only update campaigns name and status
 7. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
 criterion_id: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 keyword_match_type: string, keyword_text: string,
-cpc_bid_micros: Optional[int], local_currency: Optional[str], )
+cpc_bid_micros: Optional[int], local_currency: Optional[str])
 
 8. 'update_campaigns_negative_keywords': Update the Google Ads keywords (on campaign level), params: (customer_id: string, campaign_id: string,
 criterion_id: string, keyword_match_type: string, keyword_text: string,
@@ -390,7 +390,7 @@ name: string, cpc_bid_micros: Optional[int], local_currency: Optional[str], stat
 
 10. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
 , keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]], )
+status: Optional[Literal["ENABLED", "PAUSED"]])
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
 11. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
@@ -414,7 +414,7 @@ Use display path (path1 and path2) to increase the relevance of the ad to the us
 
 14. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
-, )
+)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
@@ -434,7 +434,7 @@ SELECT geo_target_constant.name, geo_target_constant.id FROM geo_target_constant
 
 16. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
-, parent_id: Optional[string], )
+, parent_id: Optional[string])
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
 17. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,

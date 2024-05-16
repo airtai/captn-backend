@@ -15,7 +15,7 @@ from autogen.cache import Cache
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import Annotated
 
-from ....google_ads.client import execute_query
+from ....google_ads.client import clean_nones, execute_query
 from ...model import SmartSuggestions
 from ..config import Config
 
@@ -280,6 +280,7 @@ def ask_client_for_permission(
     ],
     context: Context,
 ) -> str:
+    modification_function_parameters = clean_nones(modification_function_parameters)
     customer_id = _find_value_in_nested_dict(
         dictionary=modification_function_parameters, key="customer_id"
     )

@@ -1,5 +1,7 @@
+import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from ....google_ads.client import clean_nones
 from ..config import Config
 from ..tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
@@ -50,6 +52,10 @@ ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
     keywords=[keyword1, keyword2],
 )
 
+example_json = json.dumps(
+    clean_nones(ad_group_with_ad_and_keywords.model_dump()), indent=2
+)
+
 
 @Team.register_team("campaign_creation_team")
 class CampaignCreationTeam(Team):
@@ -79,7 +85,7 @@ sure it is understandable by non-experts.
 
     _retry_messages = [
         "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
-        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
+        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {example_json}",
         "Please continue.",
     ] * 2
 
@@ -197,7 +203,7 @@ You can NOT do anything else, so do not suggest changes which you can NOT perfor
 
 
 Example of the JSON input for the 'create_ad_group_with_ad_and_keywords' command:
-{ad_group_with_ad_and_keywords.model_dump_json()}
+{example_json}
 
 When suggesting the JSON input, do NOT add \\n, \\t or any whitespaces to the JSON!!!
 
@@ -239,6 +245,7 @@ All team members have access to the following command:
 
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 params: (resource_details: str, modification_function_parameters: Dict[str, Any])
+BOTH parameters are mandatory, do NOT forget to include 'modification_function_parameters'!
 
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 

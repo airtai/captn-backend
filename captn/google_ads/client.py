@@ -140,7 +140,9 @@ def get_user_ids_and_emails() -> str:
     return response.json()  # type: ignore[no-any-return]
 
 
-NOT_IN_QUESTION_ANSWER_LIST = "You must ask the client for the permission first by using the 'ask_client_for_permission' function by the same 'modification_function_parameters': "
+NOT_IN_QUESTION_ANSWER_LIST = """You must ask the client for the permission first by using the 'ask_client_for_permission' function by using the same JSON for the 'modification_function_parameters' parameter.
+
+"modification_function_parameters": """
 NOT_APPROVED = (
     "The client did not approve the modification. The client must approve the modification by answering 'Yes' to the question."
     "If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else."
