@@ -7,6 +7,7 @@ import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._google_ads_team_tools import (
     Context,
     _check_currency,
@@ -360,6 +361,7 @@ Please convert the budget to the customer's currency and ask the client for the 
                 user_id=123,
                 conv_id=456,
                 clients_question_answer_list=[],
+                toolbox=Toolbox(),
             )
             kwargs = {
                 "customer_id": "12121212",
@@ -404,6 +406,7 @@ Please convert the budget to the customer's currency and ask the client for the 
             user_id=123,
             conv_id=456,
             clients_question_answer_list=[],
+            toolbox=Toolbox(),
         )
 
         with pytest.raises(
@@ -437,6 +440,7 @@ Please convert the budget to the customer's currency and ask the client for the 
                 user_id=123,
                 conv_id=456,
                 clients_question_answer_list=[],
+                toolbox=Toolbox(),
             )
             list_accessible_customers(context=context)
 

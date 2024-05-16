@@ -5,6 +5,7 @@ import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
     AdGroupCriterionForCreation,
@@ -105,6 +106,7 @@ class TestTools:
                 user_id=1,
                 conv_id=1,
                 clients_question_answer_list=[(modification_function_params, "yes")],
+                toolbox=Toolbox(),
             )
             create_ad_group_with_ad_and_keywords = self.toolbox.get_function(
                 "create_ad_group_with_ad_and_keywords"
@@ -136,6 +138,7 @@ class TestContext:
             user_id=12345,
             conv_id=67890,
             clients_question_answer_list=clients_question_answer_list,
+            toolbox=Toolbox(),
         )
         clients_question_answer_list.append(("question", "answer"))
 

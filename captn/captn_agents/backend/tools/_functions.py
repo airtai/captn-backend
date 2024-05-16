@@ -1,10 +1,21 @@
 import ast
 import datetime
+import inspect
 import json
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import autogen
 import requests
@@ -13,11 +24,12 @@ from autogen.agentchat import AssistantAgent
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from autogen.cache import Cache
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
-from typing_extensions import Annotated
+from typing_extensions import _AnnotatedAlias
 
 from ....google_ads.client import clean_nones, execute_query
 from ...model import SmartSuggestions
 from ..config import Config
+from ..toolboxes.base import Toolbox
 
 __all__ = (
     "Context",
@@ -169,6 +181,7 @@ class Context:
     user_id: int
     conv_id: int
     clients_question_answer_list: List[Tuple[Dict[str, Any], Optional[str]]]
+    toolbox: Toolbox
     get_only_non_manager_accounts: bool = False
 
 
@@ -272,14 +285,76 @@ modification_function_parameters_description = """Parameters for the modificatio
 These parameters will be used ONLY for ONE function call. Do NOT send a list of parameters for multiple function calls!"""
 
 
+FUNCTIONS_TO_VALIDATE = ["create_ad_group_with_ad_and_keywords"]
+
+
+# TODO: validate all functions not just create_ad_group_with_ad_and_keywords
+# TODO: currently not able to validate Literal types
+def _validate_modification_parameters(
+    func: Callable[..., Any],
+    function_name: str,
+    modification_function_parameters: Dict[str, Any],
+) -> None:
+    error_msg = ""
+    func_parameters = inspect.signature(func).parameters
+
+    for param_name, param_value in modification_function_parameters.items():
+        if param_name not in func_parameters:
+            error_msg += (
+                f"parameter {param_name} not found in function {function_name}." + "\n"
+            )
+
+        param_type = func_parameters[param_name].annotation
+        if type(param_type) == _AnnotatedAlias:
+            print("Annotated")
+            # get the annotation
+
+            print(param_type.__args__)
+            param_type = param_type.__args__[0]
+        print(f"param_type: {param_type}")
+
+        print(f"param_value: {param_value}, type: {type(param_value)}")
+
+        if issubclass(param_type, BaseModel):
+            try:
+                param_type(**param_value)
+            except Exception as e:
+                enriched_error = f"""modification_function_parameters validation failed for param_name {param_name} with error: {e}."""
+                error_msg += enriched_error + "\n"
+        elif type(param_value) != param_type:
+            error_msg += (
+                f"parameter {param_name} type mismatch. Expected {param_type}, got {type(param_value)}."
+                + "\n"
+            )
+
+    if error_msg:
+        raise ValueError(error_msg)
+    print("Validation passed!")
+
+
 def ask_client_for_permission(
     resource_details: Annotated[str, resource_details_description],
+    function_name: Annotated[
+        str, "The name of the function which will be called for the modification"
+    ],
     modification_function_parameters: Annotated[
         Dict[str, Any],
         modification_function_parameters_description,
     ],
     context: Context,
 ) -> str:
+    try:
+        func = context.toolbox.get_function(function_name)
+    except Exception as e:
+        print(f"Error: {e}")
+        raise ValueError(f"function '{function_name}' not found") from e
+    if function_name in FUNCTIONS_TO_VALIDATE:
+        _validate_modification_parameters(
+            func=func,
+            function_name=function_name,
+            modification_function_parameters=modification_function_parameters,
+        )
+
     modification_function_parameters = clean_nones(modification_function_parameters)
     customer_id = _find_value_in_nested_dict(
         dictionary=modification_function_parameters, key="customer_id"

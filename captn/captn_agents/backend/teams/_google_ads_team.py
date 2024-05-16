@@ -311,7 +311,7 @@ Here is an example of the smart_suggestions parameter:
 }}
 
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (resource_details: str, modification_function_parameters: Dict[str, Any])
+params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
 ONLY Google ads specialist can suggest following commands:

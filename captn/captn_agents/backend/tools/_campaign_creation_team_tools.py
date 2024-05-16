@@ -196,6 +196,7 @@ def create_campaign_creation_team_toolbox(
         user_id=user_id,
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
+        toolbox=toolbox,
     )
     toolbox.set_context(context)
 

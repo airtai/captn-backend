@@ -30,6 +30,7 @@ def create_weekly_analysis_team_toolbox(
         conv_id=conv_id,
         clients_question_answer_list=clients_question_answer_list,
         get_only_non_manager_accounts=True,
+        toolbox=toolbox,
     )
     toolbox.set_context(context)
 
