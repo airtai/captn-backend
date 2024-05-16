@@ -380,9 +380,10 @@ keyword_match_type: string, keyword_text: string,
 cpc_bid_micros: Optional[int], local_currency: Optional[str])
 
 8. 'update_campaigns_negative_keywords': Update the Google Ads keywords (on campaign level), params: (customer_id: string, campaign_id: string,
-criterion_id: string, keyword_match_type: string, keyword_text: string,
+criterion_id: string, keyword_match_type: string, keyword_text: string, negative: boolean
 )
 This command can only update campaigns negative keywords keyword_match_type and keyword_text
+Always set the 'negative' parameter to True when updating the negative keyword!
 
 9. 'create_ad_group': Create the Google Ads Group, params: (customer_id: string, campaign_id: string,
 name: string, cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],

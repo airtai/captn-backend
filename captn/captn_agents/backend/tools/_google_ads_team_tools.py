@@ -847,6 +847,9 @@ def update_campaigns_negative_keywords(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
     campaign_id: Annotated[str, properties_config["campaign_id"]["description"]],
     criterion_id: Annotated[str, "Id of the Campaign criterion"],
+    negative: Annotated[
+        bool, "Set negative to True if you want to create negative keyword"
+    ],
     context: Context,
     *,
     keyword_text: Annotated[
@@ -869,6 +872,7 @@ def update_campaigns_negative_keywords(
             criterion_id=criterion_id,
             keyword_text=keyword_text,
             keyword_match_type=keyword_match_type,
+            negative=negative,
         ),
         endpoint="/update-campaigns-negative-keywords",
     )
