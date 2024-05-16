@@ -189,11 +189,17 @@ def generate_task_table_for_campaign_creation(
         "./",
         help="Output directory for the reports",
     ),
+    end2end: bool = typer.Option(
+        False,
+        help="If true, generate tasks for end2end benchmarking, otherwise generate tasks for campaign creation",
+    ),
 ) -> None:
     URLS = list(URL_TASK_DICT.keys())
 
+    task = "end2end" if end2end else "campaign_creation"
+
     params_list = [
-        ["campaign_creation"],
+        [task],
         URLS * repeat,
         [llm],
     ]
@@ -275,6 +281,7 @@ GROUP_BY_DICT = {
     "websurfer": ["url"],
     "brief_creation": ["url", "team_name"],
     "campaign_creation": ["url"],
+    "end2end": ["url"],
 }
 
 
@@ -292,12 +299,14 @@ def run_tests(
 
     from .brief_creation_team import benchmark_brief_creation
     from .campaign_creation_team import benchmark_campaign_creation
+    from .end2end import benchmark_end2end
     from .websurfer import benchmark_websurfer
 
     benchmarks = {
         "websurfer": benchmark_websurfer,
         "brief_creation": benchmark_brief_creation,
         "campaign_creation": benchmark_campaign_creation,
+        "end2end": benchmark_end2end,
     }
 
     _file_path: Path = Path(file_path)

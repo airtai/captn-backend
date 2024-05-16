@@ -15,10 +15,10 @@ from ._google_ads_team_tools import (
     list_accessible_customers_description,
 )
 
-__all__ = ("create_daily_analysis_team_toolbox",)
+__all__ = ("create_weekly_analysis_team_toolbox",)
 
 
-def create_daily_analysis_team_toolbox(
+def create_weekly_analysis_team_toolbox(
     user_id: int,
     conv_id: int,
     clients_question_answer_list: List[Tuple[str, Optional[str]]],

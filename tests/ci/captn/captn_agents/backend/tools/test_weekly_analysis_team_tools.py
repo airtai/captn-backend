@@ -4,14 +4,14 @@ import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
-from captn.captn_agents.backend.tools._daily_analysis_team_tools import (
-    create_daily_analysis_team_toolbox,
+from captn.captn_agents.backend.tools._weekly_analysis_team_tools import (
+    create_weekly_analysis_team_toolbox,
 )
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
-class TestDailyAnalysisTeamTools:
+class TestWeeklyAnalysisTeamTools:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         user_id = 1234
@@ -22,7 +22,7 @@ class TestDailyAnalysisTeamTools:
             "config_list": Config().config_list_gpt_3_5,
         }
 
-        self.toolbox = create_daily_analysis_team_toolbox(
+        self.toolbox = create_weekly_analysis_team_toolbox(
             user_id=user_id,
             conv_id=conv_id,
             clients_question_answer_list=self.clients_question_answer_list,

@@ -5,7 +5,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from os import environ
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import requests
 from autogen.io import IOConsole, IOStream
@@ -21,12 +21,12 @@ from ....google_ads.client import (
     get_user_ids_and_emails,
     list_accessible_customers,
 )
-from ..tools._daily_analysis_team_tools import create_daily_analysis_team_toolbox
 from ..tools._functions import get_webpage_status_code
+from ..tools._weekly_analysis_team_tools import create_weekly_analysis_team_toolbox
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND
 from ._team import Team
 
-__all__ = ("DailyAnalysisTeam",)
+__all__ = ("WeeklyAnalysisTeam",)
 
 REACT_APP_API_URL = environ.get("REACT_APP_API_URL", "http://localhost:3001")
 REDIRECT_DOMAIN = environ.get("REDIRECT_DOMAIN", "https://captn.ai")
@@ -82,14 +82,14 @@ class Campaign(ResourceWithMetrics):
     ad_groups: Dict[str, AdGroup]
 
 
-class DailyCustomerReports2(BaseModel):
+class WeeklyCustomerReports(BaseModel):
     customer_id: str
     currency: str
     campaigns: Dict[str, Campaign]
 
 
-class DailyReport(BaseModel):
-    daily_customer_reports: List[DailyCustomerReports2]
+class WeeklyReport(BaseModel):
+    weekly_customer_reports: List[WeeklyCustomerReports]
 
 
 def calculate_metrics_change(metrics1: Metrics, metrics2: Metrics) -> Metrics:
@@ -132,14 +132,14 @@ def google_ads_api_call(
     return function(**kwargs)  # type: ignore
 
 
-def get_daily_keywords_report(
-    user_id: int, conv_id: int, customer_id: str, date: str
+def get_weekly_keywords_report(
+    user_id: int, conv_id: int, customer_id: str, date_query: str
 ) -> Dict[str, Dict[str, Keyword]]:
     query = (
         "SELECT ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros, "
         "metrics.historical_quality_score, metrics.historical_landing_page_quality_score, metrics.historical_creative_quality_score "
         "FROM keyword_view "
-        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "  # nosec: [B608]
+        f"WHERE {date_query} AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED' AND ad_group_criterion.status != 'REMOVED' "  # nosec: [B608]
     )
     query_result = google_ads_api_call(
         function=execute_query,
@@ -191,12 +191,12 @@ def get_daily_keywords_report(
 
 
 def get_ad_groups_report(
-    user_id: int, conv_id: int, customer_id: str, date: str
+    user_id: int, conv_id: int, customer_id: str, date_query: str
 ) -> Dict[str, Dict[str, AdGroup]]:
     query = (
         "SELECT campaign.id, ad_group.id, ad_group.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
         "FROM ad_group "
-        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED'"  # nosec: [B608]
+        f"WHERE {date_query} AND campaign.status != 'REMOVED' AND ad_group.status != 'REMOVED'"  # nosec: [B608]
     )
     query_result = google_ads_api_call(
         function=execute_query,
@@ -207,9 +207,11 @@ def get_ad_groups_report(
     )
     customer_result = ast.literal_eval(query_result)[customer_id]
 
-    keywords_report = get_daily_keywords_report(user_id, conv_id, customer_id, date)
-    ad_group_ads_report = get_daily_ad_group_ads_report(
-        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
+    keywords_report = get_weekly_keywords_report(
+        user_id, conv_id, customer_id, date_query=date_query
+    )
+    ad_group_ads_report = get_weekly_ad_group_ads_report(
+        user_id=user_id, conv_id=conv_id, customer_id=customer_id, date_query=date_query
     )
     campaign_ad_groups_dict: Dict[str, Dict[str, AdGroup]] = defaultdict(dict)
 
@@ -238,12 +240,12 @@ def get_ad_groups_report(
 
 
 def get_campaigns_report(
-    user_id: int, conv_id: int, customer_id: str, date: str
+    user_id: int, conv_id: int, customer_id: str, date_query: str
 ) -> Dict[str, Campaign]:
     query = (
         "SELECT campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
         "FROM campaign "
-        f"WHERE segments.date = '{date}' AND campaign.status != 'REMOVED'"  # nosec: [B608]
+        f"WHERE {date_query} AND campaign.status != 'REMOVED'"  # nosec: [B608]
     )
     query_result = google_ads_api_call(
         function=execute_query,
@@ -253,9 +255,11 @@ def get_campaigns_report(
         query=query,
     )
     customer_result = ast.literal_eval(query_result)[customer_id]
-
-    ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date)
     campaigns: Dict[str, Campaign] = {}
+    if not customer_result:
+        return campaigns
+
+    ad_groups_report = get_ad_groups_report(user_id, conv_id, customer_id, date_query)
     for campaign_result in customer_result:
         ad_groups = ad_groups_report.get(campaign_result["campaign"]["id"], {})
         campaign = Campaign(
@@ -276,13 +280,13 @@ def get_campaigns_report(
     return campaigns
 
 
-def get_daily_ad_group_ads_report(
-    user_id: int, conv_id: int, customer_id: str, date: str
+def get_weekly_ad_group_ads_report(
+    user_id: int, conv_id: int, customer_id: str, date_query: str
 ) -> Dict[str, Dict[str, AdGroupAd]]:
     query = (
         "SELECT ad_group.id, ad_group_ad.ad.id, ad_group_ad.ad.final_urls, metrics.impressions, metrics.clicks, metrics.interactions, metrics.conversions, metrics.cost_micros "
         "FROM ad_group_ad "
-        f"WHERE segments.date = '{date}' AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
+        f"WHERE {date_query} AND ad_group.status != 'REMOVED' AND ad_group_ad.status != 'REMOVED'"  # nosec: [B608]
     )
     query_result = google_ads_api_call(
         function=execute_query,
@@ -353,19 +357,38 @@ def compare_reports(
     return report
 
 
-def get_daily_report_for_customer(
-    user_id: int, conv_id: int, customer_id: str, date: str
-) -> DailyCustomerReports2:
-    campaigns_report = get_campaigns_report(user_id, conv_id, customer_id, date)
-
+def _create_date_query(date: str, week: Literal["THIS", "LAST"]) -> str:
     datetime_date = datetime.strptime(date, "%Y-%m-%d").date()
-    previous_day = (datetime_date - timedelta(1)).isoformat()
-    yesterday_campaigns_report = get_campaigns_report(
-        user_id, conv_id, customer_id, previous_day
+
+    if week == "THIS":
+        six_days_before = (datetime_date - timedelta(6)).isoformat()
+        query = f"segments.date BETWEEN '{six_days_before}' AND '{date}'"
+    elif week == "LAST":
+        seven_days_before = (datetime_date - timedelta(7)).isoformat()
+        thirteen_days_before = (datetime_date - timedelta(13)).isoformat()
+        query = (
+            f"segments.date BETWEEN '{thirteen_days_before}' AND '{seven_days_before}'"
+        )
+    else:
+        raise ValueError("Invalid week value. Must be 'THIS' or 'LAST'.")
+    return query
+
+
+def get_weekly_report_for_customer(
+    user_id: int, conv_id: int, customer_id: str, date: str
+) -> WeeklyCustomerReports:
+    this_week_query = _create_date_query(date, "THIS")
+    campaigns_report = get_campaigns_report(
+        user_id, conv_id, customer_id, this_week_query
+    )
+
+    last_week_query = _create_date_query(date, "LAST")
+    last_week_campaigns_report = get_campaigns_report(
+        user_id, conv_id, customer_id, last_week_query
     )
 
     compared_campaigns_report = compare_reports(
-        campaigns_report, yesterday_campaigns_report
+        campaigns_report, last_week_campaigns_report
     )
 
     query = "SELECT customer.currency_code FROM customer"
@@ -379,7 +402,7 @@ def get_daily_report_for_customer(
     currency = ast.literal_eval(query_result)[customer_id][0]["customer"][
         "currencyCode"
     ]
-    return DailyCustomerReports2(
+    return WeeklyCustomerReports(
         customer_id=customer_id, currency=currency, campaigns=compared_campaigns_report
     )
 
@@ -482,16 +505,16 @@ def _update_message_and_campaigns_template(
     return message, campaigns_template
 
 
-def construct_daily_report_email_from_template(
-    daily_reports: Dict[str, Any], date: str
+def construct_weekly_report_email_from_template(
+    weekly_reports: Dict[str, Any], date: str
 ) -> Tuple[str, str]:
     main_email_template = MAIN_EMAIL_TEMPLATE
     main_email_template = main_email_template.replace("{todays_date}", date)
     customers_section = ""
 
-    message = f"<h2>Daily Google Ads Performance Report - {date}</h2>"
-    message += f"<p>We're here with your daily analysis of your Google Ads campaigns for {date}. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p>"
-    campaigns_report = daily_reports["daily_customer_reports"]
+    message = f"<h2>Weekly Google Ads Performance Report - {date}</h2>"
+    message += "<p>We're here with your weekly analysis of your Google Ads campaigns. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p>"
+    campaigns_report = weekly_reports["weekly_customer_reports"]
     for customer_report in campaigns_report:
         customer_report_template = CUSTOMER_REPORT_TEMPLATE
 
@@ -570,27 +593,38 @@ def construct_daily_report_email_from_template(
     return message, main_email_template
 
 
-def get_daily_report(date: str, user_id: int, conv_id: int) -> str:
+def _check_if_any_campaign_exists(weekly_report: WeeklyReport) -> bool:
+    for weekly_customer_report in weekly_report.weekly_customer_reports:
+        if weekly_customer_report.campaigns:
+            return True
+    return False
+
+
+def get_weekly_report(date: str, user_id: int, conv_id: int) -> Optional[str]:
     customer_ids: List[str] = google_ads_api_call(
         function=list_accessible_customers,
         user_id=user_id,
         conv_id=conv_id,
         get_only_non_manager_accounts=True,
     )
-    daily_customer_reports = [
-        get_daily_report_for_customer(
+    weekly_customer_reports = [
+        get_weekly_report_for_customer(
             user_id=user_id, conv_id=conv_id, customer_id=customer_id, date=date
         )
         for customer_id in customer_ids
     ]
-    daily_report = DailyReport(
-        daily_customer_reports=daily_customer_reports
-    ).model_dump_json(indent=2)
+    weekly_report = WeeklyReport(weekly_customer_reports=weekly_customer_reports)
 
-    return daily_report
+    if not _check_if_any_campaign_exists(weekly_report):
+        print(
+            f"No campaigns found for the date {date}, user_id: {user_id}, conv_id: {conv_id}"
+        )
+        return None
+
+    return weekly_report.model_dump_json(indent=2)
 
 
-class DailyAnalysisTeam(Team):
+class WeeklyAnalysisTeam(Team):
     _functions: List[Dict[str, Any]] = []
 
     _shared_system_message = (
@@ -638,13 +672,13 @@ sure it is understandable by non-experts.
         task: str,
         user_id: int,
         conv_id: int,
-        work_dir: str = "daily_analysis",
+        work_dir: str = "weekly_analysis",
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
     ):
         function_map: Dict[str, Callable[[Any], Any]] = {}
-        roles: List[Dict[str, str]] = DailyAnalysisTeam._default_roles
+        roles: List[Dict[str, str]] = WeeklyAnalysisTeam._default_roles
 
         super().__init__(
             user_id=user_id,
@@ -658,7 +692,7 @@ sure it is understandable by non-experts.
             use_user_proxy=True,
         )
         self.task = task
-        self.llm_config = DailyAnalysisTeam._get_llm_config(
+        self.llm_config = WeeklyAnalysisTeam._get_llm_config(
             seed=seed, temperature=temperature
         )
 
@@ -669,7 +703,7 @@ sure it is understandable by non-experts.
         self._create_initial_message()
 
     def _add_tools(self) -> None:
-        self.toolbox = create_daily_analysis_team_toolbox(
+        self.toolbox = create_weekly_analysis_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
             clients_question_answer_list=self.clients_question_answer_list,
@@ -680,7 +714,7 @@ sure it is understandable by non-experts.
 
     @property
     def _task(self) -> str:
-        return f"""You are a Google Ads team in charge of running daily analysis for the digital campaigns.
+        return f"""You are a Google Ads team in charge of running weekly analysis for the digital campaigns.
 The client has sent you the following task:
 \n{self.task}\n\n"""
 
@@ -756,7 +790,7 @@ By doing that, you will be able to recommend MUCH BETTER keywords, headlines, de
 21. Before suggesting any kind of budget, check the default currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
 as they will be featured on a webpage to ensure a user-friendly presentation.
-23. Once you have completed daily analysis, you must send a summary of the work done to the client by using the 'send_email' command.
+23. Once you have completed weekly analysis, you must send a summary of the work done to the client by using the 'send_email' command.
 
 Here is a list of things which you CAN do after the client responds to your email.
 So please recommend some of these changes to the client by using the 'proposed_user_actions' parameter in the 'send_email' command:
@@ -870,52 +904,8 @@ def _update_chat_message_and_send_email(
 
     send_email_infobip(
         to_email=client_email,
-        subject="Capt’n.ai Daily Analysis",
+        subject="Capt’n.ai Weekly Analysis",
         body_text=main_email_template,
-    )
-
-
-def _send_login_url_via_email(
-    user_id: int, conv_id: int, login_url_response: str, client_email: str
-) -> None:
-    messages = """[YOUR TASK IS TO REPLY TO THE CLIENT WITH THE FOLLOWING MESSAGE: 'Thanks for logging in! You will receive an email with the daily analysis report tomorrow.'.
-DO NOT PRCEED WITH GOOGLE ADS ANALYSIS EXCEPT IF THE CLIENT ASKS YOU TO DO SO.]"""
-    proposed_user_action: List[str] = []
-
-    data = {
-        "userId": user_id,
-        "chatId": conv_id,
-        "messages": messages,
-        "initial_message_in_chat": login_url_response,
-        "email_content": "<html></html>",
-        "proposed_user_action": proposed_user_action,
-    }
-    response = requests.post(
-        f"{REACT_APP_API_URL}/captn-daily-analysis-webhook", json=data, timeout=60
-    )
-
-    if response.status_code != 200:
-        raise ValueError(
-            f"_send_login_url_via_email function failed. data: {data}\n{str(response.content)}"
-        )
-
-    final_html_message = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capt’n.ai Daily Analysis</title>
-</head>
-<body>
-</p>To perform the daily analysis, you need to log in to your Google Ads account. The following link will take you to the Captn.ai chat where you can log in. Once you log in, daily analysis will be scheduled for the next day.<br></p>
-<p>Click here to continue (<a href='{REDIRECT_DOMAIN}/chat/{conv_id}'>Captn.ai</a>)</p>
-</body>
-</html>"""
-
-    send_email_infobip(
-        to_email=client_email,
-        subject="Capt’n.ai Daily Analysis",
-        body_text=final_html_message,
     )
 
 
@@ -945,7 +935,7 @@ def _delete_chat_webhook(user_id: int, conv_id: int) -> None:
 
 
 def _create_task_message(
-    date: str, daily_reports: str, daily_report_message: str
+    date: str, weekly_reports: str, weekly_report_message: str
 ) -> str:
     task = f"""
 You need to perform Google Ads Analysis for date: {date}.
@@ -957,12 +947,12 @@ At the end of the analysis, you need to suggest the next steps to the client. Us
 - keywords analysis (add negative keywords, add positive keywords, change match type etc).
 - ad copy analysis (change the ad copy, add more ads etc).
 
-I have prepared you a JSON file with the daily report for the wanted date. Use it to suggest the next steps to the client.
-{daily_reports}
+I have prepared you a JSON file with the weekly report for the wanted date. Use it to suggest the next steps to the client.
+{weekly_reports}
 
 
-Here is also a HTML summary of the daily report which will be sent to the client:
-{daily_report_message}
+Here is also a HTML summary of the weekly report which will be sent to the client:
+{weekly_report_message}
 
 Please propose the next steps and send the email to the client.
 """
@@ -970,15 +960,15 @@ Please propose the next steps and send the email to the client.
 
 
 def _validate_conversation_and_send_email(
-    daily_analysis_team: DailyAnalysisTeam,
+    weekly_analysis_team: WeeklyAnalysisTeam,
     conv_uuid: str,
     email: str,
-    daily_report_message: str,
+    weekly_report_message: str,
     main_email_template: str,
 ) -> None:
-    last_message = daily_analysis_team.get_last_message(add_prefix=False)
+    last_message = weekly_analysis_team.get_last_message(add_prefix=False)
 
-    messages_list = daily_analysis_team.get_messages()
+    messages_list = weekly_analysis_team.get_messages()
     check_if_send_email = messages_list[-2]
     if (
         "tool_calls" in check_if_send_email
@@ -991,22 +981,22 @@ def _validate_conversation_and_send_email(
             messages = json.dumps(messages_list[1:-1])
         last_message_json = json.loads(last_message)
         _update_chat_message_and_send_email(
-            user_id=daily_analysis_team.user_id,
-            conv_id=daily_analysis_team.conv_id,
+            user_id=weekly_analysis_team.user_id,
+            conv_id=weekly_analysis_team.conv_id,
             conv_uuid=conv_uuid,
             client_email=email,
             messages=messages,
-            initial_message_in_chat=daily_report_message,
+            initial_message_in_chat=weekly_report_message,
             main_email_template=main_email_template,
             proposed_user_action=last_message_json["proposed_user_action"],
         )
     else:
         raise ValueError(
-            f"Send email function is not called for user_id: {daily_analysis_team.user_id} - email {email}!"
+            f"Send email function is not called for user_id: {weekly_analysis_team.user_id} - email {email}!"
         )
 
 
-def execute_daily_analysis(
+def execute_weekly_analysis(
     send_only_to_emails: Optional[List[str]] = None,
     date: Optional[str] = None,
 ) -> None:
@@ -1014,7 +1004,7 @@ def execute_daily_analysis(
     with IOStream.set_default(iostream):
         if date is None:
             date = (datetime.today().date() - timedelta(1)).isoformat()
-        print("Starting daily analysis.")
+        print("Starting weekly analysis.")
         id_email_dict = json.loads(get_user_ids_and_emails())
 
         # if send_only_to_emails is None:
@@ -1026,18 +1016,12 @@ def execute_daily_analysis(
                 continue
 
             conv_id, conv_uuid = _get_conv_id_and_uuid(user_id=user_id, email=email)
-            daily_analysis_team = None
+            weekly_analysis_team = None
             try:
                 login_url_response = get_login_url(
                     user_id=user_id, conv_id=conv_id
                 ).get("login_url")
                 if not login_url_response == ALREADY_AUTHENTICATED:
-                    # _send_login_url_via_email(
-                    #     user_id=user_id,
-                    #     conv_id=conv_id,
-                    #     login_url_response=login_url_response,  # type: ignore
-                    #     client_email=email,
-                    # )
                     # Do not proceed with Google Ads analysis for non authenticated users
                     print(
                         f"Skipping user_id: {user_id} - email {email} because he hasn't logged in yet."
@@ -1045,42 +1029,45 @@ def execute_daily_analysis(
                     _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
                     continue
 
-                # Always get the daily report for the previous day
-                daily_reports = get_daily_report(
+                # Always get the weekly report for the previous day
+                weekly_reports = get_weekly_report(
                     date=date, user_id=user_id, conv_id=conv_id
                 )
+                if weekly_reports is None:
+                    _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+                    continue
 
                 (
-                    daily_report_message,
+                    weekly_report_message,
                     main_email_template,
-                ) = construct_daily_report_email_from_template(
-                    daily_reports=json.loads(daily_reports), date=date
+                ) = construct_weekly_report_email_from_template(
+                    weekly_reports=json.loads(weekly_reports), date=date
                 )
 
-                task = _create_task_message(date, daily_reports, daily_report_message)
+                task = _create_task_message(date, weekly_reports, weekly_report_message)
 
-                daily_analysis_team = DailyAnalysisTeam(
+                weekly_analysis_team = WeeklyAnalysisTeam(
                     task=task,
                     user_id=user_id,
                     conv_id=conv_id,
                 )
-                daily_analysis_team.initiate_chat()
+                weekly_analysis_team.initiate_chat()
                 _validate_conversation_and_send_email(
-                    daily_analysis_team=daily_analysis_team,
+                    weekly_analysis_team=weekly_analysis_team,
                     conv_uuid=conv_uuid,
                     email=email,
-                    daily_report_message=daily_report_message,
+                    weekly_report_message=weekly_report_message,
                     main_email_template=main_email_template,
                 )
 
             except Exception as e:
                 print(
-                    f"Daily analysis failed for user_id: {user_id} - email {email}.\nError: {e}"
+                    f"Weekly analysis failed for user_id: {user_id} - email {email}.\nError: {e}"
                 )
                 traceback.print_stack()
                 traceback.print_exc()
                 _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
             finally:
-                if daily_analysis_team:
+                if weekly_analysis_team:
                     Team.pop_team(user_id=user_id, conv_id=conv_id)
-        print("Daily analysis completed.")
+        print("Weekly analysis completed.")

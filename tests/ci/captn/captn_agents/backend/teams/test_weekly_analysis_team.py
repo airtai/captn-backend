@@ -3,6 +3,7 @@ import re
 import unittest.mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Iterator
 
 import pytest
 from autogen.cache import Cache
@@ -11,28 +12,33 @@ from tenacity import RetryError
 from captn.captn_agents.backend.teams import (
     Team,
 )
-from captn.captn_agents.backend.teams._daily_analysis_team import (
+from captn.captn_agents.backend.teams._weekly_analysis_team import (
     REACT_APP_API_URL,
     AdGroup,
     AdGroupAd,
     Campaign,
-    DailyAnalysisTeam,
     Keyword,
     KeywordMetrics,
     Metrics,
+    WeeklyAnalysisTeam,
+    WeeklyCustomerReports,
+    WeeklyReport,
     _add_metrics_message,
+    _check_if_any_campaign_exists,
+    _create_date_query,
     _create_task_message,
     _update_chat_message_and_send_email,
     _update_message_and_campaigns_template,
     _validate_conversation_and_send_email,
     calculate_metrics_change,
     compare_reports,
-    construct_daily_report_email_from_template,
-    execute_daily_analysis,
+    construct_weekly_report_email_from_template,
+    execute_weekly_analysis,
     get_campaigns_report,
-    get_daily_ad_group_ads_report,
-    get_daily_keywords_report,
     get_web_status_code_report_for_campaign,
+    get_weekly_ad_group_ads_report,
+    get_weekly_keywords_report,
+    get_weekly_report,
     google_ads_api_call,
 )
 from captn.google_ads.client import ALREADY_AUTHENTICATED
@@ -112,9 +118,9 @@ def test_keywords_metrics() -> None:
     assert excepted == metrics_new
 
 
-def test_get_daily_ad_group_ads_report() -> None:
+def test_get_weekly_ad_group_ads_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {
@@ -210,11 +216,11 @@ def test_get_daily_ad_group_ads_report() -> None:
                 ]
             }
         )
-        daily_ad_group_ads_report = get_daily_ad_group_ads_report(
+        weekly_ad_group_ads_report = get_weekly_ad_group_ads_report(
             user_id=1,
             conv_id=1,
             customer_id="2324127278",
-            date="2024-01-29",
+            date_query="2024-01-29",
         )
 
         expected = {
@@ -289,12 +295,12 @@ def test_get_daily_ad_group_ads_report() -> None:
                 ),
             },
         }
-        assert expected == daily_ad_group_ads_report
+        assert expected == weekly_ad_group_ads_report
 
 
-def test_get_daily_keywords_report() -> None:
+def test_get_weekly_keywords_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.execute_query"
     ) as mock_execute_query:
         mock_execute_query.return_value = str(
             {
@@ -374,8 +380,8 @@ def test_get_daily_keywords_report() -> None:
                 ]
             }
         )
-        daily_keywords_report = get_daily_keywords_report(
-            user_id=1, conv_id=1, customer_id="7119828439", date="2024-01-29"
+        weekly_keywords_report = get_weekly_keywords_report(
+            user_id=1, conv_id=1, customer_id="7119828439", date_query="2024-01-29"
         )
 
         expected = {
@@ -442,7 +448,7 @@ def test_get_daily_keywords_report() -> None:
                 ),
             }
         }
-        assert expected == daily_keywords_report
+        assert expected == weekly_keywords_report
 
 
 def test_compare_reports() -> None:
@@ -774,11 +780,11 @@ def test_compare_reports() -> None:
 
 def test_get_campaigns_report() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.execute_query"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.execute_query"
     ) as mock_execute_query:
         # mock get_ad_groups_report
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team.get_ad_groups_report"
+            "captn.captn_agents.backend.teams._weekly_analysis_team.get_ad_groups_report"
         ) as mock_get_ad_groups_report:
             mock_execute_query.return_value = str(
                 {
@@ -918,7 +924,7 @@ def test_get_campaigns_report() -> None:
             }
 
             campaigns_report = get_campaigns_report(
-                user_id=1, conv_id=1, customer_id="2324127278", date="2024-01-29"
+                user_id=1, conv_id=1, customer_id="2324127278", date_query="2024-01-29"
             )
 
             expected = {
@@ -994,8 +1000,8 @@ def test_get_campaigns_report() -> None:
             assert expected == campaigns_report
 
 
-daily_report = {
-    "daily_customer_reports": [
+weekly_report = {
+    "weekly_customer_reports": [
         {
             "customer_id": "2324127278",
             "currency": "USD",
@@ -1212,11 +1218,11 @@ def test_update_message_and_campaigns_template() -> None:
     assert "5 - +10.5%" == updated_template
 
 
-def test_construct_daily_report_email_from_template() -> None:
-    message, main_email_template = construct_daily_report_email_from_template(
-        daily_report, date="2024-02-05"
+def test_construct_weekly_report_email_from_template() -> None:
+    message, main_email_template = construct_weekly_report_email_from_template(
+        weekly_report, date="2024-02-05"
     )
-    excepted_message = """<h2>Daily Google Ads Performance Report - 2024-02-05</h2><p>We're here with your daily analysis of your Google Ads campaigns for 2024-02-05. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p><p>Customer <strong>2324127278</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20761810762&__e=2324127278' target='_blank'>Website traffic-Search-3-updated-up</a></strong><ul><li>Clicks: 5 (-42.86%)</li><li>Conversions: 0.0 (+0.0%)</li><li>Cost: 0.02 USD (-32.94%)</li><li><strong>WARNING:</strong>Some final URLs for your Ads are not reachable:
+    excepted_message = """<h2>Weekly Google Ads Performance Report - 2024-02-05</h2><p>We're here with your weekly analysis of your Google Ads campaigns. Below, you'll find insights into your campaign performances, along with notable updates and recommendations for optimization.</p><p>Customer <strong>2324127278</strong></p><ul><li>Campaign <strong><a href='https://ads.google.com/aw/campaigns?campaignId=20761810762&__e=2324127278' target='_blank'>Website traffic-Search-3-updated-up</a></strong><ul><li>Clicks: 5 (-42.86%)</li><li>Conversions: 0.0 (+0.0%)</li><li>Cost: 0.02 USD (-32.94%)</li><li><strong>WARNING:</strong>Some final URLs for your Ads are not reachable:
 <ul>
 <li>Final url <a href='https://not-reachable.airt.ai/' target='_blank'>https://not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=156261983518&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
 <li>Final url <a href='https://also-not-reachable.airt.ai/' target='_blank'>https://also-not-reachable.airt.ai/</a> used in Ad <a href='https://ads.google.com/aw/ads/edit/search?adId=688768033895&adGroupIdForAd=158468020535&__e=2324127278' target='_blank'>688768033895</a> is <strong>not reachable</strong></li>
@@ -1239,7 +1245,7 @@ def test_construct_daily_report_email_from_template() -> None:
 def test_send_email() -> None:
     with unittest.mock.patch("requests.post") as mock_post:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team.send_email_infobip"
+            "captn.captn_agents.backend.teams._weekly_analysis_team.send_email_infobip"
         ) as mock_send_email_infobip:
             mock_post.return_value.status_code = 200
             mock_post.return_value.json = lambda: {"chatID": 239}
@@ -1274,12 +1280,12 @@ def test_send_email() -> None:
             mock_send_email_infobip.assert_called_once()
 
 
-def test_execute_daily_analysis_with_incorrect_emails() -> None:
+def test_execute_weekly_analysis_with_incorrect_emails() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.get_user_ids_and_emails"
     ) as mock_get_user_ids_and_emails:
         with unittest.mock.patch(
-            "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid"
+            "captn.captn_agents.backend.teams._weekly_analysis_team._get_conv_id_and_uuid"
         ) as mock_get_conv_id_and_uuid:
             mock_get_user_ids_and_emails.return_value = json.dumps(
                 {
@@ -1288,7 +1294,7 @@ def test_execute_daily_analysis_with_incorrect_emails() -> None:
                 }
             )
 
-            execute_daily_analysis(
+            execute_weekly_analysis(
                 send_only_to_emails=["bla1@mail.com", "bla2@mail.com"]
             )
             mock_get_conv_id_and_uuid.assert_not_called()
@@ -1296,7 +1302,7 @@ def test_execute_daily_analysis_with_incorrect_emails() -> None:
 
 def test_google_ads_api_call_reties_three_times() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.list_accessible_customers"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.list_accessible_customers"
     ) as mock_list_accessible_customers:
         mock_list_accessible_customers.side_effect = [
             ValueError("Error1"),
@@ -1315,7 +1321,7 @@ def test_google_ads_api_call_reties_three_times() -> None:
 
 def test_google_ads_api_call_reties_returns_result_in_second_attempt() -> None:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.teams._daily_analysis_team.list_accessible_customers"
+        "captn.captn_agents.backend.teams._weekly_analysis_team.list_accessible_customers"
     ) as mock_list_accessible_customers:
         mock_list_accessible_customers.side_effect = [ValueError("Error1"), ["1", "2"]]
         result = google_ads_api_call(
@@ -1381,57 +1387,133 @@ def test_calculate_metrics_change() -> None:
     assert excepted_result == result
 
 
-class TestDailyAnalysisTeam:
+def test_create_date_query() -> None:
+    date = "2024-05-15"
+    this_week_query = _create_date_query(date, week="THIS")
+    excepted = "segments.date BETWEEN '2024-05-09' AND '2024-05-15'"
+    assert this_week_query == excepted
+
+    last_week_query = _create_date_query(date, week="LAST")
+    excepted = "segments.date BETWEEN '2024-05-02' AND '2024-05-08'"
+    assert last_week_query == excepted
+
+
+def test_check_if_any_campaign_exists_returns_true() -> None:
+    campaign = Campaign(
+        id="1212",
+        name="abc",
+        ad_groups={},
+        metrics=Metrics(
+            impressions=1,
+            clicks=1,
+            interactions=1,
+            conversions=1,
+            cost_micros=1,
+        ),
+    )
+    customer_report = WeeklyCustomerReports(
+        customer_id="1",
+        currency="USD",
+        campaigns={"1": campaign},
+    )
+    weekly_report = WeeklyReport(weekly_customer_reports=[customer_report])
+
+    assert _check_if_any_campaign_exists(weekly_report)
+
+
+def test_check_if_any_campaign_exists_returns_false() -> None:
+    customer_report = WeeklyCustomerReports(
+        customer_id="1",
+        currency="USD",
+        campaigns={},
+    )
+    weekly_report = WeeklyReport(weekly_customer_reports=[customer_report])
+
+    assert _check_if_any_campaign_exists(weekly_report) is False
+
+
+def test_get_weekly_report_when_there_are_no_campaigns() -> None:
+    with (
+        unittest.mock.patch(
+            "captn.captn_agents.backend.teams._weekly_analysis_team.google_ads_api_call",
+            return_value=["111", "222"],
+        ),
+        unittest.mock.patch(
+            "captn.captn_agents.backend.teams._weekly_analysis_team.get_weekly_report_for_customer",
+        ) as mock_get_weekly_report_for_customer,
+    ):
+        mock_get_weekly_report_for_customer.side_effect = [
+            WeeklyCustomerReports(customer_id="111", currency="USD", campaigns={}),
+            WeeklyCustomerReports(customer_id="222", currency="USD", campaigns={}),
+        ]
+
+        assert (
+            get_weekly_report(
+                date="2024-05-15",
+                user_id=13,
+                conv_id=12,
+            )
+            is None
+        )
+
+
+class TestWeeklyAnalysisTeam:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+        Team._teams.clear()
+        yield
+        Team._teams.clear()
+
     def test_init(self) -> None:
-        daily_analysis_team = DailyAnalysisTeam(
+        weekly_analysis_team = WeeklyAnalysisTeam(
             user_id=123,
             conv_id=456,
             task="do your magic",
         )
 
         helper_test_init(
-            team=daily_analysis_team,
+            team=weekly_analysis_team,
             number_of_team_members=5,
             number_of_functions=4,
-            team_class=DailyAnalysisTeam,
+            team_class=WeeklyAnalysisTeam,
         )
 
-    def test_execute_daily_analysis_workflow(self) -> None:
+    def test_execute_weekly_analysis_workflow(self) -> None:
         with (
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.get_user_ids_and_emails",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.get_user_ids_and_emails",
                 return_value="""{"1": "robert@airt.ai"}""",
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team._get_conv_id_and_uuid",
+                "captn.captn_agents.backend.teams._weekly_analysis_team._get_conv_id_and_uuid",
                 return_value=(
                     -1,
                     "f0d2e864-9fe2-4fa0-b9a7-e8381ed14ef9",
                 ),
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.get_login_url",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.get_login_url",
                 return_value={"login_url": ALREADY_AUTHENTICATED},
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.get_daily_report"
-            ) as mock_get_daily_report,
+                "captn.captn_agents.backend.teams._weekly_analysis_team.get_weekly_report"
+            ) as mock_get_weekly_report,
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email",
+                "captn.captn_agents.backend.teams._weekly_analysis_team._update_chat_message_and_send_email",
                 return_value=None,
             ) as mock_update_chat_message_and_send_email,
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.initiate_chat",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.WeeklyAnalysisTeam.initiate_chat",
                 return_value=None,
             ),
             unittest.mock.patch(
-                "captn.captn_agents.backend.teams._daily_analysis_team.DailyAnalysisTeam.get_messages",
+                "captn.captn_agents.backend.teams._weekly_analysis_team.WeeklyAnalysisTeam.get_messages",
             ) as mock_messages,
         ):
             fixtures_path = Path(__file__).resolve().parent / "fixtures"
-            with open(fixtures_path / "daily_reports.txt") as file:
-                daily_reports = json.load(file)
-            mock_get_daily_report.return_value = json.dumps(daily_reports)
+            with open(fixtures_path / "weekly_reports.txt") as file:
+                weekly_reports = json.load(file)
+            mock_get_weekly_report.return_value = json.dumps(weekly_reports)
 
             mock_messages.return_value = [
                 {},
@@ -1456,78 +1538,78 @@ class TestDailyAnalysisTeam:
                     "name": "account_manager",
                 },
                 {
-                    "content": '{"subject": "Capt\\u2019n.ai Daily Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
+                    "content": '{"subject": "Capt\\u2019n.ai Weekly Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
                     "tool_responses": [
                         {
                             "tool_call_id": "call_ASBwplYfk6KSFLsnjeT7ILH1",
                             "role": "tool",
-                            "content": '{"subject": "Capt\\u2019n.ai Daily Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
+                            "content": '{"subject": "Capt\\u2019n.ai Weekly Analysis", "email_content": "<html></html>", "proposed_user_action": ["Pause the ad with ID 680002685922 in the campaign \'faststream-web-search\' to prevent further costs without conversions.", "Review and potentially pause or refine the keyword \'AI-powered framework\' due to its high cost and no conversions.", "Evaluate the relevance of keywords such as \'microservices\', \'NATS\', \'Redis\', \'RabbitMQ\', and \'streaming app development\' and consider adding more specific long-tail keywords or adjusting match types.", "Ensure that negative keywords in the \'faststream-web-search\' campaign are not overly restrictive.", "For the \'IKEA Furniture & Decor\' campaign, incorporate themes from the IKEA web page such as home organization and Scandinavian style into the ad copy and keywords.", "Address the accessibility issue of the final URL for the \'faststream-web-search\' campaign to improve conversion rates."], "terminate_groupchat": true}',
                         }
                     ],
                     "role": "tool",
                     "name": "user_proxy",
                 },
             ]
-            execute_daily_analysis(send_only_to_emails=["robert@airt.ai"])
+            execute_weekly_analysis(send_only_to_emails=["robert@airt.ai"])
             mock_update_chat_message_and_send_email.assert_called_once()
 
     @pytest.mark.flaky
     @pytest.mark.openai
-    @pytest.mark.daily_analysis_team
+    @pytest.mark.weekly_analysis_team
     def test_end2_end(self) -> None:
         date = "2024-04-14"
         (
-            daily_report_message,
+            weekly_report_message,
             _,
-        ) = construct_daily_report_email_from_template(
-            daily_reports=daily_report, date=date
+        ) = construct_weekly_report_email_from_template(
+            weekly_reports=weekly_report, date=date
         )
 
         task = _create_task_message(
-            date, json.dumps(daily_report), daily_report_message
+            date, json.dumps(weekly_report), weekly_report_message
         )
         user_id = 123
         conv_id = 234
 
-        daily_analysis_team = DailyAnalysisTeam(
+        weekly_analysis_team = WeeklyAnalysisTeam(
             task=task, user_id=user_id, conv_id=conv_id
         )
 
         try:
             with (
                 unittest.mock.patch.object(
-                    daily_analysis_team.toolbox.functions,
+                    weekly_analysis_team.toolbox.functions,
                     "list_accessible_customers",
                     return_value=["1111"],
                 ),
                 unittest.mock.patch.object(
-                    daily_analysis_team.toolbox.functions,
+                    weekly_analysis_team.toolbox.functions,
                     "execute_query",
                     return_value=(
                         "You have all the necessary details. Do not use the execute_query anymore."
                     ),
                 ),
                 unittest.mock.patch.object(
-                    daily_analysis_team.toolbox.functions,
+                    weekly_analysis_team.toolbox.functions,
                     "send_email",
-                    wraps=daily_analysis_team.toolbox.functions.send_email,  # type: ignore[attr-defined]
+                    wraps=weekly_analysis_team.toolbox.functions.send_email,  # type: ignore[attr-defined]
                 ) as mock_send_email,
                 unittest.mock.patch(
-                    "captn.captn_agents.backend.teams._daily_analysis_team._update_chat_message_and_send_email",
+                    "captn.captn_agents.backend.teams._weekly_analysis_team._update_chat_message_and_send_email",
                     return_value=None,
                 ) as mock_update_chat_message_and_send_email,
             ):
                 with TemporaryDirectory() as cache_dir:
                     with Cache.disk(cache_path_root=cache_dir) as cache:
-                        daily_analysis_team.initiate_chat(cache=cache)
+                        weekly_analysis_team.initiate_chat(cache=cache)
 
                 mock_send_email.assert_called_once()
 
                 _validate_conversation_and_send_email(
-                    daily_analysis_team=daily_analysis_team,
+                    weekly_analysis_team=weekly_analysis_team,
                     conv_uuid="fake_uuid",
                     email="fake@email.com",
-                    daily_report_message="fake_message",
+                    weekly_report_message="fake_message",
                     main_email_template="fake_template",
                 )
                 mock_update_chat_message_and_send_email.assert_called_once()

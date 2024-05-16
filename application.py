@@ -3,13 +3,13 @@ from contextlib import asynccontextmanager
 from os import environ
 from typing import AsyncGenerator
 
-# from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from autogen.io.websockets import IOWebsockets
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from captn.captn_agents.application import on_connect
-from captn.captn_agents.backend.teams._daily_analysis_team import execute_daily_analysis
+from captn.captn_agents.backend.teams._weekly_analysis_team import execute_weekly_analysis
 from captn.observability import PrometheusMiddleware, metrics, setting_otlp
 
 load_dotenv()
@@ -25,11 +25,15 @@ OTLP_GRPC_ENDPOINT = environ.get("OTLP_GRPC_ENDPOINT", "http://tempo:4317")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(
-    #     execute_daily_analysis, "cron", hour="5", minute="15"
-    # )  # second="*/59")
-    # scheduler.start()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        execute_weekly_analysis,
+        "cron",
+        hour="4",
+        minute="15",
+        day_of_week="wed",
+    )
+    scheduler.start()
 
     with IOWebsockets.run_server_in_thread(
         on_connect=on_connect,

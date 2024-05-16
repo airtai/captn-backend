@@ -27,7 +27,7 @@ class TestConsoleIOWithWebsockets:
             all_messages=[
                 {
                     "role": "assistant",
-                    "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                    "content": "Below is your weekly analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
                 },
                 {
                     "role": "user",
@@ -306,7 +306,7 @@ class TestConsoleIOWithWebsockets:
                     mock_random_exceptions.assert_not_called()
 
 
-def test_get_message_daily_analysis() -> None:
+def test_get_message_weekly_analysis() -> None:
     request = CaptnAgentRequest(
         message="I want to Remove 'Free' keyword because it is not performing well",
         user_id=-1,
@@ -314,7 +314,7 @@ def test_get_message_daily_analysis() -> None:
         all_messages=[
             {
                 "role": "assistant",
-                "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                "content": "Below is your weekly analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
             },
             {
                 "role": "user",
@@ -327,12 +327,12 @@ def test_get_message_daily_analysis() -> None:
     actual = _get_message(request)
     expected = """
 ### History ###
-This is the JSON encoded history of your conversation that made the Daily Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
+This is the JSON encoded history of your conversation that made the Weekly Analysis and Proposed User Action. Please use this context and continue the execution according to the User Action:
 
 [{"role": "agent", "content": "Conversation 1"},{"role": "agent", "content": "Conversation 2"},{"role": "agent", "content": "Conversation 3"}]
 
-### Daily Analysis ###
-Below is your daily analysis for 29-Jan-24
+### Weekly Analysis ###
+Below is your weekly analysis for 29-Jan-24
 
 Your campaigns have performed yesterday:
  - Clicks: 124 clicks (+3.12%)
@@ -351,7 +351,7 @@ I want to Remove 'Free' keyword because it is not performing well
     assert actual == expected
 
 
-def test_get_message_daily_analysis_continue() -> None:
+def test_get_message_weekly_analysis_continue() -> None:
     request = CaptnAgentRequest(
         message="I want to Remove 'Free' keyword because it is not performing well",
         user_id=-1,
@@ -359,7 +359,7 @@ def test_get_message_daily_analysis_continue() -> None:
         all_messages=[
             {
                 "role": "assistant",
-                "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                "content": "Below is your weekly analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
             },
             {
                 "role": "user",
@@ -382,7 +382,7 @@ def test_get_message_normal_chat() -> None:
         all_messages=[
             {
                 "role": "assistant",
-                "content": "Below is your daily analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
+                "content": "Below is your weekly analysis for 29-Jan-24\n\nYour campaigns have performed yesterday:\n - Clicks: 124 clicks (+3.12%)\n - Spend: $6.54 USD (-1.12%)\n - Cost per click: $0.05 USD (+12.00%)\n\n### Proposed User Action ###\n1. Remove 'Free' keyword because it is not performing well\n2. Increase budget from $10/day to $20/day\n3. Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'\n4. Select some or all of them",
             },
             {
                 "role": "user",

@@ -10,12 +10,12 @@ from captn.captn_agents.backend.teams import BriefCreationTeam
 @pytest.mark.flaky
 @pytest.mark.openai
 def test_clients_response() -> None:
-    team = BriefCreationTeam(task="task", user_id=12, conv_id=13)
-
+    BriefCreationTeam(task="task", user_id=12, conv_id=13)
     with TemporaryDirectory() as cache_dir:
         with Cache.disk(cache_path_root=cache_dir) as cache:
             clients_response = get_client_response(
-                team=team,
+                user_id=12,
+                conv_id=13,
                 cache=cache,
                 client_system_message="Always reply with yes.",
             )

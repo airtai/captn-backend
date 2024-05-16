@@ -1,5 +1,5 @@
 {
-    "daily_customer_reports": [
+    "weekly_customer_reports": [
       {
         "customer_id": "7119828439",
         "currency": "EUR",

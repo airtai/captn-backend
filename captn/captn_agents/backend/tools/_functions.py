@@ -1,4 +1,5 @@
 import ast
+import datetime
 import re
 import time
 from dataclasses import dataclass
@@ -7,7 +8,9 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 import autogen
 import requests
 from annotated_types import Len
+from autogen.agentchat import AssistantAgent
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
+from autogen.cache import Cache
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import Annotated
 
@@ -199,6 +202,66 @@ Do you approve the changes? To approve the changes, please answer 'Yes' and noth
 
 The message MUST use the Markdown format for the text!"""
 
+BENCHMARKING = False
+
+
+def init_chat_and_get_last_message(
+    client_system_message: str,
+    message: str,
+    cache: Optional[Cache] = None,
+) -> str:
+    # This agent is used only to send the message to the client
+    sender = AssistantAgent(
+        name="assistant",
+        is_termination_msg=lambda x: True,  # Once the client replies, the sender will terminate the conversation
+    )
+
+    config_list = Config().config_list_gpt_4
+
+    client = AssistantAgent(
+        name="client",
+        system_message=client_system_message,
+        llm_config={
+            "config_list": config_list,
+            "temperature": 0,
+        },
+    )
+
+    sender.initiate_chat(client, message=message, cache=cache)
+    # last_message is the last message sent by the client
+    last_message = client.chat_messages[sender][-1]["content"]
+    return last_message  # type: ignore[no-any-return]
+
+
+def _ask_client_for_permission_mock(
+    resource_details: str,
+    proposed_changes: str,
+    context: Context,
+) -> str:
+    customer_to_update = (
+        "We propose changes for the following customer: 'IKEA' (ID: 1111)"
+    )
+
+    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+
+    client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
+We are in the middle of the process and we need your permission.
+
+If the proposed changes make sense, Please answer 'Yes' and nothing else.
+Otherwise, ask for more information or suggest changes.
+But do NOT answer with 'No' if you are not sure. Ask for more information instead.
+"""
+    # clients_answer = "yes"
+    clients_answer = init_chat_and_get_last_message(
+        client_system_message=client_system_message,
+        message=message,
+    )
+
+    # In real ask_client_for_permission, we would append (message, None)
+    # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
+    context.clients_question_answer_list.append((message, clients_answer))
+    return clients_answer
+
 
 def ask_client_for_permission(
     customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
@@ -206,6 +269,12 @@ def ask_client_for_permission(
     proposed_changes: Annotated[str, proposed_changes_description],
     context: Context,
 ) -> str:
+    if BENCHMARKING:
+        return _ask_client_for_permission_mock(
+            resource_details=resource_details,
+            proposed_changes=proposed_changes,
+            context=context,
+        )
     user_id = context.user_id
     conv_id = context.conv_id
     clients_question_answer_list = context.clients_question_answer_list
@@ -328,10 +397,8 @@ Give up only if you get 40x error on ALL the pages which you tried to navigate t
 
 
 FINAL MESSAGE:
-Once you have retrieved he wanted information, you MUST create JSON-encoded string according to the following JSON schema:
-{example.model_json_schema()}
-
-You MUST not include any other text or formatting in the message, only JSON-encoded string!
+Once you have retrieved he wanted information, you MUST create JSON-encoded string.
+You MUST not include any other text or formatting in the message, only JSON-encoded summary!
 
 This is an example of correctly formatted JSON (unrelated to the task):
 ```json
@@ -347,8 +414,6 @@ VERY IMPORTANT:
 - if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
-
-You MUST always reply to the last message from the web_surfer agent! Your reply can NOT be empty message!
 """
 
 
@@ -386,6 +451,7 @@ def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         or "TERMINATE" in content
         or "```json" in content
         or "I GIVE UP" in content
+        or content.strip() == ""
     )
 
 
@@ -407,15 +473,6 @@ Visit the most likely pages to be advertised, such as the homepage, product page
 Please provide a detailed summary of the website as JSON-encoded string as instructed in the guidelines.
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
-e.g.
-"Here is a list of the links we will visit:
-1. Click the 'Products' link
-2. Click the 'Electronics' link
-3. Click the 'TVs' link
-
-Now, let's start with the task:
-Click no. 1 - Click the 'Products' link"
-
 You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
 When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
 """
@@ -467,7 +524,11 @@ But before giving up, please try to navigate to another page and continue with t
         if websurfer_navigator_llm_config is None:
             websurfer_navigator_llm_config = get_llm_config_gpt_4()
 
-        timestamp_copy = timestamp
+        timestamp_copy = (
+            datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            if timestamp is None
+            else timestamp
+        )
         web_surfer_navigator_system_message = (
             _create_web_surfer_navigator_system_message(
                 task_guidelines=_task_guidelines
@@ -539,6 +600,15 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                                 recipient=web_surfer_navigator,
                             )
                             continue
+                        if last_message.strip() == "":
+                            retry_message = "Reminder to myself: we do not have any bad attempts, we are just trying to get the information from the web page. Also, I should not send empty messages.\nLet's continue, where we left off."
+                            # In this case, web_surfer_navigator is sending the message to web_surfer
+                            web_surfer_navigator.send(
+                                retry_message,
+                                recipient=web_surfer,
+                            )
+                            continue
+
                         match = re.search(
                             r"```json\n(.*)\n```", last_message, re.DOTALL
                         )
@@ -621,7 +691,7 @@ def send_email(
     proposed_user_actions: Annotated[List[str], "List of proposed user actions"],
 ) -> Dict[str, Any]:
     return_msg = {
-        "subject": "Capt’n.ai Daily Analysis",
+        "subject": "Capt’n.ai Weekly Analysis",
         "email_content": "<html></html>",
         "proposed_user_action": proposed_user_actions,
         "terminate_groupchat": True,
