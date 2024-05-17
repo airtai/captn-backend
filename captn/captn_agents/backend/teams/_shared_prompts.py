@@ -13,4 +13,7 @@ This command should be used for retrieving the information from clients web page
 If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc."""
 
 MODIFICATION_FUNCTIONS_INSTRUCTIONS = """The following commands make permanent changes. In all of them you must use the 'modification_function_parameters' parameter.
-This parameter is a dictionary that contains the fields that are going to be modified and their new values."""
+This parameter is a dictionary that contains the fields that are going to be modified and their new values.
+
+Before EACH call to the modification function, you MUST call the 'ask_client_for_permission' function with the same JSON for the 'modification_function_parameters' parameter.
+i.e. ONE 'ask_client_for_permission' call for ONE modification function call."""

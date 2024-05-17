@@ -258,7 +258,14 @@ def _ask_client_for_permission_mock(
         f"We propose changes for the following customer: '{customer_id}'"
     )
 
-    message = f"{customer_to_update}\n\n{resource_details}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
+    message = f"""{customer_to_update}
+
+{resource_details}
+
+Here are the parameters which will be used for the modification:
+{json.dumps(modification_function_parameters, indent=2)}
+
+To proceed with the changes, please answer 'Yes' and nothing else."""
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
 We are in the middle of the process and we need your permission.
@@ -392,7 +399,13 @@ def ask_client_for_permission(
     ]
 
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
-    message = f"{customer_to_update}\n\n{resource_details}\n\nHere are the parameters which will be used for the modification:\n{json.dumps(modification_function_parameters, indent=2)}"
+    message = f"""{customer_to_update}
+
+{resource_details}
+Here are the parameters which will be used for the modification:
+{json.dumps(modification_function_parameters, indent=2)}
+
+To proceed with the changes, please answer 'Yes' and nothing else."""
 
     recommended_modifications_and_answer_list.append(
         (modification_function_parameters, None)

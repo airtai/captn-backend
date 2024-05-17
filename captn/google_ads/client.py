@@ -141,6 +141,8 @@ def get_user_ids_and_emails() -> str:
 
 
 NOT_IN_QUESTION_ANSWER_LIST = """You must ask the client for the permission first by using the 'ask_client_for_permission' function by using the same JSON for the 'modification_function_parameters' parameter.
+If you don't use the SAME JSON for the 'modification_function_parameters' parameter, the modification will NOT be approved!
+So before calling the current function again, you MUST call the 'ask_client_for_permission' function with the same JSON for the 'modification_function_parameters' parameter.
 
 "modification_function_parameters": """
 NOT_APPROVED = (

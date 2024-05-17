@@ -155,7 +155,7 @@ The client has sent you the task to create a digital campaign for them. And this
     @property
     def _guidelines(self) -> str:
         return f"""## Guidelines
-0. Never repeat yourself or previous messages.
+0. NEVER repeat yourself or previous messages.
 1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
 TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
 reasoning behind it (as short as possible), and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION (also as short as possible). The TEAM MEMBER

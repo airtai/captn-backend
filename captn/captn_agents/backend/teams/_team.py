@@ -385,6 +385,9 @@ You operate within the following constraints:
                 OPENAI_API_STATUS_ERROR.inc()
                 print(f"Exception type: {type(e)}, {e}")
                 exception = e
+            except httpx.RemoteProtocolError as e:
+                print(f"Exception type: {type(e)}, {e}")
+                exception = e
 
         if exception is not None:
             traceback.print_exc()
@@ -400,6 +403,7 @@ You operate within the following constraints:
                 openai.APIStatusError,
                 openai.BadRequestError,
                 httpx.ReadTimeout,
+                httpx.RemoteProtocolError,
                 TimeoutError,
             ) as e:
                 print(f"Handling exception: {type(e)}, {e}")
