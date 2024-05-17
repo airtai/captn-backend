@@ -251,17 +251,15 @@ def _create_reply_message_for_client(
 ) -> str:
     message = f"""{customer_to_update}
 
-    {resource_details}
+{resource_details}
 
-    Here are the parameters which will be used for the modification:
+Here are the parameters which will be used for the modification:
 
+```yaml
+{json.dumps(modification_function_parameters, indent=2)}
+```
 
-    ```yaml
-    {json.dumps(modification_function_parameters, indent=2)}
-
-    ```
-
-    To proceed with the changes, please answer 'Yes' and nothing else."""
+To proceed with the changes, please answer 'Yes' and nothing else."""
     return message
 
 
@@ -335,15 +333,7 @@ def _validate_modification_parameters(
 
         param_type = func_parameters[param_name].annotation
         if type(param_type) == _AnnotatedAlias:
-            print("Annotated")
-            # get the annotation
-
-            print(param_type.__args__)
             param_type = param_type.__args__[0]
-        print(f"param_type: {param_type}")
-
-        print(f"param_value: {param_value}, type: {type(param_value)}")
-
         if issubclass(param_type, BaseModel):
             try:
                 param_type(**param_value)
@@ -358,7 +348,6 @@ def _validate_modification_parameters(
 
     if error_msg:
         raise ValueError(error_msg)
-    print("Validation passed!")
 
 
 def ask_client_for_permission(
@@ -375,7 +364,6 @@ def ask_client_for_permission(
     try:
         func = context.toolbox.get_function(function_name)
     except Exception as e:
-        print(f"Error: {e}")
         raise ValueError(f"function '{function_name}' not found") from e
     if function_name in FUNCTIONS_TO_VALIDATE:
         _validate_modification_parameters(

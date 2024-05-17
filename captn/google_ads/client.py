@@ -198,10 +198,6 @@ def check_for_client_approval(
 
     clients_question_list = [x[0] for x in recommended_modifications_and_answer_list]
 
-    print("modification_function_parameters")
-    print(modification_function_parameters)
-    print("clients_question_list")
-    print(clients_question_list)
     if modification_function_parameters not in clients_question_list:
         error_msg = NOT_IN_QUESTION_ANSWER_LIST + json.dumps(
             modification_function_parameters, indent=2
