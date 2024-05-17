@@ -244,6 +244,27 @@ def _find_value_in_nested_dict(dictionary: Dict[str, Any], key: str) -> Any:
     return None
 
 
+def _create_reply_message_for_client(
+    customer_to_update: str,
+    resource_details: str,
+    modification_function_parameters: Dict[str, Any],
+) -> str:
+    message = f"""{customer_to_update}
+
+    {resource_details}
+
+    Here are the parameters which will be used for the modification:
+
+
+    ```yaml
+    {json.dumps(modification_function_parameters, indent=2)}
+
+    ```
+
+    To proceed with the changes, please answer 'Yes' and nothing else."""
+    return message
+
+
 def _ask_client_for_permission_mock(
     resource_details: str,
     modification_function_parameters: Annotated[
@@ -258,14 +279,11 @@ def _ask_client_for_permission_mock(
         f"We propose changes for the following customer: '{customer_id}'"
     )
 
-    message = f"""{customer_to_update}
-
-{resource_details}
-
-Here are the parameters which will be used for the modification:
-{json.dumps(modification_function_parameters, indent=2)}
-
-To proceed with the changes, please answer 'Yes' and nothing else."""
+    message = _create_reply_message_for_client(
+        customer_to_update=customer_to_update,
+        resource_details=resource_details,
+        modification_function_parameters=modification_function_parameters,
+    )
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
 We are in the middle of the process and we need your permission.
@@ -399,13 +417,11 @@ def ask_client_for_permission(
     ]
 
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
-    message = f"""{customer_to_update}
-
-{resource_details}
-Here are the parameters which will be used for the modification:
-{json.dumps(modification_function_parameters, indent=2)}
-
-To proceed with the changes, please answer 'Yes' and nothing else."""
+    message = _create_reply_message_for_client(
+        customer_to_update=customer_to_update,
+        resource_details=resource_details,
+        modification_function_parameters=modification_function_parameters,
+    )
 
     recommended_modifications_and_answer_list.append(
         (modification_function_parameters, None)
@@ -438,6 +454,7 @@ def get_llm_config_gpt_4() -> Dict[str, Any]:
     return {
         "config_list": config.config_list_gpt_4,
         "temperature": 0,
+        "stream": True,
     }
 
 
@@ -447,6 +464,7 @@ def get_llm_config_gpt_3_5() -> Dict[str, Any]:
     return {
         "config_list": config.config_list_gpt_3_5,
         "temperature": 0,
+        "stream": True,
     }
 
 

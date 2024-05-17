@@ -315,6 +315,7 @@ Here is an example of the smart_suggestions parameter:
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
 params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
+ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'!
 
 ONLY Google ads specialist can suggest following commands:
 1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
@@ -331,6 +332,8 @@ Unless told differently, do NOT retrieve information about the REMOVED resources
 
 
 {MODIFICATION_FUNCTIONS_INSTRUCTIONS}
+When asking the client for the approval, you must explicitly tell him about the parameters which you are going to set by using the 'modification_function_parameters'
+Otherwise, we will NOT be able to make ANY changes!
 
 You can get these parameters from the client ONLY by using the 'ask_client_for_permission' command!!!
 So before you execyte create/update/remove functions, you MUST ask the client for the permission by using the 'ask_client_for_permission' command! Otherwise you will be penalized!
