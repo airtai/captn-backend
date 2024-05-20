@@ -1,5 +1,6 @@
 import datetime
 import json
+import time
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
@@ -401,7 +402,7 @@ You operate within the following constraints:
             raise exception
 
     @staticmethod
-    def retry_from_scratch(self: "Team", e: Exception) -> None:
+    def retry_from_scratch(self: "Team", e: Exception, delay: int = 3) -> None:
         print(f"Retry from scratch: {type(e)}, {e}")
         # Try the team again from scratch
         self.retry_from_scratch_counter += 1
@@ -409,6 +410,7 @@ You operate within the following constraints:
             self.initial_message += (
                 f"\nTimestamp: {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
             )
+            time.sleep(delay**self.retry_from_scratch_counter)
             self.initiate_chat(**self.initiate_chat_kwargs)
         else:
             raise e

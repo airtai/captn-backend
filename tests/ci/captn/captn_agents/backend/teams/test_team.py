@@ -110,6 +110,8 @@ Do NOT try to finish the task until other team members give their opinion.
                 raise httpx.ReadTimeout("Timeout")
 
         team = Team(roles=TestTeam.roles, user_id=123, conv_id=456)
+        team.groupchat = MagicMock()
+        team.groupchat.messages = ["message1"]
         team.retry_func = MagicMock()
 
         f(team, "message", raise_exception=raise_exception)
