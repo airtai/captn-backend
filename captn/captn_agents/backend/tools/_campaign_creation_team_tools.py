@@ -189,7 +189,7 @@ def _create_ad_group_keywords(
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
-        response += f"Keyword: {keyword_response}\n"
+        response += f"Keyword '{keyword.keyword_text}': {keyword_response}\n"
     return response
 
 
@@ -256,7 +256,7 @@ def create_campaign_creation_team_toolbox(
         )
         if isinstance(ad_group_response, dict):
             return ad_group_response
-        response = f"Ad group: {ad_group_response}\n"
+        response = f"Ad group '{ad_group_with_ad_and_keywords.ad_group.name}': {ad_group_response}\n"
         ad_group_id = _get_resource_id_from_response(ad_group_response)
 
         ad_group_ad_response = _create_ad_group_ad(
@@ -266,7 +266,7 @@ def create_campaign_creation_team_toolbox(
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
             ad_group_id=ad_group_id,
         )
-        response += f"Ad group ad: {ad_group_ad_response}\n"
+        response += f"Ad group ad with final url - '{ad_group_with_ad_and_keywords.ad_group_ad.final_url}': {ad_group_ad_response}\n"
 
         ad_group_keywords_response = _create_ad_group_keywords(
             user_id=user_id,
@@ -276,6 +276,7 @@ def create_campaign_creation_team_toolbox(
             ad_group_id=ad_group_id,
         )
         response += ad_group_keywords_response  # type: ignore
+        context.changes_made += f"\n{response}"
 
         return response
 

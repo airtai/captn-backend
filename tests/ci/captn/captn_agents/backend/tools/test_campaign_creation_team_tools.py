@@ -119,10 +119,10 @@ class TestTools:
                 context=context,
             )
 
-            expected_response = f"""Ad group: {side_effect[0]}
-Ad group ad: {side_effect[1]}
-Keyword: {side_effect[2]}
-Keyword: {side_effect[3]}
+            expected_response = f"""Ad group '{ad_group.name}': {side_effect[0]}
+Ad group ad with final url - '{ad_group_ad.final_url}': {side_effect[1]}
+Keyword '{keyword1.keyword_text}': {side_effect[2]}
+Keyword '{keyword2.keyword_text}': {side_effect[3]}
 """
 
             print()

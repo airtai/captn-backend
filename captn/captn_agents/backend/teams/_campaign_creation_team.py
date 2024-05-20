@@ -318,3 +318,9 @@ Not needed info:
 
 Now Let's get all the information from the clients web page and create a detailed plan for the campaign.
 """
+
+    def initiate_chat(self, **kwargs: Any) -> None:
+        if self.toolbox._context.changes_made:  # type: ignore[union-attr]
+            self.initial_message += f"\nThe following modifications have already been done: {self.toolbox._context.changes_made}\n"  # type: ignore[union-attr]
+            self.toolbox._context.changes_made = ""  # type: ignore[union-attr]
+        super().initiate_chat(**kwargs)
