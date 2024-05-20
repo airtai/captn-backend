@@ -88,18 +88,18 @@ Do NOT try to finish the task until other team members give their opinion.
         team.manager.send = MagicMock()
 
         if number_of_exceptions == 0:
-            team.retry_func()
+            team.retry_func(delay=0)
             team.manager.send.assert_called_once()
         elif number_of_exceptions > len(Team._retry_messages):
             team.manager.send.side_effect = httpx.ReadTimeout("Timeout")
             with pytest.raises(httpx.ReadTimeout):
-                team.retry_func()
+                team.retry_func(delay=0)
             assert team.manager.send.call_count == len(Team._retry_messages)
         else:
             team.manager.send.side_effect = [
                 httpx.ReadTimeout("Timeout")
             ] * number_of_exceptions + [None]
-            team.retry_func()
+            team.retry_func(delay=0)
             assert team.manager.send.call_count == number_of_exceptions + 1
 
     @pytest.mark.parametrize("raise_exception", [False, True])
@@ -131,7 +131,7 @@ Do NOT try to finish the task until other team members give their opinion.
         team.groupchat.messages = ["message1", "message2"]
 
         if number_of_exceptions == 0:
-            team.initiate_chat()
+            team.initiate_chat(delay=0)
             team.manager.send.assert_not_called()
             team.manager.initiate_chat.assert_called_once()
         elif (
@@ -141,7 +141,7 @@ Do NOT try to finish the task until other team members give their opinion.
             team.manager.initiate_chat.side_effect = httpx.ReadTimeout("Timeout")
             team.manager.send.side_effect = httpx.ReadTimeout("Timeout")
             with pytest.raises(httpx.ReadTimeout):
-                team.initiate_chat()
+                team.initiate_chat(delay=0)
 
             expected_call_count = (
                 len(Team._retry_messages) * Team._MAX_RETRIES_FROM_SCRATCH
@@ -155,7 +155,7 @@ Do NOT try to finish the task until other team members give their opinion.
             team.manager.send.side_effect = [
                 httpx.ReadTimeout("Timeout")
             ] * number_of_exceptions + [None]
-            team.initiate_chat()
+            team.initiate_chat(delay=0)
             assert team.manager.send.call_count == number_of_exceptions + 1
             team.manager.initiate_chat.assert_called_once()
         elif number_of_exceptions == 10:
@@ -163,7 +163,7 @@ Do NOT try to finish the task until other team members give their opinion.
             team.manager.send.side_effect = [
                 httpx.ReadTimeout("Timeout")
             ] * number_of_exceptions + [None]
-            team.initiate_chat(clear_history=True)
+            team.initiate_chat(delay=0)
             assert team.manager.send.call_count == number_of_exceptions + 1
             assert team.manager.initiate_chat.call_count == 2
 
@@ -179,12 +179,12 @@ Do NOT try to finish the task until other team members give their opinion.
         team.groupchat.messages = ["message1"] * num_of_messages
 
         if num_of_messages < max_round:
-            team.initiate_chat()
+            team.initiate_chat(delay=0)
             team.manager.send.assert_not_called()
             team.manager.initiate_chat.assert_called_once()
         else:
             with pytest.raises(Exception):  # noqa: B017
-                team.initiate_chat()
+                team.initiate_chat(delay=0)
             team.manager.send.assert_not_called()
             assert (
                 team.manager.initiate_chat.call_count == Team._MAX_RETRIES_FROM_SCRATCH

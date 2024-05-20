@@ -368,7 +368,7 @@ You operate within the following constraints:
 
         return last_message  # type: ignore
 
-    def retry_func(self) -> None:
+    def retry_func(self, delay: int = 2) -> None:
         exception: Optional[Exception] = None
         for i in range(len(self._retry_messages)):
             print(f"Retry number {i+1}.")
@@ -379,6 +379,7 @@ You operate within the following constraints:
                 message = self._retry_messages[i]
 
             try:
+                time.sleep(delay**i)
                 self.manager.send(
                     recipient=self.manager,
                     message=message,
@@ -419,11 +420,12 @@ You operate within the following constraints:
     def handle_exceptions(func: Callable[..., None]) -> Callable[..., None]:
         def wrapper(self: "Team", *args: Any, **kwargs: Any) -> None:
             try:
+                delay = kwargs.get("delay", 2)
                 func(self, *args, **kwargs)
 
                 if len(self.get_messages()) >= self.max_round:
                     error_message = f"Maximum number of messages reached: {self.max_round}, Retrying the team from scratch."
-                    Team.retry_from_scratch(self, Exception(error_message))
+                    Team.retry_from_scratch(self, Exception(error_message), delay=delay)
             except (
                 openai.APIStatusError,
                 openai.BadRequestError,
@@ -434,9 +436,9 @@ You operate within the following constraints:
                 print(f"Handling exception: {type(e)}, {e}")
                 try:
                     # Try to unstuck the team
-                    self.retry_func()
+                    self.retry_func(delay=delay)
                 except Exception as e:
-                    Team.retry_from_scratch(self, e)
+                    Team.retry_from_scratch(self, e, delay=delay)
 
         return wrapper
 
