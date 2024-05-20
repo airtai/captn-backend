@@ -1,3 +1,4 @@
+import datetime
 import json
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
@@ -62,6 +63,8 @@ class Team:
         "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
         "Please continue.",
     ] * 3
+
+    _MAX_RETRIES_FROM_SCRATCH = 3
 
     @classmethod
     def register_team(cls, name: str) -> Callable[[T], T]:
@@ -133,6 +136,7 @@ class Team:
         user_id: int,
         conv_id: int,
         roles: List[Dict[str, str]],
+        task: str = "",
         function_map: Optional[Dict[str, Callable[[Any], Any]]] = None,
         work_dir: str = "my_default_workdir",
         max_round: int = 80,
@@ -147,6 +151,7 @@ class Team:
         self.user_id = user_id
         self.conv_id = conv_id
         self.roles = roles
+        self.task = task
         self.initial_message: str
         self.name: str
         self.max_round = max_round
@@ -164,6 +169,7 @@ class Team:
 
         self.name = Team.construct_team_name(user_id=user_id, conv_id=conv_id)
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
+        self.retry_from_scratch_counter = 0
         Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
     @classmethod
@@ -407,12 +413,23 @@ You operate within the following constraints:
                 TimeoutError,
             ) as e:
                 print(f"Handling exception: {type(e)}, {e}")
-                self.retry_func()
+                try:
+                    # Try to unstuck the team
+                    self.retry_func()
+                except Exception as e:
+                    # Try the team again from scratch
+                    self.retry_from_scratch_counter += 1
+                    if self.retry_from_scratch_counter < self._MAX_RETRIES_FROM_SCRATCH:
+                        self.initial_message += f"\nTimestamp: {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
+                        self.initiate_chat(**self.initiate_chat_kwargs)
+                    else:
+                        raise e
 
         return wrapper
 
     @handle_exceptions
     def initiate_chat(self, **kwargs: Any) -> None:
+        self.initiate_chat_kwargs = kwargs
         self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
 
     @handle_exceptions

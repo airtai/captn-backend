@@ -101,8 +101,6 @@ sure it is understandable by non-experts.
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
     ):
-        self.task = task
-
         recommended_modifications_and_answer_list: List[
             Tuple[Dict[str, Any], Optional[str]]
         ] = []
@@ -113,6 +111,7 @@ sure it is understandable by non-experts.
             user_id=user_id,
             conv_id=conv_id,
             roles=roles,
+            task=task,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,

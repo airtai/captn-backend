@@ -118,7 +118,7 @@ Do NOT try to finish the task until other team members give their opinion.
         else:
             team.retry_func.assert_not_called()
 
-    @pytest.mark.parametrize("number_of_exceptions", [0, 2, 10])
+    @pytest.mark.parametrize("number_of_exceptions", [0, 2, 10, 30])
     def test_initiate_chat(self, number_of_exceptions) -> None:
         team = Team(roles=TestTeam.roles, user_id=123, conv_id=456)
         team.initial_message = "Initial message"
@@ -129,21 +129,39 @@ Do NOT try to finish the task until other team members give their opinion.
         if number_of_exceptions == 0:
             team.initiate_chat()
             team.manager.send.assert_not_called()
-        elif number_of_exceptions > len(Team._retry_messages):
+            team.manager.initiate_chat.assert_called_once()
+        elif (
+            number_of_exceptions
+            > len(Team._retry_messages) * Team._MAX_RETRIES_FROM_SCRATCH
+        ):
             team.manager.initiate_chat.side_effect = httpx.ReadTimeout("Timeout")
             team.manager.send.side_effect = httpx.ReadTimeout("Timeout")
             with pytest.raises(httpx.ReadTimeout):
                 team.initiate_chat()
-            assert team.manager.send.call_count == len(Team._retry_messages)
-        else:
+
+            expected_call_count = (
+                len(Team._retry_messages) * Team._MAX_RETRIES_FROM_SCRATCH
+            )
+            assert team.manager.send.call_count == expected_call_count
+            assert (
+                team.manager.initiate_chat.call_count == Team._MAX_RETRIES_FROM_SCRATCH
+            )
+        elif number_of_exceptions < len(Team._retry_messages):
             team.manager.initiate_chat.side_effect = httpx.ReadTimeout("Timeout")
             team.manager.send.side_effect = [
                 httpx.ReadTimeout("Timeout")
             ] * number_of_exceptions + [None]
             team.initiate_chat()
             assert team.manager.send.call_count == number_of_exceptions + 1
-
-        team.manager.initiate_chat.assert_called_once()
+            team.manager.initiate_chat.assert_called_once()
+        elif number_of_exceptions == 10:
+            team.manager.initiate_chat.side_effect = httpx.ReadTimeout("Timeout")
+            team.manager.send.side_effect = [
+                httpx.ReadTimeout("Timeout")
+            ] * number_of_exceptions + [None]
+            team.initiate_chat(clear_history=True)
+            assert team.manager.send.call_count == number_of_exceptions + 1
+            assert team.manager.initiate_chat.call_count == 2
 
 
 class TestTeamRegistry:
