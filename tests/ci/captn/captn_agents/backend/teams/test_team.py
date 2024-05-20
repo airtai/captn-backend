@@ -125,6 +125,8 @@ Do NOT try to finish the task until other team members give their opinion.
         team.manager = MagicMock()
         team.manager.initiate_chat = MagicMock()
         team.manager.send = MagicMock()
+        team.groupchat = MagicMock()
+        team.groupchat.messages = ["message1", "message2"]
 
         if number_of_exceptions == 0:
             team.initiate_chat()
@@ -162,6 +164,29 @@ Do NOT try to finish the task until other team members give their opinion.
             team.initiate_chat(clear_history=True)
             assert team.manager.send.call_count == number_of_exceptions + 1
             assert team.manager.initiate_chat.call_count == 2
+
+    @pytest.mark.parametrize("num_of_messages", [2, 5, 10])
+    def test_max_number_of_messages(self, num_of_messages) -> None:
+        max_round = 5
+        team = Team(roles=TestTeam.roles, user_id=123, conv_id=456, max_round=max_round)
+        team.initial_message = "Initial message"
+        team.manager = MagicMock()
+        team.manager.initiate_chat = MagicMock()
+        team.manager.send = MagicMock()
+        team.groupchat = MagicMock()
+        team.groupchat.messages = ["message1"] * num_of_messages
+
+        if num_of_messages < max_round:
+            team.initiate_chat()
+            team.manager.send.assert_not_called()
+            team.manager.initiate_chat.assert_called_once()
+        else:
+            with pytest.raises(Exception):  # noqa: B017
+                team.initiate_chat()
+            team.manager.send.assert_not_called()
+            assert (
+                team.manager.initiate_chat.call_count == Team._MAX_RETRIES_FROM_SCRATCH
+            )
 
 
 class TestTeamRegistry:

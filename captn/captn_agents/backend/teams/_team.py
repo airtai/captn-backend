@@ -401,10 +401,27 @@ You operate within the following constraints:
             raise exception
 
     @staticmethod
+    def retry_from_scratch(self: "Team", e: Exception) -> None:
+        print(f"Retry from scratch: {type(e)}, {e}")
+        # Try the team again from scratch
+        self.retry_from_scratch_counter += 1
+        if self.retry_from_scratch_counter < self._MAX_RETRIES_FROM_SCRATCH:
+            self.initial_message += (
+                f"\nTimestamp: {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
+            )
+            self.initiate_chat(**self.initiate_chat_kwargs)
+        else:
+            raise e
+
+    @staticmethod
     def handle_exceptions(func: Callable[..., None]) -> Callable[..., None]:
         def wrapper(self: "Team", *args: Any, **kwargs: Any) -> None:
             try:
-                return func(self, *args, **kwargs)
+                func(self, *args, **kwargs)
+
+                if len(self.get_messages()) >= self.max_round:
+                    error_message = f"Maximum number of messages reached: {self.max_round}, Retrying the team from scratch."
+                    Team.retry_from_scratch(self, Exception(error_message))
             except (
                 openai.APIStatusError,
                 openai.BadRequestError,
@@ -417,13 +434,7 @@ You operate within the following constraints:
                     # Try to unstuck the team
                     self.retry_func()
                 except Exception as e:
-                    # Try the team again from scratch
-                    self.retry_from_scratch_counter += 1
-                    if self.retry_from_scratch_counter < self._MAX_RETRIES_FROM_SCRATCH:
-                        self.initial_message += f"\nTimestamp: {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
-                        self.initiate_chat(**self.initiate_chat_kwargs)
-                    else:
-                        raise e
+                    Team.retry_from_scratch(self, e)
 
         return wrapper
 
