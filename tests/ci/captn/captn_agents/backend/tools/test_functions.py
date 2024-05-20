@@ -4,10 +4,18 @@ import pytest
 from pydantic_core._pydantic_core import ValidationError
 
 from captn.captn_agents.backend.benchmarking.websurfer import benchmark_websurfer
+from captn.captn_agents.backend.teams._campaign_creation_team import (
+    ad_group_with_ad_and_keywords,
+)
+from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
+    AdGroupWithAdAndKeywords,
+)
 from captn.captn_agents.backend.tools._functions import (
     Summary,
     WebPageSummary,
     WebUrl,
+    _find_value_in_nested_dict,
+    _validate_modification_parameters,
     get_get_info_from_the_web_page,
     get_webpage_status_code,
 )
@@ -129,3 +137,84 @@ class TestWebSurfer:
         timestamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
         result = benchmark_websurfer(url=url, outer_retries=3, timestamp=timestamp)
         print(result)
+
+
+class TestAskClientForPermission:
+    def test_find_value_in_nested_dict(self) -> None:
+        example = {"customer": "222", "nested": {"find_this": "value"}}
+        assert _find_value_in_nested_dict(example, "find_this") == "value"
+        assert _find_value_in_nested_dict(example, "not_here") is None
+
+    @pytest.mark.parametrize(
+        "modification_function_parameters, expected_output",
+        [
+            (
+                {"ad_group_with_ad_and_keywords": "not_a_model_dump"},
+                "argument after ** must be a mapping, not str",
+            ),
+            (
+                {"ad_group_with_ad_and_keywords": {"ad_group": "not_a_model_dump"}},
+                "5 validation errors",
+            ),
+            (
+                {
+                    "ad_group_with_ad_and_keywords": ad_group_with_ad_and_keywords.model_dump()
+                },
+                None,
+            ),
+            (
+                {
+                    "customer_id": "1111",
+                    "campaign_id": "847",
+                    "ad_group": {"status": "ENABLED", "name": "FastStream Features"},
+                    "ad_group_ad": {
+                        "status": "ENABLED",
+                        "final_url": "https://faststream.airt.ai/latest/faststream/",
+                        "headlines": [
+                            "FastAPI Compatible",
+                            "Modern Microservices",
+                            "Async Services",
+                            "Streamline Workflow",
+                            "Community Driven",
+                        ],
+                        "descriptions": [
+                            "Build async web services with ease.",
+                            "Validate messages with Pydantic.",
+                            "Generate docs automatically.",
+                            "Manage dependencies efficiently.",
+                        ],
+                    },
+                    "keywords": [
+                        {
+                            "status": "ENABLED",
+                            "keyword_text": "FastStream",
+                            "keyword_match_type": "EXACT",
+                        },
+                    ],
+                },
+                "parameter customer_id does not exist in create_ad_group_with_ad_and_keywords input parameters: odict_keys(['ad_group_with_ad_and_keywords'])",
+            ),
+        ],
+    )
+    def test_validate_modification_parameters(
+        self, modification_function_parameters, expected_output
+    ) -> None:
+        def create_ad_group_with_ad_and_keywords(
+            ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+        ) -> None:
+            pass
+
+        if expected_output is None:
+            _validate_modification_parameters(
+                func=create_ad_group_with_ad_and_keywords,
+                function_name="create_ad_group_with_ad_and_keywords",
+                modification_function_parameters=modification_function_parameters,
+            )
+        else:
+            with pytest.raises(ValueError) as e:
+                _validate_modification_parameters(
+                    func=create_ad_group_with_ad_and_keywords,
+                    function_name="create_ad_group_with_ad_and_keywords",
+                    modification_function_parameters=modification_function_parameters,
+                )
+            assert expected_output in str(e._excinfo[1])

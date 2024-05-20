@@ -1,9 +1,21 @@
 import ast
 import datetime
+import inspect
+import json
 import re
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import autogen
 import requests
@@ -12,11 +24,12 @@ from autogen.agentchat import AssistantAgent
 from autogen.agentchat.contrib.web_surfer import WebSurferAgent  # noqa: E402
 from autogen.cache import Cache
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
-from typing_extensions import Annotated
+from typing_extensions import _AnnotatedAlias
 
-from ....google_ads.client import execute_query
+from ....google_ads.client import clean_nones, execute_query
 from ...model import SmartSuggestions
 from ..config import Config
+from ..toolboxes.base import Toolbox
 
 __all__ = (
     "Context",
@@ -167,12 +180,15 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 class Context:
     user_id: int
     conv_id: int
-    clients_question_answer_list: List[Tuple[str, Optional[str]]]
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ]
+    toolbox: Toolbox
     get_only_non_manager_accounts: bool = False
 
 
 ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'proposed_changes' to describe the changes which you want to make.
+Use 'resource_details' to describe in detail the resource which you want to modify (all the current details of the resource) and 'modification_function_parameters'.
 Do NOT use this method before you have all the information about the resource and the changes which you want to make!
 This method should ONLY be used when you know the exact resource and exact changes which you want to make and NOT for the general questions like: 'Do you want to update keywords?'.
 Also, propose one change at a time. If you want to make multiple changes, ask the client for the permission for each change separately i.e. before each modification, use this method to ask the client for the permission.
@@ -185,20 +201,6 @@ The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are '
 
 If you want to modify the keywords, you MUST provide the current keywords details, e.g:
 Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'.
-
-The message MUST use the Markdown format for the text!"""
-
-proposed_changes_description = """Explains which changes you want to make and why you want to make them.
-I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
-You MUST also tell about all the fields which will be effected by the changes, e.g.:
-'status' will be changed from 'ENABLED' to 'PAUSED'
-Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '2000000')
-
-e.g. for AdGroupAd:
-'final_url' will be set to 'https://my-web-page.com'
-Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
-
-Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else.
 
 The message MUST use the Markdown format for the text!"""
 
@@ -233,16 +235,53 @@ def init_chat_and_get_last_message(
     return last_message  # type: ignore[no-any-return]
 
 
+def _find_value_in_nested_dict(dictionary: Dict[str, Any], key: str) -> Any:
+    for k, v in dictionary.items():
+        if k == key:
+            return v
+        elif isinstance(v, dict):
+            return _find_value_in_nested_dict(v, key)
+    return None
+
+
+def _create_reply_message_for_client(
+    customer_to_update: str,
+    resource_details: str,
+    modification_function_parameters: Dict[str, Any],
+) -> str:
+    message = f"""{customer_to_update}
+
+{resource_details}
+
+Here are the parameters which will be used for the modification:
+
+```yaml
+{json.dumps(modification_function_parameters, indent=2)}
+```
+
+To proceed with the changes, please answer 'Yes' and nothing else."""
+    return message
+
+
 def _ask_client_for_permission_mock(
     resource_details: str,
-    proposed_changes: str,
+    modification_function_parameters: Annotated[
+        Dict[str, Any], "Parameters for the modification function"
+    ],
     context: Context,
 ) -> str:
+    customer_id = _find_value_in_nested_dict(
+        dictionary=modification_function_parameters, key="customer_id"
+    )
     customer_to_update = (
-        "We propose changes for the following customer: 'IKEA' (ID: 1111)"
+        f"We propose changes for the following customer: '{customer_id}'"
     )
 
-    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+    message = _create_reply_message_for_client(
+        customer_to_update=customer_to_update,
+        resource_details=resource_details,
+        modification_function_parameters=modification_function_parameters,
+    )
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
 We are in the middle of the process and we need your permission.
@@ -258,26 +297,104 @@ But do NOT answer with 'No' if you are not sure. Ask for more information instea
     )
 
     # In real ask_client_for_permission, we would append (message, None)
-    # and we would update the clients_question_answer_list with the clients_answer in the continue_conversation function
-    context.clients_question_answer_list.append((message, clients_answer))
+    # and we would update the recommended_modifications_and_answer_list with the clients_answer in the continue_conversation function
+    context.recommended_modifications_and_answer_list.append(
+        (modification_function_parameters, clients_answer)
+    )
     return clients_answer
 
 
+# These parameters are not needed for the Google Ads API, but only for our inner checks
+REMOVE_FROM_MODIFICATION_PARAMETERS = ["local_currency"]
+modification_function_parameters_description = """Parameters for the modification function. Key 'customer_id' is mandatory in the dictionary!
+These parameters will be used ONLY for ONE function call. Do NOT send a list of parameters for multiple function calls!"""
+
+
+FUNCTIONS_TO_VALIDATE = ["create_ad_group_with_ad_and_keywords"]
+
+
+# TODO: validate all functions not just create_ad_group_with_ad_and_keywords
+# TODO: currently not able to validate Literal types
+def _validate_modification_parameters(
+    func: Callable[..., Any],
+    function_name: str,
+    modification_function_parameters: Dict[str, Any],
+) -> None:
+    error_msg = ""
+    func_parameters = inspect.signature(func).parameters
+
+    for param_name, param_value in modification_function_parameters.items():
+        if param_name not in func_parameters:
+            error_msg += (
+                f"parameter {param_name} does not exist in {function_name} input parameters: {func_parameters.keys()}"
+                + "\n"
+            )
+            continue
+
+        param_type = func_parameters[param_name].annotation
+        if type(param_type) == _AnnotatedAlias:
+            param_type = param_type.__args__[0]
+        if issubclass(param_type, BaseModel):
+            try:
+                param_type(**param_value)
+            except Exception as e:
+                enriched_error = f"""modification_function_parameters validation failed for param_name {param_name} with error: {e}."""
+                error_msg += enriched_error + "\n"
+        elif type(param_value) != param_type:
+            error_msg += (
+                f"parameter {param_name} type mismatch. Expected {param_type}, got {type(param_value)}."
+                + "\n"
+            )
+
+    if error_msg:
+        raise ValueError(error_msg)
+
+
 def ask_client_for_permission(
-    customer_id: Annotated[str, "Id of the customer for whom the changes will be made"],
     resource_details: Annotated[str, resource_details_description],
-    proposed_changes: Annotated[str, proposed_changes_description],
+    function_name: Annotated[
+        str, "The name of the function which will be called for the modification"
+    ],
+    modification_function_parameters: Annotated[
+        Dict[str, Any],
+        modification_function_parameters_description,
+    ],
     context: Context,
 ) -> str:
+    try:
+        func = context.toolbox.get_function(function_name)
+    except Exception as e:
+        raise ValueError(f"function '{function_name}' not found") from e
+    if function_name in FUNCTIONS_TO_VALIDATE:
+        _validate_modification_parameters(
+            func=func,
+            function_name=function_name,
+            modification_function_parameters=modification_function_parameters,
+        )
+
+    modification_function_parameters = clean_nones(modification_function_parameters)
+    customer_id = _find_value_in_nested_dict(
+        dictionary=modification_function_parameters, key="customer_id"
+    )
+    if customer_id is None:
+        raise ValueError(
+            "The 'customer_id' parameter is missing in the 'modification_function_parameters'."
+        )
+
+    for key in REMOVE_FROM_MODIFICATION_PARAMETERS:
+        modification_function_parameters.pop(key, None)
+
     if BENCHMARKING:
         return _ask_client_for_permission_mock(
             resource_details=resource_details,
-            proposed_changes=proposed_changes,
+            modification_function_parameters=modification_function_parameters,
             context=context,
         )
     user_id = context.user_id
     conv_id = context.conv_id
-    clients_question_answer_list = context.clients_question_answer_list
+    recommended_modifications_and_answer_list = (
+        context.recommended_modifications_and_answer_list
+    )
 
     query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
     query_result = execute_query(
@@ -288,9 +405,15 @@ def ask_client_for_permission(
     ]
 
     customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
-    message = f"{customer_to_update}\n\n{resource_details}\n\n{proposed_changes}"
+    message = _create_reply_message_for_client(
+        customer_to_update=customer_to_update,
+        resource_details=resource_details,
+        modification_function_parameters=modification_function_parameters,
+    )
 
-    clients_question_answer_list.append((message, None))
+    recommended_modifications_and_answer_list.append(
+        (modification_function_parameters, None)
+    )
 
     return reply_to_client(
         message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
@@ -312,18 +435,6 @@ The current Ad Copy contains 3 headlines and 2 descriptions. The headlines are '
 If you want to modify the keywords, you MUST provide the current keywords details, e.g:
 Ad Group 'ag1' contains 5 keywords. The keywords are 'k1', 'k2', 'k3', 'k4' and 'k5'."""
 
-proposed_changes_description = """Explains which changes you want to make and why you want to make them.
-I suggest adding new headline 'new-h' because it can increase the CTR and the number of conversions.
-You MUST also tell about all the fields which will be effected by the changes, e.g.:
-'status' will be changed from 'ENABLED' to 'PAUSED'
-Budget will be set to 2$ ('cpc_bid_micros' will be changed from '1000000' to '2000000')
-
-e.g. for AdGroupAd:
-'final_url' will be set to 'https://my-web-page.com'
-Hedlines will be extended with a list 'hedlines' ['h1', 'h2', 'h3', 'new-h']
-
-Do you approve the changes? To approve the changes, please answer 'Yes' and nothing else."""
-
 
 def get_llm_config_gpt_4() -> Dict[str, Any]:
     config = Config()
@@ -331,6 +442,7 @@ def get_llm_config_gpt_4() -> Dict[str, Any]:
     return {
         "config_list": config.config_list_gpt_4,
         "temperature": 0,
+        "stream": True,
     }
 
 
@@ -340,6 +452,7 @@ def get_llm_config_gpt_3_5() -> Dict[str, Any]:
     return {
         "config_list": config.config_list_gpt_3_5,
         "temperature": 0,
+        "stream": True,
     }
 
 

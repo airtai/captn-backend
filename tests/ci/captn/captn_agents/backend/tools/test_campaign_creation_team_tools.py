@@ -1,10 +1,11 @@
 import unittest
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
     AdGroupCriterionForCreation,
@@ -13,6 +14,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     create_campaign_creation_team_toolbox,
 )
 from captn.captn_agents.backend.tools._functions import Context
+from captn.google_ads.client import clean_nones
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
@@ -26,7 +28,7 @@ class TestTools:
         self.toolbox = create_campaign_creation_team_toolbox(
             user_id=12345,
             conv_id=67890,
-            clients_question_answer_list=[],
+            recommended_modifications_and_answer_list=[],
         )
 
     def test_llm_config(self) -> None:
@@ -95,10 +97,18 @@ class TestTools:
             ]
             mock_google_ads_create_update.side_effect = side_effect
 
+            modification_function_params = clean_nones(
+                {
+                    "ad_group_with_ad_and_keywords": ad_group_with_ad_and_keywords.model_dump()
+                }
+            )
             context = Context(
                 user_id=1,
                 conv_id=1,
-                clients_question_answer_list=[("question", "yes")],
+                recommended_modifications_and_answer_list=[
+                    (modification_function_params, "yes")
+                ],
+                toolbox=Toolbox(),
             )
             create_ad_group_with_ad_and_keywords = self.toolbox.get_function(
                 "create_ad_group_with_ad_and_keywords"
@@ -106,8 +116,6 @@ class TestTools:
 
             response = create_ad_group_with_ad_and_keywords(
                 ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-                clients_approval_message="yes",
-                modification_question="question",
                 context=context,
             )
 
@@ -127,14 +135,17 @@ Keyword: {side_effect[3]}
 
 class TestContext:
     def test_context_objects_are_not_coppies(self):
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
         context = Context(
             user_id=12345,
             conv_id=67890,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+            toolbox=Toolbox(),
         )
-        clients_question_answer_list.append(("question", "answer"))
+        recommended_modifications_and_answer_list.append(("question", "answer"))
 
-        actual = context.clients_question_answer_list
+        actual = context.recommended_modifications_and_answer_list
         expected = [("question", "answer")]
         assert actual == expected, actual

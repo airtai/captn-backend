@@ -1,5 +1,7 @@
+import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from ....google_ads.client import clean_nones
 from ..config import Config
 from ..tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
@@ -43,11 +45,15 @@ ad_group = AdGroupForCreation(
 )
 
 ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
-    customer_id="1111",
+    customer_id="2222",
     campaign_id="1212",
     ad_group=ad_group,
     ad_group_ad=ad_group_ad,
     keywords=[keyword1, keyword2],
+)
+
+example_json = json.dumps(
+    clean_nones(ad_group_with_ad_and_keywords.model_dump()), indent=2
 )
 
 
@@ -79,7 +85,7 @@ sure it is understandable by non-experts.
 
     _retry_messages = [
         "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
-        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {ad_group_with_ad_and_keywords.model_dump_json()}",
+        f"Here is an example of a valid JSON string for the 'create_ad_group_with_ad_and_keywords': {example_json}",
         "Please continue.",
     ] * 2
 
@@ -97,7 +103,9 @@ sure it is understandable by non-experts.
     ):
         self.task = task
 
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = CampaignCreationTeam._default_roles
 
@@ -110,7 +118,7 @@ sure it is understandable by non-experts.
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             use_user_proxy=True,
         )
 
@@ -132,7 +140,7 @@ sure it is understandable by non-experts.
         self.toolbox = create_campaign_creation_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
-            clients_question_answer_list=self.clients_question_answer_list,
+            recommended_modifications_and_answer_list=self.recommended_modifications_and_answer_list,
         )
         for agent in self.members:
             if agent != self.user_proxy:
@@ -147,7 +155,7 @@ The client has sent you the task to create a digital campaign for them. And this
     @property
     def _guidelines(self) -> str:
         return f"""## Guidelines
-0. Never repeat yourself or previous messages.
+0. NEVER repeat yourself or previous messages.
 1. BEFORE you do ANYTHING, write a detailed step-by-step plan of what you are going to do. For EACH STEP, an APPROPRIATE
 TEAM MEMBER should propose a SOLUTION for that step. The TEAM MEMBER PROPOSING the solution should explain the
 reasoning behind it (as short as possible), and every OTHER TEAM MEMBER on the team should give a CONSTRUCTIVE OPINION (also as short as possible). The TEAM MEMBER
@@ -197,14 +205,9 @@ You can NOT do anything else, so do not suggest changes which you can NOT perfor
 
 
 Example of the JSON input for the 'create_ad_group_with_ad_and_keywords' command:
-{ad_group_with_ad_and_keywords.model_dump_json()}
+{example_json}
 
 When suggesting the JSON input, do NOT add \\n, \\t or any whitespaces to the JSON!!!
-
-and two additional parameters:
-- clients_approval_message: "yes"
-- modification_question: "Can I make the following changes to your account?"
-
 
 smart suggestions examples:
 Use smart suggestions to suggest keywords, headlines, descriptions etc. which can be added/updated/removed. This feature is very useful for the client.
@@ -243,8 +246,8 @@ All team members have access to the following command:
 }}
 
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (customer_id: str, resource_details: str, proposed_changes: str)
-'proposed_changes' parameter must contain info about each field which you want to modify and it MUST reference it by the EXACT name as the one you are going to use in the modification method.
+params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
+ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'!
 
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
@@ -259,25 +262,16 @@ Use this command only if the client asks you to change the Google account. If th
 {MODIFICATION_FUNCTIONS_INSTRUCTIONS}
 6. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
-clients_approval_message: string, modification_question: str)
+)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
 If the client specifies the 'budget_amount_micros' in another currency, you must convert it to the local currency!
 Otherwise, incorrect budget will be set for the campaign!
-When asking the client for the approval, you must explicitly tell him about the parameters which you are going to set,
-i.e. it is mandatory that the 'proposed_changes' parameter contains ALL the parameters which will be used:
-- name
-- status
-- budget_amount_micros (if not told differently, suggest small budget, e.g. 3 EUR)
-- network_settings_target_google_search
-- network_settings_target_search_network
-- network_settings_target_content_network
+When asking the client for the approval, you must explicitly tell him about the parameters which you are going to set by using the 'modification_function_parameters'
 Otherwise, we will NOT be able to create a new campaign!
 
-Here is an example of correct 'proposed_changes' parameter:
-    We are planning to create a new campaign for airt technologies d.o.o. with the following details:
-
+Here is an example of correct 'resource_details' parameter:
     Campaign name: xyz
     Daily budget: 3 EUR (budget_amount_micros will be set to 3000000)
     Currency: EUR
@@ -285,18 +279,9 @@ Here is an example of correct 'proposed_changes' parameter:
     Targeting: Google Search Network and Google Display Network
     The campaign will focus on promoting your AI-powered framework and products such as FastStream and Monotonic Neural Networks.
 
-    We apologize for the oversight. In addition to the previously mentioned details, the campaign will have the following settings:
-
-    'budget_amount_micros' will be set to 3000000
-    'network_settings_target_google_search' will be set to true
-    'network_settings_target_search_network' will be set to true
-    'network_settings_target_content_network' will be set to true
-    Do you approve the creation of this new campaign with the specified details and settings? To approve, please answer 'Yes'.
-
-
-7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords, clients_approval_message: str, modification_question: str)
+7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
-
+NOTE: ad does NOT have a 'final_urls' attribute, only 'final_url' attribute! Please make sure that you set the 'final_url' attribute for the ad!
 """  # nosec: [B608]
 
     @classmethod

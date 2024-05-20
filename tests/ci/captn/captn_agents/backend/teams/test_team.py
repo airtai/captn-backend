@@ -61,18 +61,22 @@ Do NOT try to finish the task until other team members give their opinion.
 
         assert Team._is_termination_msg({"content": "Woohoo TERMINATE ..."}) is False
 
-    def test_update_clients_question_answer_list(self) -> None:
+    def test_update_recommended_modifications_and_answer_list(self) -> None:
         team = Team(roles=TestTeam.roles, user_id=123, conv_id=456)
-        team.clients_question_answer_list.append(("Question1", None))
-        team.update_clients_question_answer_list("Answer1")
-        assert team.clients_question_answer_list == [("Question1", "Answer1")]
+        team.recommended_modifications_and_answer_list.append(("Question1", None))
+        team.update_recommended_modifications_and_answer_list("Answer1")
+        assert team.recommended_modifications_and_answer_list == [
+            ("Question1", "Answer1")
+        ]
 
-        team.update_clients_question_answer_list("Answer2")
-        assert team.clients_question_answer_list == [("Question1", "Answer1")]
+        team.update_recommended_modifications_and_answer_list("Answer2")
+        assert team.recommended_modifications_and_answer_list == [
+            ("Question1", "Answer1")
+        ]
 
-        team.clients_question_answer_list.append(("Question2", None))
-        team.update_clients_question_answer_list("Answer3")
-        assert team.clients_question_answer_list == [
+        team.recommended_modifications_and_answer_list.append(("Question2", None))
+        team.update_recommended_modifications_and_answer_list("Answer3")
+        assert team.recommended_modifications_and_answer_list == [
             ("Question1", "Answer1"),
             ("Question2", "Answer3"),
         ]

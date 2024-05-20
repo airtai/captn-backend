@@ -7,6 +7,7 @@ import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._google_ads_team_tools import (
     Context,
     _check_currency,
@@ -26,7 +27,9 @@ class TestGoogleAdsTeamTools:
     def setup(self) -> None:
         user_id = 1234
         conv_id = 5678
-        self.clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        self.recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
 
         self.llm_config = {
             "config_list": Config().config_list_gpt_3_5,
@@ -35,7 +38,7 @@ class TestGoogleAdsTeamTools:
         self.toolbox = create_google_ads_team_toolbox(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=self.clients_question_answer_list,
+            recommended_modifications_and_answer_list=self.recommended_modifications_and_answer_list,
         )
 
         self.agent = AssistantAgent(name="agent", llm_config=self.llm_config)
@@ -85,8 +88,6 @@ class TestGoogleAdsTeamTools:
             "customer_id",
             "name",
             "budget_amount_micros",
-            "clients_approval_message",
-            "modification_question",
             "status",
             "network_settings_target_google_search",
             "network_settings_target_search_network",
@@ -101,8 +102,6 @@ class TestGoogleAdsTeamTools:
             "customer_id": "123",
             "name": "cool campaign",
             "budget_amount_micros": 1000,
-            "clients_approval_message": "yes",
-            "modification_question": "may I?",
             "status": "ENABLED",
             "network_settings_target_google_search": True,
             "network_settings_target_search_network": False,
@@ -208,12 +207,12 @@ class TestGoogleAdsTeamTools:
                 return_value="EUR",
             ) as mock_get_customer_currency,
         ):
-            self.clients_question_answer_list.append(("whatsup?", "whatsup!"))
+            self.recommended_modifications_and_answer_list.append(
+                ("whatsup?", "whatsup!")
+            )
 
             default_kwargs = {
                 "customer_id": "123",
-                "clients_approval_message": "yes",
-                "modification_question": "may I?",
                 "status": "ENABLED",
                 "local_currency": "EUR",
             }
@@ -226,9 +225,7 @@ class TestGoogleAdsTeamTools:
             mock_google_ads_create_update.assert_called_once_with(
                 user_id=1234,
                 conv_id=5678,
-                clients_question_answer_list=[("whatsup?", "whatsup!")],
-                clients_approval_message="yes",
-                modification_question="may I?",
+                recommended_modifications_and_answer_list=[("whatsup?", "whatsup!")],
                 ad=params["model_class"](**kwargs_combined),
                 endpoint=params["endpoint"],
             )
@@ -266,8 +263,6 @@ class TestGoogleAdsTeamTools:
             "customer_id",
             "name",
             "budget_amount_micros",
-            "clients_approval_message",
-            "modification_question",
             "status",
             "network_settings_target_google_search",
             "network_settings_target_search_network",
@@ -367,7 +362,8 @@ Please convert the budget to the customer's currency and ask the client for the 
             context = Context(
                 user_id=123,
                 conv_id=456,
-                clients_question_answer_list=[],
+                recommended_modifications_and_answer_list=[],
+                toolbox=Toolbox(),
             )
             kwargs = {
                 "customer_id": "12121212",
@@ -411,7 +407,8 @@ Please convert the budget to the customer's currency and ask the client for the 
         context = Context(
             user_id=123,
             conv_id=456,
-            clients_question_answer_list=[],
+            recommended_modifications_and_answer_list=[],
+            toolbox=Toolbox(),
         )
 
         with pytest.raises(
@@ -422,8 +419,6 @@ Please convert the budget to the customer's currency and ask the client for the 
                 customer_id="234",
                 ad_id="345",
                 headline="headline",
-                clients_approval_message="yes",
-                modification_question="may I?",
                 context=context,
             )
 
@@ -435,8 +430,6 @@ Please convert the budget to the customer's currency and ask the client for the 
                 customer_id="234",
                 ad_id="345",
                 description="description",
-                clients_approval_message="yes",
-                modification_question="may I?",
                 context=context,
             )
 
@@ -448,7 +441,8 @@ Please convert the budget to the customer's currency and ask the client for the 
             context = Context(
                 user_id=123,
                 conv_id=456,
-                clients_question_answer_list=[],
+                recommended_modifications_and_answer_list=[],
+                toolbox=Toolbox(),
             )
             list_accessible_customers(context=context)
 

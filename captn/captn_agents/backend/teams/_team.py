@@ -139,7 +139,9 @@ class Team:
         seed: int = 42,
         temperature: float = 0.2,
         human_input_mode: str = "NEVER",
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = [],  # noqa
+        recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = [],  # noqa
         use_user_proxy: bool = False,
     ):
         self.user_id = user_id
@@ -155,7 +157,9 @@ class Team:
         self.work_dir = work_dir
         self.llm_config: Optional[Dict[str, Any]] = None
         self.human_input_mode = human_input_mode
-        self.clients_question_answer_list = clients_question_answer_list
+        self.recommended_modifications_and_answer_list = (
+            recommended_modifications_and_answer_list
+        )
         self.use_user_proxy = use_user_proxy
 
         self.name = Team.construct_team_name(user_id=user_id, conv_id=conv_id)
@@ -185,13 +189,13 @@ class Team:
         }
         return llm_config
 
-    def update_clients_question_answer_list(self, message: str) -> None:
+    def update_recommended_modifications_and_answer_list(self, message: str) -> None:
         if (
-            len(self.clients_question_answer_list) > 0
-            and self.clients_question_answer_list[-1][1] is None
+            len(self.recommended_modifications_and_answer_list) > 0
+            and self.recommended_modifications_and_answer_list[-1][1] is None
         ):
-            self.clients_question_answer_list[-1] = (
-                self.clients_question_answer_list[-1][0],
+            self.recommended_modifications_and_answer_list[-1] = (
+                self.recommended_modifications_and_answer_list[-1][0],
                 message,
             )
 
@@ -381,6 +385,9 @@ You operate within the following constraints:
                 OPENAI_API_STATUS_ERROR.inc()
                 print(f"Exception type: {type(e)}, {e}")
                 exception = e
+            except httpx.RemoteProtocolError as e:
+                print(f"Exception type: {type(e)}, {e}")
+                exception = e
 
         if exception is not None:
             traceback.print_exc()
@@ -396,6 +403,7 @@ You operate within the following constraints:
                 openai.APIStatusError,
                 openai.BadRequestError,
                 httpx.ReadTimeout,
+                httpx.RemoteProtocolError,
                 TimeoutError,
             ) as e:
                 print(f"Handling exception: {type(e)}, {e}")

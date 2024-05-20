@@ -12,8 +12,8 @@ It should be used only for the clients web page(s), final_url(s) etc.
 This command should be used for retrieving the information from clients web page.
 If this command fails to retrieve the information, only then you should ask the client for the additional information about his business/web page etc."""
 
-MODIFICATION_FUNCTIONS_INSTRUCTIONS = """The following commands make permanent changes. In all of them you must use the following two parameters:
-- clients_approval_message: With this message, the client confirms that he is aware of the changes you will make
-(if the message is not detailed enough, we are threatened with a lawsuit)
-- modification_question: This parameter MUST be the SAME string as the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function!
-If you do not use the same string, the modification will NOT be made! Do NOT forget this!"""
+MODIFICATION_FUNCTIONS_INSTRUCTIONS = """The following commands make permanent changes. In all of them you must use the 'modification_function_parameters' parameter.
+This parameter is a dictionary that contains the fields that are going to be modified and their new values.
+
+Before EACH call to the modification function, you MUST call the 'ask_client_for_permission' function with the same JSON for the 'modification_function_parameters' parameter.
+i.e. ONE 'ask_client_for_permission' call for ONE modification function call."""

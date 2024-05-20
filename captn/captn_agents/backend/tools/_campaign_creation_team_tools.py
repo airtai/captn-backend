@@ -4,7 +4,7 @@ from annotated_types import Len
 from pydantic import BaseModel, Field, StringConstraints
 from typing_extensions import Annotated
 
-from ....google_ads.client import google_ads_create_update
+from ....google_ads.client import check_for_client_approval, google_ads_create_update
 from ..toolboxes import Toolbox
 from ._functions import (
     Context,
@@ -102,10 +102,10 @@ def _get_resource_id_from_response(response: str) -> str:
 def _create_ad_group(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
-    clients_approval_message: str,
-    modification_question: str,
 ) -> Union[Dict[str, Any], str]:
     ad_group = ad_group_with_ad_and_keywords.ad_group
     ad_group.customer_id = ad_group_with_ad_and_keywords.customer_id
@@ -114,12 +114,10 @@ def _create_ad_group(
     ad_group_response = google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group,
         endpoint="/create-ad-group",
-        skip_fields_check=True,
+        already_checked_clients_approval=True,
     )
 
     return ad_group_response
@@ -128,10 +126,10 @@ def _create_ad_group(
 def _create_ad_group_ad(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
-    clients_approval_message: str,
-    modification_question: str,
     ad_group_id: str,
 ) -> Union[Dict[str, Any], str]:
     ad_group_ad = ad_group_with_ad_and_keywords.ad_group_ad
@@ -141,12 +139,10 @@ def _create_ad_group_ad(
     ad_group_ad_response = google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group_ad,
         endpoint="/create-ad-group-ad",
-        skip_fields_check=True,
+        already_checked_clients_approval=True,
     )
     return ad_group_ad_response
 
@@ -154,10 +150,10 @@ def _create_ad_group_ad(
 def _create_ad_group_keyword(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_keyword: AdGroupCriterionForCreation,
-    clients_approval_message: str,
-    modification_question: str,
     ad_group_id: str,
     customer_id: str,
 ) -> Union[Dict[str, Any], str]:
@@ -166,12 +162,10 @@ def _create_ad_group_keyword(
     keyword_response = google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group_keyword,
         endpoint="/add-keywords-to-ad-group",
-        skip_fields_check=True,
+        already_checked_clients_approval=True,
     )
     return keyword_response
 
@@ -179,10 +173,10 @@ def _create_ad_group_keyword(
 def _create_ad_group_keywords(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
-    clients_approval_message: str,
-    modification_question: str,
     ad_group_id: str,
 ) -> Union[Dict[str, Any], str]:
     response = ""
@@ -190,10 +184,8 @@ def _create_ad_group_keywords(
         keyword_response = _create_ad_group_keyword(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_keyword=keyword,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
@@ -204,32 +196,25 @@ def _create_ad_group_keywords(
 def create_campaign_creation_team_toolbox(
     user_id: int,
     conv_id: int,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
 ) -> Toolbox:
     toolbox = Toolbox()
 
     context = Context(
         user_id=user_id,
         conv_id=conv_id,
-        clients_question_answer_list=clients_question_answer_list,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        toolbox=toolbox,
     )
     toolbox.set_context(context)
-
-    clients_approval_message_desc = properties_config["clients_approval_message"][
-        "description"
-    ]
-
-    modification_question_desc = properties_config["modification_question"][
-        "description"
-    ]
 
     @toolbox.add_function("Create an ad group with a single ad and a list of keywords")
     def create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords: Annotated[
             AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
         ],
-        clients_approval_message: Annotated[str, clients_approval_message_desc],
-        modification_question: Annotated[str, modification_question_desc],
         # the context will be injected by the toolbox
         context: Context,
     ) -> Union[Dict[str, Any], str]:
@@ -237,8 +222,6 @@ def create_campaign_creation_team_toolbox(
 
         Args:
             ad_group_with_ad_and_keywords (AdGroupWithAdAndKeywords): The ad group with an ad and a list of keywords
-            clients_approval_message (str): The approval message from the client
-            modification_question (str): The question to ask the client for approval
             context (Context): The context. It will be injected by the toolbox and not available to the LLM proposing the code.
                 It should be set up prior to calling `ìnitialize_chat` or `send_message` by calling `toolbox.set_context` function.
 
@@ -250,15 +233,26 @@ def create_campaign_creation_team_toolbox(
 
         user_id = context.user_id
         conv_id = context.conv_id
-        clients_question_answer_list = context.clients_question_answer_list
+        recommended_modifications_and_answer_list = (
+            context.recommended_modifications_and_answer_list
+        )
+
+        modification_function_parameters = {}
+        modification_function_parameters["ad_group_with_ad_and_keywords"] = (
+            ad_group_with_ad_and_keywords.model_dump()
+        )
+        error_msg = check_for_client_approval(
+            modification_function_parameters=modification_function_parameters,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        )
+        if error_msg:
+            raise ValueError(error_msg)
 
         ad_group_response = _create_ad_group(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
         )
         if isinstance(ad_group_response, dict):
             return ad_group_response
@@ -268,10 +262,8 @@ def create_campaign_creation_team_toolbox(
         ad_group_ad_response = _create_ad_group_ad(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
             ad_group_id=ad_group_id,
         )
         response += f"Ad group ad: {ad_group_ad_response}\n"
@@ -279,10 +271,8 @@ def create_campaign_creation_team_toolbox(
         ad_group_keywords_response = _create_ad_group_keywords(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            clients_approval_message=clients_approval_message,
-            modification_question=modification_question,
             ad_group_id=ad_group_id,
         )
         response += ad_group_keywords_response  # type: ignore
