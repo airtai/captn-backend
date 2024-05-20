@@ -140,12 +140,14 @@ def get_user_ids_and_emails() -> str:
     return response.json()  # type: ignore[no-any-return]
 
 
-NOT_IN_QUESTION_ANSWER_LIST = (
-    "You must ask the client for the permission first by using the 'ask_client_for_permission' function."
-    "If you have already asked the client for the permission, make sure that the 'proposed_changes' parameter you have used in the 'ask_client_for_permission' function is the same as the 'modification_question' you are currently using (EVERY character must be the same)."
-)
+NOT_IN_QUESTION_ANSWER_LIST = """You must ask the client for the permission first by using the 'ask_client_for_permission' function by using the same JSON for the 'modification_function_parameters' parameter.
+If you don't use the SAME JSON for the 'modification_function_parameters' parameter, the modification will NOT be approved!
+So before calling the current function again, you MUST call the 'ask_client_for_permission' function with the same JSON for the 'modification_function_parameters' parameter.
+
+"modification_function_parameters": """
 NOT_APPROVED = (
-    "The client did not approve the modification. The client must approve the modification by answering 'Yes' to the question."
+    "The client did not approve the modification. The client must approve the modification by answering 'Yes' the message sent by the 'ask_client_for_permission' function!"
+    "If the message was sent by the 'reply_to_client' function, the modification will NOT be approved!"
     "If the answer is 'Yes ...', the modification will NOT be approved - the answer must be 'Yes' and nothing else."
     "Please send a new message to the client (by using 'ask_client_for_permission') and ask for the permission again and tell him that only for answer 'Yes' the modification will be done."
 )
@@ -173,78 +175,63 @@ FIELD_MAPPING = {
 }
 
 
-def check_fields_are_mentioned_to_the_client(
-    ad: BaseModel, modification_question: str
-) -> str:
-    ad_dict = ad.model_dump()
-    error_msg = ""
-
-    # If the LLM generates "Final URL" the following line will replace it with "final_url"
-    modification_question_lower = modification_question.lower().replace(" ", "_")
-    for key, value in ad_dict.items():
-        if key in IGNORE_FIELDS:
-            continue
-        if value and not key.endswith("_id"):
-            key = FIELD_MAPPING.get(key, key)
-            if key not in modification_question_lower:
-                error_msg += f"'{key}' will be set to {value} (you MUST reference '{key}' in the 'proposed_changes' parameter!)\n"
-
-    if error_msg:
-        error_msg = FIELDS_ARE_NOT_MENTIONED_ERROR_MSG + error_msg
-
-    return error_msg
+def clean_nones(value: Any) -> Any:
+    """
+    Recursively remove all None values from dictionaries and lists, and returns
+    the result as a new dictionary or list.
+    """
+    if isinstance(value, list):
+        return [clean_nones(x) for x in value if x is not None]
+    elif isinstance(value, dict):
+        return {key: clean_nones(val) for key, val in value.items() if val is not None}
+    else:
+        return value
 
 
-def _check_for_client_approval(
-    error_msg: str,
-    modification_question: str,
-    clients_approval_message: str,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
-) -> str:
-    if (
-        modification_question,
-        clients_approval_message,
-    ) not in clients_question_answer_list:
-        in_question_answer_list = False
-        # Go in reverse order because approval messages are usually at the end of the list (as they are appended at the end of the list)
-        for question, answer in reversed(clients_question_answer_list):
-            if (
-                # Check if the modification_question is a substring of the question
-                modification_question.strip().lower() in question.strip().lower()
-                and clients_approval_message == answer
-            ):
-                in_question_answer_list = True
-                break
-        if not in_question_answer_list:
-            error_msg += "\n\n" + NOT_IN_QUESTION_ANSWER_LIST
-    if clients_approval_message.lower().strip() != "yes":
-        error_msg += "\n\n" + NOT_APPROVED
+def check_for_client_approval(
+    modification_function_parameters: Dict[str, Any],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
+) -> Optional[str]:
+    modification_function_parameters = clean_nones(modification_function_parameters)
 
-    return error_msg
+    clients_question_list = [x[0] for x in recommended_modifications_and_answer_list]
+
+    if modification_function_parameters not in clients_question_list:
+        error_msg = NOT_IN_QUESTION_ANSWER_LIST + json.dumps(
+            modification_function_parameters, indent=2
+        )
+        return error_msg
+
+    for client_question, client_answer in recommended_modifications_and_answer_list:
+        if (
+            client_question == modification_function_parameters
+            and client_answer is not None
+            and client_answer.strip().lower() == "yes"
+        ):
+            return None
+
+    return NOT_APPROVED
 
 
 def google_ads_create_update(
     user_id: int,
     conv_id: int,
-    clients_approval_message: str,
-    modification_question: str,
     ad: BaseModel,
-    clients_question_answer_list: List[Tuple[str, Optional[str]]],
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
     endpoint: str = "/update-ad-group-ad",
-    skip_fields_check: bool = False,
+    already_checked_clients_approval: bool = False,
 ) -> Union[Dict[str, Any], str]:
-    if not skip_fields_check:
-        error_msg = check_fields_are_mentioned_to_the_client(ad, modification_question)
-    else:
-        error_msg = ""
-    error_msg = _check_for_client_approval(
-        error_msg=error_msg,
-        clients_approval_message=clients_approval_message,
-        modification_question=modification_question,
-        clients_question_answer_list=clients_question_answer_list,
-    )
-    if error_msg:
-        raise ValueError(error_msg)
+    if not already_checked_clients_approval:
+        error_msg = check_for_client_approval(
+            modification_function_parameters=ad.model_dump(),
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        )
+        if error_msg:
+            raise ValueError(error_msg)
 
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
     if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:

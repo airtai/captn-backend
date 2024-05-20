@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
@@ -16,7 +16,9 @@ class TestWeeklyAnalysisTeamTools:
     def setup(self) -> None:
         user_id = 1234
         conv_id = 5678
-        self.clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        self.recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
 
         self.llm_config = {
             "config_list": Config().config_list_gpt_3_5,
@@ -25,7 +27,7 @@ class TestWeeklyAnalysisTeamTools:
         self.toolbox = create_weekly_analysis_team_toolbox(
             user_id=user_id,
             conv_id=conv_id,
-            clients_question_answer_list=self.clients_question_answer_list,
+            recommended_modifications_and_answer_list=self.recommended_modifications_and_answer_list,
         )
 
         self.agent = AssistantAgent(name="agent", llm_config=self.llm_config)

@@ -706,7 +706,7 @@ sure it is understandable by non-experts.
         self.toolbox = create_weekly_analysis_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
-            clients_question_answer_list=self.clients_question_answer_list,
+            recommended_modifications_and_answer_list=self.recommended_modifications_and_answer_list,
         )
         for agent in self.members:
             if agent != self.user_proxy:

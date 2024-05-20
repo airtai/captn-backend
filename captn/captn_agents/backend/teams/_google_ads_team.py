@@ -70,7 +70,9 @@ sure it is understandable by non-experts.
         seed: int = 42,
         temperature: float = 0.2,
     ):
-        clients_question_answer_list: List[Tuple[str, Optional[str]]] = []
+        recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = GoogleAdsTeam._default_roles
 
@@ -83,7 +85,7 @@ sure it is understandable by non-experts.
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            clients_question_answer_list=clients_question_answer_list,
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             use_user_proxy=True,
         )
         self.conv_id = conv_id
@@ -102,7 +104,7 @@ sure it is understandable by non-experts.
         self.toolbox = create_google_ads_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
-            clients_question_answer_list=self.clients_question_answer_list,
+            recommended_modifications_and_answer_list=self.recommended_modifications_and_answer_list,
         )
         for agent in self.members:
             if agent != self.user_proxy:
@@ -311,12 +313,9 @@ Here is an example of the smart_suggestions parameter:
 }}
 
 3. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
-params: (customer_id: str, resource_details: str, proposed_changes: str)
-'proposed_changes' parameter must contain info about each field which you want to modify and it MUST reference it by the EXACT name as the one you are going to use in the modification method. e.g.:
-if you want to update/set "budget_amount_micros" you must mention "budget_amount_micros" in this parameter.
-same thing for "final_url", you must mention "final_url" in this parameter, if you mention "final url" or "final-url" it will NOT be accepted!
-
+params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
+ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'!
 
 ONLY Google ads specialist can suggest following commands:
 1. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
@@ -333,6 +332,8 @@ Unless told differently, do NOT retrieve information about the REMOVED resources
 
 
 {MODIFICATION_FUNCTIONS_INSTRUCTIONS}
+When asking the client for the approval, you must explicitly tell him about the parameters which you are going to set by using the 'modification_function_parameters'
+Otherwise, we will NOT be able to make ANY changes!
 
 You can get these parameters from the client ONLY by using the 'ask_client_for_permission' command!!!
 So before you execyte create/update/remove functions, you MUST ask the client for the permission by using the 'ask_client_for_permission' command! Otherwise you will be penalized!
@@ -354,8 +355,8 @@ After EACH change you make, you MUST send a message to the client with the infor
 Do NOT do multiple changes at once and inform the client about all the changes at once you are done with all of them.
 
 3. 'update_ad_group_ad': Update the Google Ad, params: (customer_id: string, ad_group_id: string, ad_id: string,
-clients_approval_message: string, cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
-modification_question: str)
+, cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
+)
 This command can only update ads cpc_bid_micros and status
 
 Before executing the 'update_ad_group_ad' command, you can easily get the needed parameters customer_id, ad_group_id and ad_id
@@ -363,52 +364,53 @@ with the 'execute_query' command and the following 'query':
 "SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id FROM ad_group_ad"
 
 4. 'update_ad_copy': Update the Google Ads Copy, params: (customer_id: string, ad_id: string,
-clients_approval_message: string, modification_question: str
+,
 headline: Optional[str], description: Optional[str], update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str],
 final_url: Optional[str], final_mobile_urls: Optional[str], path1: Optional[str], path2: Optional[str])
 
 5. 'update_ad_group': Update the Google Ads Group, params: (customer_id: string, ad_group_id: string,
-clients_approval_message: string, name: Optional[str], cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
-modification_question: str)
+, name: Optional[str], cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
+)
 This command can only update ad groups name, cpc_bid_micros and status
 
 6. 'update_campaign': Update the Google Ads Campaign, params: (customer_id: string, campaign_id: string,
-clients_approval_message: string, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
-modification_question: str)
+, name: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
+)
 This command can only update campaigns name and status
 
 
 7. 'update_ad_group_criterion': Update the Google Ads Group Criterion, params: (customer_id: string, ad_group_id: string,
-criterion_id: string, clients_approval_message: string, status: Optional[Literal["ENABLED", "PAUSED"]],
+criterion_id: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 keyword_match_type: string, keyword_text: string,
-cpc_bid_micros: Optional[int], local_currency: Optional[str], modification_question: str)
+cpc_bid_micros: Optional[int], local_currency: Optional[str])
 
 8. 'update_campaigns_negative_keywords': Update the Google Ads keywords (on campaign level), params: (customer_id: string, campaign_id: string,
-criterion_id: string, clients_approval_message: string, keyword_match_type: string, keyword_text: string,
-modification_question: str)
+criterion_id: string, keyword_match_type: string, keyword_text: string, negative: boolean
+)
 This command can only update campaigns negative keywords keyword_match_type and keyword_text
+Always set the 'negative' parameter to True when updating the negative keyword!
 
-9. 'create_ad_group': Create the Google Ads Group, params: (customer_id: string, campaign_id: string, clients_approval_message: string,
+9. 'create_ad_group': Create the Google Ads Group, params: (customer_id: string, campaign_id: string,
 name: string, cpc_bid_micros: Optional[int], local_currency: Optional[str], status: Optional[Literal["ENABLED", "PAUSED"]],
-modification_question: str)
+)
 
 10. 'create_negative_keyword_for_campaign': Creates Negative campaign keywords (CampaignCriterion), params: (customer_id: string, campaign_id: string,
-clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]], modification_question: str)
+, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
+status: Optional[Literal["ENABLED", "PAUSED"]])
 This command can ONLY create NEGATIVE keywords assigned to the campaign
 
 11. 'create_keyword_for_ad_group': Creates (regular and negative) keywords for Ad Group (AdGroupCriterion), params: (customer_id: string, ad_group_id: string,
-clients_approval_message: string, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
-status: Optional[Literal["ENABLED", "PAUSED"]], modification_question: str, cpc_bid_micros: Optional[int], local_currency: Optional[str])
+, keyword_match_type: string, keyword_text: string, negative: Optional[boolean], bid_modifier: Optional[float],
+status: Optional[Literal["ENABLED", "PAUSED"]], cpc_bid_micros: Optional[int], local_currency: Optional[str])
 This command creates (regular and negative) keywords assigned to the ad group
 (Regular) keywords should always be added to the ad group, they can NOT be added to the campaign
 
 12. 'create_ad_copy_headline_or_description': Create new headline and/or description in the the EXISTING Google Ads Copy, params: (customer_id: string, ad_id: string,
-clients_approval_message: string, modification_question: str
+,
 headline: Optional[str], description: Optional[str])
 
 13. 'create_ad_group_ad': Create new ad group ad, params: (customer_id: string, ad_group_id: string,
-clients_approval_message: string, modification_question: str, status: Optional[Literal["ENABLED", "PAUSED"]],
+, status: Optional[Literal["ENABLED", "PAUSED"]],
 headlines: List[str], descriptions: List[str], final_url: List[str], path1: Optional[str], path2: Optional[str])
 You can suggest final_url within the smart suggestions if the client has provided it in the customer brief.
 If not, do not suggest the final_url, it must be provided by the client.
@@ -418,7 +420,7 @@ Use display path (path1 and path2) to increase the relevance of the ad to the us
 
 14. 'create_campaign': Create new campaign, params: (customer_id: string, name: string, budget_amount_micros: int, local_currency: string, status: Optional[Literal["ENABLED", "PAUSED"]],
 network_settings_target_google_search: Optional[boolean], network_settings_target_search_network: Optional[boolean], network_settings_target_content_network: Optional[boolean],
-clients_approval_message: string, modification_question: str)
+)
 Before creating a new campaign, you must find out the local_currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
 For creating a new campaign, the client must provide/approve the 'budget_amount_micros' and 'name'.
@@ -426,7 +428,7 @@ If the client specifies the 'budget_amount_micros' in another currency, you must
 Otherwise, incorrect budget will be set for the campaign!
 
 15. 'create_geo_targeting_for_campaign': Creates geographical targeting on the campaign level, params: (customer_id: string,
-campaign_id: string, clients_approval_message: string, modification_question: str, negative: Optional[boolean],
+campaign_id: string, negative: Optional[boolean],
 location_names: Optional[List[str]], location_ids: Optional[List[str]])
 When the client provides the location names (country/city/region), use the 'location_names' parameter without the 'location_ids' parameter. By doing so, you will receive a list of available locations and their IDs.
 Do NOT improvise with the location names, use the names which the client provided! If you know the clients business location, you can ask him if he wants to target that location, but do NOT execute 'create_geo_targeting_for_campaign' without checking with the client first!
@@ -438,11 +440,11 @@ SELECT geo_target_constant.name, geo_target_constant.id FROM geo_target_constant
 
 16. 'remove_google_ads_resource': Removes the google ads resource, params: (customer_id: string, resource_id: string,
 resource_type: Literal['campaign', 'ad_group', 'ad', 'ad_group_criterion', 'campaign_criterion'],
-clients_approval_message: string, parent_id: Optional[string], modification_question: str)
+, parent_id: Optional[string])
 If not explicitly asked, you MUST ask the client for approval before removing any kind of resource!!!!
 
 17. 'remove_ad_copy_headline_or_description_config': Remove headline and/or description from the the Google Ads Copy,
-params: (customer_id: string, ad_id: string, clients_approval_message: string, modification_question: str
+params: (customer_id: string, ad_id: string,
 update_existing_headline_index: Optional[str], update_existing_description_index: Optional[str])
 
 18. {GET_INFO_FROM_THE_WEB_COMMAND}

@@ -321,6 +321,7 @@ def run_tests(
                 break
 
             row = df.iloc[i]
+            print(f"Starting with index: {i}")
 
             df["status"] = df["status"].astype(str)
             df.iloc[i, df.columns.get_loc("status")] = "PENDING"
