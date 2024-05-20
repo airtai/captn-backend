@@ -100,7 +100,7 @@ agents = [
     "pyautogen[websurfer,websockets]==0.2.27",
     "pandas>=2.1",
     "fastcore==1.5.35",
-    "asyncer==0.0.5",
+    "asyncer==0.0.7",
     "pydantic==2.7.1",
     "markdownify==0.12.1",
     "tenacity==8.2.3",
