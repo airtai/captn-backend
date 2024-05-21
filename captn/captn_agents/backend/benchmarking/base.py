@@ -34,7 +34,7 @@ def lock_file(path: Path) -> Iterator[None]:
         lock_path.unlink()
 
 
-COMMON_COLUMNS = ["execution_time", "status", "success", "output"]
+COMMON_COLUMNS = ["execution_time", "status", "success", "output", "retries"]
 
 
 def _add_common_columns_and_save(
@@ -229,7 +229,7 @@ def run_test(
         traceback.print_exc()
         output = str(e)
         success = "Failed"
-        retry_from_scratch_counters = None
+        retry_from_scratch_counters = -1
     finally:
         total_time = time.time() - time_start
         status = "DONE"
@@ -239,6 +239,7 @@ def run_test(
         "status": status,
         "success": success,
         "output": output,
+        "retries": retry_from_scratch_counters,
     }
 
 
