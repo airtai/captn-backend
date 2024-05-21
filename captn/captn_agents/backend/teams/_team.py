@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import time
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
@@ -13,6 +14,8 @@ from prometheus_client import Counter
 from ..config import Config
 
 _completions_create_original = autogen.oai.client.OpenAIClient.create
+
+os.environ["AUTOGEN_USE_DOCKER"] = "no"
 
 
 # WORKAROUND for consistent 500 error code when using openai functions
