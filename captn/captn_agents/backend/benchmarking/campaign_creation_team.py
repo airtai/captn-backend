@@ -182,7 +182,7 @@ def continue_conversation_until_finished(
 def benchmark_campaign_creation(
     url: str,
     llm: str = Models.gpt4,
-) -> str:
+) -> Tuple[str, int]:
     try:
         task = URL_TASK_DICT[url]
         config_list = get_config_list(llm)
@@ -215,7 +215,7 @@ def benchmark_campaign_creation(
                 mock_create_ad_group_ad=mock_create_ad_group_ad,
                 mock_create_ad_group_keyword=mock_create_ad_group_keyword,
                 mock_create_campaign=mock_create_campaign,
-            )
+            ), campaign_creation_team.retry_from_scratch_counter
     finally:
         user_id, conv_id = campaign_creation_team.name.split("_")[-2:]
         success = Team.pop_team(user_id=int(user_id), conv_id=int(conv_id))

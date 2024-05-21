@@ -684,6 +684,7 @@ sure it is understandable by non-experts.
             user_id=user_id,
             conv_id=conv_id,
             roles=roles,
+            task=task,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
@@ -691,7 +692,6 @@ sure it is understandable by non-experts.
             temperature=temperature,
             use_user_proxy=True,
         )
-        self.task = task
         self.llm_config = WeeklyAnalysisTeam._get_llm_config(
             seed=seed, temperature=temperature
         )

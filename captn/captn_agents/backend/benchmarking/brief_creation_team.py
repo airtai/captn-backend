@@ -113,7 +113,7 @@ def benchmark_brief_creation(
     url: str,
     team_name: str,
     llm: str = Models.gpt3_5,
-) -> str:
+) -> Tuple[str, int]:
     config_list = get_config_list(llm)
 
     user_id = 123
@@ -166,7 +166,9 @@ def benchmark_brief_creation(
                         "task" in delegate_task_function_sugestion_function["arguments"]
                     )  # nosec: [B101]
 
-                    return delegate_task_function_sugestion_function["arguments"]  # type: ignore[no-any-return]
+                    return delegate_task_function_sugestion_function[
+                        "arguments"
+                    ], team.retry_from_scratch_counter
     finally:
         poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)
         assert isinstance(poped_team, Team)  # nosec: [B101]

@@ -88,18 +88,18 @@ Do NOT try to finish the task until other team members give their opinion.
         team.manager.send = MagicMock()
 
         if number_of_exceptions == 0:
-            team.retry_func()
+            team.retry_func(delay=0)
             team.manager.send.assert_called_once()
         elif number_of_exceptions > len(Team._retry_messages):
             team.manager.send.side_effect = httpx.ReadTimeout("Timeout")
             with pytest.raises(httpx.ReadTimeout):
-                team.retry_func()
+                team.retry_func(delay=0)
             assert team.manager.send.call_count == len(Team._retry_messages)
         else:
             team.manager.send.side_effect = [
                 httpx.ReadTimeout("Timeout")
             ] * number_of_exceptions + [None]
-            team.retry_func()
+            team.retry_func(delay=0)
             assert team.manager.send.call_count == number_of_exceptions + 1
 
     @pytest.mark.parametrize("raise_exception", [False, True])
@@ -110,6 +110,8 @@ Do NOT try to finish the task until other team members give their opinion.
                 raise httpx.ReadTimeout("Timeout")
 
         team = Team(roles=TestTeam.roles, user_id=123, conv_id=456)
+        team.groupchat = MagicMock()
+        team.groupchat.messages = ["message1"]
         team.retry_func = MagicMock()
 
         f(team, "message", raise_exception=raise_exception)
@@ -118,32 +120,75 @@ Do NOT try to finish the task until other team members give their opinion.
         else:
             team.retry_func.assert_not_called()
 
-    @pytest.mark.parametrize("number_of_exceptions", [0, 2, 10])
+    @pytest.mark.parametrize("number_of_exceptions", [0, 2, 10, 30])
     def test_initiate_chat(self, number_of_exceptions) -> None:
         team = Team(roles=TestTeam.roles, user_id=123, conv_id=456)
         team.initial_message = "Initial message"
         team.manager = MagicMock()
         team.manager.initiate_chat = MagicMock()
         team.manager.send = MagicMock()
+        team.groupchat = MagicMock()
+        team.groupchat.messages = ["message1", "message2"]
 
         if number_of_exceptions == 0:
-            team.initiate_chat()
+            team.initiate_chat(delay=0)
             team.manager.send.assert_not_called()
-        elif number_of_exceptions > len(Team._retry_messages):
+            team.manager.initiate_chat.assert_called_once()
+        elif (
+            number_of_exceptions
+            > len(Team._retry_messages) * Team._MAX_RETRIES_FROM_SCRATCH
+        ):
             team.manager.initiate_chat.side_effect = httpx.ReadTimeout("Timeout")
             team.manager.send.side_effect = httpx.ReadTimeout("Timeout")
             with pytest.raises(httpx.ReadTimeout):
-                team.initiate_chat()
-            assert team.manager.send.call_count == len(Team._retry_messages)
-        else:
+                team.initiate_chat(delay=0)
+
+            expected_call_count = (
+                len(Team._retry_messages) * Team._MAX_RETRIES_FROM_SCRATCH
+            )
+            assert team.manager.send.call_count == expected_call_count
+            assert (
+                team.manager.initiate_chat.call_count == Team._MAX_RETRIES_FROM_SCRATCH
+            )
+        elif number_of_exceptions < len(Team._retry_messages):
             team.manager.initiate_chat.side_effect = httpx.ReadTimeout("Timeout")
             team.manager.send.side_effect = [
                 httpx.ReadTimeout("Timeout")
             ] * number_of_exceptions + [None]
-            team.initiate_chat()
+            team.initiate_chat(delay=0)
             assert team.manager.send.call_count == number_of_exceptions + 1
+            team.manager.initiate_chat.assert_called_once()
+        elif number_of_exceptions == 10:
+            team.manager.initiate_chat.side_effect = httpx.ReadTimeout("Timeout")
+            team.manager.send.side_effect = [
+                httpx.ReadTimeout("Timeout")
+            ] * number_of_exceptions + [None]
+            team.initiate_chat(delay=0)
+            assert team.manager.send.call_count == number_of_exceptions + 1
+            assert team.manager.initiate_chat.call_count == 2
 
-        team.manager.initiate_chat.assert_called_once()
+    @pytest.mark.parametrize("num_of_messages", [2, 5, 10])
+    def test_max_number_of_messages(self, num_of_messages) -> None:
+        max_round = 5
+        team = Team(roles=TestTeam.roles, user_id=123, conv_id=456, max_round=max_round)
+        team.initial_message = "Initial message"
+        team.manager = MagicMock()
+        team.manager.initiate_chat = MagicMock()
+        team.manager.send = MagicMock()
+        team.groupchat = MagicMock()
+        team.groupchat.messages = ["message1"] * num_of_messages
+
+        if num_of_messages < max_round:
+            team.initiate_chat(delay=0)
+            team.manager.send.assert_not_called()
+            team.manager.initiate_chat.assert_called_once()
+        else:
+            with pytest.raises(Exception):  # noqa: B017
+                team.initiate_chat(delay=0)
+            team.manager.send.assert_not_called()
+            assert (
+                team.manager.initiate_chat.call_count == Team._MAX_RETRIES_FROM_SCRATCH
+            )
 
 
 class TestTeamRegistry:

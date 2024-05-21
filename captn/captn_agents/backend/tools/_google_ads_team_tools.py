@@ -266,7 +266,7 @@ def create_campaign(
         context.recommended_modifications_and_answer_list
     )
 
-    return google_ads_create_update(
+    response = google_ads_create_update(
         user_id=user_id,
         conv_id=conv_id,
         recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
@@ -281,6 +281,11 @@ def create_campaign(
         ),
         endpoint="/create-campaign",
     )
+
+    if isinstance(response, str):
+        response = f"Campaign '{name}': {response}"
+        context.changes_made += f"\n{response}"
+    return response
 
 
 create_keyword_for_ad_group_description = f"Creates (regular and negative) keywords for Ad Group (AdGroupCriterion). {MODIFICATION_WARNING}"
