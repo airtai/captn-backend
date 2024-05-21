@@ -1,4 +1,7 @@
+import datetime
 import json
+import os
+import time
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
@@ -11,6 +14,8 @@ from prometheus_client import Counter
 from ..config import Config
 
 _completions_create_original = autogen.oai.client.OpenAIClient.create
+
+os.environ["AUTOGEN_USE_DOCKER"] = "no"
 
 
 # WORKAROUND for consistent 500 error code when using openai functions
@@ -62,6 +67,8 @@ class Team:
         "NOTE: When generating JSON for the function, do NOT use ANY whitespace characters (spaces, tabs, newlines) in the JSON string.\n\nPlease continue.",
         "Please continue.",
     ] * 3
+
+    _MAX_RETRIES_FROM_SCRATCH = 3
 
     @classmethod
     def register_team(cls, name: str) -> Callable[[T], T]:
@@ -133,6 +140,7 @@ class Team:
         user_id: int,
         conv_id: int,
         roles: List[Dict[str, str]],
+        task: str = "",
         function_map: Optional[Dict[str, Callable[[Any], Any]]] = None,
         work_dir: str = "my_default_workdir",
         max_round: int = 80,
@@ -147,6 +155,7 @@ class Team:
         self.user_id = user_id
         self.conv_id = conv_id
         self.roles = roles
+        self.task = task
         self.initial_message: str
         self.name: str
         self.max_round = max_round
@@ -164,6 +173,7 @@ class Team:
 
         self.name = Team.construct_team_name(user_id=user_id, conv_id=conv_id)
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
+        self.retry_from_scratch_counter = 0
         Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
     @classmethod
@@ -361,7 +371,7 @@ You operate within the following constraints:
 
         return last_message  # type: ignore
 
-    def retry_func(self) -> None:
+    def retry_func(self, delay: int = 2) -> None:
         exception: Optional[Exception] = None
         for i in range(len(self._retry_messages)):
             print(f"Retry number {i+1}.")
@@ -372,6 +382,7 @@ You operate within the following constraints:
                 message = self._retry_messages[i]
 
             try:
+                time.sleep(delay**i)
                 self.manager.send(
                     recipient=self.manager,
                     message=message,
@@ -395,10 +406,29 @@ You operate within the following constraints:
             raise exception
 
     @staticmethod
+    def retry_from_scratch(self: "Team", e: Exception, delay: int = 3) -> None:
+        print(f"Retry from scratch: {type(e)}, {e}")
+        # Try the team again from scratch
+        self.retry_from_scratch_counter += 1
+        if self.retry_from_scratch_counter < self._MAX_RETRIES_FROM_SCRATCH:
+            self.initial_message += (
+                f"\nTimestamp: {datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}"
+            )
+            time.sleep(delay**self.retry_from_scratch_counter)
+            self.initiate_chat(**self.initiate_chat_kwargs)
+        else:
+            raise e
+
+    @staticmethod
     def handle_exceptions(func: Callable[..., None]) -> Callable[..., None]:
         def wrapper(self: "Team", *args: Any, **kwargs: Any) -> None:
             try:
-                return func(self, *args, **kwargs)
+                delay = kwargs.get("delay", 2)
+                func(self, *args, **kwargs)
+
+                if len(self.get_messages()) >= self.max_round:
+                    error_message = f"Maximum number of messages reached: {self.max_round}, Retrying the team from scratch."
+                    Team.retry_from_scratch(self, Exception(error_message), delay=delay)
             except (
                 openai.APIStatusError,
                 openai.BadRequestError,
@@ -407,12 +437,17 @@ You operate within the following constraints:
                 TimeoutError,
             ) as e:
                 print(f"Handling exception: {type(e)}, {e}")
-                self.retry_func()
+                try:
+                    # Try to unstuck the team
+                    self.retry_func(delay=delay)
+                except Exception as e:
+                    Team.retry_from_scratch(self, e, delay=delay)
 
         return wrapper
 
     @handle_exceptions
     def initiate_chat(self, **kwargs: Any) -> None:
+        self.initiate_chat_kwargs = kwargs
         self.manager.initiate_chat(self.manager, message=self.initial_message, **kwargs)
 
     @handle_exceptions

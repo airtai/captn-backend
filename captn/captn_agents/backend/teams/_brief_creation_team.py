@@ -44,9 +44,6 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
     ):
-        self.task = task
-        self.initial_brief = task
-
         recommended_modifications_and_answer_list: List[
             Tuple[Dict[str, Any], Optional[str]]
         ] = []
@@ -58,6 +55,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             user_id=user_id,
             conv_id=conv_id,
             roles=roles,
+            task=task,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
@@ -85,7 +83,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self.toolbox = create_brief_creation_team_toolbox(
             user_id=self.user_id,
             conv_id=self.conv_id,
-            initial_brief=self.initial_brief,
+            initial_brief=self.task,
         )
         for agent in self.members:
             if agent != self.user_proxy:

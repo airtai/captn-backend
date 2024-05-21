@@ -185,6 +185,7 @@ class Context:
     ]
     toolbox: Toolbox
     get_only_non_manager_accounts: bool = False
+    changes_made: str = ""
 
 
 ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
