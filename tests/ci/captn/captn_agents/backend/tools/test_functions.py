@@ -11,6 +11,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupWithAdAndKeywords,
 )
 from captn.captn_agents.backend.tools._functions import (
+    Actions,
     Summary,
     WebPageSummary,
     WebUrl,
@@ -18,6 +19,7 @@ from captn.captn_agents.backend.tools._functions import (
     _validate_modification_parameters,
     get_get_info_from_the_web_page,
     get_webpage_status_code,
+    send_email,
 )
 
 
@@ -218,3 +220,19 @@ class TestAskClientForPermission:
                     modification_function_parameters=modification_function_parameters,
                 )
             assert expected_output in str(e._excinfo[1])
+
+
+@pytest.mark.parametrize(
+    "proposed_user_actions",
+    [[], ["1"], ["1", "2"], ["1", "2", "3"], ["1", "2", "3", "4"]],
+)
+def test_send_email_with_proposed_user_actions(proposed_user_actions):
+    actions_count = len(proposed_user_actions)
+    if actions_count < 1 or actions_count > 3:
+        with pytest.raises(ValidationError):
+            actions = Actions(proposed_user_actions=proposed_user_actions)
+    else:
+        actions = Actions(proposed_user_actions=proposed_user_actions)
+
+        result = send_email(actions=actions)
+        assert result["proposed_user_action"] == proposed_user_actions

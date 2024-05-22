@@ -801,13 +801,17 @@ We had the following error:
 send_email_description = "Send email to the client."
 
 
+class Actions(BaseModel):
+    proposed_user_actions: Annotated[List[str], Len(min_length=1, max_length=3)]
+
+
 def send_email(
-    proposed_user_actions: Annotated[List[str], "List of proposed user actions"],
+    actions: Actions,
 ) -> Dict[str, Any]:
     return_msg = {
         "subject": "Capt’n.ai Weekly Analysis",
         "email_content": "<html></html>",
-        "proposed_user_action": proposed_user_actions,
+        "proposed_user_action": actions.proposed_user_actions,
         "terminate_groupchat": True,
     }
     return return_msg

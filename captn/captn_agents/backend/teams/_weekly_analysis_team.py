@@ -739,10 +739,11 @@ Do NOT use 'execute_query' command for retrieving Google Ads metrics (impression
 11. The client can NOT see your conversation, he only receives the message which you send him by using the
 'send_email' command
 Here an example on how to use the 'send_email' command:
-{
+'proposed_user_actions' must contain a list with MIN 1 and MAX 3 strings. We suggest to use the MAXIMUM number of proposed actions.
+{"actions": {
     "proposed_user_actions": ["Remove 'Free' keyword because it is not performing well", "Increase budget from $10/day to $20/day",
     "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'", "Select some or all of them"]
-}
+}}
 
 propose_user_actions should NOT be general, but specific.
 'proposed_user_actions' BAD EXAMPLES:
@@ -793,7 +794,7 @@ as they will be featured on a webpage to ensure a user-friendly presentation.
 23. Once you have completed weekly analysis, you must send a summary of the work done to the client by using the 'send_email' command.
 
 Here is a list of things which you CAN do after the client responds to your email.
-So please recommend some of these changes to the client by using the 'proposed_user_actions' parameter in the 'send_email' command:
+So please recommend some of these changes to the client by using the 'actions' parameter in the 'send_email' command:
 - update the status (ENABLED / PAUSED) of the campaign, ad group and ad
 - create/update/remove headlines and descriptions in the Ad Copy. Make sure to follow the restrictions for the headlines and descriptions (MAXIMUM 30 characters for headlines and MAXIMUM 90 characters for descriptions)
 - create/update/remove new keywords
@@ -822,8 +823,8 @@ Never use functions.function_name(...) because functions module does not exist.
 Just suggest calling function 'function_name'.
 
 All team members have access to the following command:
-1. send_email: Send email to the client, params: (proposed_user_actions: List[str]])
-Each message in the 'proposed_user_actions' parameter must contain all information useful to the client, because the client does not see your team's conversation
+1. send_email: Send email to the client, params: (actions: Actions(BaseModel))
+Each message in the actions.proposed_user_actions parameter must contain all information useful to the client, because the client does not see your team's conversation
 As we send this message to the client, pay attention to the content inside it. We are a digital agency and the messages we send must be professional.
 2. {GET_INFO_FROM_THE_WEB_COMMAND}
 
