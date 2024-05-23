@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Type
+from typing import Dict, Type
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -22,7 +22,7 @@ class Context:
     conv_id: int
     initial_brief: str
     function_call_counter: Dict[str, bool] = field(default_factory=dict)
-    get_info_from_web_page_result: Optional[str] = None
+    get_info_from_web_page_result: str = ""
 
 
 class DelegateTask(BaseModel):
@@ -129,7 +129,7 @@ Here is a template for the customer brief you will need to create:
         context: Context,
     ) -> str:
         get_info_from_web_page_result = context.get_info_from_web_page_result
-        if get_info_from_web_page_result is None:
+        if get_info_from_web_page_result == "":
             return "You need to scrape the web page first by using the get_info_from_the_web_page command."
 
         user_id = context.user_id
@@ -165,7 +165,7 @@ And the task is following:
         result = _get_info_from_the_web_page_original(url)
 
         if LAST_MESSAGE_BEGINNING in result:
-            context.get_info_from_web_page_result = result
+            context.get_info_from_web_page_result += result + "\n\n"
 
         result += """\n\nPlease use the rely_to_client to present what you have found on the web page to the client.
 

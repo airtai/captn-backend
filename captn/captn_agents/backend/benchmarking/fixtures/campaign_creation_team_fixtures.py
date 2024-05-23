@@ -43,73 +43,79 @@ Please review the brief and let us know if you have any additional information o
 Additional info from the web page:
 Here is a summary of the information you requested:
 
-IKEA UK offers a wide range of home furnishing products including furniture, beds & mattresses, kitchens, decorations, lighting, textiles, kitchenware & tableware, laundry & cleaning supplies, and bathroom products. The brand is known for its affordable prices, flat-pack delivery, and self-assembly furniture, catering to various styles and preferences.
+IKEA offers a wide range of home furnishing products including furniture, kitchens, beds and mattresses, smart home devices, outdoor living essentials, decorative items, and lighting solutions. They also have special sections for new products, offers, and business solutions.
 
 Relevant Pages:
 
 1. Furniture:
-URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
-Summary: A variety of home furniture for living room, bedroom, office, and more.
-Keywords: 'Sofas', 'Chairs', 'Tables', 'Wardrobes', 'Storage', 'Office Furniture', 'Outdoor Furniture'
-Headlines: 'Comfy Sofas', 'Ergonomic Chairs', 'Stylish Tables', 'Spacious Storage', 'Modern Wardrobes', 'Work Desks', 'Outdoor Sets'
-Descriptions: 'Find the perfect sofa', 'Chairs for any style', 'Tables for all spaces', 'Solve storage needs', 'Wardrobes for order', 'Desks for productivity', 'Enjoy outdoor living'
+    URL: https://www.ikea.com/gb/en/cat/furniture-fu001/
+    Summary: A variety of home furniture for every room.
+    Keywords: 'Sofas', 'Chairs', 'Tables', 'Wardrobes', 'Storage'
+    Headlines: 'Stylish Sofas', 'Comfy Chairs', 'Elegant Tables', 'Spacious Wardrobes', 'Versatile Storage', 'Modern Living', 'Classic Designs', 'Workspace Essentials', 'Dining Furniture', 'Outdoor Seating', "Children's Furniture", 'Sustainable Materials', 'Minimalist Style', 'Colorful Accents', 'Home Office'
+    Descriptions: 'Find the perfect sofa', 'Chairs for any room', 'Dine in style', 'Organize with ease'
 
-2. Beds & Mattresses:
-URL: https://www.ikea.com/gb/en/cat/beds-mattresses-bm001/
-Summary: Comfortable beds and mattresses for a good night's sleep.
-Keywords: 'Beds', 'Mattresses', 'Bed Frames', "Children's Beds", 'Mattress Toppers', 'Pillows', 'Bedding'
-Headlines: 'Dreamy Mattresses', 'Cozy Beds', "Kids' Bed Frames", 'Sleep Well', 'Top Mattress Picks', 'Soft Pillows', 'Quality Bedding'
-Descriptions: 'Mattresses for rest', 'Beds for all ages', "Fun children's beds", 'Ensure a restful sleep', 'Topper for comfort', 'Pillows for support', 'Bedding for warmth'
+2. Kitchens:
+    URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
+    Summary: Complete kitchen solutions and furniture.
+    Keywords: 'Kitchen Cabinets', 'Kitchen Appliances', 'Countertops', 'Kitchen Accessories', 'Kitchen Storage'
+    Headlines: 'Dream Kitchens', 'Modern Appliances', 'Durable Countertops', 'Kitchen Gadgets', 'Ample Storage', 'Kitchen Styles', 'Easy Installations', 'Space-Saving', 'Eco-Friendly Options', 'Kitchen Lighting', 'Cooking Essentials', 'Kitchen Textiles', 'Kitchen Organizers', 'Custom Kitchens', 'Budget-Friendly'
+    Descriptions: 'Customize your kitchen', 'Appliances that last', 'Maximize your space', 'Kitchen must-haves'
 
-3. Kitchens:
-URL: https://www.ikea.com/gb/en/cat/kitchens-ka001/
-Summary: Complete kitchen solutions and accessories.
-Keywords: 'Kitchen Units', 'Cabinets', 'Worktops', 'Kitchen Appliances', 'Sinks', 'Taps', 'Kitchen Storage'
-Headlines: 'Modern Kitchens', 'Spacious Cabinets', 'Durable Worktops', 'Appliances for Chefs', 'Stainless Sinks', 'Functional Taps', 'Organized Storage'
-Descriptions: 'Design your kitchen', 'Cabinets for storage', 'Worktops for prep', 'Appliances that last', 'Sinks for cleanup', 'Taps that impress', 'Storage solutions'
+3. Beds & Mattresses:
+    URL: https://www.ikea.com/gb/en/cat/beds-mattresses-bm001/
+    Summary: Comfortable beds and mattresses for a good night's sleep.
+    Keywords: 'Bed Frames', 'Mattresses', 'Pillows', 'Bedding', 'Bedroom Furniture'
+    Headlines: 'Restful Sleep', 'Sturdy Bed Frames', 'Supportive Mattresses', 'Soft Pillows', 'Cozy Bedding', 'Bedroom Sets', "Children's Beds", 'Guest Solutions', 'Storage Beds', 'Ergonomic Designs', 'Sleep Well', 'Bedroom Decor', 'Night Comfort', 'Quality Slumber', 'Bedroom Upgrades'
+    Descriptions: 'Sleep in comfort', 'Find the perfect bed', 'Quality mattresses', 'Bedding for all'
 
-4. Decoration:
-URL: https://www.ikea.com/gb/en/cat/decoration-de001/
-Summary: Decorative items to personalize your space.
-Keywords: 'Candles', 'Vases', 'Picture Frames', 'Mirrors', 'Clocks', 'Ornaments', 'Wall Art'
-Headlines: 'Scented Candles', 'Elegant Vases', 'Frame Memories', 'Stylish Mirrors', 'Timely Clocks', 'Decorative Pieces', 'Artistic Wall Art'
-Descriptions: 'Candles for ambiance', 'Vases for decor', 'Frames for photos', 'Mirrors for rooms', 'Clocks for time', 'Ornaments for style', 'Wall art for flair'
+4. Smart Home:
+    URL: https://www.ikea.com/gb/en/cat/smart-home-hs001/
+    Summary: Smart home devices for modern living.
+    Keywords: 'Smart Lighting', 'Smart Speakers', 'Home Automation', 'Smart Blinds', 'Smart Plugs'
+    Headlines: 'Smart Lighting', 'Voice Control', 'Home Automation', 'Automated Blinds', 'Energy Saving', 'Smart Home Hub', 'Wireless Control', 'Smart Sensors', 'Connected Home', 'Smart Security', 'Tech Lifestyle', 'Smart Heating', 'Remote Access', 'Smart Integration', 'Home Comforts'
+    Descriptions: 'Control lights easily', 'Smart home upgrades', 'Automate your home', 'Tech for living'
 
-5. Lighting:
-URL: https://www.ikea.com/gb/en/cat/lighting-li001/
-Summary: Lighting options for every room in your home.
-Keywords: 'Ceiling Lights', 'Lamps', 'LED Lighting', 'Smart Lighting', 'Wall Lights', 'Outdoor Lighting', 'Decorative Lights'
-Headlines: 'Bright Ceiling', 'Lamps for Tasks', 'LED Solutions', 'Smart Light Tech', 'Wall Illumination', 'Garden Lights', 'Decor Lights'
-Descriptions: 'Ceiling lights for all', 'Lamps for reading', 'LED for efficiency', 'Smart lighting control', 'Wall lights for mood', 'Outdoor light options', 'Lights for atmosphere'
+5. New Products:
+    URL: https://www.ikea.com/gb/en/new/
+    Summary: The latest products and collections from IKEA.
+    Keywords: 'New Arrivals', 'Latest Designs', 'Trending Now', 'New Furniture', 'Home Innovations'
+    Headlines: 'Latest Arrivals', 'New Furniture', 'Trendy Home', 'Innovative Designs', 'Fresh Looks', 'Modern Styles', 'Just In', 'Seasonal Picks', 'New Collections', 'Contemporary Pieces', 'Home Refresh', 'New Accessories', 'Must-Have Items', 'IKEA Innovations', 'Updated Classics'
+    Descriptions: 'Discover new designs', 'Refresh your home', 'Trendy home additions', 'Latest IKEA products'
 
-6. Textiles:
-URL: https://www.ikea.com/gb/en/cat/textiles-tl001/
-Summary: Soft textiles to enhance comfort and appearance.
-Keywords: 'Curtains', 'Rugs', 'Cushions', 'Bed Linen', 'Towels', 'Throws', 'Fabric'
-Headlines: 'Elegant Curtains', 'Cozy Rugs', 'Comfy Cushions', 'Soft Bed Linen', 'Absorbent Towels', 'Warm Throws', 'Quality Fabrics'
-Descriptions: 'Curtains for privacy', 'Rugs for warmth', 'Cushions for sofas', 'Bed linen for sleep', 'Towels for baths', 'Throws for snuggling', 'Fabrics for projects'
+6. Offers:
+    URL: https://www.ikea.com/gb/en/offers/
+    Summary: Current offers and discounts on IKEA products.
+    Keywords: 'Discounts', 'Special Offers', 'Deals', 'Clearance', 'Sale Items'
+    Headlines: 'Great Discounts', 'Special Offers', 'IKEA Deals', 'Clearance Finds', 'Sale Highlights', 'Budget-Friendly', 'Limited Time', 'Price Cuts', 'Value Buys', 'Exclusive Deals', 'Member Offers', 'Seasonal Sales', 'Bargain Corner', 'Reduced Prices', 'Shop and Save'
+    Descriptions: 'Save on IKEA', 'Exclusive offers', 'Deals to grab', 'Shop the sale'
 
-7. Kitchenware & Tableware:
-URL: https://www.ikea.com/gb/en/cat/kitchenware-tableware-kt001/
-Summary: Essentials for cooking and dining.
-Keywords: 'Cookware', 'Dinnerware', 'Glassware', 'Utensils', 'Serveware', 'Cutlery', 'Food Storage'
-Headlines: 'Cooking Made Easy', 'Dine in Style', 'Glassware Galore', 'Utensils for Chefs', 'Serve with Pride', 'Cutlery Sets', 'Store Fresh Food'
-Descriptions: 'Cookware for meals', 'Dinnerware for feasts', 'Glassware for drinks', 'Utensils for prep', 'Serveware for hosting', 'Cutlery for dining', 'Food storage options'
+7. IKEA for Business:
+    URL: https://www.ikea.com/gb/en/ikea-business/
+    Summary: Furnishing solutions for businesses.
+    Keywords: 'Business Interiors', 'Office Furniture', 'Retail Solutions', 'Hospitality Furniture', 'Business Planning'
+    Headlines: 'Business Interiors', 'Office Essentials', 'Retail Furnishings', 'Hospitality Range', 'Business Planning', 'Workspace Design', 'Commercial Seating', 'Professional Desks', 'Storage Solutions', 'Corporate Style', 'Functional Spaces', 'Business Decor', 'Custom Solutions', 'Bulk Orders', 'Corporate Discounts'
+    Descriptions: 'Furnish your office', 'Business solutions', 'Retail furniture', 'Corporate planning'
 
-8. Laundry & Cleaning:
-URL: https://www.ikea.com/gb/en/cat/laundry-cleaning-lc001/
-Summary: Products to keep your home clean and organized.
-Keywords: 'Laundry Baskets', 'Cleaning Supplies', 'Ironing Boards', 'Waste Bins', 'Organizers', 'Drying Racks', 'Cleaning Accessories'
-Headlines: 'Laundry Solutions', 'Clean & Tidy', 'Ironing Ease', 'Waste Disposal', 'Space Organizers', 'Drying Made Simple', 'Cleaning Tools'
-Descriptions: 'Baskets for laundry', 'Supplies for cleaning', 'Ironing board options', 'Bins for waste', 'Organizers for order', 'Racks for drying', 'Tools for cleanliness'
+8. Outdoor Living:
+    URL: https://www.ikea.com/gb/en/cat/outdoor-living-od001/
+    Summary: Products for garden and outdoor activities.
+    Keywords: 'Patio Furniture', 'Outdoor Decor', 'Garden Tools', 'BBQ Grills', 'Outdoor Lighting'
+    Headlines: 'Patio Perfection', 'Garden Essentials', 'Outdoor Decor', 'BBQ Ready', 'Bright Outdoors', 'Al Fresco Dining', 'Outdoor Comfort', 'Garden Upgrades', 'Summer Fun', 'Outdoor Entertaining', 'Balcony Ideas', 'Eco-Friendly Garden', 'Outdoor Adventures', 'Porch Decor', 'Lawn Care'
+    Descriptions: 'Upgrade your patio', 'Garden must-haves', 'Outdoor lighting', 'BBQ season essentials'
 
-9. Bathroom Products:
-URL: https://www.ikea.com/gb/en/cat/bathroom-products-ba001/
-Summary: A range of products for your bathroom needs.
-Keywords: 'Bathroom Storage', 'Shower Accessories', 'Bath Mats', 'Bathroom Mirrors', 'Towel Rails', 'Bathroom Lighting', 'Bathroom Decor'
-Headlines: 'Storage for Baths', 'Shower Must-Haves', 'Soft Bath Mats', 'Clear Mirrors', 'Towel Hang-Ups', 'Bathroom Brightness', 'Decor Touches'
-Descriptions: 'Storage for toiletries', 'Shower accessories', 'Mats for safety', 'Mirrors for clarity', 'Rails for towels', 'Lighting for bathrooms', 'Decor for style'
+9. Decoration:
+    URL: https://www.ikea.com/gb/en/cat/decoration-de001/
+    Summary: Decorative items to enhance any room.
+    Keywords: 'Wall Art', 'Candles', 'Vases', 'Picture Frames', 'Decorative Accessories'
+    Headlines: 'Artistic Walls', 'Scented Ambiance', 'Elegant Vases', 'Frame Memories', 'Decor Accents', 'Room Finishing', 'Stylish Decor', 'Home Accents', 'Artful Displays', 'Decorative Touches', 'Personalize Space', 'Chic Ornaments', 'Tabletop Decor', 'Seasonal Decorations', 'Accent Pieces'
+    Descriptions: 'Decor for any style', 'Accentuate your home', 'Stylish frames', 'Decorative vases'
 
+10. Lighting:
+    URL: https://www.ikea.com/gb/en/cat/lighting-li001/
+    Summary: A range of lighting options for the entire home.
+    Keywords: 'Ceiling Lights', 'Lamps', 'LED Lighting', 'Smart Lighting', 'Outdoor Lights'
+    Headlines: 'Ceiling Highlights', 'Luminous Lamps', 'LED Solutions', 'Smart Illumination', 'Outdoor Glow', 'Bright Ideas', 'Lighting Decor', 'Mood Lighting', 'Functional Lights', 'Energy Efficient', 'Designer Lamps', 'Lighting Fixtures', 'Ambient Lighting', 'Night Lights', 'Decorative Lamps'
+    Descriptions: 'Light up your home', 'Find the perfect lamp', 'Energy-saving LEDs', 'Smart lighting options'
 
 And the task is following:
 Create a new Google Ads campaign for the Furniture category
@@ -145,34 +151,33 @@ The campaign should utilize the provided keywords and headlines to create compel
 Additional info from the web page:
 Here is a summary of the information you requested:
 
-Disney Store EU features a vast collection of Disney, Marvel, Pixar, and Star Wars merchandise, including new arrivals, seasonal gifts, and exclusive offers. Key selling points include free delivery on orders over 60€, free returns, and multiple click & collect options.
+The Disney Store EU offers a wide range of Disney, Marvel, Pixar, and Star Wars merchandise, including new arrivals and exclusive collections. Customers can enjoy promotions such as spend-based discounts with a special code and free gifts with qualifying purchases. The store provides free delivery over 60€ and free returns, along with Click & Collect locations.
 
 Relevant Pages:
 
-1. New In Products:
-URL: https://www.disneystore.eu/new
-Summary: Showcases the latest products across various Disney franchises.
-Keywords: 'New Arrivals', 'Disney', 'Marvel', 'Pixar', 'Star Wars', 'Latest Merchandise', 'Exclusive Products'
-Headlines: 'Latest Disney Finds', 'New Marvel Gear', "Pixar's Newest", 'Star Wars Arrivals', 'Fresh Disney Magic', 'Just In: Disney', 'Marvel Must-Haves', 'Pixar Picks', 'Star Wars Selection', 'Newest Arrivals', 'Disney Delights', "Marvel's Best", "Pixar's Finest", 'Star Wars Treasures', "Disney's Latest"
-Descriptions: 'Explore the latest Disney merchandise and collectibles.', 'Discover new Marvel apparel and accessories.', 'Find the newest Pixar-themed items.', 'Get the latest Star Wars products.'
+1. Disney Store EU | Home to Official Disney Merchandise:
+    URL: https://www.disneystore.eu/
+    Summary: Main page showcasing Disney merchandise and current promotions.
+    Keywords: 'Disney Merchandise', 'Marvel Gear', 'Pixar Toys', 'Star Wars Collectibles', 'Disney Apparel', 'Exclusive Disney Collections', 'Disney Accessories', 'Disney Home Decor', 'Disney Plush Toys', 'Disney Figurines', 'Disney Store Offers', 'Disney Free Delivery', 'Disney Collectibles', 'Disney Gifts', 'Disney Magic'
+    Headlines: 'Disney Magic Delivered', 'Marvel Gear & Apparel', 'Pixar Toys Galore', 'Star Wars Collectibles', 'Exclusive Disney Finds', 'Shop Disney Apparel', 'Disney Home Accents', 'Cuddle Disney Plush', 'Collect Disney Figures', 'Disney Store Savings', 'Free Delivery Over 60€', 'Disney Click & Collect', 'Gifts for Disney Fans', 'Official Disney Gear', 'Find Disney Treasures'
+    Descriptions: 'Explore official Disney merchandise for all ages.', 'Find the latest Marvel apparel and accessories.', 'Discover new Pixar toys for endless fun.', 'Get exclusive Star Wars collectibles here.'
 
-2. Easter Gifts & Toys:
-URL: https://www.disneystore.eu/easter?srule=newest
-Summary: A selection of Easter-themed Disney gifts and toys.
-Keywords: 'Easter', 'Disney Gifts', 'Toys', 'Books', 'Soft Toys', 'Seasonal Offers', 'Themed Merchandise'
-Headlines: 'Easter Disney Fun', 'Springtime Surprises', 'Easter Toy Magic', 'Disney Easter Gifts', 'Bunny-Approved Toys', 'Easter Book Finds', 'Soft Toy Delights', 'Easter Basket Joy', 'Disney Spring Gifts', 'Easter Plush Pals', 'Festive Disney Toys', 'Easter Reads', 'Soft Toy Wonders', 'Easter Treasures', 'Spring Disney Picks'
-Descriptions: 'Fill your Easter with Disney books and soft toys.', 'Discover the perfect Disney Easter gifts for kids.', 'Hop into Easter with Disney-themed toys and books.', 'Celebrate Easter with delightful Disney soft toys.'
+2. New In Products | Disney Store:
+    URL: https://www.disneystore.eu/new
+    Summary: Latest Disney, Marvel, Pixar, and Star Wars products.
+    Keywords: 'New Disney Arrivals', 'Latest Marvel Merch', 'New Pixar Releases', 'Star Wars New Additions', 'Disney Store New', 'New Disney Toys', 'Latest Disney Apparel', 'New Disney Accessories', 'Disney Store Exclusives', 'New Disney Plush', 'Disney Store Updates', 'New Disney Figures', 'Disney Store Must-Haves', 'Just Arrived Disney', 'New Disney Gifts'
+    Headlines: 'New Disney Arrivals', 'Latest Marvel Finds', "Pixar's Newest Toys", 'New Star Wars Gear', 'Just In Disney Store', 'Fresh Disney Styles', "Marvel's New Releases", 'Pixar Latest Additions', 'Star Wars Just Dropped', "Disney's New Exclusives", 'New Disney Plush Pals', 'Latest Disney Figures', 'Must-Have Disney Items', 'New Disney Gifts Here', "Shop Disney's Latest"
+    Descriptions: 'Shop the latest Disney products now.', 'Check out new Marvel merchandise today.', 'Find the newest Pixar toys for kids.', 'Get the latest Star Wars additions.'
 
-3. Offers:
-URL: https://www.disneystore.eu/offers
-Summary: Current discounts and promotions on Disney merchandise.
-Keywords: 'Disney Offers', 'Discounts', 'Promotions', 'Deals', 'Special Offers', 'Savings', 'Exclusive Deals'
-Headlines: 'Disney Deals', 'Marvel Discounts', 'Pixar Promos', 'Star Wars Savings', 'Special Offers', 'Disney Bargains', 'Marvel Offers', 'Pixar Savings', 'Star Wars Deals', 'Exclusive Discounts', 'Disney Promotions', 'Marvel Savings', 'Pixar Deals', 'Star Wars Offers', 'Disney Specials'
-Descriptions: 'Save on Disney favorites with exclusive offers.', 'Get discounts on Marvel, Pixar, and Star Wars gear.', 'Discover promotions on a wide range of Disney products.', 'Enjoy special deals on Disney merchandise.'
-
+3. Magical Offers | Disney Store:
+    URL: https://www.disneystore.eu/offers/magical-offers
+    Summary: Special promotions and discounts on Disney merchandise.
+    Keywords: 'Disney Deals', 'Disney Store Promotions', 'Disney Discount Code', 'Disney Special Offers', 'Disney Savings', 'Disney Promo Items', 'Disney Store Sale', 'Disney Bargains', 'Disney Store Discounts', 'Disney Coupon Code', 'Disney Store Deals', 'Disney Limited Offers', 'Disney Exclusive Promos', 'Disney Store Savings', 'Disney Magical Offers'
+    Headlines: 'Disney Deals Await', 'Magical Disney Offers', 'Disney Promo Codes', 'Special Disney Savings', 'Disney Store Bargains', 'Exclusive Disney Deals', 'Disney Discounts Here', 'Save Big at Disney', 'Disney Store Promos', 'Disney Coupon Savings', 'Limited Disney Offers', 'Disney Sale Now On', 'Exclusive Disney Codes', 'Disney Store Exclusives', 'Magical Savings Inside'
+    Descriptions: 'Discover magical offers at Disney Store.', 'Use code for Disney Store discounts.', 'Find exclusive Disney promotions.', 'Save on Disney merchandise today.'
 
 And the task is following:
-Create a new Google Ads campaign focusing on the 'New In Products' and 'Easter Gifts & Toys' sections of the Disney Store EU website.
+Create a new Google Ads campaign focusing on the 'New In Products' and 'Magical Offers' sections of the Disney Store EU website.
 """
 
 CAMPAIGN_CREATION_FASTSTREAM = """Here is the customer brief:
@@ -188,31 +193,30 @@ Budget: Recommended €3 per day.
 Additional info from the web page:
 Here is a summary of the information you requested:
 
-FastStream is an open-source framework for building asynchronous web services that interact with event streams, offering a unified API for multiple message brokers and features like Pydantic validation, automatic documentation, and a powerful DI system.
+FastStream is an open-source framework for building asynchronous web services that interact with event streams. It offers features such as multiple broker support, Pydantic validation, automatic AsyncAPI documentation, and compatibility with HTTP frameworks like FastAPI.
 
 Relevant Pages:
 
-1. Features - FastStream:
-URL: https://faststream.airt.ai/latest/faststream/
-Summary: Details the features of FastStream, including multiple brokers support, Pydantic validation, and automatic AsyncAPI documentation.
-Keywords: 'FastStream', 'Asynchronous', 'Event Streams', 'API', 'Message Brokers', 'Pydantic', 'Documentation', 'Dependency Injection', 'Testing', 'Extensible', 'Integrations', 'Code Generation', 'GPT', 'Llama'
-Headlines: 'Unified API', 'Pydantic Support', 'Auto Documentation', 'DI System', 'In-Memory Tests', 'HTTP Integrations', 'Code Generation', 'Multiple Brokers', 'Testable Services', 'Extensible Framework', 'FastAPI Compatible', 'Modern Microservices', 'Async Services', 'Streamline Workflow', 'Community Driven'
-Descriptions: 'Build async web services', 'Validate messages easily', 'Generate docs automatically', 'Efficient dependency management'
+1. FastStream Home:
+    URL: https://faststream.airt.ai/
+    Summary: Introduction to FastStream framework
+    Keywords: 'FastStream', 'Asynchronous Services', 'Event Streams', 'Message Queues', 'Pydantic Validation', 'AsyncAPI Documentation', 'Dependency Injection', 'In-Memory Tests', 'HTTP Frameworks', 'Code Generation', 'GPT', 'Llama'
+    Headlines: 'Streamline Async Services', 'FastStream Framework', 'Event Stream Interaction', 'Message Queue Simplified', 'Automate Service Tasks', 'Pydantic Data Validation', 'Automatic API Docs', 'Catch Errors Early', 'Efficient Dependency DI', 'Accelerate CI/CD Pipeline', 'Extend Service Features', 'HTTP Framework Compatible', 'Code Generation Optimized', 'FastAPI Integration', 'Advanced Model Support'
+    Descriptions: 'Build async web services easily', 'Unified API for message brokers', 'Automatic documentation generation', 'Optimized for code generation'
 
-2. Getting Started - FastStream:
-URL: https://faststream.airt.ai/latest/getting-started/
-Summary: Provides a quick start guide and basic usage instructions for FastStream.
-Keywords: 'Getting Started', 'FastStream', 'Quick Start', 'Basic Usage', 'Installation', 'Tutorial', 'Setup Guide', 'Event Streaming', 'Message Brokers', 'Python', 'Framework', 'Asynchronous', 'Web Services', 'Documentation'
-Headlines: 'Quick Start', 'Install Guide', 'Basic Usage', 'Setup Tutorial', 'FastStream Setup', "Beginner's Guide", 'Quick Installation', 'Usage Instructions', 'Service Creation', 'Run Applications', 'Project Setup', 'Python Environment', 'Development Guide', 'Streaming Basics', 'Broker Containers'
-Descriptions: 'Start with FastStream', 'Easy installation steps', 'Learn basic FastStream usage', 'Set up your project quickly'
+2. Features:
+    URL: https://faststream.airt.ai/features
+    Summary: Features of FastStream framework
+    Keywords: 'FastStream Features', 'Broker Support', 'Validation', 'Documentation', 'Dependency Injection', 'Testing', 'Extensibility', 'HTTP Integration', 'Code Generation'
+    Headlines: 'Unified Broker API', 'Validate with Pydantic', 'Auto AsyncAPI Docs', 'Typed Editor Support', 'Dependency Management', 'In-Memory Testing', 'Middleware Extensibility', 'HTTP Frameworks Ready', 'Code Gen Made Easy', 'FastAPI Compatibility', 'GPT & Llama Support', 'Async Service Building', 'Message Queue Management', 'Streamline Development', 'Enhance Microservices'
+    Descriptions: 'Explore FastStream features', 'Simplify message queue handling', 'Enhance service documentation', 'Improve development experience'
 
-3. Reference - Code API - FastStream:
-URL: https://faststream.airt.ai/latest/api/
-Summary: Contains the reference code API for FastStream, detailing classes, functions, and components.
-Keywords: 'Code API', 'Reference', 'FastStream', 'Documentation', 'Classes', 'Functions', 'Components', 'Framework', 'Asynchronous', 'Web Services', 'API Reference', 'Python', 'Developers', 'Technical Details', 'Source Code'
-Headlines: 'API Reference', 'Code Documentation', 'Framework Components', 'Class Details', 'Function Guide', 'API Components', 'Technical Reference', 'Source Code', 'Python Classes', 'Framework Functions', 'Developer Guide', 'Code Insights', 'API Overview', 'Component Specs', 'Code Examples'
-Descriptions: 'Detailed API documentation', 'Explore FastStream components', 'Technical reference for devs', "Guide to framework's API"
-
+3. Tutorial:
+    URL: https://faststream.airt.ai/tutorial
+    Summary: Tutorial for using FastStream
+    Keywords: 'FastStream Tutorial', 'Getting Started', 'Service Creation', 'Event Stream Tutorial', 'Message Queue Tutorial', 'Async Services Guide', 'Framework Setup', 'Development Guide'
+    Headlines: 'Start with FastStream', 'Async Services Guide', 'Event Stream Tutorial', 'Message Queue Basics', 'Setup FastStream', 'Develop with FastStream', 'Service Creation Steps', 'Broker Configuration', 'Validation Tutorial', 'Documentation Guide', 'Dependency Injection Intro', 'Testing Your Services', 'Extending FastStream', 'HTTP Integration Tips', 'Code Generation Guide'
+    Descriptions: 'Learn to use FastStream', 'Build services with a guide', 'Master event stream handling', 'Develop efficient microservices'
 
 And the task is following:
-Create a new Google Ads campaign focusing on the 'Features' and 'Getting Started' pages of the FastStream website."""
+Create a new Google Ads campaign focusing on the 'Features' and 'Tutorial' pages of the FastStream website."""

@@ -38,11 +38,11 @@ class AdGroupAdForCreation(AdBase):
     ]
     headlines: Annotated[
         List[Annotated[str, StringConstraints(max_length=30)]],
-        Len(min_length=3, max_length=15),
+        Len(min_length=15, max_length=15),
     ]
     descriptions: Annotated[
         List[Annotated[str, StringConstraints(max_length=90)]],
-        Len(min_length=2, max_length=4),
+        Len(min_length=4, max_length=4),
     ]
     path1: Optional[
         Annotated[
@@ -213,7 +213,8 @@ def create_campaign_creation_team_toolbox(
     @toolbox.add_function("Create an ad group with a single ad and a list of keywords")
     def create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords: Annotated[
-            AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
+            AdGroupWithAdAndKeywords,
+            "An ad group with an ad (15 headlines and 4 descriptions) and a list of keywords",
         ],
         # the context will be injected by the toolbox
         context: Context,

@@ -525,6 +525,12 @@ When you are finished, write a single 'TERMINATE' to end the task.
 VERY IMPORTANT:
 - each headline must have LESS than 30 characters and each description must have LESS than 90 characters
 - generate EXACTLY 15 headlines and 4 descriptions for EACH link which you think is relevant for the Google Ads campaign!
+- Do NOT create general keywords. Keywords must be specific so they attract the right customers.
+- Include popular keywords in your headlines!
+- headlines MUST be UNIQUE, do NOT repeat the same or similar phrases
+- use at least ONE keyword insertion in the headlines list e.g. '{{Keyword: Your default text here}}'
+- descriptions MUST be UNIQUE, do NOT repeat the same or similar phrases
+- Use longer descriptions to provide more information about the product (but MAX 90 characters)
 - if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
