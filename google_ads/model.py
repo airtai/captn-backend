@@ -24,6 +24,27 @@ class AdGroup(Campaign):
     cpc_bid_micros: Optional[int] = None
 
 
+def _remove_keyword_insertion_chars(text: str) -> str:
+    text = text.lower()
+    if "{keyword:" in text and text[-1] == "}":
+        text = text.replace("{keyword:", "")
+        # remove last character
+        text = text[:-1].strip()
+    return text
+
+
+def check_max_string_length_for_each_item(
+    field_name: str, field: List[str], max_string_length: int
+) -> str:
+    error_message = ""
+    for item in field:
+        item_without_keyword_insertion_chars = _remove_keyword_insertion_chars(item)
+        if len(item_without_keyword_insertion_chars) > max_string_length:
+            error_message += f"Each {field_name} must be less than {max_string_length} characters!\nLength of {item} is {len(item)}"
+
+    return error_message
+
+
 class AdGroupAd(AdGroup):
     ad_id: Optional[str] = None
     final_url: Optional[str] = None
@@ -40,17 +61,19 @@ class AdGroupAd(AdGroup):
         min_list_length: int,
         max_string_length: int,
     ) -> Optional[List[str]]:
+        error_message = ""
         if field is not None:
             if len(field) < min_list_length:
-                raise ValueError(
+                error_message += (
                     f"{field_name} must have at least {min_list_length} items!"
                 )
-            for item in field:
-                if len(item) > max_string_length:
-                    raise ValueError(
-                        f"Each {field_name} must be less than {max_string_length} characters!\nLength of {item} is {len(item)}"
-                    )
 
+            error_message += check_max_string_length_for_each_item(
+                field_name=field_name, field=field, max_string_length=max_string_length
+            )
+
+        if error_message:
+            raise ValueError(error_message)
         return field
 
     @field_validator("headlines")

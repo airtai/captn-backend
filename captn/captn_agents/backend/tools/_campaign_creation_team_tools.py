@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from annotated_types import Len
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, field_validator
 from typing_extensions import Annotated
 
-from google_ads.model import RemoveResource
+from google_ads.model import RemoveResource, check_max_string_length_for_each_item
 
 from ....google_ads.client import check_for_client_approval, google_ads_create_update
 from ..toolboxes import Toolbox
@@ -39,11 +39,21 @@ class AdGroupAdForCreation(AdBase):
         str, Field(..., description=properties_config["final_url"]["description"])
     ]
     headlines: Annotated[
-        List[Annotated[str, StringConstraints(max_length=30)]],
+        List[
+            Annotated[
+                str,
+                "Maximum 30 characters. If keyword insertion is used, '{KeyWord' and '}' are NOT included in the 30 characters.",
+            ]
+        ],
         Len(min_length=15, max_length=15),
     ]
     descriptions: Annotated[
-        List[Annotated[str, StringConstraints(max_length=90)]],
+        List[
+            Annotated[
+                str,
+                "Maximum 90 characters. If keyword insertion is used, '{KeyWord' and '}' are NOT included in the 90 characters.",
+            ]
+        ],
         Len(min_length=4, max_length=4),
     ]
     path1: Optional[
@@ -56,6 +66,37 @@ class AdGroupAdForCreation(AdBase):
             str, Field(..., description=properties_config["path2"]["description"])
         ]
     ] = None
+
+    @classmethod
+    def validate_field(
+        cls,
+        field_name: str,
+        field: List[str],
+        max_string_length: int,
+    ) -> Optional[List[str]]:
+        error_message = check_max_string_length_for_each_item(
+            field_name=field_name, field=field, max_string_length=max_string_length
+        )
+
+        if error_message:
+            raise ValueError(error_message)
+        return field
+
+    @field_validator("headlines")
+    def headlines_validator(cls, headlines: List[str]) -> Optional[List[str]]:
+        return cls.validate_field(
+            field_name="headlines",
+            field=headlines,
+            max_string_length=30,
+        )
+
+    @field_validator("descriptions")
+    def descriptions_validator(cls, descriptions: List[str]) -> Optional[List[str]]:
+        return cls.validate_field(
+            field_name="descriptions",
+            field=descriptions,
+            max_string_length=90,
+        )
 
 
 class AdGroupCriterionForCreation(AdBase):

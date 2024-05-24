@@ -95,12 +95,18 @@ example = Summary(
                 "Quiet Operation",
             ],
             headlines=[
-                "Cool Comfort, Anywhere",
-                "Beat the Heat with Ease",
-                "Stay Chill All Summer",
-                "Your Cooling Solution",
-                "Ultimate Climate Control",
-                "AC: Your Hot Weather Ally",
+                "Cool Comfort for Your Home",
+                "Efficient Cooling Solutions",
+                "Smart Air Conditioning",
+                "Whisper-Quiet Operation",
+                "Energy-Efficient Cooling",
+                "Stay Cool and Comfortable",
+                "{Keyword: Stay Cool}",
+                "{Keyword: Smart Cooling}",
+                "Home Comfort Solutions",
+                "Cool Your Space Efficiently",
+                "Save money",
+                "ECO-Friendly",
             ],
             descriptions=[
                 "Powerful cooling for any space",
@@ -595,6 +601,7 @@ Please provide a detailed summary of the website as JSON-encoded string as instr
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
 You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
 When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
+Make sure you use keyword insertion in the headlines and provide unique headlines and descriptions for each link.
 """
 
 _task_guidelines = "Please provide a summary of the website, including the products/services offered and any unique selling points."

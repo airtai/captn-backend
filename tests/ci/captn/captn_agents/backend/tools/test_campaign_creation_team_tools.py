@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
+from pydantic import ValidationError
 
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.teams._campaign_creation_team import (
@@ -10,6 +11,7 @@ from captn.captn_agents.backend.teams._campaign_creation_team import (
 )
 from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
+    AdGroupAdForCreation,
     _get_resource_id_from_response,
     _remove_resources,
     create_campaign_creation_team_toolbox,
@@ -184,3 +186,123 @@ class TestContext:
         actual = context.recommended_modifications_and_answer_list
         expected = [("question", "answer")]
         assert actual == expected, actual
+
+
+class TestAdGroupAdForCreation:
+    @pytest.mark.parametrize(
+        "headlines, descriptions, expected",
+        [
+            (
+                [
+                    "H1",
+                    "H2",
+                    "H3",
+                    "H4",
+                    "H5",
+                    "H6",
+                    "H7",
+                    "H8",
+                    "H9",
+                    "H10",
+                    "H11",
+                    "H12",
+                    "H13",
+                    "H14",
+                    "H15",
+                ],
+                ["D1", "D2", "D3", "D4"],
+                None,
+            ),
+            (
+                ["H1", "H2", "H3", "H4"],
+                ["D1", "D2", "D3", "D4"],
+                ValidationError,
+            ),
+            (
+                [
+                    "H1",
+                    "H2",
+                    "H3",
+                    "H4",
+                    "H5",
+                    "H6",
+                    "H7",
+                    "H8",
+                    "H9",
+                    "H10",
+                    "H11",
+                    "H12",
+                    "H13",
+                    "H14",
+                    "H15",
+                ],
+                ["D1", "D2", "D3"],
+                ValidationError,
+            ),
+        ],
+    )
+    def test_minimum_number_of_headlines_and_descriptions(
+        self, headlines, descriptions, expected
+    ):
+        if expected == ValidationError:
+            with pytest.raises(ValidationError):
+                AdGroupAdForCreation(
+                    customer_id="2222",
+                    headlines=headlines,
+                    descriptions=descriptions,
+                    final_url="https://www.example.com",
+                    status="ENABLED",
+                )
+        else:
+            AdGroupAdForCreation(
+                customer_id="2222",
+                headlines=headlines,
+                descriptions=descriptions,
+                final_url="https://www.example.com",
+                status="ENABLED",
+            )
+
+    @pytest.mark.parametrize(
+        "headline, expected",
+        [
+            ("A" * 31, ValueError),
+            ("{KeyWord: " + "A" * 30 + "}", None),
+            ("{KeyWord: " + "A" * 31 + "}", ValueError),
+        ],
+    )
+    def test_maximum_headline_string_length(self, headline, expected):
+        descriptions = ["D1", "D2", "D3", "D4"]
+        headlines = [
+            "H1",
+            "H2",
+            "H3",
+            "H4",
+            "H5",
+            "H6",
+            "H7",
+            "H8",
+            "H9",
+            "H10",
+            "H11",
+            "H12",
+            "H13",
+            "H14",
+        ]
+        headlines.append(headline)
+        if expected == ValueError:
+            with pytest.raises(ValueError):
+                AdGroupAdForCreation(
+                    customer_id="2222",
+                    headlines=headlines,
+                    descriptions=descriptions,
+                    final_url="https://www.example.com",
+                    status="ENABLED",
+                )
+        else:
+            AdGroupAdForCreation(
+                customer_id="2222",
+                headlines=headlines,
+                descriptions=descriptions,
+                final_url="https://www.example.com",
+                status="ENABLED",
+            )
