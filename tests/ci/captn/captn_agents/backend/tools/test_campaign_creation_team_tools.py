@@ -10,10 +10,13 @@ from captn.captn_agents.backend.teams._campaign_creation_team import (
 )
 from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
+    _get_resource_id_from_response,
+    _remove_resources,
     create_campaign_creation_team_toolbox,
 )
 from captn.captn_agents.backend.tools._functions import Context
 from captn.google_ads.client import clean_nones
+from google_ads.model import RemoveResource
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
@@ -51,23 +54,53 @@ class TestTools:
             },
         )
 
-    def test_create_ad_group_with_ad_and_keywords(self) -> None:
+    @pytest.mark.parametrize(
+        "response",
+        [
+            "Created customers/1212/adGroups/3434.",
+            "Created customers/7119828439/adGroupCriteria/1212~3434.",
+        ],
+    )
+    def test_get_resource_id_from_response(self, response) -> None:
+        resource_id = _get_resource_id_from_response(response)
+        assert resource_id == "3434", resource_id
+
+    @pytest.mark.parametrize(
+        "side_effect",
+        [
+            [
+                "Created customers/1212/adGroups/3434.",
+                "Created customers/1212/adGroupAds/3434~5656.",
+                "Created customers/1212/adGroupCriteria/3434~7878.",
+                "Created customers/1212/adGroupCriteria/3434~8989.",
+            ],
+            [
+                "Created customers/1212/adGroups/3434.",
+                "Created customers/1212/adGroupAds/3434~5656.",
+                "Created customers/1212/adGroupCriteria/3434~7878.",
+                ValueError("Error: 400: The keyword text 'keyword1' is invalid."),
+                "Removed customers/1212/adGroupCriteria/3434~7878.",
+                "Removed customers/1212/adGroupAds/3434~5656.",
+                "Removed customers/1212/adGroups/3434.",
+            ],
+        ],
+    )
+    def test_create_ad_group_with_ad_and_keywords(self, side_effect) -> None:
         ad_group = ad_group_with_ad_and_keywords.ad_group
         ad_group_ad = ad_group_with_ad_and_keywords.ad_group_ad
         keyword1 = ad_group_with_ad_and_keywords.keywords[0]
         keyword2 = ad_group_with_ad_and_keywords.keywords[1]
 
-        with unittest.mock.patch(
-            "captn.captn_agents.backend.tools._campaign_creation_team_tools.google_ads_create_update"
-        ) as mock_google_ads_create_update:
-            side_effect = [
-                "Created customers/1212/adGroups/3434.",
-                "Created customers/1212/adGroupAds/3434~5656.",
-                "Created customers/1212/adGroupCriteria/3434~7878.",
-                "Created customers/1212/adGroupCriteria/3434~8989.",
-            ]
-            mock_google_ads_create_update.side_effect = side_effect
-
+        with (
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._campaign_creation_team_tools.google_ads_create_update",
+                side_effect=side_effect,
+            ) as mock_google_ads_create_update,
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._campaign_creation_team_tools._remove_resources",
+                wraps=_remove_resources,
+            ) as mock_remove_resources,
+        ):
             modification_function_params = clean_nones(
                 {
                     "ad_group_with_ad_and_keywords": ad_group_with_ad_and_keywords.model_dump()
@@ -85,23 +118,54 @@ class TestTools:
                 "create_ad_group_with_ad_and_keywords"
             )
 
-            response = create_ad_group_with_ad_and_keywords(
-                ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-                context=context,
-            )
+            if isinstance(side_effect[3], ValueError):
+                with pytest.raises(ValueError):
+                    create_ad_group_with_ad_and_keywords(
+                        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+                        context=context,
+                    )
 
-            expected_response = f"""Ad group '{ad_group.name}': {side_effect[0]}
+                # 4 create calls (the last one failed) + 3 remove calls
+                assert mock_google_ads_create_update.call_count == 7
+                mock_remove_resources.assert_called_once_with(
+                    user_id=1,
+                    conv_id=1,
+                    list_of_resources=[
+                        RemoveResource(
+                            customer_id="2222",
+                            resource_id="3434",
+                            resource_type="ad_group",
+                        ),
+                        RemoveResource(
+                            customer_id="2222",
+                            parent_id="3434",
+                            resource_id="5656",
+                            resource_type="ad",
+                        ),
+                        RemoveResource(
+                            customer_id="2222",
+                            parent_id="3434",
+                            resource_id="7878",
+                            resource_type="ad_group_criterion",
+                        ),
+                    ],
+                )
+
+            else:
+                response = create_ad_group_with_ad_and_keywords(
+                    ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+                    context=context,
+                )
+
+                expected_response = f"""Ad group '{ad_group.name}': {side_effect[0]}
 Ad group ad with final url - '{ad_group_ad.final_url}': {side_effect[1]}
 Keyword '{keyword1.keyword_text}': {side_effect[2]}
 Keyword '{keyword2.keyword_text}': {side_effect[3]}
 """
 
-            print()
-            print(f"{response=}")
-            print(f"{expected_response=}")
-
-            assert mock_google_ads_create_update.call_count == 4
-            assert response == expected_response, response
+                assert mock_google_ads_create_update.call_count == 4
+                assert response == expected_response, response
+                mock_remove_resources.assert_not_called()
 
 
 class TestContext:

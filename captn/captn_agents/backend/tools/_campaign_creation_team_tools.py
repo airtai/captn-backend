@@ -4,6 +4,8 @@ from annotated_types import Len
 from pydantic import BaseModel, Field, StringConstraints
 from typing_extensions import Annotated
 
+from google_ads.model import RemoveResource
+
 from ....google_ads.client import check_for_client_approval, google_ads_create_update
 from ..toolboxes import Toolbox
 from ._functions import (
@@ -96,7 +98,7 @@ class AdGroupWithAdAndKeywords(BaseModel):
 
 
 def _get_resource_id_from_response(response: str) -> str:
-    return response.split("/")[-1].replace(".", "")
+    return response.split("/")[-1].split("~")[-1].replace(".", "").strip()
 
 
 def _create_ad_group(
@@ -178,6 +180,7 @@ def _create_ad_group_keywords(
     ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
     ad_group_id: str,
+    list_of_resources: List[RemoveResource],
 ) -> Union[Dict[str, Any], str]:
     response = ""
     for keyword in ad_group_with_ad_and_keywords.keywords:
@@ -189,7 +192,98 @@ def _create_ad_group_keywords(
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
+        keyword_id = _get_resource_id_from_response(keyword_response)  # type: ignore[arg-type]
+        list_of_resources.append(
+            RemoveResource(
+                customer_id=ad_group_with_ad_and_keywords.customer_id,
+                parent_id=ad_group_id,
+                resource_id=keyword_id,
+                resource_type="ad_group_criterion",
+            )
+        )
         response += f"Keyword '{keyword.keyword_text}': {keyword_response}\n"
+    return response
+
+
+def _remove_resources(
+    user_id: int, conv_id: int, list_of_resources: List[RemoveResource]
+) -> None:
+    for remove_resource in list_of_resources[::-1]:
+        remove_response = google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            recommended_modifications_and_answer_list=[],
+            ad=remove_resource,
+            endpoint="/remove-google-ads-resource",
+            already_checked_clients_approval=True,
+        )
+        print(remove_response)
+    print("Resources removed successfully")
+
+
+def _create_ad_group_with_ad_and_keywords(
+    ad_group_with_ad_and_keywords: Annotated[
+        AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
+    ],
+    context: Context,
+) -> Union[Dict[str, Any], str]:
+    list_of_resources = []
+    try:
+        ad_group_response = _create_ad_group(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+        )
+        if isinstance(ad_group_response, dict):
+            return ad_group_response
+        response = f"Ad group '{ad_group_with_ad_and_keywords.ad_group.name}': {ad_group_response}\n"
+        ad_group_id = _get_resource_id_from_response(ad_group_response)
+        list_of_resources.append(
+            RemoveResource(
+                customer_id=ad_group_with_ad_and_keywords.customer_id,
+                resource_id=ad_group_id,
+                resource_type="ad_group",
+            )
+        )
+
+        ad_group_ad_response = _create_ad_group_ad(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            ad_group_id=ad_group_id,
+        )
+        ad_group_ad_id = _get_resource_id_from_response(ad_group_ad_response)  # type: ignore[arg-type]
+        list_of_resources.append(
+            RemoveResource(
+                customer_id=ad_group_with_ad_and_keywords.customer_id,
+                parent_id=ad_group_id,
+                resource_id=ad_group_ad_id,
+                resource_type="ad",
+            )
+        )
+
+        response += f"Ad group ad with final url - '{ad_group_with_ad_and_keywords.ad_group_ad.final_url}': {ad_group_ad_response}\n"
+
+        ad_group_keywords_response = _create_ad_group_keywords(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            ad_group_id=ad_group_id,
+            list_of_resources=list_of_resources,
+        )
+        response += ad_group_keywords_response  # type: ignore
+        context.changes_made += f"\n{response}"
+    except Exception as e:
+        _remove_resources(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            list_of_resources=list_of_resources,
+        )
+        raise e
+
     return response
 
 
@@ -231,55 +325,21 @@ def create_campaign_creation_team_toolbox(
         """
         # TODO: If any of the creation fails, we should rollback the changes
         # and return the error message (delete ad_group, other resources will be deleted automatically)
-
-        user_id = context.user_id
-        conv_id = context.conv_id
-        recommended_modifications_and_answer_list = (
-            context.recommended_modifications_and_answer_list
-        )
-
         modification_function_parameters = {}
         modification_function_parameters["ad_group_with_ad_and_keywords"] = (
             ad_group_with_ad_and_keywords.model_dump()
         )
         error_msg = check_for_client_approval(
             modification_function_parameters=modification_function_parameters,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
         )
         if error_msg:
             raise ValueError(error_msg)
 
-        ad_group_response = _create_ad_group(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        return _create_ad_group_with_ad_and_keywords(
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            context=context,
         )
-        if isinstance(ad_group_response, dict):
-            return ad_group_response
-        response = f"Ad group '{ad_group_with_ad_and_keywords.ad_group.name}': {ad_group_response}\n"
-        ad_group_id = _get_resource_id_from_response(ad_group_response)
-
-        ad_group_ad_response = _create_ad_group_ad(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
-            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            ad_group_id=ad_group_id,
-        )
-        response += f"Ad group ad with final url - '{ad_group_with_ad_and_keywords.ad_group_ad.final_url}': {ad_group_ad_response}\n"
-
-        ad_group_keywords_response = _create_ad_group_keywords(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
-            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            ad_group_id=ad_group_id,
-        )
-        response += ad_group_keywords_response  # type: ignore
-        context.changes_made += f"\n{response}"
-
-        return response
 
     add_shared_functions(toolbox)
 
