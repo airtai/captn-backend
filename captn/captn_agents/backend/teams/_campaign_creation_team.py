@@ -35,8 +35,8 @@ ad_group_ad = AdGroupAdForCreation(
         "headline11",
         "headline12",
         "headline13",
-        "keyword1",
-        "keyword2",
+        "{KeyWord:your default text1}",
+        "{KeyWord:your default text2}",
     ],
     descriptions=["description1", "description2", "description3", "description4"],
     status="ENABLED",
@@ -204,7 +204,7 @@ Use it only to retrieve the information about the currency and already existing 
 34. Ad rules:
 - Ad MUST contain 15 headlines and 4 descriptions
 - Do NOT create general keywords. Keywords must be specific so they attract the right customers.
-- Include popular keywords in your headlines!
+- Use keyword insertion in the headlines!
 - headlines MUST be UNIQUE, do NOT repeat the same or similar phrases
 - descriptions MUST be UNIQUE, do NOT repeat the same or similar phrases
 - Use longer descriptions to provide more information about the product (but MAX 90 characters)
