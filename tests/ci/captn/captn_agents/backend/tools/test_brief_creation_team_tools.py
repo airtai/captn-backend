@@ -78,7 +78,7 @@ class TestTools:
         "get_info_from_web_page_result",
         [
             "My web page info.",
-            None,
+            "",
         ],
     )
     def test_delagate_task(self, get_info_from_web_page_result: Optional[str]) -> None:
@@ -116,7 +116,7 @@ class TestTools:
                     context=context,
                 )
 
-                if get_info_from_web_page_result is None:
+                if get_info_from_web_page_result == "":
                     assert isinstance(response, str)
                     mock_initiate_chat.assert_not_called()
                     mock_get_last_message.assert_not_called()
@@ -126,6 +126,6 @@ class TestTools:
                     team_response = TeamResponse.model_validate_json(response)
                     print(f"team_response: {team_response}")
             finally:
-                if get_info_from_web_page_result is not None:
+                if get_info_from_web_page_result != "":
                     poped_team = Team.pop_team(user_id=12345, conv_id=67890)
                     assert isinstance(poped_team, GoogleAdsTeam)

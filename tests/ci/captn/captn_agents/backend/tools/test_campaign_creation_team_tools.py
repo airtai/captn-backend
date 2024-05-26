@@ -3,14 +3,15 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
+from pydantic import ValidationError
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.teams._campaign_creation_team import (
+    ad_group_with_ad_and_keywords,
+)
 from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
-    AdGroupCriterionForCreation,
-    AdGroupForCreation,
-    AdGroupWithAdAndKeywords,
     _get_resource_id_from_response,
     _remove_resources,
     create_campaign_creation_team_toolbox,
@@ -87,38 +88,10 @@ class TestTools:
         ],
     )
     def test_create_ad_group_with_ad_and_keywords(self, side_effect) -> None:
-        ad_group_ad = AdGroupAdForCreation(
-            final_url="https://www.example.com",
-            headlines=["headline1", "headline2", "headline3"],
-            descriptions=["description1", "description2"],
-            status="ENABLED",
-        )
-
-        keyword1 = AdGroupCriterionForCreation(
-            keyword_text="keyword1",
-            keyword_match_type="EXACT",
-            status="ENABLED",
-        )
-        keyword2 = AdGroupCriterionForCreation(
-            keyword_text="keyword2",
-            keyword_match_type="EXACT",
-            status="ENABLED",
-        )
-
-        ad_group = AdGroupForCreation(
-            name="ad_group",
-            status="ENABLED",
-            ad_group_ad=ad_group_ad,
-            keywords=[keyword1, keyword2],
-        )
-
-        ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
-            customer_id="1111",
-            campaign_id="1212",
-            ad_group=ad_group,
-            ad_group_ad=ad_group_ad,
-            keywords=[keyword1, keyword2],
-        )
+        ad_group = ad_group_with_ad_and_keywords.ad_group
+        ad_group_ad = ad_group_with_ad_and_keywords.ad_group_ad
+        keyword1 = ad_group_with_ad_and_keywords.keywords[0]
+        keyword2 = ad_group_with_ad_and_keywords.keywords[1]
 
         with (
             unittest.mock.patch(
@@ -161,18 +134,18 @@ class TestTools:
                     conv_id=1,
                     list_of_resources=[
                         RemoveResource(
-                            customer_id="1111",
+                            customer_id="2222",
                             resource_id="3434",
                             resource_type="ad_group",
                         ),
                         RemoveResource(
-                            customer_id="1111",
+                            customer_id="2222",
                             parent_id="3434",
                             resource_id="5656",
                             resource_type="ad",
                         ),
                         RemoveResource(
-                            customer_id="1111",
+                            customer_id="2222",
                             parent_id="3434",
                             resource_id="7878",
                             resource_type="ad_group_criterion",
@@ -213,3 +186,123 @@ class TestContext:
         actual = context.recommended_modifications_and_answer_list
         expected = [("question", "answer")]
         assert actual == expected, actual
+
+
+class TestAdGroupAdForCreation:
+    @pytest.mark.parametrize(
+        "headlines, descriptions, expected",
+        [
+            (
+                [
+                    "H1",
+                    "H2",
+                    "H3",
+                    "H4",
+                    "H5",
+                    "H6",
+                    "H7",
+                    "H8",
+                    "H9",
+                    "H10",
+                    "H11",
+                    "H12",
+                    "H13",
+                    "H14",
+                    "H15",
+                ],
+                ["D1", "D2", "D3", "D4"],
+                None,
+            ),
+            (
+                ["H1", "H2", "H3", "H4"],
+                ["D1", "D2", "D3", "D4"],
+                ValidationError,
+            ),
+            (
+                [
+                    "H1",
+                    "H2",
+                    "H3",
+                    "H4",
+                    "H5",
+                    "H6",
+                    "H7",
+                    "H8",
+                    "H9",
+                    "H10",
+                    "H11",
+                    "H12",
+                    "H13",
+                    "H14",
+                    "H15",
+                ],
+                ["D1", "D2", "D3"],
+                ValidationError,
+            ),
+        ],
+    )
+    def test_minimum_number_of_headlines_and_descriptions(
+        self, headlines, descriptions, expected
+    ):
+        if expected == ValidationError:
+            with pytest.raises(ValidationError):
+                AdGroupAdForCreation(
+                    customer_id="2222",
+                    headlines=headlines,
+                    descriptions=descriptions,
+                    final_url="https://www.example.com",
+                    status="ENABLED",
+                )
+        else:
+            AdGroupAdForCreation(
+                customer_id="2222",
+                headlines=headlines,
+                descriptions=descriptions,
+                final_url="https://www.example.com",
+                status="ENABLED",
+            )
+
+    @pytest.mark.parametrize(
+        "headline, expected",
+        [
+            ("A" * 31, ValueError),
+            ("{KeyWord: " + "A" * 30 + "}", None),
+            ("{KeyWord: " + "A" * 31 + "}", ValueError),
+        ],
+    )
+    def test_maximum_headline_string_length(self, headline, expected):
+        descriptions = ["D1", "D2", "D3", "D4"]
+        headlines = [
+            "H1",
+            "H2",
+            "H3",
+            "H4",
+            "H5",
+            "H6",
+            "H7",
+            "H8",
+            "H9",
+            "H10",
+            "H11",
+            "H12",
+            "H13",
+            "H14",
+        ]
+        headlines.append(headline)
+        if expected == ValueError:
+            with pytest.raises(ValueError):
+                AdGroupAdForCreation(
+                    customer_id="2222",
+                    headlines=headlines,
+                    descriptions=descriptions,
+                    final_url="https://www.example.com",
+                    status="ENABLED",
+                )
+        else:
+            AdGroupAdForCreation(
+                customer_id="2222",
+                headlines=headlines,
+                descriptions=descriptions,
+                final_url="https://www.example.com",
+                status="ENABLED",
+            )

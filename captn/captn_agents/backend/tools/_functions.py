@@ -95,12 +95,18 @@ example = Summary(
                 "Quiet Operation",
             ],
             headlines=[
-                "Cool Comfort, Anywhere",
-                "Beat the Heat with Ease",
-                "Stay Chill All Summer",
-                "Your Cooling Solution",
-                "Ultimate Climate Control",
-                "AC: Your Hot Weather Ally",
+                "Cool Comfort for Your Home",
+                "Efficient Cooling Solutions",
+                "Smart Air Conditioning",
+                "Whisper-Quiet Operation",
+                "Energy-Efficient Cooling",
+                "Stay Cool and Comfortable",
+                "{Keyword:Stay Cool}",
+                "{Keyword:Smart Cooling}",
+                "Home Comfort Solutions",
+                "Cool Your Space Efficiently",
+                "Save money",
+                "ECO-Friendly",
             ],
             descriptions=[
                 "Powerful cooling for any space",
@@ -130,6 +136,8 @@ example = Summary(
                 "Smart Refrigeration",
                 "Stylish Cooling",
                 "Space-Saving Solutions",
+                "{Keyword:Fresh Food}",
+                "{Keyword:Smart Cooling}",
             ],
             descriptions=[
                 "Keep your food fresh longer",
@@ -525,6 +533,12 @@ When you are finished, write a single 'TERMINATE' to end the task.
 VERY IMPORTANT:
 - each headline must have LESS than 30 characters and each description must have LESS than 90 characters
 - generate EXACTLY 15 headlines and 4 descriptions for EACH link which you think is relevant for the Google Ads campaign!
+- Do NOT create general keywords. Keywords must be specific so they attract the right customers.
+- Include popular keywords in your headlines!
+- headlines MUST be UNIQUE, do NOT repeat the same or similar phrases
+- use at least ONE keyword insertion in the headlines list e.g. '{{Keyword: Your default text here}}'
+- descriptions MUST be UNIQUE, do NOT repeat the same or similar phrases
+- Use longer descriptions to provide more information about the product (but MAX 90 characters)
 - if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
@@ -589,6 +603,7 @@ Please provide a detailed summary of the website as JSON-encoded string as instr
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
 You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
 When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
+Make sure you use keyword insertion in the headlines and provide unique headlines and descriptions for each link.
 """
 
 _task_guidelines = "Please provide a summary of the website, including the products/services offered and any unique selling points."
