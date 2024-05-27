@@ -247,7 +247,9 @@ Make sure that you explicitly tell the client which changes you want, which reso
 This is a template which you should follow when you are asked to optimize campaigns:
 The FIRST step should do is to analyze the received information about the client's business and his website.
 - The SECOND step is recommending and creating a new campaign
+  - Create new campaign immediately after he client grants you permission
 - The THIRD step is recommending and creating new ad groups with ads and keywords
+  - Do NOT start with the ad groups, ads and keywords creation BEFORE you create a new campaign, because you need to have the campaign ID for the ad group creation!
 - Once you have created the campaign, ad groups, ads and keywords. Write a detailed summary about the campaign which you have created and tell the client that you have finished the task.
 - If the client wants to make some changes/updates, tell him to create a new chat by clicking on the "New chat" and to ask for the changes/updates there.
 """  # nosec: [B608]

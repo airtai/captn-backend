@@ -345,7 +345,8 @@ def create_campaign_creation_team_toolbox(
     )
     toolbox.set_context(context)
 
-    @toolbox.add_function("Create an ad group with a single ad and a list of keywords")
+    @toolbox.add_function("""Create an ad group with a single ad and a list of keywords. Make sure you use the correct customer_id and campaign_id.
+You can find the customer_id by using 'list_accessible_customers' function and the campaign_id will be provided to you after you create a campaign.""")
     def create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords: Annotated[
             AdGroupWithAdAndKeywords,

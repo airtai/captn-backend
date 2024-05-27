@@ -269,7 +269,9 @@ We suggest executing function '{function_name}' with the following parameters:
 {json.dumps(modification_function_parameters, indent=2)}
 ```
 
-If you confirm the changes, we will execute '{function_name}' with the provided parameters immediately.
+(NOTE for the team: If the client agrees, execute the function '{function_name}' with the provided parameters IMMEDIATELY.
+Do NOT proceed with the next steps until the wanted function is executed!)
+
 To proceed with the changes, please answer 'Yes' and nothing else."""
     return message
 
