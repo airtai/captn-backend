@@ -38,3 +38,15 @@ class TestConfig:
         config_list_gpt_4 = Config().config_list_gpt_4
 
         assert config_list_gpt_4 == [], self._message
+
+    def test_config_list_gpt_4o(self) -> None:
+        config_list_gpt_4o = Config().config_list_gpt_4o
+
+        assert config_list_gpt_4o != [], self._message
+
+    def test_config_list_gpt_4o_fail(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AZURE_GPT4O_MODEL")
+
+        config_list_gpt_4o = Config().config_list_gpt_4o
+
+        assert config_list_gpt_4o == [], self._message
