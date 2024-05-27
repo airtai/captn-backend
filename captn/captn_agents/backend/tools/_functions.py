@@ -269,6 +269,7 @@ We suggest executing function '{function_name}' with the following parameters:
 {json.dumps(modification_function_parameters, indent=2)}
 ```
 
+If you confirm the changes, we will execute '{function_name}' with the provided parameters immediately.
 To proceed with the changes, please answer 'Yes' and nothing else."""
     return message
 
@@ -334,11 +335,13 @@ def _validate_modification_parameters(
 ) -> None:
     error_msg = ""
     func_parameters = inspect.signature(func).parameters
+    # Do not include 'context' in the list of parameters
+    parameters_without_context = [x for x in func_parameters.keys() if x != "context"]
 
     for param_name, param_value in modification_function_parameters.items():
         if param_name not in func_parameters:
             error_msg += (
-                f"parameter {param_name} does not exist in {function_name} input parameters: {func_parameters.keys()}"
+                f"parameter {param_name} does not exist in {function_name} input parameters: {parameters_without_context}"
                 + "\n"
             )
             continue

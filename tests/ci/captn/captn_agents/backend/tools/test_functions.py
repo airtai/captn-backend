@@ -1,4 +1,5 @@
 import time
+from typing import Any
 
 import pytest
 from pydantic_core._pydantic_core import ValidationError
@@ -194,7 +195,7 @@ class TestAskClientForPermission:
                         },
                     ],
                 },
-                "parameter customer_id does not exist in create_ad_group_with_ad_and_keywords input parameters: odict_keys(['ad_group_with_ad_and_keywords'])",
+                "parameter customer_id does not exist in create_ad_group_with_ad_and_keywords input parameters: ['ad_group_with_ad_and_keywords']",
             ),
         ],
     )
@@ -203,6 +204,7 @@ class TestAskClientForPermission:
     ) -> None:
         def create_ad_group_with_ad_and_keywords(
             ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+            context: Any,
         ) -> None:
             pass
 

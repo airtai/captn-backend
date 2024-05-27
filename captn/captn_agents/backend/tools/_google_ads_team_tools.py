@@ -89,11 +89,11 @@ def execute_query(
 properties_config = {
     "customer_id": {
         "type": "string",
-        "description": "Id of the customer",
+        "description": "Id of the customer. This ID is unique for each customer and it is NOT the same as the campaign/ad group/ad ID!",
     },
     "campaign_id": {
         "type": "string",
-        "description": "Id of the campaign",
+        "description": "Id of the campaign. This ID is never the same as the customer ID!",
     },
     "ad_group_id": {
         "type": "string",
