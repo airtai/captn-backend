@@ -21,19 +21,35 @@ __all__ = ("CampaignCreationTeam",)
 
 ad_group_ad = AdGroupAdForCreation(
     final_url="https://www.example.com",
-    headlines=["headline1", "headline2", "headline3"],
-    descriptions=["description1", "description2"],
+    headlines=[
+        "headline1",
+        "headline2",
+        "headline3",
+        "headline4",
+        "headline5",
+        "headline6",
+        "headline7",
+        "headline8",
+        "headline9",
+        "headline10",
+        "headline11",
+        "headline12",
+        "headline13",
+        "{KeyWord:your default text1}",
+        "{KeyWord:your default text2}",
+    ],
+    descriptions=["description1", "description2", "description3", "description4"],
     status="ENABLED",
 )
 
 keyword1 = AdGroupCriterionForCreation(
     keyword_text="keyword1",
-    keyword_match_type="EXACT",
+    keyword_match_type="BROAD",
     status="ENABLED",
 )
 keyword2 = AdGroupCriterionForCreation(
     keyword_text="keyword2",
-    keyword_match_type="EXACT",
+    keyword_match_type="BROAD",
     status="ENABLED",
 )
 
@@ -101,8 +117,6 @@ sure it is understandable by non-experts.
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
     ):
-        self.task = task
-
         recommended_modifications_and_answer_list: List[
             Tuple[Dict[str, Any], Optional[str]]
         ] = []
@@ -113,6 +127,7 @@ sure it is understandable by non-experts.
             user_id=user_id,
             conv_id=conv_id,
             roles=roles,
+            task=task,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
@@ -187,9 +202,12 @@ Use it only to retrieve the information about the currency and already existing 
 32. Ad Copy headlines can have MAXIMUM 30 characters and descriptions can have MAXIMUM 90 characters, NEVER suggest headlines/descriptions which exceed that length or you will be penalized!
 33. If the client sends you invalid headline/description, do not try to modify it yourself! Explain the problems to him and suggest valid headline/description.
 34. Ad rules:
-- MINIMUM 3 and MAXIMUM 15 headlines.
-- MINIMUM 2 and MAXIMUM 4 descriptions.
-It is recommended to use the MAXIMUM number of headlines and descriptions. So if not explicitly told differently, suggest adding 15 headlines and 4 descriptions!
+- Ad MUST contain 15 headlines and 4 descriptions
+- Do NOT create general keywords. Keywords must be specific so they attract the right customers.
+- Use keyword insertion in the headlines!
+- headlines MUST be UNIQUE, do NOT repeat the same or similar phrases
+- descriptions MUST be UNIQUE, do NOT repeat the same or similar phrases
+- Use longer descriptions to provide more information about the product (but MAX 90 characters)
 35. When replying to the client, try to finish the message with a question, that way you will navigate the client what to do next
 36. Before setting any kind of budget, check the default currency from the customer table and convert the budget to that currency.
 You can use the following query for retrieving the local currency: SELECT customer.currency_code FROM customer WHERE customer.id = '1212121212'
@@ -319,3 +337,9 @@ Not needed info:
 
 Now Let's get all the information from the clients web page and create a detailed plan for the campaign.
 """
+
+    def initiate_chat(self, **kwargs: Any) -> None:
+        if self.toolbox._context.changes_made:  # type: ignore[union-attr]
+            self.initial_message += f"\nThe following modifications have already been done: {self.toolbox._context.changes_made}\n"  # type: ignore[union-attr]
+            self.toolbox._context.changes_made = ""  # type: ignore[union-attr]
+        super().initiate_chat(**kwargs)

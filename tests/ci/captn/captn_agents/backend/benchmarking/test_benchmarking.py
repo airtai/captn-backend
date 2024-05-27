@@ -1,7 +1,7 @@
 import functools
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional
+from typing import List, Optional, Set
 
 import pandas as pd
 import pytest
@@ -33,7 +33,7 @@ class TestBase:
     def benchmark_success(success: bool, *args, **kwargs):
         print(f"success: {success}")
         if success:
-            return "it's ok"
+            return "it's ok", 0
         else:
             raise RuntimeError("it's not ok")
 
@@ -61,7 +61,14 @@ class TestBase:
         command: str,
         aggregated_csv_name: str,
         success: bool,
-        columns: List[str] = ["url", "success_rate", "avg_time"],  # noqa: B006
+        columns: Set[str] = [  # noqa: B006
+            "Unnamed: 0",
+            "url",
+            "success_percentage",
+            "success_with_retry_percentage",
+            "failed_percentage",
+            "avg_time",
+        ],
         no_rows: int = 50,
         additional_generate_task_table_parameters: Optional[List[str]] = None,
     ) -> None:
@@ -89,9 +96,9 @@ class TestBase:
             print(tabulate(df, headers="keys", tablefmt="pretty"))
             assert (df["status"] == "DONE").all()
             if success:
-                assert df["success"].all()
+                assert (df["success"] == "Success").all()
             else:
-                assert not df["success"].any()
+                assert (df["success"] == "Failed").all()
 
             aggregated_csv_path = Path(tmp_dir) / aggregated_csv_name
             assert aggregated_csv_path.exists()
@@ -136,7 +143,14 @@ class TestWebsurfer:
             {
                 "url": ["url1", "url2", "url1", "url2", "url1", "url1"],
                 "status": ["DONE", "DONE", "DONE", "DONE", "DONE", "DONE"],
-                "success": [True, True, False, False, False, False],
+                "success": [
+                    "Success",
+                    "Success with retry",
+                    "Failed",
+                    "Failed",
+                    "Failed",
+                    "Failed",
+                ],
                 "execution_time": [1, 2, 3, 4, 5, 2],
             }
         )
@@ -144,14 +158,47 @@ class TestWebsurfer:
             df, ["url"]
         )
 
-        assert report_ag_df.shape == (3, 2)
+        assert report_ag_df.shape == (3, 5)
 
-        assert report_ag_df.loc["url1", "success_rate"] == 0.25
-        assert report_ag_df.loc["url1", "avg_time"] == 2.75
-        assert report_ag_df.loc["url2", "success_rate"] == 0.5
-        assert report_ag_df.loc["url2", "avg_time"] == 3.0
-        assert report_ag_df.loc["Total", "success_rate"] == 0.33
-        assert report_ag_df.loc["Total", "avg_time"] == 2.83
+        url1_result = report_ag_df[report_ag_df["url"] == "url1"]
+        assert url1_result["success_percentage"].values[0] == 25.0
+        assert url1_result["failed_percentage"].values[0] == 75.0
+        assert url1_result["avg_time"].values[0] == 2.75
+
+        url2_result = report_ag_df[report_ag_df["url"] == "url2"]
+        assert url2_result["success_percentage"].values[0] == 0.0
+        assert url2_result["success_with_retry_percentage"].values[0] == 50.0
+        assert url2_result["failed_percentage"].values[0] == 50.0
+        assert url2_result["avg_time"].values[0] == 3.0
+
+        total_result = report_ag_df[report_ag_df["url"] == "Total"]
+        assert total_result["success_percentage"].values[0] == 16.67
+        assert total_result["success_with_retry_percentage"].values[0] == 16.67
+        assert total_result["failed_percentage"].values[0] == 66.67
+        assert total_result["avg_time"].values[0] == 2.83
+
+    def test_create_ag_report_with_multiple_columns_to_group_by(self):
+        df = pd.DataFrame(
+            {
+                "url": ["url1", "url2", "url1", "url2", "url1", "url1"],
+                "team_name": ["team1", "team1", "team1", "team1", "team2", "team1"],
+                "status": ["DONE", "DONE", "DONE", "DONE", "DONE", "DONE"],
+                "success": [
+                    "Success",
+                    "Success with retry",
+                    "Failed",
+                    "Failed",
+                    "Failed",
+                    "Failed",
+                ],
+                "execution_time": [1, 2, 3, 4, 5, 2],
+            }
+        )
+        report_ag_df = captn.captn_agents.backend.benchmarking.base.create_ag_report(
+            df, ["url", "team_name"]
+        )
+
+        assert report_ag_df.shape == (4, 6)
 
 
 class TestBriefCreation:
@@ -184,7 +231,15 @@ class TestBriefCreation:
             aggregated_csv_name=self.aggregated_csv_name,
             success=success,
             no_rows=100,
-            columns=["Unnamed: 0", "success_rate", "avg_time"],
+            columns=[
+                "Unnamed: 0",
+                "url",
+                "team_name",
+                "success_percentage",
+                "success_with_retry_percentage",
+                "failed_percentage",
+                "avg_time",
+            ],
         )
 
 

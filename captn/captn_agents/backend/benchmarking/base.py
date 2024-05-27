@@ -34,7 +34,7 @@ def lock_file(path: Path) -> Iterator[None]:
         lock_path.unlink()
 
 
-COMMON_COLUMNS = ["execution_time", "status", "success", "output"]
+COMMON_COLUMNS = ["execution_time", "status", "success", "output", "retries"]
 
 
 def _add_common_columns_and_save(
@@ -219,13 +219,17 @@ def run_test(
 ) -> Dict[str, Any]:
     try:
         time_start = time.time()
-        output = benchmark(**kwargs)
-        success = True
+        output, retry_from_scratch_counters = benchmark(**kwargs)
+        if retry_from_scratch_counters == 0:
+            success = "Success"
+        else:
+            success = "Success with retry"
     except Exception as e:
         traceback.print_stack()
         traceback.print_exc()
         output = str(e)
-        success = False
+        success = "Failed"
+        retry_from_scratch_counters = -1
     finally:
         total_time = time.time() - time_start
         status = "DONE"
@@ -235,6 +239,7 @@ def run_test(
         "status": status,
         "success": success,
         "output": output,
+        "retries": retry_from_scratch_counters,
     }
 
 
@@ -250,31 +255,42 @@ def get_random_nan_index(xs: pd.Series) -> Any:
 
 def create_ag_report(df: pd.DataFrame, groupby_list: List[str]) -> pd.DataFrame:
     df = df.dropna(subset=["success"])
-    group = df.groupby(groupby_list)["success"]
-    total = group.count()
-    success = group.sum()
-    success_rate = (success / total).rename("success_rate")
-
-    group = df.groupby(groupby_list)["execution_time"]
-    avg_time = group.mean().rename("avg_time")
-
-    ag_report_df = pd.concat([success_rate, avg_time], axis=1).sort_values(
-        "success_rate", ascending=True
+    result = (
+        df.groupby(groupby_list)
+        .agg(
+            success_percentage=(
+                "success",
+                lambda x: sum(x == "Success") / len(x) * 100,
+            ),
+            success_with_retry_percentage=(
+                "success",
+                lambda x: sum(x == "Success with retry") / len(x) * 100,
+            ),
+            failed_percentage=("success", lambda x: sum(x == "Failed") / len(x) * 100),
+            avg_time=("execution_time", "mean"),
+        )
+        .reset_index()
     )
 
-    # Calculate total success rate and average time
-    total_success = success.sum()
-    count = len(df)
-    total_time = df["execution_time"].sum()
-    total_success_rate = total_success / count
-    total_avg_time = total_time / count
+    total_success_percentage = df["success"].eq("Success").mean() * 100
+    total_success_with_retry_percentage = (
+        df["success"].eq("Success with retry").mean() * 100
+    )
+    total_failed_percentage = df["success"].eq("Failed").mean() * 100
+    total_avg_execution_time = df["execution_time"].mean()
+    total_row = {
+        "success_percentage": total_success_percentage,
+        "success_with_retry_percentage": total_success_with_retry_percentage,
+        "failed_percentage": total_failed_percentage,
+        "avg_time": total_avg_execution_time,
+    }
+    for col in groupby_list:
+        total_row[col] = None
+    result.loc["Total"] = total_row
 
-    ag_report_df.loc["Total"] = [total_success_rate, total_avg_time]
+    result.loc[result.index[-1], "url"] = "Total"
 
-    # round columns to 2 decimal places
-    ag_report_df = ag_report_df.round(2)
-
-    return ag_report_df
+    return result.reset_index(drop=True).round(2)
 
 
 GROUP_BY_DICT = {

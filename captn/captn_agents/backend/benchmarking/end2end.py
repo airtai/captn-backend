@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Any, Iterator
+from typing import Any, Iterator, Tuple
 from unittest.mock import patch
 
 from autogen.cache import Cache
@@ -49,13 +49,13 @@ def _patch_brief_creation_team_vars(
 def benchmark_end2end(
     url: str,
     llm: str = Models.gpt4,
-) -> str:
+) -> Tuple[str, int]:
     config_list = get_config_list(llm)
 
     user_id = 123
     conv_id = 234
     task = _get_task(url)
-    team = BriefCreationTeam(
+    brief_creation_team = BriefCreationTeam(
         task=task, user_id=user_id, conv_id=conv_id, config_list=config_list
     )
 
@@ -66,7 +66,9 @@ def benchmark_end2end(
         with TemporaryDirectory() as cache_dir:
             with Cache.disk(cache_path_root=cache_dir) as cache:
                 with _patch_brief_creation_team_vars(
-                    team=team, client_system_message=client_system_message, cache=cache
+                    team=brief_creation_team,
+                    client_system_message=client_system_message,
+                    cache=cache,
                 ) as mock_change_the_team_and_start_new_chat:
                     with _patch_campaign_creation_team_vars() as (
                         mock_create_ad_group,
@@ -74,7 +76,7 @@ def benchmark_end2end(
                         mock_create_ad_group_keyword,
                         mock_create_campaign,
                     ):
-                        team.initiate_chat(cache=cache)
+                        brief_creation_team.initiate_chat(cache=cache)
                         continue_conversation_until_finished(
                             user_id=user_id,
                             conv_id=conv_id,
@@ -94,12 +96,16 @@ def benchmark_end2end(
                         )
                         assert isinstance(campaign_creation_team, CampaignCreationTeam)  # nosec: [B101]
 
-                        return run_assertions_and_return_last_message(
-                            campaign_creation_team=campaign_creation_team,
-                            mock_create_ad_group=mock_create_ad_group,
-                            mock_create_ad_group_ad=mock_create_ad_group_ad,
-                            mock_create_ad_group_keyword=mock_create_ad_group_keyword,
-                            mock_create_campaign=mock_create_campaign,
+                        return (
+                            run_assertions_and_return_last_message(
+                                campaign_creation_team=campaign_creation_team,
+                                mock_create_ad_group=mock_create_ad_group,
+                                mock_create_ad_group_ad=mock_create_ad_group_ad,
+                                mock_create_ad_group_keyword=mock_create_ad_group_keyword,
+                                mock_create_campaign=mock_create_campaign,
+                            ),
+                            brief_creation_team.retry_from_scratch_counter
+                            + campaign_creation_team.retry_from_scratch_counter,
                         )
     finally:
         poped_team = Team.pop_team(user_id=user_id, conv_id=conv_id)

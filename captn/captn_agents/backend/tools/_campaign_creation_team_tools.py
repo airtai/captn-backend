@@ -1,8 +1,10 @@
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from annotated_types import Len
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, field_validator
 from typing_extensions import Annotated
+
+from google_ads.model import RemoveResource, check_max_string_length_for_each_item
 
 from ....google_ads.client import check_for_client_approval, google_ads_create_update
 from ..toolboxes import Toolbox
@@ -37,12 +39,22 @@ class AdGroupAdForCreation(AdBase):
         str, Field(..., description=properties_config["final_url"]["description"])
     ]
     headlines: Annotated[
-        List[Annotated[str, StringConstraints(max_length=30)]],
-        Len(min_length=3, max_length=15),
+        List[
+            Annotated[
+                str,
+                "Maximum 30 characters. If keyword insertion is used, '{KeyWord' and '}' are NOT included in the 30 characters.",
+            ]
+        ],
+        Len(min_length=15, max_length=15),
     ]
     descriptions: Annotated[
-        List[Annotated[str, StringConstraints(max_length=90)]],
-        Len(min_length=2, max_length=4),
+        List[
+            Annotated[
+                str,
+                "Maximum 90 characters. If keyword insertion is used, '{KeyWord' and '}' are NOT included in the 90 characters.",
+            ]
+        ],
+        Len(min_length=4, max_length=4),
     ]
     path1: Optional[
         Annotated[
@@ -54,6 +66,37 @@ class AdGroupAdForCreation(AdBase):
             str, Field(..., description=properties_config["path2"]["description"])
         ]
     ] = None
+
+    @classmethod
+    def validate_field(
+        cls,
+        field_name: str,
+        field: List[str],
+        max_string_length: int,
+    ) -> Optional[List[str]]:
+        error_message = check_max_string_length_for_each_item(
+            field_name=field_name, field=field, max_string_length=max_string_length
+        )
+
+        if error_message:
+            raise ValueError(error_message)
+        return field
+
+    @field_validator("headlines")
+    def headlines_validator(cls, headlines: List[str]) -> Optional[List[str]]:
+        return cls.validate_field(
+            field_name="headlines",
+            field=headlines,
+            max_string_length=30,
+        )
+
+    @field_validator("descriptions")
+    def descriptions_validator(cls, descriptions: List[str]) -> Optional[List[str]]:
+        return cls.validate_field(
+            field_name="descriptions",
+            field=descriptions,
+            max_string_length=90,
+        )
 
 
 class AdGroupCriterionForCreation(AdBase):
@@ -96,7 +139,7 @@ class AdGroupWithAdAndKeywords(BaseModel):
 
 
 def _get_resource_id_from_response(response: str) -> str:
-    return response.split("/")[-1].replace(".", "")
+    return response.split("/")[-1].split("~")[-1].replace(".", "").strip()
 
 
 def _create_ad_group(
@@ -178,6 +221,7 @@ def _create_ad_group_keywords(
     ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
     ad_group_id: str,
+    list_of_resources: List[RemoveResource],
 ) -> Union[Dict[str, Any], str]:
     response = ""
     for keyword in ad_group_with_ad_and_keywords.keywords:
@@ -189,7 +233,98 @@ def _create_ad_group_keywords(
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
-        response += f"Keyword: {keyword_response}\n"
+        keyword_id = _get_resource_id_from_response(keyword_response)  # type: ignore[arg-type]
+        list_of_resources.append(
+            RemoveResource(
+                customer_id=ad_group_with_ad_and_keywords.customer_id,
+                parent_id=ad_group_id,
+                resource_id=keyword_id,
+                resource_type="ad_group_criterion",
+            )
+        )
+        response += f"Keyword '{keyword.keyword_text}': {keyword_response}\n"
+    return response
+
+
+def _remove_resources(
+    user_id: int, conv_id: int, list_of_resources: List[RemoveResource]
+) -> None:
+    for remove_resource in list_of_resources[::-1]:
+        remove_response = google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            recommended_modifications_and_answer_list=[],
+            ad=remove_resource,
+            endpoint="/remove-google-ads-resource",
+            already_checked_clients_approval=True,
+        )
+        print(remove_response)
+    print("Resources removed successfully")
+
+
+def _create_ad_group_with_ad_and_keywords(
+    ad_group_with_ad_and_keywords: Annotated[
+        AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
+    ],
+    context: Context,
+) -> Union[Dict[str, Any], str]:
+    list_of_resources = []
+    try:
+        ad_group_response = _create_ad_group(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+        )
+        if isinstance(ad_group_response, dict):
+            return ad_group_response
+        response = f"Ad group '{ad_group_with_ad_and_keywords.ad_group.name}': {ad_group_response}\n"
+        ad_group_id = _get_resource_id_from_response(ad_group_response)
+        list_of_resources.append(
+            RemoveResource(
+                customer_id=ad_group_with_ad_and_keywords.customer_id,
+                resource_id=ad_group_id,
+                resource_type="ad_group",
+            )
+        )
+
+        ad_group_ad_response = _create_ad_group_ad(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            ad_group_id=ad_group_id,
+        )
+        ad_group_ad_id = _get_resource_id_from_response(ad_group_ad_response)  # type: ignore[arg-type]
+        list_of_resources.append(
+            RemoveResource(
+                customer_id=ad_group_with_ad_and_keywords.customer_id,
+                parent_id=ad_group_id,
+                resource_id=ad_group_ad_id,
+                resource_type="ad",
+            )
+        )
+
+        response += f"Ad group ad with final url - '{ad_group_with_ad_and_keywords.ad_group_ad.final_url}': {ad_group_ad_response}\n"
+
+        ad_group_keywords_response = _create_ad_group_keywords(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            ad_group_id=ad_group_id,
+            list_of_resources=list_of_resources,
+        )
+        response += ad_group_keywords_response  # type: ignore
+        context.changes_made += f"\n{response}"
+    except Exception as e:
+        _remove_resources(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            list_of_resources=list_of_resources,
+        )
+        raise e
+
     return response
 
 
@@ -213,7 +348,8 @@ def create_campaign_creation_team_toolbox(
     @toolbox.add_function("Create an ad group with a single ad and a list of keywords")
     def create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords: Annotated[
-            AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
+            AdGroupWithAdAndKeywords,
+            "An ad group with an ad (15 headlines and 4 descriptions) and a list of keywords",
         ],
         # the context will be injected by the toolbox
         context: Context,
@@ -230,54 +366,21 @@ def create_campaign_creation_team_toolbox(
         """
         # TODO: If any of the creation fails, we should rollback the changes
         # and return the error message (delete ad_group, other resources will be deleted automatically)
-
-        user_id = context.user_id
-        conv_id = context.conv_id
-        recommended_modifications_and_answer_list = (
-            context.recommended_modifications_and_answer_list
-        )
-
         modification_function_parameters = {}
         modification_function_parameters["ad_group_with_ad_and_keywords"] = (
             ad_group_with_ad_and_keywords.model_dump()
         )
         error_msg = check_for_client_approval(
             modification_function_parameters=modification_function_parameters,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
         )
         if error_msg:
             raise ValueError(error_msg)
 
-        ad_group_response = _create_ad_group(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        return _create_ad_group_with_ad_and_keywords(
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            context=context,
         )
-        if isinstance(ad_group_response, dict):
-            return ad_group_response
-        response = f"Ad group: {ad_group_response}\n"
-        ad_group_id = _get_resource_id_from_response(ad_group_response)
-
-        ad_group_ad_response = _create_ad_group_ad(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
-            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            ad_group_id=ad_group_id,
-        )
-        response += f"Ad group ad: {ad_group_ad_response}\n"
-
-        ad_group_keywords_response = _create_ad_group_keywords(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
-            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            ad_group_id=ad_group_id,
-        )
-        response += ad_group_keywords_response  # type: ignore
-
-        return response
 
     add_shared_functions(toolbox)
 

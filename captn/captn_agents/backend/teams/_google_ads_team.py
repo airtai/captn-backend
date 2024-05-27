@@ -80,6 +80,7 @@ sure it is understandable by non-experts.
             user_id=user_id,
             conv_id=conv_id,
             roles=roles,
+            task=task,
             function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
@@ -89,7 +90,6 @@ sure it is understandable by non-experts.
             use_user_proxy=True,
         )
         self.conv_id = conv_id
-        self.task = task
         self.llm_config = GoogleAdsTeam._get_llm_config(
             seed=seed, temperature=temperature
         )

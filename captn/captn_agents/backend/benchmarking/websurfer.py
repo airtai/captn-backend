@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from ..tools._functions import (
     get_get_info_from_the_web_page,
     get_llm_config_gpt_3_5,
@@ -17,7 +19,7 @@ def benchmark_websurfer(
     navigator_llm: str = Models.gpt4,
     timestamp: str = "2024-01-01T00:00:0",
     introduce_give_up_after: int = 7,
-) -> str:
+) -> Tuple[str, int]:
     llm_configs = {
         Models.gpt3_5.value: get_llm_config_gpt_3_5(),
         Models.gpt4.value: get_llm_config_gpt_4(),
@@ -42,4 +44,5 @@ def benchmark_websurfer(
     ):
         raise AssertionError(last_message)
 
-    return last_message
+    # TODO: Always return 0 as a retry counter
+    return last_message, 0
