@@ -181,7 +181,7 @@ def continue_conversation_until_finished(
 
 def benchmark_campaign_creation(
     url: str,
-    llm: str = Models.gpt4,
+    llm: str = Models.gpt4o,
 ) -> Tuple[str, int]:
     try:
         task = URL_TASK_DICT[url]

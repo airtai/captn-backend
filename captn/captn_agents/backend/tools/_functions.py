@@ -227,7 +227,7 @@ def init_chat_and_get_last_message(
         is_termination_msg=lambda x: True,  # Once the client replies, the sender will terminate the conversation
     )
 
-    config_list = Config().config_list_gpt_4
+    config_list = Config().config_list_gpt_4o
 
     client = AssistantAgent(
         name="client",
@@ -257,12 +257,13 @@ def _create_reply_message_for_client(
     customer_to_update: str,
     resource_details: str,
     modification_function_parameters: Dict[str, Any],
+    function_name: str,
 ) -> str:
     message = f"""{customer_to_update}
 
 {resource_details}
 
-Here are the parameters which will be used for the modification:
+We suggest executing function '{function_name}' with the following parameters:
 
 ```yaml
 {json.dumps(modification_function_parameters, indent=2)}
@@ -277,6 +278,7 @@ def _ask_client_for_permission_mock(
     modification_function_parameters: Annotated[
         Dict[str, Any], "Parameters for the modification function"
     ],
+    function_name: str,
     context: Context,
 ) -> str:
     customer_id = _find_value_in_nested_dict(
@@ -290,6 +292,7 @@ def _ask_client_for_permission_mock(
         customer_to_update=customer_to_update,
         resource_details=resource_details,
         modification_function_parameters=modification_function_parameters,
+        function_name=function_name,
     )
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
@@ -397,6 +400,7 @@ def ask_client_for_permission(
         return _ask_client_for_permission_mock(
             resource_details=resource_details,
             modification_function_parameters=modification_function_parameters,
+            function_name=function_name,
             context=context,
         )
     user_id = context.user_id
@@ -418,6 +422,7 @@ def ask_client_for_permission(
         customer_to_update=customer_to_update,
         resource_details=resource_details,
         modification_function_parameters=modification_function_parameters,
+        function_name=function_name,
     )
 
     recommended_modifications_and_answer_list.append(

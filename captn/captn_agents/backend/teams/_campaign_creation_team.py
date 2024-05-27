@@ -139,7 +139,7 @@ sure it is understandable by non-experts.
 
         if config_list is None:
             config = Config()
-            config_list = config.config_list_gpt_4
+            config_list = config.config_list_gpt_4o
 
         self.llm_config = CampaignCreationTeam._get_llm_config(
             seed=seed, temperature=temperature, config_list=config_list
@@ -186,12 +186,14 @@ Do NOT use smart suggestions when forwarding the login url to the client!
 Don't repeat your self and others and do not use any filler words.
 8. Do NOT use 'reply_to_client' command for asking the questions on how to Google Ads API nor for asking the client for the permission to make the changes (use 'ask_client_for_permission' command instead).
 Your team is in charge of using the Google Ads API and no one else does NOT know how to use it.
+9. Before you start with the campaign creation, use 'list_accessible_customers' command to get the list of all customer IDs which you can access.
 10. Before making any changes, ask the client for approval.
 Also, make sure that you explicitly tell the client which changes you want to make.
 12. Never repeat the content from (received) previous messages
 13. When referencing the customer ID, return customer.descriptive_name also or use a hyperlink to the Google Ads UI
 14. The client can NOT see your conversation, he only receives the message which you send him by using the
 'reply_to_client' or 'ask_client_for_permission' command
+15. If the client grants you permission after you ask him for it by using the 'ask_client_for_permission' command, you MUST execute the command which you have asked the permission for.
 19. There is a list of commands which you are able to execute in the 'Commands' section.
 You can NOT execute anything else, so do not suggest changes which you can NOT perform.
 27. When you create a new campaign/ad group etc. create clickable link in the markdown format which will open a NEW tab in the Google Ads UI
@@ -267,6 +269,8 @@ All team members have access to the following command:
 params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
 ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'!
 
+function_name: 'create_campaign' or 'create_ad_group_with_ad_and_keywords'
+
 You MUST use this before you make ANY permanent changes. ALWAYS use this command before you make any changes and do NOT use 'reply_to_client' command for asking the client for the permission to make the changes!
 
 3. 'list_accessible_customers': List all the customers accessible to the client, no input params: ()
@@ -300,6 +304,8 @@ Here is an example of correct 'resource_details' parameter:
 7. 'create_ad_group_with_ad_and_keywords': Create Ad Group, Ad and keywords, params: (ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords)
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 NOTE: ad does NOT have a 'final_urls' attribute, only 'final_url' attribute! Please make sure that you set the 'final_url' attribute for the ad!
+Make sure you have the correct 'customer_id' and 'campaign_id' in the 'ad_group_with_ad_and_keywords' parameter. 'customer_id' and 'campaign_id' can NOT have the same value!!
+Do NOT use this command before you create a new campaign by using the 'create_campaign' command (or before checking if the campaign already exists)
 """  # nosec: [B608]
 
     @classmethod
