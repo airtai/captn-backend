@@ -291,7 +291,6 @@ def _ask_client_for_permission_mock(
     customer_id = _find_value_in_nested_dict(
         dictionary=modification_function_parameters, key="customer_id"
     )
-    print(f"Ask_cl_func - customer_id: {customer_id}")
     customer_to_update = (
         f"We propose changes for the following customer: '{customer_id}'"
     )
@@ -361,8 +360,6 @@ def validate_customer_and_campaign_id(
         raise ValueError(f"""campaign_id '{campaign_id}' does not exist for the customer_id '{customer_id}'.
 Make sure you have created the campaign before creating the ad group with ads and keywords!""")
 
-    print(f"customer_id {customer_id} and campaign_id {campaign_id} exist!!!!")
-
 
 ADDITIONAL_VALIDATION = {
     "create_ad_group_with_ad_and_keywords": validate_customer_and_campaign_id
@@ -410,7 +407,6 @@ def _validate_modification_parameters(
 
     if error_msg:
         raise ValueError(error_msg)
-    print("Initial validation passed!")
 
     if function_name in ADDITIONAL_VALIDATION:
         ADDITIONAL_VALIDATION[function_name](
