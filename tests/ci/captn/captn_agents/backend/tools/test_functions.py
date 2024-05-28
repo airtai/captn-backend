@@ -1,4 +1,5 @@
 import time
+import unittest
 from typing import Any
 
 import pytest
@@ -164,7 +165,6 @@ class TestAskClientForPermission:
             user_id=234,
             conv_id=345,
             recommended_modifications_and_answer_list=[],
-            created_campaigns={"2222": [campaign_id]},
             toolbox=Toolbox(),
         )
         modification_function_parameters = {
@@ -173,17 +173,21 @@ class TestAskClientForPermission:
                 "customer_id": "2222",
             }
         }
-        if use_correct_parameters:
-            validate_customer_and_campaign_id(
-                modification_function_parameters=modification_function_parameters,
-                context=context,
-            )
-        else:
-            with pytest.raises(ValueError):
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._functions._get_campaign_ids",
+            return_value=[campaign_id],
+        ):
+            if use_correct_parameters:
                 validate_customer_and_campaign_id(
                     modification_function_parameters=modification_function_parameters,
                     context=context,
                 )
+            else:
+                with pytest.raises(ValueError):
+                    validate_customer_and_campaign_id(
+                        modification_function_parameters=modification_function_parameters,
+                        context=context,
+                    )
 
     @pytest.mark.parametrize(
         "modification_function_parameters, expected_output",
@@ -249,16 +253,19 @@ class TestAskClientForPermission:
             user_id=234,
             conv_id=345,
             recommended_modifications_and_answer_list=[],
-            created_campaigns={"1111": ["847"], "2222": ["1212"]},
             toolbox=Toolbox(),
         )
         if expected_output is None:
-            _validate_modification_parameters(
-                func=create_ad_group_with_ad_and_keywords,
-                function_name="create_ad_group_with_ad_and_keywords",
-                modification_function_parameters=modification_function_parameters,
-                context=context,
-            )
+            with unittest.mock.patch(
+                "captn.captn_agents.backend.tools._functions._get_campaign_ids",
+                return_value=["1212"],
+            ):
+                _validate_modification_parameters(
+                    func=create_ad_group_with_ad_and_keywords,
+                    function_name="create_ad_group_with_ad_and_keywords",
+                    modification_function_parameters=modification_function_parameters,
+                    context=context,
+                )
         else:
             with pytest.raises(ValueError) as e:
                 _validate_modification_parameters(
