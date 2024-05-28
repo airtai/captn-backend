@@ -330,6 +330,23 @@ modification_function_parameters_description = """Parameters for the modificatio
 These parameters will be used ONLY for ONE function call. Do NOT send a list of parameters for multiple function calls!"""
 
 
+def _get_campaign_ids(context: Context, customer_id: str) -> List[str]:
+    query = """SELECT campaign.id FROM campaign WHERE campaign.status != 'REMOVED'"""
+    result = execute_query(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        customer_ids=[customer_id],
+        query=query,
+    )
+    if isinstance(result, dict):
+        raise ValueError(result)
+
+    customer_campaign_ids = [
+        campaign["campaign"]["id"] for campaign in ast.literal_eval(result)[customer_id]
+    ]
+    return customer_campaign_ids
+
+
 def validate_customer_and_campaign_id(
     context: Context, modification_function_parameters: Dict[str, Any]
 ) -> None:
@@ -339,10 +356,8 @@ def validate_customer_and_campaign_id(
     customer_id = ad_group_with_ad_and_keywords["customer_id"]
     campaign_id = ad_group_with_ad_and_keywords["campaign_id"]
 
-    if (
-        customer_id not in context.created_campaigns
-        or campaign_id not in context.created_campaigns[customer_id]
-    ):
+    existing_campaign_ids = _get_campaign_ids(context=context, customer_id=customer_id)
+    if campaign_id not in existing_campaign_ids:
         raise ValueError(f"""campaign_id '{campaign_id}' does not exist for the customer_id '{customer_id}'.
 Make sure you have created the campaign before creating the ad group with ads and keywords!""")
 
