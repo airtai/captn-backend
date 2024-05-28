@@ -8,11 +8,13 @@ from captn.captn_agents.backend.benchmarking.websurfer import benchmark_websurfe
 from captn.captn_agents.backend.teams._campaign_creation_team import (
     ad_group_with_ad_and_keywords,
 )
+from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupWithAdAndKeywords,
 )
 from captn.captn_agents.backend.tools._functions import (
     Actions,
+    Context,
     Summary,
     WebPageSummary,
     WebUrl,
@@ -21,6 +23,7 @@ from captn.captn_agents.backend.tools._functions import (
     get_get_info_from_the_web_page,
     get_webpage_status_code,
     send_email,
+    validate_customer_and_campaign_id,
 )
 
 
@@ -149,6 +152,40 @@ class TestAskClientForPermission:
         assert _find_value_in_nested_dict(example, "not_here") is None
 
     @pytest.mark.parametrize(
+        "use_correct_parameters",
+        [
+            True,
+            False,
+        ],
+    )
+    def test_validate_customer_and_campaign_id(self, use_correct_parameters) -> None:
+        campaign_id = "847" if use_correct_parameters else "dosnt_exist_campaign_id"
+        context = Context(
+            user_id=234,
+            conv_id=345,
+            recommended_modifications_and_answer_list=[],
+            created_campaigns={"2222": [campaign_id]},
+            toolbox=Toolbox(),
+        )
+        modification_function_parameters = {
+            "ad_group_with_ad_and_keywords": {
+                "campaign_id": "847",
+                "customer_id": "2222",
+            }
+        }
+        if use_correct_parameters:
+            validate_customer_and_campaign_id(
+                modification_function_parameters=modification_function_parameters,
+                context=context,
+            )
+        else:
+            with pytest.raises(ValueError):
+                validate_customer_and_campaign_id(
+                    modification_function_parameters=modification_function_parameters,
+                    context=context,
+                )
+
+    @pytest.mark.parametrize(
         "modification_function_parameters, expected_output",
         [
             (
@@ -208,11 +245,19 @@ class TestAskClientForPermission:
         ) -> None:
             pass
 
+        context = Context(
+            user_id=234,
+            conv_id=345,
+            recommended_modifications_and_answer_list=[],
+            created_campaigns={"1111": ["847"], "2222": ["1212"]},
+            toolbox=Toolbox(),
+        )
         if expected_output is None:
             _validate_modification_parameters(
                 func=create_ad_group_with_ad_and_keywords,
                 function_name="create_ad_group_with_ad_and_keywords",
                 modification_function_parameters=modification_function_parameters,
+                context=context,
             )
         else:
             with pytest.raises(ValueError) as e:
@@ -220,6 +265,7 @@ class TestAskClientForPermission:
                     func=create_ad_group_with_ad_and_keywords,
                     function_name="create_ad_group_with_ad_and_keywords",
                     modification_function_parameters=modification_function_parameters,
+                    context=context,
                 )
             assert expected_output in str(e._excinfo[1])
 

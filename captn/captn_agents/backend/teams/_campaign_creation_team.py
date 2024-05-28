@@ -80,7 +80,7 @@ class CampaignCreationTeam(Team):
     _default_roles = [
         {
             "Name": "Copywriter",
-            "Description": "You are a Copywriter in the digital agency",
+            "Description": "You are a Copywriter in the digital agency. Keep your messages clear and concise. Never work on mujltiple resources at the same time.",
         },
         {
             "Name": "Account_manager",
@@ -95,6 +95,7 @@ is executed, you must write down the accomplished work and forward it to the cli
 Once the initial task given to the team is completed by implementing proposed solutions, you must write down the
 accomplished work and execute the 'reply_to_client' command. That message will be forwarded to the client so make
 sure it is understandable by non-experts.
+Keep your messages clear and concise. Never work on mujltiple resources at the same time.
 """,
         },
     ]
@@ -248,6 +249,7 @@ This is a template which you should follow when you are asked to optimize campai
 The FIRST step should do is to analyze the received information about the client's business and his website.
 - The SECOND step is recommending and creating a new campaign
   - Create new campaign immediately after he client grants you permission
+  - Do NOT proceed with the next steps before you create a new campaign! The creation of the new campaign is MANADATORY!
 - The THIRD step is recommending and creating new ad groups with ads and keywords
   - Do NOT start with the ad groups, ads and keywords creation BEFORE you create a new campaign, because you need to have the campaign ID for the ad group creation!
 - Once you have created the campaign, ad groups, ads and keywords. Write a detailed summary about the campaign which you have created and tell the client that you have finished the task.
@@ -307,7 +309,9 @@ Here is an example of correct 'resource_details' parameter:
 When asking the client for the approval, you must explicitly tell him which final_url, headlines, descriptions and keywords you are going to set
 NOTE: ad does NOT have a 'final_urls' attribute, only 'final_url' attribute! Please make sure that you set the 'final_url' attribute for the ad!
 Make sure you have the correct 'customer_id' and 'campaign_id' in the 'ad_group_with_ad_and_keywords' parameter. 'customer_id' and 'campaign_id' can NOT have the same value!!
-Do NOT use this command before you create a new campaign by using the 'create_campaign' command (or before checking if the campaign already exists)
+Do NOT use this command before you create a new campaign by executing the 'create_campaign' command (or before checking if the campaign already exists)
+It is crucial that you use campaign_id from the campaign which you have created by using the 'create_campaign' command!
+When you are asking the client for the approval, sk for ONE ad group at the time. Do NOT ask for multiple ad groups at the same time (it is too much information at once)!
 """  # nosec: [B608]
 
     @classmethod

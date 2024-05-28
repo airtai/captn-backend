@@ -4,7 +4,8 @@ import inspect
 import json
 import re
 import time
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import (
     Annotated,
     Any,
@@ -194,6 +195,9 @@ class Context:
     toolbox: Toolbox
     get_only_non_manager_accounts: bool = False
     changes_made: str = ""
+    created_campaigns: Dict[str, List[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
 
 
 ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
@@ -287,6 +291,7 @@ def _ask_client_for_permission_mock(
     customer_id = _find_value_in_nested_dict(
         dictionary=modification_function_parameters, key="customer_id"
     )
+    print(f"Ask_cl_func - customer_id: {customer_id}")
     customer_to_update = (
         f"We propose changes for the following customer: '{customer_id}'"
     )
@@ -325,6 +330,30 @@ modification_function_parameters_description = """Parameters for the modificatio
 These parameters will be used ONLY for ONE function call. Do NOT send a list of parameters for multiple function calls!"""
 
 
+def validate_customer_and_campaign_id(
+    context: Context, modification_function_parameters: Dict[str, Any]
+) -> None:
+    ad_group_with_ad_and_keywords = modification_function_parameters[
+        "ad_group_with_ad_and_keywords"
+    ]
+    customer_id = ad_group_with_ad_and_keywords["customer_id"]
+    campaign_id = ad_group_with_ad_and_keywords["campaign_id"]
+
+    if (
+        customer_id not in context.created_campaigns
+        or campaign_id not in context.created_campaigns[customer_id]
+    ):
+        raise ValueError(f"""campaign_id '{campaign_id}' does not exist for the customer_id '{customer_id}'.
+Make sure you have created the campaign before creating the ad group with ads and keywords!""")
+
+    print(f"customer_id {customer_id} and campaign_id {campaign_id} exist!!!!")
+
+
+ADDITIONAL_VALIDATION = {
+    "create_ad_group_with_ad_and_keywords": validate_customer_and_campaign_id
+}
+
+
 FUNCTIONS_TO_VALIDATE = ["create_ad_group_with_ad_and_keywords"]
 
 
@@ -334,6 +363,7 @@ def _validate_modification_parameters(
     func: Callable[..., Any],
     function_name: str,
     modification_function_parameters: Dict[str, Any],
+    context: Context,
 ) -> None:
     error_msg = ""
     func_parameters = inspect.signature(func).parameters
@@ -365,6 +395,13 @@ def _validate_modification_parameters(
 
     if error_msg:
         raise ValueError(error_msg)
+    print("Initial validation passed!")
+
+    if function_name in ADDITIONAL_VALIDATION:
+        ADDITIONAL_VALIDATION[function_name](
+            context=context,
+            modification_function_parameters=modification_function_parameters,
+        )
 
 
 def ask_client_for_permission(
@@ -387,6 +424,7 @@ def ask_client_for_permission(
             func=func,
             function_name=function_name,
             modification_function_parameters=modification_function_parameters,
+            context=context,
         )
 
     modification_function_parameters = clean_nones(modification_function_parameters)

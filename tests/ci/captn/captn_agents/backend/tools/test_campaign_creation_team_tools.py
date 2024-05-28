@@ -12,11 +12,13 @@ from captn.captn_agents.backend.teams._campaign_creation_team import (
 from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
-    _get_resource_id_from_response,
     _remove_resources,
     create_campaign_creation_team_toolbox,
 )
 from captn.captn_agents.backend.tools._functions import Context
+from captn.captn_agents.backend.tools._google_ads_team_tools import (
+    get_resource_id_from_response,
+)
 from captn.google_ads.client import clean_nones
 from google_ads.model import RemoveResource
 
@@ -64,7 +66,7 @@ class TestTools:
         ],
     )
     def test_get_resource_id_from_response(self, response) -> None:
-        resource_id = _get_resource_id_from_response(response)
+        resource_id = get_resource_id_from_response(response)
         assert resource_id == "3434", resource_id
 
     @pytest.mark.parametrize(
