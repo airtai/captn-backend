@@ -611,10 +611,14 @@ VERY IMPORTANT:
 - if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
-- Do NOT repeat Step-by-Step Plan every time you send a message. Send it only once at the beginning of the task. For every other message, send only the relevant part of the plan.
+- Do NOT repeat completed parts of the plan you have created. Each message should contain only the next steps!
+- When clicking on a link, add a comment "Click no. X -> 'Page you want to click' (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
 
 OFTEN MISTAKES:
 - Do NOT create more than 15 headlines and 4 descriptions for each link!
+- You do NOT need to click on MAX number of links. If you have enough information from the first xy links, you do NOT need to click on the rest of the links!
+- Do NOT repeat the steps you have already completed!
+- ALWAYS include the NEXT steps in the message!
 """
 
 
@@ -675,7 +679,6 @@ Please provide a detailed summary of the website as JSON-encoded string as instr
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
 You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
-When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
 Make sure you use keyword insertion in the headlines and provide unique headlines and descriptions for each link.
 """
 
