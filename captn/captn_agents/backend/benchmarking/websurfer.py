@@ -4,6 +4,7 @@ from ..tools._functions import (
     get_get_info_from_the_web_page,
     get_llm_config_gpt_3_5,
     get_llm_config_gpt_4,
+    get_llm_config_gpt_4o,
 )
 from .models import Models
 
@@ -16,13 +17,14 @@ def benchmark_websurfer(
     inner_retries: int = 10,
     summarizer_llm: str = Models.gpt3_5,
     llm: str = Models.gpt4,
-    navigator_llm: str = Models.gpt4,
+    navigator_llm: str = Models.gpt4o,
     timestamp: str = "2024-01-01T00:00:0",
     introduce_give_up_after: int = 7,
 ) -> Tuple[str, int]:
     llm_configs = {
         Models.gpt3_5.value: get_llm_config_gpt_3_5(),
         Models.gpt4.value: get_llm_config_gpt_4(),
+        Models.gpt4o.value: get_llm_config_gpt_4o(),
     }
 
     get_info_from_the_web_page = get_get_info_from_the_web_page(

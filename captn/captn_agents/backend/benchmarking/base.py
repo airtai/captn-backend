@@ -82,7 +82,7 @@ def generate_task_table_for_websurfer(
         help="Model which will be used by the web surfer",
     ),
     navigator_llm: Models = typer.Option(  # noqa: B008
-        Models.gpt4,
+        Models.gpt4o,
         help="Model which will be used by the web surfer navigator",
     ),
     file_name: str = typer.Option(

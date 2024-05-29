@@ -514,6 +514,16 @@ def get_llm_config_gpt_4() -> Dict[str, Any]:
     }
 
 
+def get_llm_config_gpt_4o() -> Dict[str, Any]:
+    config = Config()
+
+    return {
+        "config_list": config.config_list_gpt_4o,
+        "temperature": 0,
+        "stream": True,
+    }
+
+
 def get_llm_config_gpt_3_5() -> Dict[str, Any]:
     config = Config()
 
@@ -601,6 +611,10 @@ VERY IMPORTANT:
 - if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
+- Do NOT repeat Step-by-Step Plan every time you send a message. Send it only once at the beginning of the task. For every other message, send only the relevant part of the plan.
+
+OFTEN MISTAKES:
+- Do NOT create more than 15 headlines and 4 descriptions for each link!
 """
 
 
@@ -710,7 +724,7 @@ But before giving up, please try to navigate to another page and continue with t
         if websurfer_llm_config is None:
             websurfer_llm_config = get_llm_config_gpt_4()
         if websurfer_navigator_llm_config is None:
-            websurfer_navigator_llm_config = get_llm_config_gpt_4()
+            websurfer_navigator_llm_config = get_llm_config_gpt_4o()
 
         timestamp_copy = (
             datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
