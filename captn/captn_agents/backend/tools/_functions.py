@@ -619,6 +619,9 @@ OFTEN MISTAKES:
 - You do NOT need to click on MAX number of links. If you have enough information from the first xy links, you do NOT need to click on the rest of the links!
 - Do NOT repeat the steps you have already completed!
 - ALWAYS include the NEXT steps in the message!
+- Do NOT instruct web_surfer to click on the same link multiple times. If there are some problems with the link, MOVE ON to the next one!
+- Also, if web_surfer does not understand your message, just MOVE ON to the next link!
+- NEVER REPEAT the same instructions to web_surfer! If he does not understand the first time, MOVE ON to the next link!
 """
 
 
@@ -806,7 +809,10 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                             )
                             continue
                         if last_message.strip() == "":
-                            retry_message = "Reminder to myself: we do not have any bad attempts, we are just trying to get the information from the web page. Also, I should not send empty messages.\nLet's continue, where we left off."
+                            retry_message = """Reminder to myself: we do not have any bad attempts, we are just trying to get the information from the web page.
+
+Message to web_surfer: Please click on the link which you think is the most relevant for the task.
+After that, I will guide you through the next steps."""
                             # In this case, web_surfer_navigator is sending the message to web_surfer
                             web_surfer_navigator.send(
                                 retry_message,
