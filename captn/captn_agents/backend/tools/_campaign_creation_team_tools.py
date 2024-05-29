@@ -13,6 +13,7 @@ from ._functions import (
 )
 from ._google_ads_team_tools import (
     add_shared_functions,
+    get_resource_id_from_response,
     properties_config,
 )
 
@@ -138,10 +139,6 @@ class AdGroupWithAdAndKeywords(BaseModel):
     keywords: Annotated[List[AdGroupCriterionForCreation], Len(min_length=1)]
 
 
-def _get_resource_id_from_response(response: str) -> str:
-    return response.split("/")[-1].split("~")[-1].replace(".", "").strip()
-
-
 def _create_ad_group(
     user_id: int,
     conv_id: int,
@@ -233,7 +230,7 @@ def _create_ad_group_keywords(
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
         )
-        keyword_id = _get_resource_id_from_response(keyword_response)  # type: ignore[arg-type]
+        keyword_id = get_resource_id_from_response(keyword_response)  # type: ignore[arg-type]
         list_of_resources.append(
             RemoveResource(
                 customer_id=ad_group_with_ad_and_keywords.customer_id,
@@ -279,7 +276,7 @@ def _create_ad_group_with_ad_and_keywords(
         if isinstance(ad_group_response, dict):
             return ad_group_response
         response = f"Ad group '{ad_group_with_ad_and_keywords.ad_group.name}': {ad_group_response}\n"
-        ad_group_id = _get_resource_id_from_response(ad_group_response)
+        ad_group_id = get_resource_id_from_response(ad_group_response)
         list_of_resources.append(
             RemoveResource(
                 customer_id=ad_group_with_ad_and_keywords.customer_id,
@@ -295,7 +292,7 @@ def _create_ad_group_with_ad_and_keywords(
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
             ad_group_id=ad_group_id,
         )
-        ad_group_ad_id = _get_resource_id_from_response(ad_group_ad_response)  # type: ignore[arg-type]
+        ad_group_ad_id = get_resource_id_from_response(ad_group_ad_response)  # type: ignore[arg-type]
         list_of_resources.append(
             RemoveResource(
                 customer_id=ad_group_with_ad_and_keywords.customer_id,
@@ -345,7 +342,8 @@ def create_campaign_creation_team_toolbox(
     )
     toolbox.set_context(context)
 
-    @toolbox.add_function("Create an ad group with a single ad and a list of keywords")
+    @toolbox.add_function("""Create an ad group with a single ad and a list of keywords. Make sure you use the correct customer_id and campaign_id.
+You can find the customer_id by using 'list_accessible_customers' function and the campaign_id will be provided to you after you create a campaign.""")
     def create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords: Annotated[
             AdGroupWithAdAndKeywords,

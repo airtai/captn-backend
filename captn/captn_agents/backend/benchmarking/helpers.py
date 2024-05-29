@@ -23,6 +23,9 @@ def get_config_list(llm: str) -> List[Dict[str, str]]:
     if llm == Models.gpt4:
         return config.config_list_gpt_4
 
+    if llm == Models.gpt4o:
+        return config.config_list_gpt_4o
+
     raise ValueError(f"llm {llm} not supported")
 
 

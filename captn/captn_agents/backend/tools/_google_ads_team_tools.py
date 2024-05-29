@@ -89,11 +89,11 @@ def execute_query(
 properties_config = {
     "customer_id": {
         "type": "string",
-        "description": "Id of the customer",
+        "description": "Id of the customer. This ID is unique for each customer and it is NOT the same as the campaign/ad group/ad ID!",
     },
     "campaign_id": {
         "type": "string",
-        "description": "Id of the campaign",
+        "description": "Id of the campaign. This ID is never the same as the customer ID!",
     },
     "ad_group_id": {
         "type": "string",
@@ -236,6 +236,10 @@ def _mock_create_campaign() -> None:
     pass
 
 
+def get_resource_id_from_response(response: str) -> str:
+    return response.split("/")[-1].split("~")[-1].replace(".", "").strip()
+
+
 @add_currency_check(micros_var_name="budget_amount_micros")
 def create_campaign(
     customer_id: Annotated[str, properties_config["customer_id"]["description"]],
@@ -285,6 +289,8 @@ def create_campaign(
     if isinstance(response, str):
         response = f"Campaign '{name}': {response}"
         context.changes_made += f"\n{response}"
+        campaign_id = get_resource_id_from_response(response)
+        context.created_campaigns[customer_id].append(campaign_id)
     return response
 
 

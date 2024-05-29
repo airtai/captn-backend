@@ -2,7 +2,7 @@ import random
 import unittest
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Any, Iterator, Tuple
+from typing import Any, Iterator, List, Tuple
 from unittest.mock import MagicMock
 
 from autogen.cache import Cache
@@ -18,6 +18,7 @@ from ..tools._campaign_creation_team_tools import (
     _create_ad_group_ad,
     _create_ad_group_keyword,
 )
+from ..tools._functions import Context
 from ..tools._google_ads_team_tools import _mock_create_campaign
 from .fixtures.campaign_creation_team_fixtures import (
     CAMPAIGN_CREATION_DISNEY,
@@ -34,6 +35,15 @@ URL_TASK_DICT = {
     # "https://www.konzum.hr": "",
     "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
 }
+
+
+def mock_get_campaign_ids(context: Context, customer_id: str) -> List[str]:
+    print("Inside mock_get_campaign_ids")
+    if len(context.created_campaigns) == 0:
+        return []
+    if customer_id not in context.created_campaigns:
+        raise ValueError(f"Invalid customer ID: '{customer_id}'")
+    return context.created_campaigns[customer_id]
 
 
 @contextmanager
@@ -107,10 +117,14 @@ def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
             "captn.google_ads.client.requests_get",
             return_value=MagicMock(),
         ) as mock_requests_get,
+        unittest.mock.patch(
+            "captn.captn_agents.backend.tools._functions._get_campaign_ids",
+            wraps=mock_get_campaign_ids,
+        ),
     ):
         mock_requests_get.return_value.ok = True
         mock_requests_get.return_value.json.side_effect = [
-            f"Resource with id: {random.randint(100, 1000)} created!"  # nosec: [B311]
+            f"Created resource/new/{random.randint(100, 1000)}"  # nosec: [B311]
             for _ in range(200)
         ]
         yield (
@@ -181,7 +195,7 @@ def continue_conversation_until_finished(
 
 def benchmark_campaign_creation(
     url: str,
-    llm: str = Models.gpt4,
+    llm: str = Models.gpt4o,
 ) -> Tuple[str, int]:
     try:
         task = URL_TASK_DICT[url]
