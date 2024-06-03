@@ -9,6 +9,7 @@ from ..teams._team import Team
 from ..toolboxes import Toolbox
 from ._functions import (
     LAST_MESSAGE_BEGINNING,
+    BaseContext,
     get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client,
@@ -17,9 +18,7 @@ from ._functions import (
 
 
 @dataclass
-class Context:
-    user_id: int
-    conv_id: int
+class Context(BaseContext):
     initial_brief: str
     function_call_counter: Dict[str, bool] = field(default_factory=dict)
     get_info_from_web_page_result: str = ""
@@ -55,6 +54,8 @@ def _change_the_team_and_start_new_chat(
         user_id=user_id,
         conv_id=conv_id,
     )
+    if team.toolbox is None:
+        raise ValueError("Team toolbox is not set!")
 
     try:
         team.initiate_chat()
@@ -69,6 +70,7 @@ def _change_the_team_and_start_new_chat(
             message=DELEGATE_TASK_ERROR_MESSAGE,
             completed=False,
             smart_suggestions=smart_suggestions,
+            context=team.toolbox._context,  # type: ignore[arg-type]
         )
     # the last message is TeamResponse in json encoded string
     last_message = team.get_last_message(add_prefix=False)

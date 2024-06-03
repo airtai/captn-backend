@@ -6,7 +6,11 @@ from autogen.cache import Cache
 from ..config import Config
 from ..teams import Team
 from ..tools._brief_creation_team_tools import DELEGATE_TASK_ERROR_MESSAGE
-from ..tools._functions import init_chat_and_get_last_message, reply_to_client
+from ..tools._functions import (
+    BaseContext,
+    init_chat_and_get_last_message,
+    reply_to_client,
+)
 from .models import Models
 
 __all__ = (
@@ -63,16 +67,20 @@ def get_client_response(
     conv_id: int,
     cache: Cache,
     client_system_message: str = "Just accept everything.",
-) -> Callable[[str, bool, Optional[Dict[str, Union[str, List[str]]]]], str]:
+) -> Callable[
+    [str, bool, BaseContext, Optional[Dict[str, Union[str, List[str]]]]], str
+]:
     def clients_response(
         message: str,
         completed: bool,
+        context: BaseContext,
         smart_suggestions: Optional[Dict[str, Union[str, List[str]]]] = None,
     ) -> str:
         message_for_client = reply_to_client(
             message=message,
             completed=completed,
             smart_suggestions=smart_suggestions,
+            context=context,
         )
         # If the child team raises an error during the delegat_task, return the error message
         # The test will finish here
@@ -86,6 +94,7 @@ def get_client_response(
         message_for_client_json.pop("terminate_groupchat")
         message_for_client = json.dumps(message_for_client_json)
 
+        context.waiting_for_client_response = False
         return get_client_response_for_the_team_conv(
             user_id=user_id,
             conv_id=conv_id,
