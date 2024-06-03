@@ -108,7 +108,7 @@ agents = [
     "opentelemetry-distro==0.45b0",
     "opentelemetry-instrumentation-fastapi==0.45b0",
     "opentelemetry-instrumentation-logging==0.45b0",
-    "opentelemetry-exporter-otlp==1.24.0",
+    "opentelemetry-exporter-otlp==1.25.0",
 ]
 
 dev = [
