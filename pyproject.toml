@@ -101,7 +101,7 @@ agents = [
     "pandas>=2.1",
     "fastcore==1.5.35",
     "asyncer==0.0.7",
-    "pydantic==2.7.1",
+    "pydantic==2.7.2",
     "markdownify==0.12.1",
     "tenacity==8.3.0",
     "prometheus-client==0.20.0",
