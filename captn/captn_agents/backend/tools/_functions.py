@@ -4,7 +4,8 @@ import inspect
 import json
 import re
 import time
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import (
     Annotated,
     Any,
@@ -194,6 +195,9 @@ class Context:
     toolbox: Toolbox
     get_only_non_manager_accounts: bool = False
     changes_made: str = ""
+    created_campaigns: Dict[str, List[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
 
 
 ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
@@ -227,7 +231,7 @@ def init_chat_and_get_last_message(
         is_termination_msg=lambda x: True,  # Once the client replies, the sender will terminate the conversation
     )
 
-    config_list = Config().config_list_gpt_4
+    config_list = Config().config_list_gpt_4o
 
     client = AssistantAgent(
         name="client",
@@ -257,16 +261,20 @@ def _create_reply_message_for_client(
     customer_to_update: str,
     resource_details: str,
     modification_function_parameters: Dict[str, Any],
+    function_name: str,
 ) -> str:
     message = f"""{customer_to_update}
 
 {resource_details}
 
-Here are the parameters which will be used for the modification:
+We suggest executing function '{function_name}' with the following parameters:
 
 ```yaml
 {json.dumps(modification_function_parameters, indent=2)}
 ```
+
+(NOTE for the team: If the client agrees, execute the function '{function_name}' with the provided parameters IMMEDIATELY.
+Do NOT proceed with the next steps until the wanted function is executed!)
 
 To proceed with the changes, please answer 'Yes' and nothing else."""
     return message
@@ -277,6 +285,7 @@ def _ask_client_for_permission_mock(
     modification_function_parameters: Annotated[
         Dict[str, Any], "Parameters for the modification function"
     ],
+    function_name: str,
     context: Context,
 ) -> str:
     customer_id = _find_value_in_nested_dict(
@@ -290,6 +299,7 @@ def _ask_client_for_permission_mock(
         customer_to_update=customer_to_update,
         resource_details=resource_details,
         modification_function_parameters=modification_function_parameters,
+        function_name=function_name,
     )
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
@@ -319,6 +329,43 @@ modification_function_parameters_description = """Parameters for the modificatio
 These parameters will be used ONLY for ONE function call. Do NOT send a list of parameters for multiple function calls!"""
 
 
+def _get_campaign_ids(context: Context, customer_id: str) -> List[str]:
+    query = """SELECT campaign.id FROM campaign WHERE campaign.status != 'REMOVED'"""
+    result = execute_query(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        customer_ids=[customer_id],
+        query=query,
+    )
+    if isinstance(result, dict):
+        raise ValueError(result)
+
+    customer_campaign_ids = [
+        campaign["campaign"]["id"] for campaign in ast.literal_eval(result)[customer_id]
+    ]
+    return customer_campaign_ids
+
+
+def validate_customer_and_campaign_id(
+    context: Context, modification_function_parameters: Dict[str, Any]
+) -> None:
+    ad_group_with_ad_and_keywords = modification_function_parameters[
+        "ad_group_with_ad_and_keywords"
+    ]
+    customer_id = ad_group_with_ad_and_keywords["customer_id"]
+    campaign_id = ad_group_with_ad_and_keywords["campaign_id"]
+
+    existing_campaign_ids = _get_campaign_ids(context=context, customer_id=customer_id)
+    if campaign_id not in existing_campaign_ids:
+        raise ValueError(f"""campaign_id '{campaign_id}' does not exist for the customer_id '{customer_id}'.
+Make sure you have created the campaign before creating the ad group with ads and keywords!""")
+
+
+ADDITIONAL_VALIDATION = {
+    "create_ad_group_with_ad_and_keywords": validate_customer_and_campaign_id
+}
+
+
 FUNCTIONS_TO_VALIDATE = ["create_ad_group_with_ad_and_keywords"]
 
 
@@ -328,14 +375,17 @@ def _validate_modification_parameters(
     func: Callable[..., Any],
     function_name: str,
     modification_function_parameters: Dict[str, Any],
+    context: Context,
 ) -> None:
     error_msg = ""
     func_parameters = inspect.signature(func).parameters
+    # Do not include 'context' in the list of parameters
+    parameters_without_context = [x for x in func_parameters.keys() if x != "context"]
 
     for param_name, param_value in modification_function_parameters.items():
         if param_name not in func_parameters:
             error_msg += (
-                f"parameter {param_name} does not exist in {function_name} input parameters: {func_parameters.keys()}"
+                f"parameter {param_name} does not exist in {function_name} input parameters: {parameters_without_context}"
                 + "\n"
             )
             continue
@@ -358,6 +408,12 @@ def _validate_modification_parameters(
     if error_msg:
         raise ValueError(error_msg)
 
+    if function_name in ADDITIONAL_VALIDATION:
+        ADDITIONAL_VALIDATION[function_name](
+            context=context,
+            modification_function_parameters=modification_function_parameters,
+        )
+
 
 def ask_client_for_permission(
     resource_details: Annotated[str, resource_details_description],
@@ -379,6 +435,7 @@ def ask_client_for_permission(
             func=func,
             function_name=function_name,
             modification_function_parameters=modification_function_parameters,
+            context=context,
         )
 
     modification_function_parameters = clean_nones(modification_function_parameters)
@@ -397,6 +454,7 @@ def ask_client_for_permission(
         return _ask_client_for_permission_mock(
             resource_details=resource_details,
             modification_function_parameters=modification_function_parameters,
+            function_name=function_name,
             context=context,
         )
     user_id = context.user_id
@@ -418,6 +476,7 @@ def ask_client_for_permission(
         customer_to_update=customer_to_update,
         resource_details=resource_details,
         modification_function_parameters=modification_function_parameters,
+        function_name=function_name,
     )
 
     recommended_modifications_and_answer_list.append(

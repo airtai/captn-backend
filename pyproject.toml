@@ -61,13 +61,13 @@ lint = [
     "ruff==0.4.4",
     "pyupgrade-directories",
     "bandit==1.7.8",
-    "semgrep==1.73.0",
+    "semgrep==1.74.0",
     "pre-commit==3.7.1",
-    "detect-secrets==1.4.0",
+    "detect-secrets==1.5.0",
 ]
 
 test-core = [
-    "coverage[toml]==7.4.4",
+    "coverage[toml]==7.5.2",
     "pytest==8.2.1",
     "pytest-asyncio>=0.23.6",
     "dirty-equals==0.7.1.post0",
@@ -103,7 +103,7 @@ agents = [
     "asyncer==0.0.7",
     "pydantic==2.7.1",
     "markdownify==0.12.1",
-    "tenacity==8.2.3",
+    "tenacity==8.3.0",
     "prometheus-client==0.20.0",
     "opentelemetry-distro==0.45b0",
     "opentelemetry-instrumentation-fastapi==0.45b0",
