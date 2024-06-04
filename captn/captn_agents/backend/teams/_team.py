@@ -12,6 +12,7 @@ from fastcore.basics import patch
 from prometheus_client import Counter
 
 from ..config import Config
+from ..toolboxes import Toolbox
 
 _completions_create_original = autogen.oai.client.OpenAIClient.create
 
@@ -174,6 +175,7 @@ class Team:
         self.name = Team.construct_team_name(user_id=user_id, conv_id=conv_id)
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
         self.retry_from_scratch_counter = 0
+        self.toolbox: Toolbox
         Team._store_team(user_id=user_id, conv_id=conv_id, team=self)
 
     @classmethod
@@ -364,6 +366,13 @@ You operate within the following constraints:
         last_message = self.get_messages()[-1]["content"]
         if isinstance(last_message, dict):
             last_message = json.dumps(last_message)
+        else:
+            end_of_message = last_message.rfind("}")
+            if end_of_message != -1:
+                # If agents execute reply_to_client or ask_client_for_permission multiple times,
+                # Only the first execution will be done and the other ones will raise an error.
+                # So, we need to remove the rest of the message.
+                last_message = last_message[: end_of_message + 1]
         last_message = last_message.replace("PAUSE", "").replace("TERMINATE", "")
 
         if add_prefix:

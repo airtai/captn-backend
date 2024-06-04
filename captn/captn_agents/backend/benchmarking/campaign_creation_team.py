@@ -172,6 +172,7 @@ def continue_conversation_until_finished(
 ) -> None:
     while True:
         current_team = Team.get_team(user_id=user_id, conv_id=conv_id)
+        current_team.toolbox._context.waiting_for_client_response = False  # type: ignore[union-attr]
         if not isinstance(current_team, Team):
             raise ValueError(
                 f"Team with user_id {user_id} and conv_id {conv_id} not found."
