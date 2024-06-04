@@ -15,6 +15,7 @@ from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
 )
 from captn.captn_agents.backend.tools._functions import (
     Actions,
+    BaseContext,
     Context,
     Summary,
     WebPageSummary,
@@ -24,6 +25,7 @@ from captn.captn_agents.backend.tools._functions import (
     _validate_modification_parameters,
     get_get_info_from_the_web_page,
     get_webpage_status_code,
+    reply_to_client,
     send_email,
     validate_customer_and_campaign_id,
 )
@@ -328,3 +330,25 @@ def test_send_email_with_proposed_user_actions(proposed_user_actions):
 
         result = send_email(actions=actions)
         assert result["proposed_user_action"] == proposed_user_actions
+
+
+class TestReplyToClient:
+    def test_reply_to_client(self):
+        context = BaseContext(
+            user_id=234,
+            conv_id=345,
+        )
+        reply_to_client(
+            message="This is a message",
+            completed=True,
+            context=context,
+        )
+        assert context.waiting_for_client_response is True
+
+        # Test that the function raises an error if waiting_for_client_response is True
+        with pytest.raises(ValueError):
+            reply_to_client(
+                message="This is a message",
+                completed=False,
+                context=context,
+            )

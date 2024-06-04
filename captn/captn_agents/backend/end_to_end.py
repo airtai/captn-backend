@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Tuple, Type
 
 from .teams import Team
+from .tools._functions import BaseContext
 
 __all__ = [
     "start_or_continue_conversation",
@@ -79,6 +80,9 @@ def start_or_continue_conversation(
 
 
 def continue_conversation(team: Team, message: str) -> str:
+    if team.toolbox is not None:
+        context: BaseContext = team.toolbox._context  # type: ignore[assignment]
+        context.waiting_for_client_response = False
     team.update_recommended_modifications_and_answer_list(message.strip())
 
     team.continue_chat(message=message)

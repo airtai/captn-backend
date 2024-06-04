@@ -1,3 +1,4 @@
+import unittest
 from typing import Iterator
 from unittest.mock import MagicMock
 
@@ -189,6 +190,24 @@ Do NOT try to finish the task until other team members give their opinion.
             assert (
                 team.manager.initiate_chat.call_count == Team._MAX_RETRIES_FROM_SCRATCH
             )
+
+    def test_get_last_message(self) -> None:
+        team = Team(roles=TestTeam.roles, user_id=123, conv_id=456)
+
+        team.groupchat = MagicMock()
+
+        last_successful_message = """{"message":"To better align with your goals of boosting sales and increasing brand awareness, could you please clarify if you are looking to create a new campaign or optimize an existing one for your website?","smart_suggestions":{"suggestions":["Create new campaign","Optimize existing campaign"],"type":"oneOf"},"is_question":true,"status":"pause","terminate_groupchat":true}"""
+
+        last_message_with_junk = f"""{last_successful_message}
+
+Error: We have already another message to the client and we are waiting for his response! Please wait for the client to respond before sending another message!
+
+Error: We have already another message to the client and we are waiting for his response! Please wait for the client to respond before sending another message!"""
+        # mock team get team.get_messages
+        with unittest.mock.patch.object(Team, "get_messages") as mock_get_messages:
+            mock_get_messages.return_value = [{"content": last_message_with_junk}]
+            last_message = team.get_last_message(add_prefix=False)
+            assert last_message == last_successful_message
 
 
 class TestTeamRegistry:
