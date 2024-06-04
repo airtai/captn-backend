@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 docker build --progress=plain --build-arg PORT=9000 -t ghcr.io/airtai/captn-backend:dev .
 

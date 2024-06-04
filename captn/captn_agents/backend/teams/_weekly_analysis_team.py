@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 import requests
 from autogen.io import IOConsole, IOStream
 from markdownify import markdownify as md
+from prometheus_client import Counter
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt
 
@@ -960,6 +961,12 @@ Please propose the next steps and send the email to the client.
     return task
 
 
+WEEKLY_ANALYSIS_TEAM_CONVERSATION_SUCCESS_TOTAL = Counter(
+    "weekly_analysis_team_conversation_success_total",
+    "Total count of successfully executed weekly analysis",
+)
+
+
 def _validate_conversation_and_send_email(
     weekly_analysis_team: WeeklyAnalysisTeam,
     conv_uuid: str,
@@ -991,10 +998,28 @@ def _validate_conversation_and_send_email(
             main_email_template=main_email_template,
             proposed_user_action=last_message_json["proposed_user_action"],
         )
+        WEEKLY_ANALYSIS_TEAM_CONVERSATION_SUCCESS_TOTAL.inc()
     else:
         raise ValueError(
             f"Send email function is not called for user_id: {weekly_analysis_team.user_id} - email {email}!"
         )
+
+
+WEEKLY_ANALYSIS_TEAM_CONVERSATIONS_TOTAL = Counter(
+    "weekly_analysis_team_conversations_total",
+    "Total count of executed weekly analysis (team conversation started)",
+)
+
+
+WEEKLY_ANALYSIS_EXCEPTIONS_TOTAL = Counter(
+    "weekly_analysis_exceptions_total",
+    "Total count of weekly analysis exceptions",
+)
+
+SKIPPED_USERS_TOTAL = Counter(
+    "skipped_users_total",
+    "Total count of users that were skipped during weekly analysis",
+)
 
 
 def execute_weekly_analysis(
@@ -1013,6 +1038,7 @@ def execute_weekly_analysis(
 
         for user_id, email in id_email_dict.items():
             if send_only_to_emails is not None and email not in send_only_to_emails:
+                SKIPPED_USERS_TOTAL.inc()
                 print(f"Skipping user_id: {user_id} - email {email}")
                 continue
 
@@ -1028,6 +1054,7 @@ def execute_weekly_analysis(
                         f"Skipping user_id: {user_id} - email {email} because he hasn't logged in yet."
                     )
                     _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+                    SKIPPED_USERS_TOTAL.inc()
                     continue
 
                 # Always get the weekly report for the previous day
@@ -1036,6 +1063,7 @@ def execute_weekly_analysis(
                 )
                 if weekly_reports is None:
                     _delete_chat_webhook(user_id=user_id, conv_id=conv_id)
+                    SKIPPED_USERS_TOTAL.inc()
                     continue
 
                 (
@@ -1052,6 +1080,7 @@ def execute_weekly_analysis(
                     user_id=user_id,
                     conv_id=conv_id,
                 )
+                WEEKLY_ANALYSIS_TEAM_CONVERSATIONS_TOTAL.inc()
                 weekly_analysis_team.initiate_chat()
                 _validate_conversation_and_send_email(
                     weekly_analysis_team=weekly_analysis_team,
@@ -1062,6 +1091,7 @@ def execute_weekly_analysis(
                 )
 
             except Exception as e:
+                WEEKLY_ANALYSIS_EXCEPTIONS_TOTAL.inc()
                 print(
                     f"Weekly analysis failed for user_id: {user_id} - email {email}.\nError: {e}"
                 )
