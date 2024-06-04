@@ -151,6 +151,16 @@ example = Summary(
 )
 
 
+@dataclass(kw_only=True)
+class BaseContext:
+    user_id: int
+    conv_id: int
+    waiting_for_client_response: bool = False
+
+
+WAITING_FOR_CLIENT_RESPONSE_MESSAGE = "We have already another message to the client and we are waiting for his response! Please wait for the client to respond before sending another message!"
+
+
 def reply_to_client(
     message: Annotated[
         str,
@@ -159,10 +169,13 @@ def reply_to_client(
     completed: Annotated[
         bool, "Has the team completed the task or are they waiting for additional info"
     ],
+    context: BaseContext,
     smart_suggestions: Annotated[
         Optional[Dict[str, Union[str, List[str]]]], smart_suggestions_description
     ] = None,
 ) -> str:
+    if context.waiting_for_client_response:
+        raise ValueError(WAITING_FOR_CLIENT_RESPONSE_MESSAGE)
     if smart_suggestions:
         smart_suggestions_model = SmartSuggestions(**smart_suggestions)
         smart_suggestions = smart_suggestions_model.model_dump()
@@ -176,6 +189,7 @@ def reply_to_client(
         status="completed" if completed else "pause",
         terminate_groupchat=True,
     )
+    context.waiting_for_client_response = True
 
     return return_msg.model_dump_json()
 
@@ -186,9 +200,7 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 
 
 @dataclass
-class Context:
-    user_id: int
-    conv_id: int
+class Context(BaseContext):
     recommended_modifications_and_answer_list: List[
         Tuple[Dict[str, Any], Optional[str]]
     ]
@@ -479,13 +491,18 @@ def ask_client_for_permission(
         function_name=function_name,
     )
 
+    result = reply_to_client(
+        message=message,
+        completed=False,
+        smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS,
+        context=context,
+    )
+
     recommended_modifications_and_answer_list.append(
         (modification_function_parameters, None)
     )
 
-    return reply_to_client(
-        message=message, completed=False, smart_suggestions=YES_OR_NO_SMART_SUGGESTIONS
-    )
+    return result
 
 
 ask_client_for_permission_description = """Ask the client for permission to make the changes. Use this method before calling any of the modification methods!
