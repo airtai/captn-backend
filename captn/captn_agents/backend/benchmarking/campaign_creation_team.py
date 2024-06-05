@@ -48,6 +48,7 @@ def mock_get_campaign_ids(context: Context, customer_id: str) -> List[str]:
 
 @contextmanager
 def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
+    accessible_customers = ["1111"]
     with (
         # unittest.mock.patch.object(
         #     campaign_creation_team.toolbox.functions,
@@ -56,7 +57,11 @@ def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
         # ),
         unittest.mock.patch(
             "captn.captn_agents.backend.tools._google_ads_team_tools.list_accessible_customers_client",
-            return_value=["1111"],
+            return_value=accessible_customers,
+        ),
+        unittest.mock.patch(
+            "captn.captn_agents.backend.tools._functions.list_accessible_customers",
+            return_value=accessible_customers,
         ),
         # unittest.mock.patch.object(
         #     campaign_creation_team.toolbox.functions,

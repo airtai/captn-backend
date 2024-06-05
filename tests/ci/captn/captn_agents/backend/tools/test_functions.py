@@ -23,6 +23,7 @@ from captn.captn_agents.backend.tools._functions import (
     _find_value_in_nested_dict,
     _get_campaign_ids,
     _validate_modification_parameters,
+    ask_client_for_permission,
     get_get_info_from_the_web_page,
     get_webpage_status_code,
     reply_to_client,
@@ -314,6 +315,28 @@ class TestAskClientForPermission:
                 )
                 == expected
             )
+
+    def test_customer_id_not_in_accessible_customers(self) -> None:
+        toolbox = Toolbox()
+        toolbox.get_function = unittest.mock.MagicMock()
+        context = Context(
+            user_id=234,
+            conv_id=345,
+            recommended_modifications_and_answer_list=[],
+            toolbox=toolbox,
+        )
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._functions.list_accessible_customers",
+            return_value=["1111"],
+        ):
+            with pytest.raises(ValueError) as e:
+                ask_client_for_permission(
+                    resource_details="bla",
+                    function_name="random_func",
+                    modification_function_parameters={"customer_id": "2222"},
+                    context=context,
+                )
+            assert "Customer ID '2222' is not accessible for the current user" in str(e)
 
 
 @pytest.mark.parametrize(
