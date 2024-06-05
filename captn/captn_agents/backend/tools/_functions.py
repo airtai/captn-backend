@@ -800,7 +800,12 @@ TASK: {_task}
 The JSON-encoded string must contain at least {min_relevant_pages} relevant pages!
 """
 
-                web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
+                try:
+                    web_surfer_navigator.initiate_chat(
+                        web_surfer, message=initial_message
+                    )
+                except Exception as e:
+                    print(f"Exception '{type(e)}' in initiating chat: {e}")
 
                 for i in range(inner_retries):
                     print(f"Inner retry {i + 1}/{inner_retries}")
