@@ -112,7 +112,7 @@ Yes
 def benchmark_brief_creation(
     url: str,
     team_name: str,
-    llm: str = Models.gpt3_5,
+    llm: str = Models.gpt4o,
 ) -> Tuple[str, int]:
     config_list = get_config_list(llm)
 
