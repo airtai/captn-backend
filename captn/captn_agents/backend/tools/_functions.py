@@ -531,6 +531,16 @@ def get_llm_config_gpt_4() -> Dict[str, Any]:
     }
 
 
+def get_llm_config_gpt_4o() -> Dict[str, Any]:
+    config = Config()
+
+    return {
+        "config_list": config.config_list_gpt_4o,
+        "temperature": 0,
+        "stream": True,
+    }
+
+
 def get_llm_config_gpt_3_5() -> Dict[str, Any]:
     config = Config()
 
@@ -618,6 +628,17 @@ VERY IMPORTANT:
 - if not explicitly told, do NOT include links like 'About Us', 'Contact Us' etc. in the summary.
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
+- Do NOT repeat completed parts of the plan you have created. Each message should contain only the next steps!
+- When clicking on a link, add a comment "Click no. X -> 'Page you want to click' (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
+
+OFTEN MISTAKES:
+- Do NOT create more than 15 headlines and 4 descriptions for each link!
+- You do NOT need to click on MAX number of links. If you have enough information from the first xy links, you do NOT need to click on the rest of the links!
+- Do NOT repeat the steps you have already completed!
+- ALWAYS include the NEXT steps in the message!
+- Do NOT instruct web_surfer to click on the same link multiple times. If there are some problems with the link, MOVE ON to the next one!
+- Also, if web_surfer does not understand your message, just MOVE ON to the next link!
+- NEVER REPEAT the same instructions to web_surfer! If he does not understand the first time, MOVE ON to the next link!
 """
 
 
@@ -678,7 +699,6 @@ Please provide a detailed summary of the website as JSON-encoded string as instr
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
 You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
-When clicking on a link, add a comment "Click no. X (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
 Make sure you use keyword insertion in the headlines and provide unique headlines and descriptions for each link.
 """
 
@@ -727,7 +747,7 @@ But before giving up, please try to navigate to another page and continue with t
         if websurfer_llm_config is None:
             websurfer_llm_config = get_llm_config_gpt_4()
         if websurfer_navigator_llm_config is None:
-            websurfer_navigator_llm_config = get_llm_config_gpt_4()
+            websurfer_navigator_llm_config = get_llm_config_gpt_4o()
 
         timestamp_copy = (
             datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -780,7 +800,12 @@ TASK: {_task}
 The JSON-encoded string must contain at least {min_relevant_pages} relevant pages!
 """
 
-                web_surfer_navigator.initiate_chat(web_surfer, message=initial_message)
+                try:
+                    web_surfer_navigator.initiate_chat(
+                        web_surfer, message=initial_message
+                    )
+                except Exception as e:
+                    print(f"Exception '{type(e)}' in initiating chat: {e}")
 
                 for i in range(inner_retries):
                     print(f"Inner retry {i + 1}/{inner_retries}")
@@ -806,7 +831,10 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                             )
                             continue
                         if last_message.strip() == "":
-                            retry_message = "Reminder to myself: we do not have any bad attempts, we are just trying to get the information from the web page. Also, I should not send empty messages.\nLet's continue, where we left off."
+                            retry_message = """Reminder to myself: we do not have any bad attempts, we are just trying to get the information from the web page.
+
+Message to web_surfer: Please click on the link which you think is the most relevant for the task.
+After that, I will guide you through the next steps."""
                             # In this case, web_surfer_navigator is sending the message to web_surfer
                             web_surfer_navigator.send(
                                 retry_message,

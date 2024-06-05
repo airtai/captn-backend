@@ -21,6 +21,7 @@ from captn.captn_agents.backend.tools._functions import (
     WebPageSummary,
     WebUrl,
     _find_value_in_nested_dict,
+    _get_campaign_ids,
     _validate_modification_parameters,
     get_get_info_from_the_web_page,
     get_webpage_status_code,
@@ -129,12 +130,12 @@ class TestWebSurfer:
         [
             # "faststream.airt.ai",
             # "airt.ai",
-            "https://www.ikea.com/gb/en/",
+            # "https://www.ikea.com/gb/en/",
             # "https://docs.pydantic.dev/",
             # "https://websitedemos.net/electronic-store-04",
             # "https://websitedemos.net/organic-shop-02/",
             # "https://www.disneystore.eu",
-            # "https://www.hamleys.com/",
+            "https://www.hamleys.com/",
             # "www.bbc.com/news",
             # "https://www.konzum.hr/",
         ],
@@ -277,6 +278,42 @@ class TestAskClientForPermission:
                     context=context,
                 )
             assert expected_output in str(e._excinfo[1])
+
+    @pytest.mark.parametrize(
+        "execute_query_return_value, expected",
+        [
+            (
+                "{'222222': [{'campaign': {'id': '333'}}, {'campaign': {'id': '444'}}]}",
+                ["333", "444"],
+            ),
+            (
+                "{'222222': [{'campaign': {'id': '333'}}]}",
+                ["333"],
+            ),
+            (
+                "{'222222': []}",
+                [],
+            ),
+        ],
+    )
+    def test_get_campaign_ids(self, execute_query_return_value, expected) -> None:
+        context = Context(
+            user_id=234,
+            conv_id=345,
+            recommended_modifications_and_answer_list=[],
+            toolbox=Toolbox(),
+        )
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._functions.execute_query",
+            return_value=execute_query_return_value,
+        ):
+            assert (
+                _get_campaign_ids(
+                    context=context,
+                    customer_id="222222",
+                )
+                == expected
+            )
 
 
 @pytest.mark.parametrize(
