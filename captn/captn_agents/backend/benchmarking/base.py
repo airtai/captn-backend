@@ -132,7 +132,7 @@ def generate_task_table_for_websurfer(
 @app.command()
 def generate_task_table_for_brief_creation(
     llm: Models = typer.Option(  # noqa: B008
-        Models.gpt4,
+        Models.gpt4o,
         help="Model which will be used by all agents",
     ),
     file_name: str = typer.Option(

@@ -48,10 +48,8 @@ def _patch_brief_creation_team_vars(
 
 def benchmark_end2end(
     url: str,
-    llm: str = Models.gpt4,
+    llm: str = Models.gpt4o,
 ) -> Tuple[str, int]:
-    # Remove the following line after integrating gpt4-o for brief creation team
-    llm = Models.gpt4
     config_list = get_config_list(llm)
 
     user_id = 123

@@ -67,7 +67,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
 
         if config_list is None:
             config = Config()
-            config_list = config.config_list_gpt_4
+            config_list = config.config_list_gpt_4o
 
         self.llm_config = BriefCreationTeam._get_llm_config(
             seed=seed, temperature=temperature, config_list=config_list
@@ -126,7 +126,7 @@ Here is the current customers brief/information we have gathered for you as a st
     def _guidelines(self) -> str:
         return f"""### Guidelines
 1. Do NOT repeat the content of the previous messages nor repeat your role.
-Write short and clear messages. Nobody likes to read long messages. Be concise and to the point.
+Write SHORT and CLEAR messages. Nobody likes to read long messages. Be concise and to the point, or you will be penalized!
 
 
 2. The MOST important part of your task is to choose the appropriate team for the task.
@@ -151,10 +151,16 @@ Once you have the template, you are responsible for filling in all the fields. D
 5. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
 It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
 If the client has provided a link to the web page and you do not try to gather information from the web page, you will be penalized!
-If you are unable to retrieve the information, use the 'reply_to_client' command to ask the client for the information which you need.
+If you are unable to retrieve ANY information, use the 'reply_to_client' command to ask the client for the information which you need.
+Otherwise, focus on creating the brief based on the information which you were able to gather from the web page (ignore the links which you were unable to retrieve information from and don't mention them in the brief!).
+Do NOT use the 'get_info_from_the_web_page' for retrieving the information of the subpages which you have found in the provided link.
+Your job is to create a brief based on the information which you have gathered from URL which the client has provided.
+If you try to gather information from the subpages, a lot of time will be wasted and you will be penalized!
+i.e. use the 'get_info_from_the_web_page' command ONLY once for the URL which the client has provided!
 
 6. When you have gathered all the information, create a detailed brief.
-Team members should discuss and agree on the content of the brief before sending it to the chosen team.
+Do NOT repeat the content which you have received from the 'get_info_from_the_web_page' command (the content will be injected automatically later on)!
+i.e. do NOT mention keywords, headlines and descriptions in the brief which you are constructing!
 Do NOT mention to the client that you are creating a brief. This is your internal task and the client does not need to know that.
 Do NOT ask the client which information he wants to include in the brief.
 i.e. word 'brief' should NOT be mentioned to the client at all!
