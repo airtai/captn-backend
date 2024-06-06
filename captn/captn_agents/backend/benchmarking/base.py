@@ -90,7 +90,7 @@ def generate_task_table_for_websurfer(
         help="File name of the task list",
     ),
     repeat: int = typer.Option(
-        10,
+        5,
         help="Number of times to repeat each url",
     ),
     introduce_give_up_after: int = typer.Option(
@@ -140,7 +140,7 @@ def generate_task_table_for_brief_creation(
         help="File name of the task list",
     ),
     repeat: int = typer.Option(
-        10,
+        5,
         help="Number of times to repeat each url",
     ),
     output_dir: str = typer.Option(  # noqa: B008
@@ -182,7 +182,7 @@ def generate_task_table_for_campaign_creation(
         help="File name of the task list",
     ),
     repeat: int = typer.Option(
-        10,
+        5,
         help="Number of times to repeat each url",
     ),
     output_dir: str = typer.Option(  # noqa: B008
