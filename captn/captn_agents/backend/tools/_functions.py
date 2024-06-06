@@ -752,7 +752,7 @@ write 'I GIVE UP' and the reason why you gave up.
 
 But before giving up, please try to navigate to another page and continue with the task. Give up ONLY if you are sure that you can NOT retrieve any information!"""
 
-    @lru_cache(maxsize=10)
+    @lru_cache(maxsize=20)
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
     ) -> str:
