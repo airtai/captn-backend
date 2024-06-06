@@ -285,7 +285,7 @@ class TestToolbox:
                 "api_key": "dummy",  # pragma: allowlist secret
             },
         )
-        user_proxy = UserProxyAgent(name="user_proxy")
+        user_proxy = UserProxyAgent(name="user_proxy", code_execution_config=False)
 
         toolbox = Toolbox()
 
