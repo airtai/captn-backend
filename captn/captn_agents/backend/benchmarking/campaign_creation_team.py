@@ -129,7 +129,7 @@ def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
     ):
         mock_requests_get.return_value.ok = True
         mock_requests_get.return_value.json.side_effect = [
-            f"Created resource/new/{random.randint(100, 1000)}"  # nosec: [B311]
+            f"Created resource/{random.randint(100, 1000)}"  # nosec: [B311]
             for _ in range(200)
         ]
         yield (

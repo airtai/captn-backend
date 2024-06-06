@@ -151,8 +151,12 @@ Once you have the template, you are responsible for filling in all the fields. D
 5. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
 It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
 If the client has provided a link to the web page and you do not try to gather information from the web page, you will be penalized!
-If you are unable to retrieve the information, use the 'reply_to_client' command to ask the client for the information which you need.
+If you are unable to retrieve ANY information, use the 'reply_to_client' command to ask the client for the information which you need.
+Otherwise, focus on creating the brief based on the information which you were able to gather from the web page (ignore the links which you were unable to retrieve information from and don't mention them in the brief!).
 Do NOT use the 'get_info_from_the_web_page' for retrieving the information of the subpages which you have found in the provided link.
+Your job is to create a brief based on the information which you have gathered from URL which the client has provided.
+If you try to gather information from the subpages, a lot of time will be wasted and you will be penalized!
+i.e. use the 'get_info_from_the_web_page' command ONLY once for the URL which the client has provided!
 
 6. When you have gathered all the information, create a detailed brief.
 Do NOT repeat the content which you have received from the 'get_info_from_the_web_page' command (the content will be injected automatically later on)!

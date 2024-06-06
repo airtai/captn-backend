@@ -472,7 +472,6 @@ def ask_client_for_permission(
             f"""Customer ID '{customer_id}' is not accessible for the current user.
 Here is the list of accessible customer IDs: {accessible_customer_ids}"""
         )
-    print(f"{customer_id} is accessible for the current user.")
 
     for key in REMOVE_FROM_MODIFICATION_PARAMETERS:
         modification_function_parameters.pop(key, None)
