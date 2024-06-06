@@ -31,9 +31,14 @@ from .models import Models
 URL_TASK_DICT = {
     "https://www.ikea.com/gb/en/": CAMPAIGN_CREATION_IKEA,
     "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
-    # "https://www.hamleys.com/": "",
-    # "https://www.konzum.hr": "",
     "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
+    "https://www.hamleys.com/": "",
+    "https://www.konzum.hr": "",
+    "https://websitedemos.net/organic-shop-02/": "",
+    "www.bbc.com/news": "",
+    "https://zagreb.cinestarcinemas.hr/": "",
+    "https://camelbackflowershop.com/": "",
+    "https://getbybus.com/hr/": "",
 }
 
 

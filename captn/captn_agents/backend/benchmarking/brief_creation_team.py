@@ -11,11 +11,16 @@ from ..teams import (
 )
 from .fixtures.brief_creation_team_fixtures import (
     BRIEF_CREATION_TEAM_RESPONSE,
+    WEB_PAGE_SUMMARY_BBC,
+    WEB_PAGE_SUMMARY_CINESTAR,
     WEB_PAGE_SUMMARY_DISNEY,
     WEB_PAGE_SUMMARY_FASTSTREAM,
+    WEB_PAGE_SUMMARY_FLOWERSHOP,
+    WEB_PAGE_SUMMARY_GET_BY_BUS,
     WEB_PAGE_SUMMARY_HAMLEYS,
     WEB_PAGE_SUMMARY_IKEA,
     WEB_PAGE_SUMMARY_KONZUM,
+    WEB_PAGE_SUMMARY_WEBSITE_DEMOS,
 )
 from .helpers import get_client_response, get_config_list
 from .models import Models
@@ -32,6 +37,11 @@ URL_SUMMARY_DICT = {
     "https://www.hamleys.com/": WEB_PAGE_SUMMARY_HAMLEYS,
     "https://www.konzum.hr": WEB_PAGE_SUMMARY_KONZUM,
     "https://faststream.airt.ai": WEB_PAGE_SUMMARY_FASTSTREAM,
+    "https://camelbackflowershop.com": WEB_PAGE_SUMMARY_FLOWERSHOP,
+    "https://www.bbc.com": WEB_PAGE_SUMMARY_BBC,
+    "https://zagreb.cinestarcinemas.hr": WEB_PAGE_SUMMARY_CINESTAR,
+    "https://websitedemos.net/organic-shop-02": WEB_PAGE_SUMMARY_WEBSITE_DEMOS,
+    "https://getbybus.com/hr": WEB_PAGE_SUMMARY_GET_BY_BUS,
 }
 
 
