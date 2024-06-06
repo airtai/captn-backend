@@ -21,9 +21,16 @@ from ..tools._campaign_creation_team_tools import (
 from ..tools._functions import Context
 from ..tools._google_ads_team_tools import _mock_create_campaign
 from .fixtures.campaign_creation_team_fixtures import (
+    CAMPAIGN_CREATION_BBC,
+    CAMPAIGN_CREATION_CINESTAR,
     CAMPAIGN_CREATION_DISNEY,
     CAMPAIGN_CREATION_FASTSTREAM,
+    CAMPAIGN_CREATION_FLOWERSHOP,
+    CAMPAIGN_CREATION_GETBYBUS,
+    CAMPAIGN_CREATION_HAMLEYS,
     CAMPAIGN_CREATION_IKEA,
+    CAMPAIGN_CREATION_KONZUM,
+    CAMPAIGN_CREATION_WEBSITEDEMOS,
 )
 from .helpers import get_client_response_for_the_team_conv, get_config_list
 from .models import Models
@@ -32,13 +39,13 @@ URL_TASK_DICT = {
     "https://www.ikea.com/gb/en/": CAMPAIGN_CREATION_IKEA,
     "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
     "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
-    "https://www.hamleys.com/": "",
-    "https://www.konzum.hr": "",
-    "https://websitedemos.net/organic-shop-02/": "",
-    "www.bbc.com/news": "",
-    "https://zagreb.cinestarcinemas.hr/": "",
-    "https://camelbackflowershop.com/": "",
-    "https://getbybus.com/hr/": "",
+    "https://www.hamleys.com/": CAMPAIGN_CREATION_HAMLEYS,
+    "https://www.konzum.hr": CAMPAIGN_CREATION_KONZUM,
+    "https://websitedemos.net/organic-shop-02/": CAMPAIGN_CREATION_WEBSITEDEMOS,
+    "www.bbc.com/news": CAMPAIGN_CREATION_BBC,
+    "https://zagreb.cinestarcinemas.hr/": CAMPAIGN_CREATION_CINESTAR,
+    "https://camelbackflowershop.com/": CAMPAIGN_CREATION_FLOWERSHOP,
+    "https://getbybus.com/hr/": CAMPAIGN_CREATION_GETBYBUS,
 }
 
 

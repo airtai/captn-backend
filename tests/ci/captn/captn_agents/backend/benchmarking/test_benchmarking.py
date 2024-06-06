@@ -254,7 +254,7 @@ class TestCampaignCreation:
                 command=self.command,
                 file_name=self.file_name,
                 tmp_dir=tmp_dir,
-                no_rows=30,
+                no_rows=50,
             )
 
     @pytest.mark.parametrize("end2end_param", ["--end2end"])  # , "--no-end2end"])
@@ -280,6 +280,6 @@ class TestCampaignCreation:
             file_name=self.file_name,
             aggregated_csv_name=self.aggregated_csv_name,
             success=success,
-            no_rows=30,
+            no_rows=50,
             additional_generate_task_table_parameters=[end2end_param],
         )
