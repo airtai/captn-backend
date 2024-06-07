@@ -9,6 +9,7 @@ from ..teams._team import Team
 from ..toolboxes import Toolbox
 from ._functions import (
     LAST_MESSAGE_BEGINNING,
+    MAX_LINKS_TO_CLICK_DESCRIPTION,
     BaseContext,
     get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
@@ -39,7 +40,7 @@ You must fill in all the fields. NEVER write [Insert client's business]!! You ar
 
 
 class WebPageInfo:
-    def get_info_from_the_web_page_f(self) -> Callable[[str], str]:
+    def get_info_from_the_web_page_f(self) -> Callable[[str, int], str]:
         return get_get_info_from_the_web_page()
 
 
@@ -166,9 +167,13 @@ And the task is following:
     @toolbox.add_function(get_info_from_the_web_page_description)
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
+        max_links_to_click: Annotated[
+            int,
+            MAX_LINKS_TO_CLICK_DESCRIPTION,
+        ],
         context: Context,
     ) -> str:
-        result = web_page_info_f(url)
+        result = web_page_info_f(url, max_links_to_click)
 
         if LAST_MESSAGE_BEGINNING in result:
             context.get_info_from_web_page_result += result + "\n\n"

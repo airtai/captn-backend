@@ -592,7 +592,9 @@ class WebUrl(BaseModel):
         return v
 
 
-def _create_web_surfer_navigator_system_message(task_guidelines: str) -> str:
+def _create_web_surfer_navigator_system_message(
+    task_guidelines: str, max_links_to_click: int
+) -> str:
     return f"""You are in charge of navigating the web_surfer agent to scrape the web.
 web_surfer is able to CLICK on links, SCROLL down, and scrape the content of the web page. e.g. you cen tell him: "Click the 'Getting Started' result".
 Each time you receive a reply from web_surfer, you need to tell him what to do next. e.g. "Click the TV link" or "Scroll down".
@@ -644,7 +646,7 @@ VERY IMPORTANT:
 We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
 - Do NOT repeat completed parts of the plan you have created. Each message should contain only the next steps!
-- When clicking on a link, add a comment "Click no. X -> 'Page you want to click' (I can click MAX 10 links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
+- When clicking on a link, add a comment "Click no. X -> 'Page you want to click' (I can click MAX {max_links_to_click} links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
 
 OFTEN MISTAKES:
 - Do NOT create more than 15 headlines and 4 descriptions for each link!
@@ -660,9 +662,9 @@ OFTEN MISTAKES:
 LAST_MESSAGE_BEGINNING = "Here is a summary of the information you requested:"
 
 
-def _format_last_message(summary: Summary) -> str:
+def _format_last_message(url: str, summary: Summary) -> str:
     summary_response = f"""{LAST_MESSAGE_BEGINNING}
-
+URL: {url}
 {summary.summary}
 
 Relevant Pages:
@@ -705,7 +707,8 @@ def get_webpage_status_code(url: str) -> Optional[int]:
         return None
 
 
-_task = """We are tasked with creating a new Google Ads campaign for the website.
+def _get_task_message(max_links_to_click: int) -> str:
+    _task = f"""We are tasked with creating a new Google Ads campaign for the website.
 In order to create the campaign, we need to understand the website and its products/services.
 Our task is to provide a summary of the website, including the products/services offered and any unique selling points.
 This is the first step in creating the Google Ads campaign so please gather as much information as possible.
@@ -713,9 +716,11 @@ Visit the most likely pages to be advertised, such as the homepage, product page
 Please provide a detailed summary of the website as JSON-encoded string as instructed in the guidelines.
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
-You can click on MAXIMUM 10 links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX 10)!
+You can click on MAXIMUM {max_links_to_click} links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX {max_links_to_click})!
 Make sure you use keyword insertion in the headlines and provide unique headlines and descriptions for each link.
 """
+    return _task
+
 
 _task_guidelines = "Please provide a summary of the website, including the products/services offered and any unique selling points."
 
@@ -735,6 +740,11 @@ def _constuct_retry_message(
 """
 
 
+MAX_LINKS_TO_CLICK_DESCRIPTION = """The maximum number of links to click on the page.
+When you want to do the initial research about the client's business, set max_links_to_click=10
+If you have already have insight in the clients business, and you need only the info for perticualr subpage, set max_links_to_click=4"""
+
+
 def get_get_info_from_the_web_page(
     outer_retries: int = 3,
     inner_retries: int = 10,
@@ -744,7 +754,7 @@ def get_get_info_from_the_web_page(
     timestamp: Optional[str] = None,
     min_relevant_pages: int = 3,
     max_retires_before_give_up_message: int = 7,
-) -> Callable[[str], str]:
+) -> Callable[[str, int], str]:
     fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
 
     give_up_message = f"""ONLY if you are 100% sure that you can NOT retrieve any information for at least {min_relevant_pages} relevant pages,
@@ -755,6 +765,10 @@ But before giving up, please try to navigate to another page and continue with t
     @lru_cache(maxsize=20)
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
+        max_links_to_click: Annotated[
+            int,
+            MAX_LINKS_TO_CLICK_DESCRIPTION,
+        ] = 10,
     ) -> str:
         summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config = fx
 
@@ -772,7 +786,8 @@ But before giving up, please try to navigate to another page and continue with t
         )
         web_surfer_navigator_system_message = (
             _create_web_surfer_navigator_system_message(
-                task_guidelines=_task_guidelines
+                task_guidelines=_task_guidelines,
+                max_links_to_click=max_links_to_click,
             )
         )
         # validate url, error will be raised if url is invalid
@@ -810,6 +825,7 @@ But before giving up, please try to navigate to another page and continue with t
                 initial_message = (
                     f"Time now is {timestamp_copy}." if timestamp_copy else ""
                 )
+                _task = _get_task_message(max_links_to_click=max_links_to_click)
                 initial_message += f"""
 URL: {url}
 TASK: {_task}
@@ -877,7 +893,7 @@ After that, I will guide you through the next steps."""
                                 recipient=web_surfer_navigator,
                             )
                             continue
-                        last_message = _format_last_message(summary)
+                        last_message = _format_last_message(url=url, summary=summary)
                         return last_message
                     except ValidationError as e:
                         retry_message = _constuct_retry_message(
