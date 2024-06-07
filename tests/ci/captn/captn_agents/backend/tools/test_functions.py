@@ -126,6 +126,32 @@ class TestWebSurfer:
         status_code = get_webpage_status_code(url=url)
         assert status_code == 404
 
+    def test_get_info_from_the_web_page_cache(self):
+        url1 = "https://fakeurl1.com"
+        url2 = "https://fakeurl2.com"
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._functions.get_webpage_status_code",
+            return_value=500,
+        ):
+            f = get_get_info_from_the_web_page()
+            f(url=url1)  # miss
+            f(url=url1)  # hit
+            f(url=url2)  # miss
+            f(url=url2)  # hit
+            f(url=url2)  # hit
+
+            cache_info = f.cache_info()
+            assert cache_info.hits == 3
+            assert cache_info.misses == 2
+
+            f2 = get_get_info_from_the_web_page()
+            f2(url=url1)  # miss
+            f2(url=url1)  # hit
+            cache_info2 = f2.cache_info()
+            assert cache_info2.hits == 1
+            assert cache_info2.misses == 1
+
     @pytest.mark.parametrize(
         "url",
         [

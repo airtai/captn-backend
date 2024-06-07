@@ -10,7 +10,9 @@ from ..teams import (
     CampaignCreationTeam,
     Team,
 )
-from ..tools._brief_creation_team_tools import _change_the_team_and_start_new_chat
+from ..tools._brief_creation_team_tools import (
+    _change_the_team_and_start_new_chat,
+)
 from .brief_creation_team import _client_system_messages, _get_task
 from .campaign_creation_team import (
     _patch_campaign_creation_team_vars,
