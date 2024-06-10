@@ -22,6 +22,7 @@ from ....google_ads.client import (
     get_user_ids_and_emails,
     list_accessible_customers,
 )
+from ..config import Config
 from ..tools._functions import get_webpage_status_code
 from ..tools._weekly_analysis_team_tools import create_weekly_analysis_team_toolbox
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND
@@ -677,6 +678,7 @@ sure it is understandable by non-experts.
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
+        config_list: Optional[List[Dict[str, str]]] = None,
     ):
         function_map: Dict[str, Callable[[Any], Any]] = {}
         roles: List[Dict[str, str]] = WeeklyAnalysisTeam._default_roles
@@ -693,8 +695,13 @@ sure it is understandable by non-experts.
             temperature=temperature,
             use_user_proxy=True,
         )
+
+        if config_list is None:
+            config = Config()
+            config_list = config.config_list_gpt_4
+
         self.llm_config = WeeklyAnalysisTeam._get_llm_config(
-            seed=seed, temperature=temperature
+            seed=seed, temperature=temperature, config_list=config_list
         )
 
         self._create_members()
