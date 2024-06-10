@@ -1,6 +1,5 @@
 import datetime
 import json
-import os
 import time
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
@@ -15,8 +14,6 @@ from ..config import Config
 from ..toolboxes import Toolbox
 
 _completions_create_original = autogen.oai.client.OpenAIClient.create
-
-os.environ["AUTOGEN_USE_DOCKER"] = "no"
 
 
 # WORKAROUND for consistent 500 error code when using openai functions
@@ -276,6 +273,7 @@ Do NOT try to finish the task until other team members give their opinion.
                 llm_config=False,
                 system_message=system_message,
                 is_termination_msg=self._is_termination_msg,
+                code_execution_config=False,
             )
 
         return autogen.AssistantAgent(
@@ -283,7 +281,6 @@ Do NOT try to finish the task until other team members give their opinion.
             llm_config=self.llm_config,
             system_message=system_message,
             is_termination_msg=self._is_termination_msg,
-            code_execution_config={"work_dir": self.work_dir},
             function_map=self.function_map,
         )
 

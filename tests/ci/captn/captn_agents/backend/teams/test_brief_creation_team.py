@@ -58,5 +58,5 @@ class TestBriefCreationTeam:
         benchmark_brief_creation(
             url="https://www.ikea.com/gb/en/",
             team_name=team_name,
-            llm=Models.gpt3_5,
+            llm=Models.gpt4o,
         )

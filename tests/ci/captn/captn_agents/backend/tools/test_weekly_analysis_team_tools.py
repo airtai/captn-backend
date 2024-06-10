@@ -31,7 +31,7 @@ class TestWeeklyAnalysisTeamTools:
         )
 
         self.agent = AssistantAgent(name="agent", llm_config=self.llm_config)
-        self.user_proxy = UserProxyAgent(name="user_proxy")
+        self.user_proxy = UserProxyAgent(name="user_proxy", code_execution_config=False)
 
         self.toolbox.add_to_agent(self.agent, self.user_proxy)
 

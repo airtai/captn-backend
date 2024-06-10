@@ -21,9 +21,16 @@ from ..tools._campaign_creation_team_tools import (
 from ..tools._functions import Context
 from ..tools._google_ads_team_tools import _mock_create_campaign
 from .fixtures.campaign_creation_team_fixtures import (
+    CAMPAIGN_CREATION_BBC,
+    CAMPAIGN_CREATION_CINESTAR,
     CAMPAIGN_CREATION_DISNEY,
     CAMPAIGN_CREATION_FASTSTREAM,
+    CAMPAIGN_CREATION_FLOWERSHOP,
+    CAMPAIGN_CREATION_GETBYBUS,
+    CAMPAIGN_CREATION_HAMLEYS,
     CAMPAIGN_CREATION_IKEA,
+    CAMPAIGN_CREATION_KONZUM,
+    CAMPAIGN_CREATION_WEBSITEDEMOS,
 )
 from .helpers import get_client_response_for_the_team_conv, get_config_list
 from .models import Models
@@ -31,9 +38,14 @@ from .models import Models
 URL_TASK_DICT = {
     "https://www.ikea.com/gb/en/": CAMPAIGN_CREATION_IKEA,
     "https://www.disneystore.eu": CAMPAIGN_CREATION_DISNEY,
-    # "https://www.hamleys.com/": "",
-    # "https://www.konzum.hr": "",
     "https://faststream.airt.ai": CAMPAIGN_CREATION_FASTSTREAM,
+    "https://www.hamleys.com/": CAMPAIGN_CREATION_HAMLEYS,
+    "https://www.konzum.hr": CAMPAIGN_CREATION_KONZUM,
+    "https://websitedemos.net/organic-shop-02/": CAMPAIGN_CREATION_WEBSITEDEMOS,
+    "www.bbc.com/news": CAMPAIGN_CREATION_BBC,
+    "https://zagreb.cinestarcinemas.hr/": CAMPAIGN_CREATION_CINESTAR,
+    "https://camelbackflowershop.com/": CAMPAIGN_CREATION_FLOWERSHOP,
+    "https://getbybus.com/hr/": CAMPAIGN_CREATION_GETBYBUS,
 }
 
 
@@ -48,6 +60,7 @@ def mock_get_campaign_ids(context: Context, customer_id: str) -> List[str]:
 
 @contextmanager
 def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
+    accessible_customers = ["1111"]
     with (
         # unittest.mock.patch.object(
         #     campaign_creation_team.toolbox.functions,
@@ -56,7 +69,11 @@ def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
         # ),
         unittest.mock.patch(
             "captn.captn_agents.backend.tools._google_ads_team_tools.list_accessible_customers_client",
-            return_value=["1111"],
+            return_value=accessible_customers,
+        ),
+        unittest.mock.patch(
+            "captn.captn_agents.backend.tools._functions.list_accessible_customers",
+            return_value=accessible_customers,
         ),
         # unittest.mock.patch.object(
         #     campaign_creation_team.toolbox.functions,
@@ -124,7 +141,7 @@ def _patch_campaign_creation_team_vars() -> Iterator[Tuple[Any, Any, Any, Any]]:
     ):
         mock_requests_get.return_value.ok = True
         mock_requests_get.return_value.json.side_effect = [
-            f"Created resource/new/{random.randint(100, 1000)}"  # nosec: [B311]
+            f"Created resource/{random.randint(100, 1000)}"  # nosec: [B311]
             for _ in range(200)
         ]
         yield (

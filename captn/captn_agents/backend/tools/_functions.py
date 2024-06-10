@@ -6,6 +6,7 @@ import re
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import (
     Annotated,
     Any,
@@ -27,7 +28,7 @@ from autogen.cache import Cache
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import _AnnotatedAlias
 
-from ....google_ads.client import clean_nones, execute_query
+from ....google_ads.client import clean_nones, execute_query, list_accessible_customers
 from ...model import SmartSuggestions
 from ..config import Config
 from ..toolboxes.base import Toolbox
@@ -437,7 +438,7 @@ def ask_client_for_permission(
         modification_function_parameters_description,
     ],
     context: Context,
-) -> str:
+) -> Union[str, Dict[str, Any]]:
     try:
         func = context.toolbox.get_function(function_name)
     except Exception as e:
@@ -457,6 +458,20 @@ def ask_client_for_permission(
     if customer_id is None:
         raise ValueError(
             "The 'customer_id' parameter is missing in the 'modification_function_parameters'."
+        )
+
+    accessible_customer_ids = list_accessible_customers(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        get_only_non_manager_accounts=context.get_only_non_manager_accounts,
+    )
+    if not isinstance(accessible_customer_ids, list):
+        return accessible_customer_ids
+
+    if customer_id not in accessible_customer_ids:
+        raise ValueError(
+            f"""Customer ID '{customer_id}' is not accessible for the current user.
+Here is the list of accessible customer IDs: {accessible_customer_ids}"""
         )
 
     for key in REMOVE_FROM_MODIFICATION_PARAMETERS:
@@ -737,6 +752,7 @@ write 'I GIVE UP' and the reason why you gave up.
 
 But before giving up, please try to navigate to another page and continue with the task. Give up ONLY if you are sure that you can NOT retrieve any information!"""
 
+    @lru_cache(maxsize=20)
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
     ) -> str:

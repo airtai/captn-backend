@@ -10,7 +10,9 @@ from ..teams import (
     CampaignCreationTeam,
     Team,
 )
-from ..tools._brief_creation_team_tools import _change_the_team_and_start_new_chat
+from ..tools._brief_creation_team_tools import (
+    _change_the_team_and_start_new_chat,
+)
 from .brief_creation_team import _client_system_messages, _get_task
 from .campaign_creation_team import (
     _patch_campaign_creation_team_vars,
@@ -48,10 +50,8 @@ def _patch_brief_creation_team_vars(
 
 def benchmark_end2end(
     url: str,
-    llm: str = Models.gpt4,
+    llm: str = Models.gpt4o,
 ) -> Tuple[str, int]:
-    # Remove the following line after integrating gpt4-o for brief creation team
-    llm = Models.gpt4
     config_list = get_config_list(llm)
 
     user_id = 123

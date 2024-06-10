@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, Type
+from typing import Callable, Dict, Type
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -38,7 +38,9 @@ You must fill in all the fields. NEVER write [Insert client's business]!! You ar
     ]
 
 
-_get_info_from_the_web_page_original = get_get_info_from_the_web_page()
+class WebPageInfo:
+    def get_info_from_the_web_page_f(self) -> Callable[[str], str]:
+        return get_get_info_from_the_web_page()
 
 
 DELEGATE_TASK_ERROR_MESSAGE = "An error occurred while trying to delegate the task to the selected team. Please try again."
@@ -90,6 +92,8 @@ def create_brief_creation_team_toolbox(
         initial_brief=initial_brief,
     )
     toolbox.set_context(context)
+    web_page_info = WebPageInfo()
+    web_page_info_f = web_page_info.get_info_from_the_web_page_f()
 
     @toolbox.add_function(
         "Get the TEMPLATE for the customer brief you will need to create"
@@ -164,7 +168,7 @@ And the task is following:
         url: Annotated[str, "The url of the web page which needs to be summarized"],
         context: Context,
     ) -> str:
-        result = _get_info_from_the_web_page_original(url)
+        result = web_page_info_f(url)
 
         if LAST_MESSAGE_BEGINNING in result:
             context.get_info_from_web_page_result += result + "\n\n"

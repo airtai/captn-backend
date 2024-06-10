@@ -43,7 +43,7 @@ class TestTools:
 
     def test_llm_config(self) -> None:
         agent = AssistantAgent(name="agent", llm_config=self.llm_config)
-        user_proxy = UserProxyAgent(name="user_proxy")
+        user_proxy = UserProxyAgent(name="user_proxy", code_execution_config=False)
 
         self.toolbox.add_to_agent(agent, user_proxy)
 
