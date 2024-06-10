@@ -41,7 +41,7 @@ def create_weekly_analysis_team_toolbox(
     )
     toolbox.add_function(execute_query_description)(execute_query)
     toolbox.add_function(get_info_from_the_web_page_description)(
-        get_get_info_from_the_web_page(min_relevant_pages=1)
+        get_get_info_from_the_web_page()
     )
     toolbox.add_function(send_email_description)(send_email)
 

@@ -647,6 +647,7 @@ We are interested ONLY in the products/services which the page is offering.
 - NEVER include in the summary links which return 40x error!
 - Do NOT repeat completed parts of the plan you have created. Each message should contain only the next steps!
 - When clicking on a link, add a comment "Click no. X -> 'Page you want to click' (I can click MAX {max_links_to_click} links, but I will click only the most relevant ones, once I am done, I need to generate JSON-encoded string)" to the message.
+- Each time some page is visited, increase the click number by 1, otherwise you will be penalized!
 
 OFTEN MISTAKES:
 - Do NOT create more than 15 headlines and 4 descriptions for each link!
@@ -709,10 +710,13 @@ def get_webpage_status_code(url: str) -> Optional[int]:
 
 def _get_task_message(max_links_to_click: int) -> str:
     _task = f"""We are tasked with creating a new Google Ads campaign for the website.
+The focus is on the provided url and its subpages ,we do NOT care about the rest of the website i.e. parent pages.
+e.g. If the url is 'https://www.example.com/products/air-conditioners', we are interested ONLY in the 'air-conditioners' and its subpages.
+
 In order to create the campaign, we need to understand the website and its products/services.
 Our task is to provide a summary of the website, including the products/services offered and any unique selling points.
 This is the first step in creating the Google Ads campaign so please gather as much information as possible.
-Visit the most likely pages to be advertised, such as the homepage, product pages, and any other relevant pages.
+Visit the most likely pages to be advertised, such as product pages, and any other relevant pages.
 Please provide a detailed summary of the website as JSON-encoded string as instructed in the guidelines.
 
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
@@ -744,6 +748,10 @@ MAX_LINKS_TO_CLICK_DESCRIPTION = """The maximum number of links to click on the 
 When you want to do the initial research about the client's business, set max_links_to_click=10
 If you have already have insight in the clients business, and you need only the info for perticualr subpage, set max_links_to_click=4"""
 
+MIN_RELEVANT_PAGES_DESCRIPTION = """The minimum number of relevant pages which the summary must include.
+When you want to do the initial research about the client's business, set min_relevant_pages=3
+If you have already have insight in the clients business, and you need only the info for perticualr subpage, set min_relevant_pages=1"""
+
 
 def get_get_info_from_the_web_page(
     outer_retries: int = 3,
@@ -752,15 +760,9 @@ def get_get_info_from_the_web_page(
     websurfer_llm_config: Optional[Dict[str, Any]] = None,
     websurfer_navigator_llm_config: Optional[Dict[str, Any]] = None,
     timestamp: Optional[str] = None,
-    min_relevant_pages: int = 3,
     max_retires_before_give_up_message: int = 7,
-) -> Callable[[str, int], str]:
+) -> Callable[[str, int, int], str]:
     fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
-
-    give_up_message = f"""ONLY if you are 100% sure that you can NOT retrieve any information for at least {min_relevant_pages} relevant pages,
-write 'I GIVE UP' and the reason why you gave up.
-
-But before giving up, please try to navigate to another page and continue with the task. Give up ONLY if you are sure that you can NOT retrieve any information!"""
 
     @lru_cache(maxsize=20)
     def get_info_from_the_web_page(
@@ -769,7 +771,12 @@ But before giving up, please try to navigate to another page and continue with t
             int,
             MAX_LINKS_TO_CLICK_DESCRIPTION,
         ] = 10,
+        min_relevant_pages: Annotated[int, MIN_RELEVANT_PAGES_DESCRIPTION] = 3,
     ) -> str:
+        give_up_message = f"""ONLY if you are 100% sure that you can NOT retrieve any information for at least {min_relevant_pages} relevant pages,
+write 'I GIVE UP' and the reason why you gave up.
+
+But before giving up, please try to navigate to another page and continue with the task. Give up ONLY if you are sure that you can NOT retrieve any information!"""
         summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config = fx
 
         if summarizer_llm_config is None:
