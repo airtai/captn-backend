@@ -13,6 +13,7 @@ import captn.captn_agents.backend.benchmarking.brief_creation_team
 import captn.captn_agents.backend.benchmarking.campaign_creation_team
 import captn.captn_agents.backend.benchmarking.end2end
 import captn.captn_agents.backend.benchmarking.websurfer
+import captn.captn_agents.backend.benchmarking.weekly_analysis_team
 from captn.captn_agents.backend.benchmarking.base import (
     app,
 )
@@ -282,4 +283,37 @@ class TestCampaignCreation:
             success=success,
             no_rows=50,
             additional_generate_task_table_parameters=[end2end_param],
+        )
+
+
+class TestWeeklyAnalysis:
+    command = "generate-task-table-for-weekly-analysis"
+    file_name = "weekly-analysis-benchmark-tasks.csv"
+    aggregated_csv_name = "weekly-analysis-benchmark-tasks-aggregated.csv"
+
+    def test_generate_task_table_for_weekly_analysis_success(self):
+        with TemporaryDirectory() as tmp_dir:
+            TestBase.generate_task_table(
+                command=self.command,
+                file_name=self.file_name,
+                tmp_dir=tmp_dir,
+                no_rows=10,
+            )
+
+    @pytest.mark.parametrize("success", [True, False])
+    def test_run_tests_for_weekly_analysis_success(
+        self, success: bool, monkeypatch: MonkeyPatch
+    ):
+        monkeypatch.setattr(
+            captn.captn_agents.backend.benchmarking.weekly_analysis_team,
+            "benchmark_weekly_analysis",
+            functools.partial(TestBase.benchmark_success, success),
+        )
+
+        TestBase.run_tests_for_team_success(
+            command=self.command,
+            file_name=self.file_name,
+            aggregated_csv_name=self.aggregated_csv_name,
+            success=success,
+            no_rows=10,
         )
