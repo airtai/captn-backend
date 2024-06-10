@@ -316,6 +316,7 @@ def _ask_client_for_permission_mock(
     )
 
     client_system_message = """We are creating a new Google Ads campaign (ad groups, ads etc).
+We currently do NOT care about geo and audience targeting, we are focusing on the structure of the campaign.
 We are in the middle of the process and we need your permission.
 
 If the proposed changes make sense, Please answer 'Yes' and nothing else.
@@ -722,6 +723,7 @@ Please provide a detailed summary of the website as JSON-encoded string as instr
 AFTER visiting the home page, create a step-by-step plan BEFORE visiting the other pages.
 You can click on MAXIMUM {max_links_to_click} links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX {max_links_to_click})!
 Make sure you use keyword insertion in the headlines and provide unique headlines and descriptions for each link.
+Do NOT visit the same page multiple times, but only once!
 """
     return _task
 
