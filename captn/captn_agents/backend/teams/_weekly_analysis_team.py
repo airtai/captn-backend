@@ -698,7 +698,7 @@ sure it is understandable by non-experts.
 
         if config_list is None:
             config = Config()
-            config_list = config.config_list_gpt_4
+            config_list = config.config_list_gpt_4o
 
         self.llm_config = WeeklyAnalysisTeam._get_llm_config(
             seed=seed, temperature=temperature, config_list=config_list

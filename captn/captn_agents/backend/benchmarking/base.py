@@ -216,7 +216,7 @@ def generate_task_table_for_campaign_creation(
 @app.command()
 def generate_task_table_for_weekly_analysis(
     llm: Models = typer.Option(  # noqa: B008
-        Models.gpt4,
+        Models.gpt4o,
         help="Model which will be used by all agents",
     ),
     file_name: str = typer.Option(

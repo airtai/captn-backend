@@ -131,7 +131,7 @@ weekly_report = {
 
 def benchmark_weekly_analysis(
     url: str = "currently_not_used",
-    llm: str = Models.gpt4,
+    llm: str = Models.gpt4o,
 ) -> Tuple[str, int]:
     date = "2024-04-14"
     (
