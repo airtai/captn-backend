@@ -765,6 +765,8 @@ These suggestions should be specific and actionable.
 "Remove 'Free' keyword because it is not performing well" is specific enough.
 "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'" is specific enough.
 
+Messages within the 'proposed_user_actions' are the ONLY messages the client will see. So make sure to include all the necessary information in them.
+e.g. Do NOT suggest 'Update the ad copy with the suggested headlines and descriptions for better engagement.' because the client will not know which ad copy you are talking about and what changes you want to make.
 
 12. There is a list of commands which you are able to execute in the 'Commands' section.
 You can NOT execute anything else, so do not suggest changes which you can NOT perform.
