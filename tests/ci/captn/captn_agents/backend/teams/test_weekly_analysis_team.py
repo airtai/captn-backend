@@ -28,6 +28,7 @@ from captn.captn_agents.backend.teams._weekly_analysis_team import (
     _add_metrics_message,
     _check_if_any_campaign_exists,
     _create_date_query,
+    _get_day_of_week,
     _update_chat_message_and_send_email,
     _update_message_and_campaigns_template,
     calculate_metrics_change,
@@ -1341,6 +1342,16 @@ def test_get_weekly_report_when_there_are_no_campaigns() -> None:
             )
             is None
         )
+
+
+def test_get_day_of_week() -> None:
+    assert _get_day_of_week("2024-06-09") == "Sunday"
+    assert _get_day_of_week("2024-06-10") == "Monday"
+    assert _get_day_of_week("2024-06-11") == "Tuesday"
+    assert _get_day_of_week("2024-06-12") == "Wednesday"
+    assert _get_day_of_week("2024-06-13") == "Thursday"
+    assert _get_day_of_week("2024-06-14") == "Friday"
+    assert _get_day_of_week("2024-06-15") == "Saturday"
 
 
 class TestWeeklyAnalysisTeam:

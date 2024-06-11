@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:  # type: ignore
         "cron",
         hour="4",
         minute="15",
-        day_of_week="wed",
+        # day_of_week="wed",
     )
     scheduler.start()
 

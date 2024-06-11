@@ -44,10 +44,15 @@ oauth2_settings = {
 }
 
 
-async def get_users() -> Any:
+async def get_users(day_of_week_created: Optional[str] = None) -> Any:
     wasp_db_url = await get_wasp_db_url()
+    if day_of_week_created:
+        query = f"""SELECT * FROM "User"
+WHERE TO_CHAR("createdAt", 'Day') = '{day_of_week_created}'"""  # nosec: [B608]
+    else:
+        query = 'SELECT * from "User"'
     async with get_db_connection(db_url=wasp_db_url) as db:
-        users = await db.query_raw('SELECT * from "User"')
+        users = await db.query_raw(query)
 
     return users
 
@@ -337,8 +342,8 @@ async def search(
 
 # Route 5: Fetch user's emails
 @router.get("/get-user-ids-and-emails")
-async def get_user_ids_and_emails() -> str:
-    users = await get_users()
+async def get_user_ids_and_emails(day_of_week_created: Optional[str] = None) -> str:
+    users = await get_users(day_of_week_created=day_of_week_created)
     id_email_dict = {user["id"]: user["email"] for user in users}
     return json.dumps(id_email_dict)
 

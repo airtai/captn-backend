@@ -1029,6 +1029,28 @@ SKIPPED_USERS_TOTAL = Counter(
 )
 
 
+def _get_day_of_week(date_str: str) -> str:
+    # Parse the date string into a datetime object
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+
+    # Get the day of the week as an integer (0=Monday, 6=Sunday)
+    day_of_week_num = date_obj.weekday()
+
+    # Map the integer to the day name
+    days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
+    day_of_week_name = days[day_of_week_num]
+
+    return day_of_week_name
+
+
 def execute_weekly_analysis(
     send_only_to_emails: Optional[List[str]] = None,
     date: Optional[str] = None,
@@ -1038,7 +1060,12 @@ def execute_weekly_analysis(
         if date is None:
             date = (datetime.today().date() - timedelta(1)).isoformat()
         print("Starting weekly analysis.")
-        id_email_dict = json.loads(get_user_ids_and_emails())
+        if send_only_to_emails is not None:
+            day_of_week = None
+        else:
+            day_of_week = _get_day_of_week(date)
+        day_of_week = "Wednesday"
+        id_email_dict = json.loads(get_user_ids_and_emails(day_of_week=day_of_week))
 
         # if send_only_to_emails is None:
         #     send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
