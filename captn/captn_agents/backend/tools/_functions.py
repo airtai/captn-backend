@@ -724,6 +724,8 @@ AFTER visiting the home page, create a step-by-step plan BEFORE visiting the oth
 You can click on MAXIMUM {max_links_to_click} links. Do NOT try to click all the links on the page, but only the ones which are most relevant for the task (MAX {max_links_to_click})!
 Make sure you use keyword insertion in the headlines and provide unique headlines and descriptions for each link.
 Do NOT visit the same page multiple times, but only once!
+If your co-speaker repeats the same message, inform him that you have already answered to that message and ask him to proceed with the task.
+e.g. "I have already answered to that message, please proceed with the task or you will be penalized!"
 """
     return _task
 
