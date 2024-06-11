@@ -765,6 +765,8 @@ These suggestions should be specific and actionable.
 "Remove 'Free' keyword because it is not performing well" is specific enough.
 "Remove the headline 'New product' and replace it with 'Very New product' in the 'Adgroup 1'" is specific enough.
 
+Messages within the 'proposed_user_actions' are the ONLY messages the client will see. So make sure to include all the necessary information in them.
+e.g. Do NOT suggest 'Update the ad copy with the suggested headlines and descriptions for better engagement.' because the client will not know which ad copy you are talking about and what changes you want to make.
 
 12. There is a list of commands which you are able to execute in the 'Commands' section.
 You can NOT execute anything else, so do not suggest changes which you can NOT perform.
@@ -1029,6 +1031,28 @@ SKIPPED_USERS_TOTAL = Counter(
 )
 
 
+def _get_day_of_week(date_str: str) -> str:
+    # Parse the date string into a datetime object
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+
+    # Get the day of the week as an integer (0=Monday, 6=Sunday)
+    day_of_week_num = date_obj.weekday()
+
+    # Map the integer to the day name
+    days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
+    day_of_week_name = days[day_of_week_num]
+
+    return day_of_week_name
+
+
 def execute_weekly_analysis(
     send_only_to_emails: Optional[List[str]] = None,
     date: Optional[str] = None,
@@ -1038,7 +1062,12 @@ def execute_weekly_analysis(
         if date is None:
             date = (datetime.today().date() - timedelta(1)).isoformat()
         print("Starting weekly analysis.")
-        id_email_dict = json.loads(get_user_ids_and_emails())
+        if send_only_to_emails is not None:
+            day_of_week = None
+        else:
+            day_of_week = _get_day_of_week(date)
+        day_of_week = "Wednesday"
+        id_email_dict = json.loads(get_user_ids_and_emails(day_of_week=day_of_week))
 
         # if send_only_to_emails is None:
         #     send_only_to_emails = ["robert@airt.ai", "harish@airt.ai"]
