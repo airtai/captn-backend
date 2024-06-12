@@ -686,10 +686,14 @@ Relevant Pages:
 
 
 def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
+    print("Inside is_termination_msg")
     content = x.get("content")
+    print(f"Content of the message: {content}")
     if content is None or not isinstance(content, str):
+        print("Content is None or not a string")
         return False
-    return (
+
+    result = (
         content.startswith('{"type":"SUMMARY"')
         or content.startswith('{"type": "SUMMARY"')
         or "TERMINATE" in content
@@ -697,6 +701,8 @@ def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         or "I GIVE UP" in content
         or content.strip() == ""
     )
+    print(f"Is termination message: {result}")
+    return result
 
 
 def get_webpage_status_code(url: str) -> Optional[int]:
@@ -765,6 +771,7 @@ def get_get_info_from_the_web_page(
     websurfer_navigator_llm_config: Optional[Dict[str, Any]] = None,
     timestamp: Optional[str] = None,
     max_retires_before_give_up_message: int = 7,
+    max_round: int = 50,
 ) -> Callable[[str, int, int], str]:
     fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
 
@@ -833,6 +840,16 @@ But before giving up, please try to navigate to another page and continue with t
                     # is_termination_msg=_is_termination_msg,
                 )
 
+                groupchat = autogen.GroupChat(
+                    agents=[web_surfer, web_surfer_navigator],
+                    messages=[],
+                    max_round=max_round,
+                    speaker_selection_method="round_robin",
+                )
+                manager = autogen.GroupChatManager(
+                    groupchat=groupchat,
+                )
+
                 initial_message = (
                     f"Time now is {timestamp_copy}." if timestamp_copy else ""
                 )
@@ -844,9 +861,7 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
 """
 
                 try:
-                    web_surfer_navigator.initiate_chat(
-                        web_surfer, message=initial_message
-                    )
+                    manager.initiate_chat(recipient=web_surfer, message=initial_message)
                 except Exception as e:
                     print(f"Exception '{type(e)}' in initiating chat: {e}")
 
@@ -868,8 +883,8 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                                 current_retries=i,
                                 max_retires_before_give_up_message=max_retires_before_give_up_message,
                             )
-                            web_surfer.send(
-                                retry_message,
+                            manager.send(
+                                message=retry_message,
                                 recipient=web_surfer_navigator,
                             )
                             continue
@@ -879,8 +894,8 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
 Message to web_surfer: Please click on the link which you think is the most relevant for the task.
 After that, I will guide you through the next steps."""
                             # In this case, web_surfer_navigator is sending the message to web_surfer
-                            web_surfer_navigator.send(
-                                retry_message,
+                            manager.send(
+                                message=retry_message,
                                 recipient=web_surfer,
                             )
                             continue
@@ -899,8 +914,8 @@ After that, I will guide you through the next steps."""
                                 current_retries=i,
                                 max_retires_before_give_up_message=max_retires_before_give_up_message,
                             )
-                            web_surfer.send(
-                                retry_message,
+                            manager.send(
+                                message=retry_message,
                                 recipient=web_surfer_navigator,
                             )
                             continue
@@ -923,8 +938,8 @@ Example of correctly formatted JSON (unrelated to the task):
                             current_retries=i,
                             max_retires_before_give_up_message=max_retires_before_give_up_message,
                         )
-                        web_surfer.send(
-                            retry_message,
+                        manager.send(
+                            message=retry_message,
                             recipient=web_surfer_navigator,
                         )
 
@@ -935,7 +950,9 @@ Example of correctly formatted JSON (unrelated to the task):
                             current_retries=i,
                             max_retires_before_give_up_message=max_retires_before_give_up_message,
                         )
-                        web_surfer.send(retry_message, recipient=web_surfer_navigator)
+                        manager.send(
+                            message=retry_message, recipient=web_surfer_navigator
+                        )
             except Exception as e:
                 # todo: log the exception
                 failure_message = str(e)
