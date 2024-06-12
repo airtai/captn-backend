@@ -686,14 +686,12 @@ Relevant Pages:
 
 
 def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
-    print("Inside is_termination_msg")
     content = x.get("content")
-    print(f"Content of the message: {content}")
     if content is None or not isinstance(content, str):
         print("Content is None or not a string")
         return False
 
-    result = (
+    return (
         content.startswith('{"type":"SUMMARY"')
         or content.startswith('{"type": "SUMMARY"')
         or "TERMINATE" in content
@@ -701,8 +699,6 @@ def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
         or "I GIVE UP" in content
         or content.strip() == ""
     )
-    print(f"Is termination message: {result}")
-    return result
 
 
 def get_webpage_status_code(url: str) -> Optional[int]:
@@ -840,35 +836,11 @@ But before giving up, please try to navigate to another page and continue with t
                     # is_termination_msg=_is_termination_msg,
                 )
 
-                def get_state_transition(
-                    web_surfer: WebSurferAgent, web_surfer_navigator: AssistantAgent
-                ) -> Callable[[AssistantAgent, autogen.GroupChat], AssistantAgent]:
-                    def state_transition(
-                        last_speaker: AssistantAgent, groupchat: autogen.GroupChat
-                    ) -> AssistantAgent:
-                        print("I am choosing the next speaker")
-                        print(f"Last speaker: {last_speaker.name}")
-                        messages = groupchat.messages  # nosec: [B023]
-
-                        if _is_termination_msg(messages[-1]):
-                            print("Last message is termination message")
-
-                        if last_speaker is web_surfer:
-                            return web_surfer_navigator
-
-                        if _is_termination_msg(messages[-1]):
-                            return web_surfer_navigator
-                        return web_surfer
-
-                    return state_transition
-
                 groupchat = autogen.GroupChat(
                     agents=[web_surfer, web_surfer_navigator],
                     messages=[],
                     max_round=max_round,
-                    speaker_selection_method=get_state_transition(
-                        web_surfer, web_surfer_navigator
-                    ),
+                    speaker_selection_method="round_robin",
                 )
                 manager = autogen.GroupChatManager(
                     groupchat=groupchat,
@@ -885,13 +857,13 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
 """
 
                 try:
-                    manager.initiate_chat(recipient=web_surfer, message=initial_message)
+                    manager.initiate_chat(recipient=manager, message=initial_message)
                 except Exception as e:
                     print(f"Exception '{type(e)}' in initiating chat: {e}")
 
                 for i in range(inner_retries):
                     print(f"Inner retry {i + 1}/{inner_retries}")
-                    last_message = str(web_surfer_navigator.last_message()["content"])
+                    last_message = str(groupchat.messages[-1]["content"])
 
                     try:
                         if "I GIVE UP" in last_message:
@@ -909,7 +881,7 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                             )
                             manager.send(
                                 message=retry_message,
-                                recipient=web_surfer_navigator,
+                                recipient=manager,
                             )
                             continue
                         if last_message.strip() == "":
@@ -917,10 +889,9 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
 
 Message to web_surfer: Please click on the link which you think is the most relevant for the task.
 After that, I will guide you through the next steps."""
-                            # In this case, web_surfer_navigator is sending the message to web_surfer
                             manager.send(
                                 message=retry_message,
-                                recipient=web_surfer,
+                                recipient=manager,
                             )
                             continue
 
@@ -940,7 +911,7 @@ After that, I will guide you through the next steps."""
                             )
                             manager.send(
                                 message=retry_message,
-                                recipient=web_surfer_navigator,
+                                recipient=manager,
                             )
                             continue
                         last_message = _format_last_message(url=url, summary=summary)
@@ -964,7 +935,7 @@ Example of correctly formatted JSON (unrelated to the task):
                         )
                         manager.send(
                             message=retry_message,
-                            recipient=web_surfer_navigator,
+                            recipient=manager,
                         )
 
                     except Exception as e:
@@ -974,9 +945,7 @@ Example of correctly formatted JSON (unrelated to the task):
                             current_retries=i,
                             max_retires_before_give_up_message=max_retires_before_give_up_message,
                         )
-                        manager.send(
-                            message=retry_message, recipient=web_surfer_navigator
-                        )
+                        manager.send(message=retry_message, recipient=manager)
             except Exception as e:
                 # todo: log the exception
                 failure_message = str(e)
