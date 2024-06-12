@@ -688,9 +688,7 @@ Relevant Pages:
 def _is_termination_msg(x: Dict[str, Optional[str]]) -> bool:
     content = x.get("content")
     if content is None or not isinstance(content, str):
-        print("Content is None or not a string")
         return False
-
     return (
         content.startswith('{"type":"SUMMARY"')
         or content.startswith('{"type": "SUMMARY"')
