@@ -9,6 +9,8 @@ from ..teams._team import Team
 from ..toolboxes import Toolbox
 from ._functions import (
     LAST_MESSAGE_BEGINNING,
+    MAX_LINKS_TO_CLICK_DESCRIPTION,
+    MIN_RELEVANT_PAGES_DESCRIPTION,
     BaseContext,
     get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
@@ -39,7 +41,7 @@ You must fill in all the fields. NEVER write [Insert client's business]!! You ar
 
 
 class WebPageInfo:
-    def get_info_from_the_web_page_f(self) -> Callable[[str], str]:
+    def get_info_from_the_web_page_f(self) -> Callable[[str, int, int], str]:
         return get_get_info_from_the_web_page()
 
 
@@ -166,17 +168,31 @@ And the task is following:
     @toolbox.add_function(get_info_from_the_web_page_description)
     def get_info_from_the_web_page(
         url: Annotated[str, "The url of the web page which needs to be summarized"],
+        max_links_to_click: Annotated[
+            int,
+            MAX_LINKS_TO_CLICK_DESCRIPTION,
+        ],
+        min_relevant_pages: Annotated[int, MIN_RELEVANT_PAGES_DESCRIPTION],
         context: Context,
     ) -> str:
-        result = web_page_info_f(url)
+        result = web_page_info_f(  # type: ignore[call-arg]
+            url=url,
+            max_links_to_click=max_links_to_click,
+            min_relevant_pages=min_relevant_pages,
+        )
 
         if LAST_MESSAGE_BEGINNING in result:
-            context.get_info_from_web_page_result += result + "\n\n"
+            context.get_info_from_web_page_result += (
+                result.replace(LAST_MESSAGE_BEGINNING, "") + "\n\n"
+            )
 
         result += """\n\nPlease use the rely_to_client to present what you have found on the web page to the client.
 
 Use smart suggestions with type 'manyOf' to ask the client in which pages they are interested in.
 Each relevant page should be one smart suggestion.
+Additionally, add to smart suggestions 'Proceed with the task without further web page scraping' to allow the client to proceed without further web page scraping.
+If the client chooses this option do NOT use the 'get_info_from_the_web_page' command again.
+If the client does not choose this option, you can use the 'get_info_from_the_web_page' if you think you need more information for the selected pages.
 """
         return result
 

@@ -133,8 +133,13 @@ If the account has been active for a while, please check the account status in t
     return str(response_json)
 
 
-def get_user_ids_and_emails() -> str:
-    response = requests_get(f"{BASE_URL}/get-user-ids-and-emails", timeout=60)
+def get_user_ids_and_emails(day_of_week: Optional[str] = None) -> str:
+    params = {
+        "day_of_week_created": day_of_week,
+    }
+    response = requests_get(
+        f"{BASE_URL}/get-user-ids-and-emails", params=params, timeout=60
+    )
     if not response.ok:
         raise ValueError(response.content)
     return response.json()  # type: ignore[no-any-return]

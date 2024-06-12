@@ -213,6 +213,41 @@ def generate_task_table_for_campaign_creation(
     _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
 
 
+@app.command()
+def generate_task_table_for_weekly_analysis(
+    llm: Models = typer.Option(  # noqa: B008
+        Models.gpt4o,
+        help="Model which will be used by all agents",
+    ),
+    file_name: str = typer.Option(
+        "weekly-analysis-benchmark-tasks.csv",
+        help="File name of the task list",
+    ),
+    repeat: int = typer.Option(
+        10,
+        help="Number of times to repeat each url",
+    ),
+    output_dir: str = typer.Option(  # noqa: B008
+        "./",
+        help="Output directory for the reports",
+    ),
+) -> None:
+    URLS = ["faststream-web-search"] * repeat
+    params_list = [
+        ["weekly_analysis"],
+        URLS,
+        [llm],
+    ]
+    params_names = [
+        "task",
+        "url",
+        "llm",
+    ]
+
+    df = _create_task_df(params_list=params_list, params_names=params_names)
+    _add_common_columns_and_save(df, output_dir=output_dir, file_name=file_name)
+
+
 def run_test(
     benchmark: Callable[..., Any],
     **kwargs: Any,
@@ -298,6 +333,7 @@ GROUP_BY_DICT = {
     "brief_creation": ["url", "team_name"],
     "campaign_creation": ["url"],
     "end2end": ["url"],
+    "weekly_analysis": ["url"],
 }
 
 
@@ -317,12 +353,14 @@ def run_tests(
     from .campaign_creation_team import benchmark_campaign_creation
     from .end2end import benchmark_end2end
     from .websurfer import benchmark_websurfer
+    from .weekly_analysis_team import benchmark_weekly_analysis
 
     benchmarks = {
         "websurfer": benchmark_websurfer,
         "brief_creation": benchmark_brief_creation,
         "campaign_creation": benchmark_campaign_creation,
         "end2end": benchmark_end2end,
+        "weekly_analysis": benchmark_weekly_analysis,
     }
 
     _file_path: Path = Path(file_path)

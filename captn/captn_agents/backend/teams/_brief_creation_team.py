@@ -153,19 +153,20 @@ It is MANADATORY to use this command to gather information if the client has pro
 If the client has provided a link to the web page and you do not try to gather information from the web page, you will be penalized!
 If you are unable to retrieve ANY information, use the 'reply_to_client' command to ask the client for the information which you need.
 Otherwise, focus on creating the brief based on the information which you were able to gather from the web page (ignore the links which you were unable to retrieve information from and don't mention them in the brief!).
-Do NOT use the 'get_info_from_the_web_page' for retrieving the information of the subpages which you have found in the provided link.
-Your job is to create a brief based on the information which you have gathered from URL which the client has provided.
-If you try to gather information from the subpages, a lot of time will be wasted and you will be penalized!
-i.e. use the 'get_info_from_the_web_page' command ONLY once for the URL which the client has provided!
 
-6. When you have gathered all the information, create a detailed brief.
+6. Initially, use the 'get_info_from_the_web_page' command with the 'max_links_to_click' parameter set to 10.
+This will allow you to gather the most information about the clients business.
+Once you have gathered the information, if the client wants to focus on a specific subpage(s), use the 'get_info_from_the_web_page' command again with the 'max_links_to_click' parameter set to 4.
+This will allow you to gather deeper information about the specific subpage(s) which the client is interested in - this step is VERY important!
+
+7. When you have gathered all the information, create a detailed brief.
 Do NOT repeat the content which you have received from the 'get_info_from_the_web_page' command (the content will be injected automatically later on)!
 i.e. do NOT mention keywords, headlines and descriptions in the brief which you are constructing!
 Do NOT mention to the client that you are creating a brief. This is your internal task and the client does not need to know that.
 Do NOT ask the client which information he wants to include in the brief.
 i.e. word 'brief' should NOT be mentioned to the client at all!
 
-7. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
+8. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan
