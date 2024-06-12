@@ -840,11 +840,27 @@ But before giving up, please try to navigate to another page and continue with t
                     # is_termination_msg=_is_termination_msg,
                 )
 
+                def get_state_transition(
+                    web_surfer: WebSurferAgent, web_surfer_navigator: AssistantAgent
+                ) -> Callable[[AssistantAgent, autogen.GroupChat], AssistantAgent]:
+                    def state_transition(
+                        last_speaker: AssistantAgent, groupchat: autogen.GroupChat
+                    ) -> AssistantAgent:
+                        # messages = groupchat.messages
+
+                        if last_speaker is web_surfer:
+                            return web_surfer_navigator
+                        return web_surfer
+
+                    return state_transition
+
                 groupchat = autogen.GroupChat(
                     agents=[web_surfer, web_surfer_navigator],
                     messages=[],
                     max_round=max_round,
-                    speaker_selection_method="round_robin",
+                    speaker_selection_method=get_state_transition(
+                        web_surfer, web_surfer_navigator
+                    ),
                 )
                 manager = autogen.GroupChatManager(
                     groupchat=groupchat,
@@ -885,7 +901,7 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                             )
                             manager.send(
                                 message=retry_message,
-                                recipient=web_surfer_navigator,
+                                recipient=web_surfer,
                             )
                             continue
                         if last_message.strip() == "":
@@ -916,7 +932,7 @@ After that, I will guide you through the next steps."""
                             )
                             manager.send(
                                 message=retry_message,
-                                recipient=web_surfer_navigator,
+                                recipient=web_surfer,
                             )
                             continue
                         last_message = _format_last_message(url=url, summary=summary)
@@ -940,7 +956,7 @@ Example of correctly formatted JSON (unrelated to the task):
                         )
                         manager.send(
                             message=retry_message,
-                            recipient=web_surfer_navigator,
+                            recipient=web_surfer,
                         )
 
                     except Exception as e:
@@ -950,9 +966,7 @@ Example of correctly formatted JSON (unrelated to the task):
                             current_retries=i,
                             max_retires_before_give_up_message=max_retires_before_give_up_message,
                         )
-                        manager.send(
-                            message=retry_message, recipient=web_surfer_navigator
-                        )
+                        manager.send(message=retry_message, recipient=web_surfer)
             except Exception as e:
                 # todo: log the exception
                 failure_message = str(e)
