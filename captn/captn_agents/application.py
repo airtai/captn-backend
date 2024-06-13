@@ -174,7 +174,11 @@ def weekly_analysis(request: WeeklyAnalysisRequest) -> str:
     return "Weekly analysis has been sent to the specified emails"
 
 
-AVALIABLE_CONTENT_TYPES = ["text/csv"]
+AVALIABLE_FILE_CONTENT_TYPES = [
+    "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]
 MANDATORY_COLUMNS = {"from_destination", "to_destination"}
 
 UPLOADED_FILES_DIR = Path(__file__).resolve().parent.parent.parent / "uploaded_files"
@@ -186,8 +190,11 @@ async def create_upload_file(
     user_id: Annotated[int, Form()],
     conv_id: Annotated[int, Form()],
 ) -> Dict[str, Union[str, None]]:
-    if file.content_type not in AVALIABLE_CONTENT_TYPES:
-        raise HTTPException(status_code=400, detail="Invalid file content type")
+    if file.content_type not in AVALIABLE_FILE_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file content type: {file.content_type}. Only {', '.join(AVALIABLE_FILE_CONTENT_TYPES)} are allowed.",
+        )
     if file.filename is None:
         raise HTTPException(status_code=400, detail="Invalid file name")
 
@@ -199,7 +206,10 @@ async def create_upload_file(
         f.write(file.file.read())
 
     # Check if the file has mandatory columns
-    df = pd.read_csv(file_path, nrows=0)
+    if file.content_type == "text/csv":
+        df = pd.read_csv(file_path, nrows=0)
+    else:
+        df = pd.read_excel(file_path, nrows=0)
     if not MANDATORY_COLUMNS.issubset(df.columns):
         # Remove the file
         file_path.unlink()
