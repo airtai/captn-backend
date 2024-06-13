@@ -5,6 +5,7 @@ from typing import Annotated, Dict, List, Literal, Optional, TypeVar, Union
 
 import httpx
 import openai
+import pandas as pd
 from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from prometheus_client import Counter
@@ -174,6 +175,7 @@ def weekly_analysis(request: WeeklyAnalysisRequest) -> str:
 
 
 AVALIABLE_CONTENT_TYPES = ["text/csv"]
+MANDATORY_COLUMNS = {"from_destination", "to_destination"}
 
 UPLOADED_FILES_DIR = Path(__file__).resolve().parent.parent.parent / "uploaded_files"
 
@@ -188,14 +190,23 @@ async def create_upload_file(
         raise HTTPException(status_code=400, detail="Invalid file content type")
     if file.filename is None:
         raise HTTPException(status_code=400, detail="Invalid file name")
-    print(
-        f"Received file: {file.filename} with user_id: {user_id} and conv_id: {conv_id}"
-    )
+
     # Create a directory if not exists
     users_conv_dir = UPLOADED_FILES_DIR / str(user_id) / str(conv_id)
     users_conv_dir.mkdir(parents=True, exist_ok=True)
-    with open(users_conv_dir / file.filename, "wb") as f:
+    file_path = users_conv_dir / file.filename
+    with open(file_path, "wb") as f:
         f.write(file.file.read())
-    print(f"File saved to {users_conv_dir}")
+
+    # Check if the file has mandatory columns
+    df = pd.read_csv(file_path, nrows=0)
+    if not MANDATORY_COLUMNS.issubset(df.columns):
+        # Remove the file
+        file_path.unlink()
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing mandatory columns: {', '.join(MANDATORY_COLUMNS - set(df.columns))}",
+        )
 
     return {"filename": file.filename}

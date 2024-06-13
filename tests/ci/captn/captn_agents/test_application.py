@@ -424,9 +424,19 @@ class TestUploadFile:
         assert exc_info.value.status_code == 400
         assert exc_info.value.detail == "Invalid file content type"
 
-    def test_upload_csv_file(self):
+    @pytest.mark.parametrize(
+        "file_content, success",
+        [
+            (
+                b"from_destination,to_destination,additional_column\nvalue1,value2,value3",
+                True,
+            ),
+            (b"from_destination,additional_column\nvalue1,value3", False),
+        ],
+    )
+    def test_upload_csv_file(self, file_content: bytes, success: bool):
         # Create a dummy CSV file
-        file_content = b"column1,column2\nvalue1,value2"
+        file_content = file_content
         file_name = "test.csv"
         files = {"file": (file_name, file_content, "text/csv")}
 
@@ -435,19 +445,28 @@ class TestUploadFile:
                 "captn.captn_agents.application.UPLOADED_FILES_DIR",
                 Path(tmp_dir),
             ) as mock_uploaded_files_dir:
-                # Send a POST request to the upload endpoint
-                response = self.client.post("/uploadfile/", files=files, data=self.data)
-
-                assert response.status_code == 200
-                assert response.json() == {"filename": file_name}
-
-                # Check if the file was saved
                 file_path = (
                     mock_uploaded_files_dir
                     / str(self.data["user_id"])
                     / str(self.data["conv_id"])
                     / file_name
                 )
-                assert file_path.exists()
-                with open(file_path, "rb") as f:
-                    assert f.read() == file_content
+
+                if success:
+                    response = self.client.post(
+                        "/uploadfile/", files=files, data=self.data
+                    )
+                    assert response.status_code == 200
+                    assert response.json() == {"filename": file_name}
+                    # Check if the file was saved
+                    assert file_path.exists()
+                    with open(file_path, "rb") as f:
+                        assert f.read() == file_content
+                else:
+                    with pytest.raises(HTTPException) as exc_info:
+                        self.client.post("/uploadfile/", files=files, data=self.data)
+                    assert not file_path.exists()
+                    assert (
+                        exc_info.value.detail
+                        == "Missing mandatory columns: to_destination"
+                    )
