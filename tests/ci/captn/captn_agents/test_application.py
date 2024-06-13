@@ -404,6 +404,10 @@ class TestUploadFile:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.client = TestClient(router)
+        self.data = {
+            "user_id": 123,
+            "conv_id": 456,
+        }
 
     def test_upload_file_raises_exception_if_invalid_content_type(self):
         # Create a dummy file
@@ -413,7 +417,7 @@ class TestUploadFile:
 
         # Send a POST request to the upload endpoint
         with pytest.raises(HTTPException) as exc_info:
-            self.client.post("/uploadfile/", files=files)
+            self.client.post("/uploadfile/", files=files, data=self.data)
 
         assert exc_info.value.status_code == 400
         assert exc_info.value.detail == "Invalid file content type"
@@ -425,7 +429,7 @@ class TestUploadFile:
         files = {"file": (file_name, file_content, "text/csv")}
 
         # Send a POST request to the upload endpoint
-        response = self.client.post("/uploadfile/", files=files)
+        response = self.client.post("/uploadfile/", files=files, data=self.data)
 
         assert response.status_code == 200
         assert response.json() == {"filename": file_name}

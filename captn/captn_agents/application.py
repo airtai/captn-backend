@@ -1,11 +1,11 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Literal, Optional, TypeVar, Union
+from typing import Annotated, Dict, List, Literal, Optional, TypeVar, Union
 
 import httpx
 import openai
 from autogen.io.websockets import IOWebsockets
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from prometheus_client import Counter
 from pydantic import BaseModel
 
@@ -176,8 +176,16 @@ AVALIABLE_CONTENT_TYPES = ["text/csv"]
 
 
 @router.post("/uploadfile/")
-async def create_upload_file(file: UploadFile) -> Dict[str, Union[str, None]]:
+async def create_upload_file(
+    file: Annotated[UploadFile, File()],
+    user_id: Annotated[int, Form()],
+    conv_id: Annotated[int, Form()],
+) -> Dict[str, Union[str, None]]:
     if file.content_type not in AVALIABLE_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="Invalid file content type")
+
+    print(
+        f"Received file: {file.filename} with user_id: {user_id} and conv_id: {conv_id}"
+    )
 
     return {"filename": file.filename}
