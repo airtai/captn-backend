@@ -3,6 +3,7 @@ from datetime import date
 from pathlib import Path
 from typing import Annotated, Dict, List, Literal, Optional, TypeVar, Union
 
+import aiofiles
 import httpx
 import openai
 import pandas as pd
@@ -202,8 +203,11 @@ async def create_upload_file(
     users_conv_dir = UPLOADED_FILES_DIR / str(user_id) / str(conv_id)
     users_conv_dir.mkdir(parents=True, exist_ok=True)
     file_path = users_conv_dir / file.filename
-    with open(file_path, "wb") as f:
-        f.write(file.file.read())
+
+    # Async read-write
+    async with aiofiles.open(file_path, "wb") as out_file:
+        content = await file.read()
+        await out_file.write(content)
 
     # Check if the file has mandatory columns
     if file.content_type == "text/csv":
