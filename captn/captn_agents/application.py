@@ -1,5 +1,6 @@
 import traceback
 from datetime import date
+from pathlib import Path
 from typing import Annotated, Dict, List, Literal, Optional, TypeVar, Union
 
 import httpx
@@ -174,6 +175,8 @@ def weekly_analysis(request: WeeklyAnalysisRequest) -> str:
 
 AVALIABLE_CONTENT_TYPES = ["text/csv"]
 
+UPLOADED_FILES_DIR = Path(__file__).resolve().parent.parent.parent / "uploaded_files"
+
 
 @router.post("/uploadfile/")
 async def create_upload_file(
@@ -183,9 +186,16 @@ async def create_upload_file(
 ) -> Dict[str, Union[str, None]]:
     if file.content_type not in AVALIABLE_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="Invalid file content type")
-
+    if file.filename is None:
+        raise HTTPException(status_code=400, detail="Invalid file name")
     print(
         f"Received file: {file.filename} with user_id: {user_id} and conv_id: {conv_id}"
     )
+    # Create a directory if not exists
+    users_conv_dir = UPLOADED_FILES_DIR / str(user_id) / str(conv_id)
+    users_conv_dir.mkdir(parents=True, exist_ok=True)
+    with open(users_conv_dir / file.filename, "wb") as f:
+        f.write(file.file.read())
+    print(f"File saved to {users_conv_dir}")
 
     return {"filename": file.filename}

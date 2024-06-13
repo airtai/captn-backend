@@ -1,5 +1,7 @@
 import unittest
 from datetime import datetime
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Callable, Dict
 
 import autogen
@@ -428,8 +430,24 @@ class TestUploadFile:
         file_name = "test.csv"
         files = {"file": (file_name, file_content, "text/csv")}
 
-        # Send a POST request to the upload endpoint
-        response = self.client.post("/uploadfile/", files=files, data=self.data)
+        with TemporaryDirectory() as tmp_dir:
+            with unittest.mock.patch(
+                "captn.captn_agents.application.UPLOADED_FILES_DIR",
+                Path(tmp_dir),
+            ) as mock_uploaded_files_dir:
+                # Send a POST request to the upload endpoint
+                response = self.client.post("/uploadfile/", files=files, data=self.data)
 
-        assert response.status_code == 200
-        assert response.json() == {"filename": file_name}
+                assert response.status_code == 200
+                assert response.json() == {"filename": file_name}
+
+                # Check if the file was saved
+                file_path = (
+                    mock_uploaded_files_dir
+                    / str(self.data["user_id"])
+                    / str(self.data["conv_id"])
+                    / file_name
+                )
+                assert file_path.exists()
+                with open(file_path, "rb") as f:
+                    assert f.read() == file_content
