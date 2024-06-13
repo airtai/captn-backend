@@ -1,11 +1,11 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Literal, Optional, TypeVar
+from typing import Dict, List, Literal, Optional, TypeVar, Union
 
 import httpx
 import openai
 from autogen.io.websockets import IOWebsockets
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile
 from prometheus_client import Counter
 from pydantic import BaseModel
 
@@ -170,3 +170,14 @@ def weekly_analysis(request: WeeklyAnalysisRequest) -> str:
         send_only_to_emails=request.send_only_to_emails, date=request.date
     )
     return "Weekly analysis has been sent to the specified emails"
+
+
+AVALIABLE_CONTENT_TYPES = ["text/csv"]
+
+
+@router.post("/uploadfile/")
+async def create_upload_file(file: UploadFile) -> Dict[str, Union[str, None]]:
+    if file.content_type not in AVALIABLE_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file content type")
+
+    return {"filename": file.filename}

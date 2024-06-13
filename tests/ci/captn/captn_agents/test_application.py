@@ -5,6 +5,8 @@ from typing import Callable, Dict
 import autogen
 import pytest
 from autogen.io.websockets import IOWebsockets
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from websockets.sync.client import connect as ws_connect
 
 from captn.captn_agents.application import (
@@ -12,6 +14,7 @@ from captn.captn_agents.application import (
     CaptnAgentRequest,
     _get_message,
     on_connect,
+    router,
 )
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._functions import TeamResponse
@@ -395,3 +398,34 @@ def test_get_message_normal_chat() -> None:
     actual = _get_message(request)
     expected = "I want to Remove 'Free' keyword because it is not performing well"
     assert actual == expected
+
+
+class TestUploadFile:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> None:
+        self.client = TestClient(router)
+
+    def test_upload_file_raises_exception_if_invalid_content_type(self):
+        # Create a dummy file
+        file_content = b"Hello, world!"
+        file_name = "test.txt"
+        files = {"file": (file_name, file_content, "text/plain")}
+
+        # Send a POST request to the upload endpoint
+        with pytest.raises(HTTPException) as exc_info:
+            self.client.post("/uploadfile/", files=files)
+
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail == "Invalid file content type"
+
+    def test_upload_csv_file(self):
+        # Create a dummy CSV file
+        file_content = b"column1,column2\nvalue1,value2"
+        file_name = "test.csv"
+        files = {"file": (file_name, file_content, "text/csv")}
+
+        # Send a POST request to the upload endpoint
+        response = self.client.post("/uploadfile/", files=files)
+
+        assert response.status_code == 200
+        assert response.json() == {"filename": file_name}
