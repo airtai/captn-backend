@@ -2,9 +2,10 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import autogen
+import pandas as pd
 import pytest
 from autogen.io.websockets import IOWebsockets
 from fastapi import HTTPException
@@ -422,23 +423,53 @@ class TestUploadFile:
             self.client.post("/uploadfile/", files=files, data=self.data)
 
         assert exc_info.value.status_code == 400
-        assert exc_info.value.detail == "Invalid file content type"
+        assert "Invalid file content type" in exc_info.value.detail
 
     @pytest.mark.parametrize(
-        "file_content, success",
+        "file_name, file_content, success, content_type",
         [
             (
-                b"from_destination,to_destination,additional_column\nvalue1,value2,value3",
+                "test.csv",
+                b"from_destination,to_destination,additional_column\nvalue1,value2,value3\nvalue1,value2,value3\nvalue1,value2,value3",
                 True,
+                "text/csv",
             ),
-            (b"from_destination,additional_column\nvalue1,value3", False),
+            (
+                "test.csv",
+                b"from_destination,additional_column\nvalue1,value3",
+                False,
+                "text/csv",
+            ),
+            (
+                "upload.xlsx",
+                None,
+                True,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ),
+            (
+                "upload.xls",
+                None,
+                True,
+                "application/vnd.ms-excel",
+            ),
         ],
     )
-    def test_upload_csv_file(self, file_content: bytes, success: bool):
+    def test_upload_csv_or_xlsx_file(
+        self,
+        file_name: str,
+        file_content: Optional[bytes],
+        success: bool,
+        content_type: str,
+    ):
         # Create a dummy CSV file
-        file_content = file_content
-        file_name = "test.csv"
-        files = {"file": (file_name, file_content, "text/csv")}
+        if file_content is None and "upload.xls" in file_name:
+            file_path = Path(__file__).parent / "fixtures" / file_name
+            with open(file_path, "rb") as f:
+                file_content = f.read()
+        else:
+            file_content = file_content
+        file_name = file_name
+        files = {"file": (file_name, file_content, content_type)}
 
         with TemporaryDirectory() as tmp_dir:
             with unittest.mock.patch(
@@ -462,6 +493,14 @@ class TestUploadFile:
                     assert file_path.exists()
                     with open(file_path, "rb") as f:
                         assert f.read() == file_content
+                        if "xls" in file_name:
+                            df = pd.read_excel(file_path)
+                        else:
+                            df = pd.read_csv(file_path)
+
+                        # 3 rows in all test files
+                        assert df.shape[0] == 3
+
                 else:
                     with pytest.raises(HTTPException) as exc_info:
                         self.client.post("/uploadfile/", files=files, data=self.data)
