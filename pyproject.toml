@@ -111,6 +111,7 @@ agents = [
     "opentelemetry-exporter-otlp==1.25.0",
     "openpyxl==3.1.4",
     "aiofiles==23.2.1",
+    "google-api-python-client==2.133.0",
 ]
 
 dev = [
