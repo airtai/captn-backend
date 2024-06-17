@@ -1,10 +1,15 @@
 import unittest
 from datetime import datetime
-from typing import Callable, Dict
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Callable, Dict, Optional
 
 import autogen
+import pandas as pd
 import pytest
 from autogen.io.websockets import IOWebsockets
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from websockets.sync.client import connect as ws_connect
 
 from captn.captn_agents.application import (
@@ -12,6 +17,7 @@ from captn.captn_agents.application import (
     CaptnAgentRequest,
     _get_message,
     on_connect,
+    router,
 )
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._functions import TeamResponse
@@ -395,3 +401,111 @@ def test_get_message_normal_chat() -> None:
     actual = _get_message(request)
     expected = "I want to Remove 'Free' keyword because it is not performing well"
     assert actual == expected
+
+
+class TestUploadFile:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> None:
+        self.client = TestClient(router)
+        self.data = {
+            "user_id": 123,
+            "conv_id": 456,
+        }
+
+    def test_upload_file_raises_exception_if_invalid_content_type(self):
+        # Create a dummy file
+        file_content = b"Hello, world!"
+        file_name = "test.txt"
+        files = {"file": (file_name, file_content, "text/plain")}
+
+        # Send a POST request to the upload endpoint
+        with pytest.raises(HTTPException) as exc_info:
+            self.client.post("/uploadfile/", files=files, data=self.data)
+
+        assert exc_info.value.status_code == 400
+        assert "Invalid file content type" in exc_info.value.detail
+
+    @pytest.mark.parametrize(
+        "file_name, file_content, success, content_type",
+        [
+            (
+                "test.csv",
+                b"from_destination,to_destination,additional_column\nvalue1,value2,value3\nvalue1,value2,value3\nvalue1,value2,value3",
+                True,
+                "text/csv",
+            ),
+            (
+                "test.csv",
+                b"from_destination,additional_column\nvalue1,value3",
+                False,
+                "text/csv",
+            ),
+            (
+                "upload.xlsx",
+                None,
+                True,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ),
+            (
+                "upload.xls",
+                None,
+                True,
+                "application/vnd.ms-excel",
+            ),
+        ],
+    )
+    def test_upload_csv_or_xlsx_file(
+        self,
+        file_name: str,
+        file_content: Optional[bytes],
+        success: bool,
+        content_type: str,
+    ):
+        # Create a dummy CSV file
+        if file_content is None and "upload.xls" in file_name:
+            file_path = Path(__file__).parent / "fixtures" / file_name
+            with open(file_path, "rb") as f:
+                file_content = f.read()
+        else:
+            file_content = file_content
+        file_name = file_name
+        files = {"file": (file_name, file_content, content_type)}
+
+        with TemporaryDirectory() as tmp_dir:
+            with unittest.mock.patch(
+                "captn.captn_agents.application.UPLOADED_FILES_DIR",
+                Path(tmp_dir),
+            ) as mock_uploaded_files_dir:
+                file_path = (
+                    mock_uploaded_files_dir
+                    / str(self.data["user_id"])
+                    / str(self.data["conv_id"])
+                    / file_name
+                )
+
+                if success:
+                    response = self.client.post(
+                        "/uploadfile/", files=files, data=self.data
+                    )
+                    assert response.status_code == 200
+                    assert response.json() == {"filename": file_name}
+                    # Check if the file was saved
+                    assert file_path.exists()
+                    with open(file_path, "rb") as f:
+                        assert f.read() == file_content
+                        if "xls" in file_name:
+                            df = pd.read_excel(file_path)
+                        else:
+                            df = pd.read_csv(file_path)
+
+                        # 3 rows in all test files
+                        assert df.shape[0] == 3
+
+                else:
+                    with pytest.raises(HTTPException) as exc_info:
+                        self.client.post("/uploadfile/", files=files, data=self.data)
+                    assert not file_path.exists()
+                    assert (
+                        exc_info.value.detail
+                        == "Missing mandatory columns: to_destination"
+                    )

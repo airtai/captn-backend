@@ -765,6 +765,7 @@ def get_get_info_from_the_web_page(
     websurfer_navigator_llm_config: Optional[Dict[str, Any]] = None,
     timestamp: Optional[str] = None,
     max_retires_before_give_up_message: int = 7,
+    max_round: int = 50,
 ) -> Callable[[str, int, int], str]:
     fx = summarizer_llm_config, websurfer_llm_config, websurfer_navigator_llm_config
 
@@ -833,6 +834,16 @@ But before giving up, please try to navigate to another page and continue with t
                     # is_termination_msg=_is_termination_msg,
                 )
 
+                groupchat = autogen.GroupChat(
+                    agents=[web_surfer, web_surfer_navigator],
+                    messages=[],
+                    max_round=max_round,
+                    speaker_selection_method="round_robin",
+                )
+                manager = autogen.GroupChatManager(
+                    groupchat=groupchat,
+                )
+
                 initial_message = (
                     f"Time now is {timestamp_copy}." if timestamp_copy else ""
                 )
@@ -844,15 +855,13 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
 """
 
                 try:
-                    web_surfer_navigator.initiate_chat(
-                        web_surfer, message=initial_message
-                    )
+                    manager.initiate_chat(recipient=manager, message=initial_message)
                 except Exception as e:
                     print(f"Exception '{type(e)}' in initiating chat: {e}")
 
                 for i in range(inner_retries):
                     print(f"Inner retry {i + 1}/{inner_retries}")
-                    last_message = str(web_surfer_navigator.last_message()["content"])
+                    last_message = str(groupchat.messages[-1]["content"])
 
                     try:
                         if "I GIVE UP" in last_message:
@@ -868,9 +877,9 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
                                 current_retries=i,
                                 max_retires_before_give_up_message=max_retires_before_give_up_message,
                             )
-                            web_surfer.send(
-                                retry_message,
-                                recipient=web_surfer_navigator,
+                            manager.send(
+                                message=retry_message,
+                                recipient=manager,
                             )
                             continue
                         if last_message.strip() == "":
@@ -878,10 +887,9 @@ The JSON-encoded string must contain at least {min_relevant_pages} relevant page
 
 Message to web_surfer: Please click on the link which you think is the most relevant for the task.
 After that, I will guide you through the next steps."""
-                            # In this case, web_surfer_navigator is sending the message to web_surfer
-                            web_surfer_navigator.send(
-                                retry_message,
-                                recipient=web_surfer,
+                            manager.send(
+                                message=retry_message,
+                                recipient=manager,
                             )
                             continue
 
@@ -899,9 +907,9 @@ After that, I will guide you through the next steps."""
                                 current_retries=i,
                                 max_retires_before_give_up_message=max_retires_before_give_up_message,
                             )
-                            web_surfer.send(
-                                retry_message,
-                                recipient=web_surfer_navigator,
+                            manager.send(
+                                message=retry_message,
+                                recipient=manager,
                             )
                             continue
                         last_message = _format_last_message(url=url, summary=summary)
@@ -923,9 +931,9 @@ Example of correctly formatted JSON (unrelated to the task):
                             current_retries=i,
                             max_retires_before_give_up_message=max_retires_before_give_up_message,
                         )
-                        web_surfer.send(
-                            retry_message,
-                            recipient=web_surfer_navigator,
+                        manager.send(
+                            message=retry_message,
+                            recipient=manager,
                         )
 
                     except Exception as e:
@@ -935,7 +943,7 @@ Example of correctly formatted JSON (unrelated to the task):
                             current_retries=i,
                             max_retires_before_give_up_message=max_retires_before_give_up_message,
                         )
-                        web_surfer.send(retry_message, recipient=web_surfer_navigator)
+                        manager.send(message=retry_message, recipient=manager)
             except Exception as e:
                 # todo: log the exception
                 failure_message = str(e)

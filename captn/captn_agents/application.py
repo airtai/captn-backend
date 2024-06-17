@@ -1,11 +1,14 @@
 import traceback
 from datetime import date
-from typing import Dict, List, Literal, Optional, TypeVar
+from pathlib import Path
+from typing import Annotated, Dict, List, Literal, Optional, TypeVar, Union
 
+import aiofiles
 import httpx
 import openai
+import pandas as pd
 from autogen.io.websockets import IOWebsockets
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from prometheus_client import Counter
 from pydantic import BaseModel
 
@@ -170,3 +173,54 @@ def weekly_analysis(request: WeeklyAnalysisRequest) -> str:
         send_only_to_emails=request.send_only_to_emails, date=request.date
     )
     return "Weekly analysis has been sent to the specified emails"
+
+
+AVALIABLE_FILE_CONTENT_TYPES = [
+    "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]
+MANDATORY_COLUMNS = {"from_destination", "to_destination"}
+
+UPLOADED_FILES_DIR = Path(__file__).resolve().parent.parent.parent / "uploaded_files"
+
+
+@router.post("/uploadfile/")
+async def create_upload_file(
+    file: Annotated[UploadFile, File()],
+    user_id: Annotated[int, Form()],
+    conv_id: Annotated[int, Form()],
+) -> Dict[str, Union[str, None]]:
+    if file.content_type not in AVALIABLE_FILE_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file content type: {file.content_type}. Only {', '.join(AVALIABLE_FILE_CONTENT_TYPES)} are allowed.",
+        )
+    if file.filename is None:
+        raise HTTPException(status_code=400, detail="Invalid file name")
+
+    # Create a directory if not exists
+    users_conv_dir = UPLOADED_FILES_DIR / str(user_id) / str(conv_id)
+    users_conv_dir.mkdir(parents=True, exist_ok=True)
+    file_path = users_conv_dir / file.filename
+
+    # Async read-write
+    async with aiofiles.open(file_path, "wb") as out_file:
+        content = await file.read()
+        await out_file.write(content)
+
+    # Check if the file has mandatory columns
+    if file.content_type == "text/csv":
+        df = pd.read_csv(file_path, nrows=0)
+    else:
+        df = pd.read_excel(file_path, nrows=0)
+    if not MANDATORY_COLUMNS.issubset(df.columns):
+        # Remove the file
+        file_path.unlink()
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing mandatory columns: {', '.join(MANDATORY_COLUMNS - set(df.columns))}",
+        )
+
+    return {"filename": file.filename}
