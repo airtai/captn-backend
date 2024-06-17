@@ -1078,7 +1078,14 @@ def execute_weekly_analysis(
                 print(f"Skipping user_id: {user_id} - email {email}")
                 continue
 
-            conv_id, conv_uuid = _get_conv_id_and_uuid(user_id=user_id, email=email)
+            try:
+                conv_id, conv_uuid = _get_conv_id_and_uuid(user_id=user_id, email=email)
+            except Exception as e:
+                print(
+                    f"Failed to create chat for user_id: {user_id} - email {email}.\nError: {e}"
+                )
+                WEEKLY_ANALYSIS_EXCEPTIONS_TOTAL.inc()
+                continue
             weekly_analysis_team = None
             try:
                 login_url_response = get_login_url(
