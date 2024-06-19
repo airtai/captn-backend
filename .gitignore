@@ -17,7 +17,7 @@ tmp*
 *_data/
 
 # Google Ads client secret
-client_secret.json
+client_secret*.json
 
 .vscode/
 benchmarking/working/*
