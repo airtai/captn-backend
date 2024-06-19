@@ -11,9 +11,7 @@ from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
 from google.api_core import protobuf_helpers
 from google.auth.exceptions import RefreshError
-from google.oauth2.credentials import Credentials
 from google.protobuf import json_format
-from googleapiclient.discovery import build
 
 from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 
@@ -126,7 +124,7 @@ async def get_login_url(
     google_oauth_url = (
         f"{oauth2_settings['auth_uri']}?client_id={oauth2_settings['clientId']}"
         f"&redirect_uri={oauth2_settings['redirectUri']}&response_type=code"
-        f"&scope={urllib.parse.quote_plus('https://www.googleapis.com/auth/adwords email https://www.googleapis.com/auth/spreadsheets')}"
+        f"&scope={urllib.parse.quote_plus('https://www.googleapis.com/auth/adwords email https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.metadata.readonly')}"
         f"&access_type=offline&prompt=consent&state={conv_id}"
         # f"&access_type=offline&prompt=consent&state={chat_id}"
     )
@@ -1358,33 +1356,3 @@ async def remove_google_ads_resource(
         ) from e
 
     return f"Removed {response.results[0].resource_name}."
-
-
-# TODO: move to new git repo
-@router.get("/sheet")
-async def get_sheet(
-    user_id: int, spreadshit_id: str, range: str
-) -> Union[str, List[List[str]]]:
-    user_credentials = await load_user_credentials(user_id)
-    print(f"{user_credentials=}")
-
-    sheets_credentials = {
-        "refresh_token": user_credentials["refresh_token"],
-        "client_id": oauth2_settings["clientId"],
-        "client_secret": oauth2_settings["clientSecret"],
-    }
-
-    creds = Credentials.from_authorized_user_info(
-        info=sheets_credentials, scopes=["https://www.googleapis.com/auth/spreadsheets"]
-    )
-    service = build("sheets", "v4", credentials=creds)
-
-    # Call the Sheets API
-    sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=spreadshit_id, range=range).execute()
-    values = result.get("values", [])
-
-    if not values:
-        return "No data found."
-
-    return values  # type: ignore[no-any-return]
