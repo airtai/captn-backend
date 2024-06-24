@@ -99,7 +99,7 @@ agents = [
     "python-dotenv==1.0.1",
     "pyautogen[websurfer,websockets]==0.2.28",
     "pandas>=2.1",
-    "fastcore==1.5.35",
+    "fastcore==1.5.48",
     "asyncer==0.0.7",
     "pydantic==2.7.4",
     "markdownify==0.12.1",
