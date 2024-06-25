@@ -48,7 +48,7 @@ async def get_users(day_of_week_created: Optional[str] = None) -> Any:
     wasp_db_url = await get_wasp_db_url()
     if day_of_week_created:
         query = f"""SELECT * FROM "User"
-WHERE TO_CHAR("createdAt", 'Day') = '{day_of_week_created}'"""  # nosec: [B608]
+WHERE TRIM(TO_CHAR("createdAt", 'Day')) = '{day_of_week_created}'"""  # nosec: [B608]
     else:
         query = 'SELECT * from "User"'
     async with get_db_connection(db_url=wasp_db_url) as db:
