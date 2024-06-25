@@ -1066,7 +1066,6 @@ def execute_weekly_analysis(
             day_of_week = None
         else:
             day_of_week = _get_day_of_week(date)
-        day_of_week = "Wednesday"
         id_email_dict = json.loads(get_user_ids_and_emails(day_of_week=day_of_week))
 
         # if send_only_to_emails is None:
@@ -1084,6 +1083,8 @@ def execute_weekly_analysis(
                 print(
                     f"Failed to create chat for user_id: {user_id} - email {email}.\nError: {e}"
                 )
+                traceback.print_stack()
+                traceback.print_exc()
                 WEEKLY_ANALYSIS_EXCEPTIONS_TOTAL.inc()
                 continue
             weekly_analysis_team = None
