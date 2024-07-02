@@ -51,6 +51,8 @@ class TestTools:
         name_desc_dict = {
             "get_brief_template": "Get the TEMPLATE for the customer brief you will need to create",
             "delagate_task": "Delegate the task to the selected team",
+            "reply_to_client": "Respond to the client",
+            "get_info_from_the_web_page": "Retrieve wanted information from the web page.",
         }
 
         check_llm_config_total_tools(llm_config, 4)
