@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from ..toolboxes import Toolbox
 from ..tools._gbb_initial_team_tools import create_gbb_initial_team_toolbox
@@ -9,29 +9,6 @@ from ._team import Team
 
 @Team.register_team("gbb_initial_team")
 class GBBInitialTeam(BriefCreationTeam):
-    _default_roles = [
-        {
-            "Name": "Digitial_marketing_strategist",
-            "Description": """You are a Strategist in a digital agency.
-Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
-        },
-        {
-            "Name": "Account_manager",
-            "Description": """You are an account manager in the digital agency.
-You are also SOLELY responsible for communicating with the client.
-
-Based on the initial task, a number of proposed solutions will be suggested by the team. You must ask the team to write a detailed plan
-including steps and expected outcomes.
-Once the initial task given to the team is completed by implementing proposed solutions, you must write down the
-accomplished work and execute the 'reply_to_client' command. That message will be forwarded to the client so make
-sure it is understandable by non-experts.
-Never introduce yourself when writing messages. E.g. do not write 'As an account manager'
-""",
-        },
-    ]
-
-    _functions: Optional[List[Dict[str, Any]]] = []
-
     def __init__(
         self,
         *,
@@ -88,7 +65,7 @@ and depending on the clients answer, choose the appropriate team.
 If you fail to choose the appropriate team, you will be penalized!
 
 3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
-{BriefCreationTeam.construct_team_names_and_descriptions_message(use_only_team_names={"campaign_creation_team"})}
+{self.construct_team_names_and_descriptions_message(use_only_team_names={"campaign_creation_team"})}
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan

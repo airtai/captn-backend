@@ -20,6 +20,7 @@ def create_gbb_initial_team_toolbox(
         user_id=user_id,
         conv_id=conv_id,
         initial_brief=initial_brief,
+        get_info_from_web_page_result="Web page will not be scraped in this task.",
     )
     toolbox.set_context(context)
 
