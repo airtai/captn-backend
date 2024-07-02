@@ -1,14 +1,12 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..config import Config
-from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
-from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
+from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
 
-@Team.register_team("brief_creation_team")
-class BriefCreationTeam(Team):
-    # The roles of the team members, like "admin", "manager", "analyst", etc.
+@Team.register_team("gbb_initial_team")
+class GBBInitialTeam(Team):
     _default_roles = [
         {
             "Name": "Digitial_marketing_strategist",
@@ -38,7 +36,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         task: str,
         user_id: int,
         conv_id: int,
-        work_dir: str = "brief_creation_team",
+        work_dir: str = "gbb_initial_team",
         max_round: int = 80,
         seed: int = 42,
         temperature: float = 0.2,
@@ -49,7 +47,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         ] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
 
-        roles: List[Dict[str, str]] = BriefCreationTeam._default_roles
+        roles: List[Dict[str, str]] = GBBInitialTeam._default_roles
 
         super().__init__(
             user_id=user_id,
@@ -69,49 +67,16 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             config = Config()
             config_list = config.config_list_gpt_4o
 
-        self.llm_config = BriefCreationTeam._get_llm_config(
+        self.llm_config = GBBInitialTeam._get_llm_config(
             seed=seed, temperature=temperature, config_list=config_list
         )
 
         self._create_members()
 
-        self._add_tools()
+        # TODO: Add tools
+        # self._add_tools()
 
         self._create_initial_message()
-
-    def _add_tools(self) -> None:
-        self.toolbox = create_brief_creation_team_toolbox(
-            user_id=self.user_id,
-            conv_id=self.conv_id,
-            initial_brief=self.task,
-        )
-        for agent in self.members:
-            if agent != self.user_proxy:
-                self.toolbox.add_to_agent(agent, self.user_proxy)
-
-    @classmethod
-    def get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:
-        use_only_team_names = ["default_team", "campaign_creation_team"]
-        return {
-            name: team_class.get_capabilities()
-            for name, team_class in Team._team_registry.items()
-            if name in use_only_team_names
-        }
-
-    @classmethod
-    def construct_team_names_and_descriptions_message(cls) -> str:
-        avaliable_team_names_and_their_descriptions = (
-            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
-        )
-        # Create a string from dict
-        avaliable_team_names_and_their_descriptions_str = "\n".join(
-            [
-                f"{name} - {description}\n\n"
-                for name, description in avaliable_team_names_and_their_descriptions.items()
-            ]
-        )
-
-        return avaliable_team_names_and_their_descriptions_str
 
     @property
     def _task(self) -> str:
@@ -125,49 +90,22 @@ Here is the current customers brief/information we have gathered for you as a st
 
     @property
     def _guidelines(self) -> str:
-        return f"""### Guidelines
+        return """### Guidelines
 1. Do NOT repeat the content of the previous messages nor repeat your role.
 Write SHORT and CLEAR messages. Nobody likes to read long messages. Be concise and to the point, or you will be penalized!
 
 
 2. The MOST important part of your task is to choose the appropriate team for the task.
 ALWAYS ask the client for more information. Here is the FIRST (and probably the only) question you should ask the client:
-message:"Do you want to create a new campaign or optimize an existing one?"
-"smart_suggestions": {{
-    'suggestions': ['Create new campaign', 'Optimize existing campaign'],
+message:"Do you want to create a new campaign by using Google Sheets template"
+"smart_suggestions": {
+    'suggestions': ['Create new campaign by using Google Sheets template'],
     'type': 'oneOf'
-}}
+}
 
 and depending on the clients answer, choose the appropriate team.
 If you fail to choose the appropriate team, you will be penalized!
 
-3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
-{self.construct_team_names_and_descriptions_message()}
-
-4. AFTER the client has told you if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task,
-use 'get_brief_template' command to get the template for the brief which you will need to fill out.
-Once you have the template, you are responsible for filling in all the fields. Do NOT ask the client to fill in the information for you, otherwise you will be penalized!
-
-
-5. Use 'get_info_from_the_web_page' command to get information from the web page. This information MUST be used before creating the brief.
-It is MANADATORY to use this command to gather information if the client has provided a link to the web page.
-If the client has provided a link to the web page and you do not try to gather information from the web page, you will be penalized!
-If you are unable to retrieve ANY information, use the 'reply_to_client' command to ask the client for the information which you need.
-Otherwise, focus on creating the brief based on the information which you were able to gather from the web page (ignore the links which you were unable to retrieve information from and don't mention them in the brief!).
-
-6. Initially, use the 'get_info_from_the_web_page' command with the 'max_links_to_click' parameter set to 10.
-This will allow you to gather the most information about the clients business.
-Once you have gathered the information, if the client wants to focus on a specific subpage(s), use the 'get_info_from_the_web_page' command again with the 'max_links_to_click' parameter set to 4.
-This will allow you to gather deeper information about the specific subpage(s) which the client is interested in - this step is VERY important!
-
-7. When you have gathered all the information, create a detailed brief.
-Do NOT repeat the content which you have received from the 'get_info_from_the_web_page' command (the content will be injected automatically later on)!
-i.e. do NOT mention keywords, headlines and descriptions in the brief which you are constructing!
-Do NOT mention to the client that you are creating a brief. This is your internal task and the client does not need to know that.
-Do NOT ask the client which information he wants to include in the brief.
-i.e. word 'brief' should NOT be mentioned to the client at all!
-
-8. Finally, after you retrieve the information from the web page and create the brief, use the 'delagate_task' command to send the brief to the chosen team.
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan
@@ -181,14 +119,6 @@ Guidelines SUMMARY:
 ## Additional Guidelines
 1. When using reply_to_client command, try to use the 'smart_suggestions' parameter to suggest the next steps to the client when ever it is possible.
 Do NOT use smart suggestions for open ended questions or questions which require the clients input.
-
-smart suggestions examples:
-
-When you ask the client for some suggestions (e.g. at the beginning when you need to choose the right team), you should also generate smart suggestions like:
-"smart_suggestions": {{
-    "suggestions":["Create NEW Google Ads campaign", "Optimize EXISTING Google Ads campaign"],
-    "type":"manyOf"
-}}
 
 The client can see only the messages and the smart suggestions which are sent to him by using the 'reply_to_client' command. He can NOT see the chat history between the team members!!
 So make sure you include all the necessary information in the messages and smart suggestions which you are sending by using the 'reply_to_client' command.
@@ -218,13 +148,11 @@ All team members have access to the following command:
     'type': 'oneOf'
 }}
 
-2. {GET_INFO_FROM_THE_WEB_COMMAND}
-
-3. 'get_brief_template': Get the TEMPLATE for the customer brief you will need to create. params: (team_name: string)
+2. 'get_brief_template': Get the TEMPLATE for the customer brief you will need to create. params: (team_name: string)
 Use this command ONLY after you have asked the client if he wants to create a new campaign or optimize an existing one and you have chosen the appropriate team for the task!
 
-4. 'delagate_task': Delegate the task to the selected team. params: (team_name: string, task: string, customers_business_brief: string)
+3. 'delagate_task': Delegate the task to the selected team. params: (team_name: string, task: string, customers_business_brief: string)
 
-5. NEVER ask the client questions like "Please provide the following information for the customer brief:..."
+4. NEVER ask the client questions like "Please provide the following information for the customer brief:..."
 If you need additional information, use the 'reply_to_client' command and ask the client for the information you need, but ask him one question at a time.
 """

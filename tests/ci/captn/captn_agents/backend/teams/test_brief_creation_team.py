@@ -39,10 +39,12 @@ class TestBriefCreationTeam:
             BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
         )
 
-        # All teams except the BriefCreationTeam should be in the dictionary
-        assert (
-            len(avaliable_teams_and_their_descriptions) == len(Team._team_registry) - 1
-        )
+        # Only campaign_creation_team and default_team are available
+        assert len(avaliable_teams_and_their_descriptions) == 2
+        assert list(avaliable_teams_and_their_descriptions.keys()) == [
+            "campaign_creation_team",
+            "default_team",
+        ]
 
     @pytest.mark.parametrize(
         "team_name",
