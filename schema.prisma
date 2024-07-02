@@ -30,3 +30,14 @@ model Task {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
+model InitialTeam {
+  id Int @id @default(autoincrement())
+  name String @unique
+}
+
+model UserInitialTeam {
+  id Int @id @default(autoincrement())
+  user_id Int
+  initial_team_id Int
+}
