@@ -1,6 +1,8 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..config import Config
+from ..tools._gbb_initial_team_tools import create_gbb_initial_team_toolbox
+from ._brief_creation_team import BriefCreationTeam
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
@@ -73,10 +75,19 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
 
         self._create_members()
 
-        # TODO: Add tools
-        # self._add_tools()
+        self._add_tools()
 
         self._create_initial_message()
+
+    def _add_tools(self) -> None:
+        self.toolbox = create_gbb_initial_team_toolbox(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+            initial_brief=self.task,
+        )
+        for agent in self.members:
+            if agent != self.user_proxy:
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
@@ -90,7 +101,7 @@ Here is the current customers brief/information we have gathered for you as a st
 
     @property
     def _guidelines(self) -> str:
-        return """### Guidelines
+        return f"""### Guidelines
 1. Do NOT repeat the content of the previous messages nor repeat your role.
 Write SHORT and CLEAR messages. Nobody likes to read long messages. Be concise and to the point, or you will be penalized!
 
@@ -98,22 +109,23 @@ Write SHORT and CLEAR messages. Nobody likes to read long messages. Be concise a
 2. The MOST important part of your task is to choose the appropriate team for the task.
 ALWAYS ask the client for more information. Here is the FIRST (and probably the only) question you should ask the client:
 message:"Do you want to create a new campaign by using Google Sheets template"
-"smart_suggestions": {
+"smart_suggestions": {{
     'suggestions': ['Create new campaign by using Google Sheets template'],
     'type': 'oneOf'
-}
+}}
 
 and depending on the clients answer, choose the appropriate team.
 If you fail to choose the appropriate team, you will be penalized!
 
+3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
+{BriefCreationTeam.construct_team_names_and_descriptions_message(use_only_team_names={"campaign_creation_team"})}
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan
 - Choose the appropriate team depending on the clients answer
 - Get the brief template
-- Get information from the web page (do NOT forget this step, it is the MOST IMPORTANT step!)
 - Create a detailed brief
-- Delegate the task to the chosen team. Use this command ONLY after you have chosen the team, retrieved the information from the web page and created the brief.
+- Delegate the task to the chosen team. Use this command ONLY after you have chosen the team and created the brief.
 
 
 ## Additional Guidelines

@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from ..config import Config
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
@@ -31,6 +31,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
     ]
 
     _functions: Optional[List[Dict[str, Any]]] = []
+    _use_only_team_names: Set[str] = {"default_team", "campaign_creation_team"}
 
     def __init__(
         self,
@@ -90,8 +91,9 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
                 self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @classmethod
-    def get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:
-        use_only_team_names = ["default_team", "campaign_creation_team"]
+    def get_avaliable_team_names_and_their_descriptions(
+        cls, use_only_team_names: Set[str] = _use_only_team_names
+    ) -> Dict[str, str]:
         return {
             name: team_class.get_capabilities()
             for name, team_class in Team._team_registry.items()
@@ -99,9 +101,13 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         }
 
     @classmethod
-    def construct_team_names_and_descriptions_message(cls) -> str:
+    def construct_team_names_and_descriptions_message(
+        cls, use_only_team_names: Set[str] = _use_only_team_names
+    ) -> str:
         avaliable_team_names_and_their_descriptions = (
-            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
+            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions(
+                use_only_team_names=use_only_team_names
+            )
         )
         # Create a string from dict
         avaliable_team_names_and_their_descriptions_str = "\n".join(

@@ -11,11 +11,20 @@ from ._functions import (
     LAST_MESSAGE_BEGINNING,
     MAX_LINKS_TO_CLICK_DESCRIPTION,
     MIN_RELEVANT_PAGES_DESCRIPTION,
+    REPLY_TO_CLIENT_DESCRIPTION,
     BaseContext,
     get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client,
-    reply_to_client_description,
+)
+
+__all__ = (
+    "Context",
+    "DelegateTask",
+    "DELEGATE_TASK_DESCRIPTION",
+    "delagate_task",
+    "GET_BRIEF_TEMPLATE_DESCRIPTION",
+    "get_brief_template",
 )
 
 
@@ -203,6 +212,6 @@ If the client does not choose this option, you can use the 'get_info_from_the_we
 """
         return result
 
-    toolbox.add_function(reply_to_client_description)(reply_to_client)
+    toolbox.add_function(REPLY_TO_CLIENT_DESCRIPTION)(reply_to_client)
 
     return toolbox

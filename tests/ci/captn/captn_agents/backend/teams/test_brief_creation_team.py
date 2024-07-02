@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Iterator, List, Optional
 
 import pytest
 
@@ -34,17 +34,27 @@ class TestBriefCreationTeam:
             team_class=BriefCreationTeam,
         )
 
-    def test_get_avaliable_teams_and_their_descriptions(self) -> None:
-        avaliable_teams_and_their_descriptions = (
-            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
-        )
-
-        # Only campaign_creation_team and default_team are available
-        assert len(avaliable_teams_and_their_descriptions) == 2
-        assert list(avaliable_teams_and_their_descriptions.keys()) == [
-            "campaign_creation_team",
-            "default_team",
-        ]
+    @pytest.mark.parametrize(
+        ("use_only_team_names", "expected_keys"),
+        [
+            (None, ["campaign_creation_team", "default_team"]),
+            (["campaign_creation_team"], ["campaign_creation_team"]),
+        ],
+    )
+    def test_get_avaliable_teams_and_their_descriptions(
+        self, use_only_team_names: Optional[List[str]], expected_keys: List[str]
+    ) -> None:
+        if use_only_team_names is None:
+            avaliable_teams_and_their_descriptions = (
+                BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
+            )
+        else:
+            avaliable_teams_and_their_descriptions = (
+                BriefCreationTeam.get_avaliable_team_names_and_their_descriptions(
+                    use_only_team_names=use_only_team_names
+                )
+            )
+        assert list(avaliable_teams_and_their_descriptions.keys()) == expected_keys
 
     @pytest.mark.parametrize(
         "team_name",
