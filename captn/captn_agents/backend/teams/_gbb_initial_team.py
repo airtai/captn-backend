@@ -1,6 +1,6 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
-from ..config import Config
+from ..toolboxes import Toolbox
 from ..tools._gbb_initial_team_tools import create_gbb_initial_team_toolbox
 from ._brief_creation_team import BriefCreationTeam
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
@@ -8,7 +8,7 @@ from ._team import Team
 
 
 @Team.register_team("gbb_initial_team")
-class GBBInitialTeam(Team):
+class GBBInitialTeam(BriefCreationTeam):
     _default_roles = [
         {
             "Name": "Digitial_marketing_strategist",
@@ -43,51 +43,21 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         seed: int = 42,
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
+        create_toolbox_func: Callable[
+            [int, int, str], Toolbox
+        ] = create_gbb_initial_team_toolbox,
     ):
-        recommended_modifications_and_answer_list: List[
-            Tuple[Dict[str, Any], Optional[str]]
-        ] = []
-        function_map: Dict[str, Callable[[Any], Any]] = {}
-
-        roles: List[Dict[str, str]] = GBBInitialTeam._default_roles
-
         super().__init__(
+            task=task,
             user_id=user_id,
             conv_id=conv_id,
-            roles=roles,
-            task=task,
-            function_map=function_map,
             work_dir=work_dir,
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
-            use_user_proxy=True,
+            config_list=config_list,
+            create_toolbox_func=create_toolbox_func,
         )
-
-        if config_list is None:
-            config = Config()
-            config_list = config.config_list_gpt_4o
-
-        self.llm_config = GBBInitialTeam._get_llm_config(
-            seed=seed, temperature=temperature, config_list=config_list
-        )
-
-        self._create_members()
-
-        self._add_tools()
-
-        self._create_initial_message()
-
-    def _add_tools(self) -> None:
-        self.toolbox = create_gbb_initial_team_toolbox(
-            user_id=self.user_id,
-            conv_id=self.conv_id,
-            initial_brief=self.task,
-        )
-        for agent in self.members:
-            if agent != self.user_proxy:
-                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
