@@ -34,6 +34,7 @@ model Task {
 model InitialTeam {
   id Int @id @default(autoincrement())
   name String @unique
+  smart_suggestions String[]
 }
 
 model UserInitialTeam {
