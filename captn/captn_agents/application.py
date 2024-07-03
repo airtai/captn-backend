@@ -8,7 +8,7 @@ import httpx
 import openai
 import pandas as pd
 from autogen.io.websockets import IOWebsockets
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from prometheus_client import Counter
 from pydantic import BaseModel
 
@@ -18,6 +18,7 @@ from ..observability.websocket_utils import (
     WEBSOCKET_TOKENS,
 )
 from .backend import Team, execute_weekly_analysis, start_or_continue_conversation
+from .db_queries import get_initial_team
 
 router = APIRouter()
 
@@ -224,3 +225,22 @@ async def create_upload_file(
         )
 
     return {"filename": file.filename}
+
+
+DEFAULT_SMART_SUGGESTIONS = [
+    "Boost sales",
+    "Increase brand awareness",
+    "Drive website traffic",
+    "Promote a product or service",
+]
+
+
+@router.get("/smart-suggestions", description="Get smart suggestions for the user")
+async def get_smart_suggestions(
+    user_id: Annotated[int, Query(description="The user id")],
+) -> List[str]:
+    user_initial_team = await get_initial_team(user_id)
+    if isinstance(user_initial_team, dict):
+        return user_initial_team["smart_suggestions"]  # type: ignore[no-any-return]
+
+    return DEFAULT_SMART_SUGGESTIONS
