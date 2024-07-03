@@ -7,6 +7,7 @@ import aiofiles
 import httpx
 import openai
 import pandas as pd
+import prisma
 from autogen.io.websockets import IOWebsockets
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from prometheus_client import Counter
@@ -240,7 +241,7 @@ async def get_smart_suggestions(
     user_id: Annotated[int, Query(description="The user id")],
 ) -> List[str]:
     user_initial_team = await get_initial_team(user_id)
-    if isinstance(user_initial_team, dict):
-        return user_initial_team["smart_suggestions"]  # type: ignore[no-any-return]
+    if isinstance(user_initial_team, prisma.models.UserInitialTeam):
+        return user_initial_team.initial_team.smart_suggestions  # type: ignore[no-any-return]
 
     return DEFAULT_SMART_SUGGESTIONS

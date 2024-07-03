@@ -1,5 +1,6 @@
 import unittest
 
+import prisma
 import pytest
 from fastapi.testclient import TestClient
 
@@ -30,8 +31,14 @@ class TestChat:
 
         with unittest.mock.patch(
             "openai_agent.application.get_initial_team"
-        ) as mock_get_initial_team:
-            mock_get_initial_team.return_value = {"initial_team_name": "test_team"}
+        ) as mock_get_user_initial_team:
+            initial_team = prisma.models.InitialTeam(
+                id=1, name="test_team", smart_suggestions=["test suggestion"]
+            )
+            user_initial_team = prisma.models.UserInitialTeam(
+                id=1, user_id=123, initial_team_id=1, initial_team=initial_team
+            )
+            mock_get_user_initial_team.return_value = user_initial_team
 
             response = client.post("/chat", json=request.model_dump())
 

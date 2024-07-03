@@ -6,6 +6,7 @@ from typing import Callable, Dict, List, Optional
 
 import autogen
 import pandas as pd
+import prisma
 import pytest
 from autogen.io.websockets import IOWebsockets
 from fastapi import HTTPException
@@ -513,11 +514,20 @@ class TestUploadFile:
 
 
 class TestGetSmartSuggestions:
+    initial_team = prisma.models.InitialTeam(
+        id=1,
+        name="test_team",
+        smart_suggestions=["Boost sales", "Increase brand awareness"],
+    )
+    user_initial_team = prisma.models.UserInitialTeam(
+        id=1, user_id=123, initial_team_id=1, initial_team=initial_team
+    )
+
     @pytest.mark.parametrize(
         ("return_value", "expected"),
         [
             (
-                {"smart_suggestions": ["Boost sales", "Increase brand awareness"]},
+                user_initial_team,
                 ["Boost sales", "Increase brand awareness"],
             ),
             (None, DEFAULT_SMART_SUGGESTIONS),
