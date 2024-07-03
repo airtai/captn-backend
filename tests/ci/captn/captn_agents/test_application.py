@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 import autogen
 import pandas as pd
@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from websockets.sync.client import connect as ws_connect
 
 from captn.captn_agents.application import (
+    DEFAULT_SMART_SUGGESTIONS,
     ON_FAILURE_MESSAGE,
     CaptnAgentRequest,
     _get_message,
@@ -509,3 +510,29 @@ class TestUploadFile:
                         exc_info.value.detail
                         == "Missing mandatory columns: to_destination"
                     )
+
+
+class TestGetSmartSuggestions:
+    @pytest.mark.parametrize(
+        ("return_value", "expected"),
+        [
+            (
+                {"smart_suggestions": ["Boost sales", "Increase brand awareness"]},
+                ["Boost sales", "Increase brand awareness"],
+            ),
+            (None, DEFAULT_SMART_SUGGESTIONS),
+        ],
+    )
+    def test_get_smart_suggestions(
+        self, return_value: Optional[Dict[str, List[str]]], expected: List[str]
+    ):
+        with unittest.mock.patch(
+            "captn.captn_agents.application.get_initial_team"
+        ) as mock_get_initial_team:
+            mock_get_initial_team.return_value = return_value
+
+            response = TestClient(router).get("/smart-suggestions?user_id=123")
+
+            assert response.status_code == 200
+
+            assert response.json() == expected
