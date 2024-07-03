@@ -7,6 +7,7 @@ from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
 from captn.captn_agents import BriefCreationTeam, SmartSuggestions
+from captn.captn_agents.helpers import get_db_connection
 
 from .smart_suggestion_generator import generate_smart_suggestions
 
@@ -267,10 +268,40 @@ class AzureOpenAIRequest(BaseModel):
     user_id: int
 
 
+async def get_initial_team_name(user_id: Union[int, str]) -> Optional[str]:
+    async with get_db_connection() as db:
+        query = f"""SELECT
+    uit.id AS user_initial_team_id,
+    uit.user_id,
+    it.id AS initial_team_id,
+    it.name AS initial_team_name
+FROM
+    "UserInitialTeam" uit
+JOIN
+    "InitialTeam" it ON uit.initial_team_id = it.id
+WHERE
+    uit.user_id = {int(user_id)}"""  # nosec: [B608]
+        user_initial_team = await db.query_first(query)
+    if not user_initial_team:
+        return None
+
+    return user_initial_team["initial_team_name"]  # type: ignore[no-any-return]
+
+
 @router.post("/chat")
 async def chat(
     request: AzureOpenAIRequest, background_tasks: BackgroundTasks
 ) -> Dict[str, Union[Optional[str], int, Union[str, Optional[SmartSuggestions]]]]:
+    initial_team_name = await get_initial_team_name(request.user_id)
+    if initial_team_name is not None:
+        return {
+            "team_status": "inprogress",
+            "team_name": initial_team_name,
+            "team_id": request.chat_id,
+            "customer_brief": "This is my customer brief.",
+            "conversation_name": "Team of Experts",
+        }
+
     message = request.message
     chat_id = request.chat_id
     user_id = request.user_id

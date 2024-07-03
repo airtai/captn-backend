@@ -21,13 +21,13 @@ from ....google_ads.client import (
 )
 from ..toolboxes import Toolbox
 from ._functions import (
+    REPLY_TO_CLIENT_DESCRIPTION,
     Context,
     ask_client_for_permission,
     ask_client_for_permission_description,
     get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client,
-    reply_to_client_description,
 )
 
 __all__ = (
@@ -920,7 +920,7 @@ def update_campaigns_negative_keywords(
 
 
 def add_shared_functions(toolbox: Toolbox) -> None:
-    toolbox.add_function(reply_to_client_description)(reply_to_client)
+    toolbox.add_function(REPLY_TO_CLIENT_DESCRIPTION)(reply_to_client)
     toolbox.add_function(
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)

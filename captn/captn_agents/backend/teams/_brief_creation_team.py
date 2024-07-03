@@ -1,6 +1,7 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from ..config import Config
+from ..toolboxes import Toolbox
 from ..tools._brief_creation_team_tools import create_brief_creation_team_toolbox
 from ._shared_prompts import GET_INFO_FROM_THE_WEB_COMMAND, REPLY_TO_CLIENT_COMMAND
 from ._team import Team
@@ -31,6 +32,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
     ]
 
     _functions: Optional[List[Dict[str, Any]]] = []
+    _use_only_team_names: Set[str] = {"default_team", "campaign_creation_team"}
 
     def __init__(
         self,
@@ -43,13 +45,16 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         seed: int = 42,
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
+        create_toolbox_func: Callable[
+            [int, int, str], Toolbox
+        ] = create_brief_creation_team_toolbox,
     ):
         recommended_modifications_and_answer_list: List[
             Tuple[Dict[str, Any], Optional[str]]
         ] = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
 
-        roles: List[Dict[str, str]] = BriefCreationTeam._default_roles
+        roles: List[Dict[str, str]] = self._default_roles
 
         super().__init__(
             user_id=user_id,
@@ -69,9 +74,10 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             config = Config()
             config_list = config.config_list_gpt_4o
 
-        self.llm_config = BriefCreationTeam._get_llm_config(
+        self.llm_config = self._get_llm_config(
             seed=seed, temperature=temperature, config_list=config_list
         )
+        self.create_toolbox_func = create_toolbox_func
 
         self._create_members()
 
@@ -80,27 +86,33 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self._create_initial_message()
 
     def _add_tools(self) -> None:
-        self.toolbox = create_brief_creation_team_toolbox(
-            user_id=self.user_id,
-            conv_id=self.conv_id,
-            initial_brief=self.task,
+        self.toolbox = self.create_toolbox_func(
+            self.user_id,
+            self.conv_id,
+            self.task,
         )
         for agent in self.members:
             if agent != self.user_proxy:
                 self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @classmethod
-    def get_avaliable_team_names_and_their_descriptions(cls) -> Dict[str, str]:
+    def get_avaliable_team_names_and_their_descriptions(
+        cls, use_only_team_names: Set[str] = _use_only_team_names
+    ) -> Dict[str, str]:
         return {
             name: team_class.get_capabilities()
             for name, team_class in Team._team_registry.items()
-            if cls != team_class
+            if name in use_only_team_names
         }
 
     @classmethod
-    def construct_team_names_and_descriptions_message(cls) -> str:
+    def construct_team_names_and_descriptions_message(
+        cls, use_only_team_names: Set[str] = _use_only_team_names
+    ) -> str:
         avaliable_team_names_and_their_descriptions = (
-            BriefCreationTeam.get_avaliable_team_names_and_their_descriptions()
+            cls.get_avaliable_team_names_and_their_descriptions(
+                use_only_team_names=use_only_team_names
+            )
         )
         # Create a string from dict
         avaliable_team_names_and_their_descriptions_str = "\n".join(
