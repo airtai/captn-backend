@@ -20,25 +20,28 @@ model GAuth {
 }
 
 model Task {
-  user_id Int
-  chat_id Int
-  team_id Int @id
-  team_name String
+  user_id     Int
+  chat_id     Int
+  team_id     Int      @id
+  team_name   String
   team_status String
-  msg String
+  msg         String
   is_question Boolean
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 }
 
 model InitialTeam {
-  id Int @id @default(autoincrement())
-  name String @unique
+  id                Int               @id @default(autoincrement())
+  name              String            @unique
   smart_suggestions String[]
+  UserInitialTeam   UserInitialTeam[]
 }
 
 model UserInitialTeam {
-  id Int @id @default(autoincrement())
-  user_id Int
+  id              Int         @id @default(autoincrement())
+  user_id         Int
   initial_team_id Int
+  // Define the relation field
+  initial_team    InitialTeam @relation(fields: [initial_team_id], references: [id])
 }

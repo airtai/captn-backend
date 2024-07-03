@@ -2,10 +2,11 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 import autogen
 import pandas as pd
+import prisma
 import pytest
 from autogen.io.websockets import IOWebsockets
 from fastapi import HTTPException
@@ -13,6 +14,7 @@ from fastapi.testclient import TestClient
 from websockets.sync.client import connect as ws_connect
 
 from captn.captn_agents.application import (
+    DEFAULT_SMART_SUGGESTIONS,
     ON_FAILURE_MESSAGE,
     CaptnAgentRequest,
     _get_message,
@@ -509,3 +511,38 @@ class TestUploadFile:
                         exc_info.value.detail
                         == "Missing mandatory columns: to_destination"
                     )
+
+
+class TestGetSmartSuggestions:
+    initial_team = prisma.models.InitialTeam(
+        id=1,
+        name="test_team",
+        smart_suggestions=["Boost sales", "Increase brand awareness"],
+    )
+    user_initial_team = prisma.models.UserInitialTeam(
+        id=1, user_id=123, initial_team_id=1, initial_team=initial_team
+    )
+
+    @pytest.mark.parametrize(
+        ("return_value", "expected"),
+        [
+            (
+                user_initial_team,
+                ["Boost sales", "Increase brand awareness"],
+            ),
+            (None, DEFAULT_SMART_SUGGESTIONS),
+        ],
+    )
+    def test_get_smart_suggestions(
+        self, return_value: Optional[Dict[str, List[str]]], expected: List[str]
+    ):
+        with unittest.mock.patch(
+            "captn.captn_agents.application.get_initial_team"
+        ) as mock_get_initial_team:
+            mock_get_initial_team.return_value = return_value
+
+            response = TestClient(router).get("/smart-suggestions?user_id=123")
+
+            assert response.status_code == 200
+
+            assert response.json() == expected
