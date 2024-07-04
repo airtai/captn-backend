@@ -3,7 +3,12 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from fastagency.openapi.client import Client
 
 from ..config import Config
-from ..tools._weather_team_tools import create_weather_team_client
+from ..toolboxes import Toolbox
+from ..tools._weather_team_tools import (
+    create_weather_team_client,
+    create_weather_team_toolbox,
+)
+from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
 
@@ -43,6 +48,9 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         seed: int = 42,
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
+        create_toolbox_func: Callable[
+            [int, int], Toolbox
+        ] = create_weather_team_toolbox,
         create_client_func: Callable[[], Client] = create_weather_team_client,
     ):
         recommended_modifications_and_answer_list: List[
@@ -73,11 +81,13 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self.llm_config = self._get_llm_config(
             seed=seed, temperature=temperature, config_list=config_list
         )
+        self.create_toolbox_func = create_toolbox_func
         self.create_client_func = create_client_func
 
         self._create_members()
 
         self._add_client()
+        self._add_tools()
 
         self._create_initial_message()
 
@@ -86,8 +96,24 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
 
         self.client.register_for_execution(self.user_proxy)
         for agent in self.members:
-            if agent != self.user_proxy:
+            # Add only for Weather_forecaster
+            if agent.name == self._default_roles[0]["Name"].lower():
+                if agent.llm_config["tools"] is None:
+                    agent.llm_config.pop("tools")
                 self.client.register_for_llm(agent)
+
+    def _add_tools(self) -> None:
+        self.toolbox = self.create_toolbox_func(
+            self.user_id,
+            self.conv_id,
+        )
+        # Add only for News_reporter
+        for agent in self.members:
+            if (
+                agent != self.user_proxy
+                and agent.name != self._default_roles[0]["Name"].lower()
+            ):
+                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
@@ -105,7 +131,16 @@ Here is the current customers brief/information we have gathered for you as a st
 
     @property
     def _commands(self) -> str:
-        return ""
+        return f"""## Commands
+Only News_reporter has access to the following command:
+1. {REPLY_TO_CLIENT_COMMAND}
+"smart_suggestions": {{
+    'suggestions': ['Give me suggestions what I can do based on the current weather forecast.'],
+    'type': 'oneOf'
+}}
+
+2. Only Weather_forecaster has access to weather API to get the weather forecast for the city.
+"""
 
     @classmethod
     def get_capabilities(cls) -> str:
