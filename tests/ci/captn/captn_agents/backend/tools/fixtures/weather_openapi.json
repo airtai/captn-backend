@@ -1,0 +1,184 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "WeatherAPI",
+      "version": "0.1.0"
+    },
+    "servers": [
+      {
+        "url": "https://weather.tools.fastagency.ai",
+        "description": "Weather app server"
+      }
+    ],
+    "paths": {
+      "/": {
+        "get": {
+          "summary": "Get Weather",
+          "description": "Get weather forecast for a given city",
+          "operationId": "get_weather__get",
+          "parameters": [
+            {
+              "name": "city",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "description": "city for which forecast is requested",
+                "title": "City"
+              },
+              "description": "city for which forecast is requested"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Weather"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "DailyForecast": {
+          "properties": {
+            "forecast_date": {
+              "type": "string",
+              "format": "date",
+              "title": "Forecast Date"
+            },
+            "temperature": {
+              "type": "integer",
+              "title": "Temperature"
+            },
+            "hourly_forecasts": {
+              "items": {
+                "$ref": "#/components/schemas/HourlyForecast"
+              },
+              "type": "array",
+              "title": "Hourly Forecasts"
+            }
+          },
+          "type": "object",
+          "required": [
+            "forecast_date",
+            "temperature",
+            "hourly_forecasts"
+          ],
+          "title": "DailyForecast"
+        },
+        "HTTPValidationError": {
+          "properties": {
+            "detail": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "title": "Detail"
+            }
+          },
+          "type": "object",
+          "title": "HTTPValidationError"
+        },
+        "HourlyForecast": {
+          "properties": {
+            "forecast_time": {
+              "type": "string",
+              "format": "time",
+              "title": "Forecast Time"
+            },
+            "temperature": {
+              "type": "integer",
+              "title": "Temperature"
+            },
+            "description": {
+              "type": "string",
+              "title": "Description"
+            }
+          },
+          "type": "object",
+          "required": [
+            "forecast_time",
+            "temperature",
+            "description"
+          ],
+          "title": "HourlyForecast"
+        },
+        "ValidationError": {
+          "properties": {
+            "loc": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array",
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            }
+          },
+          "type": "object",
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        },
+        "Weather": {
+          "properties": {
+            "city": {
+              "type": "string",
+              "title": "City"
+            },
+            "temperature": {
+              "type": "integer",
+              "title": "Temperature"
+            },
+            "daily_forecasts": {
+              "items": {
+                "$ref": "#/components/schemas/DailyForecast"
+              },
+              "type": "array",
+              "title": "Daily Forecasts"
+            }
+          },
+          "type": "object",
+          "required": [
+            "city",
+            "temperature",
+            "daily_forecasts"
+          ],
+          "title": "Weather"
+        }
+      }
+    }
+  }

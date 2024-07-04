@@ -51,7 +51,8 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         create_toolbox_func: Callable[
             [int, int], Toolbox
         ] = create_weather_team_toolbox,
-        create_client_func: Callable[[], Client] = create_weather_team_client,
+        create_client_func: Callable[[str], Client] = create_weather_team_client,
+        openapi_url: str = "https://weather.tools.fastagency.ai/openapi.json",
     ):
         recommended_modifications_and_answer_list: List[
             Tuple[Dict[str, Any], Optional[str]]
@@ -83,6 +84,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         )
         self.create_toolbox_func = create_toolbox_func
         self.create_client_func = create_client_func
+        self.openapi_url = openapi_url
 
         self._create_members()
 
@@ -92,7 +94,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         self._create_initial_message()
 
     def _add_client(self) -> None:
-        self.client = self.create_client_func()
+        self.client = self.create_client_func(self.openapi_url)
 
         self.client.register_for_execution(self.user_proxy)
         for agent in self.members:

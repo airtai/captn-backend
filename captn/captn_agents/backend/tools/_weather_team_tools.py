@@ -10,9 +10,7 @@ __all__ = (
 )
 
 
-def create_weather_team_client() -> Client:
-    openapi_url = "https://weather.tools.fastagency.ai/openapi.json"
-
+def create_weather_team_client(openapi_url: str) -> Client:
     with httpx.Client() as httpx_client:
         response = httpx_client.get(openapi_url)
         response.raise_for_status()
