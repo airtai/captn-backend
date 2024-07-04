@@ -34,3 +34,28 @@ class TestWeatherTeam:
             agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=WeatherTeam,
         )
+
+    @pytest.mark.flaky
+    @pytest.mark.openai
+    @pytest.mark.fastapi_openapi_team
+    def test_weather_team_end2end(self, weather_fastapi_openapi_url: str) -> None:
+        weather_team = WeatherTeam(
+            task="What's the weather like in London?",
+            user_id=123,
+            conv_id=456,
+            openapi_url=weather_fastapi_openapi_url,
+        )
+
+        weather_team.initiate_chat()
+
+        messages = weather_team.get_messages()
+        success = False
+        for message in messages:
+            if (
+                "tool_responses" in message
+                and message["content"] == "Weather in London is sunny"
+            ):
+                success = True
+                break
+
+        assert success, messages
