@@ -58,7 +58,7 @@ class TestAdGroupAd:
         ],
     )
     def test_maximum_headline_string_length(self, headlines, expected):
-        if expected == ValueError:
+        if expected is ValueError:
             with pytest.raises(ValueError):
                 AdGroupAd(
                     customer_id="2222",

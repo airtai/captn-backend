@@ -2,11 +2,13 @@ import json
 from os import environ
 from typing import Dict, List, Optional, Union
 
+import prisma
 from fastapi import APIRouter, BackgroundTasks
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
 from captn.captn_agents import BriefCreationTeam, SmartSuggestions
+from captn.captn_agents.db_queries import get_initial_team
 
 from .smart_suggestion_generator import generate_smart_suggestions
 
@@ -271,6 +273,16 @@ class AzureOpenAIRequest(BaseModel):
 async def chat(
     request: AzureOpenAIRequest, background_tasks: BackgroundTasks
 ) -> Dict[str, Union[Optional[str], int, Union[str, Optional[SmartSuggestions]]]]:
+    user_initial_team = await get_initial_team(request.user_id)
+    if isinstance(user_initial_team, prisma.models.UserInitialTeam):
+        return {
+            "team_status": "inprogress",
+            "team_name": user_initial_team.initial_team.name,
+            "team_id": request.chat_id,
+            "customer_brief": "This is my customer brief.",
+            "conversation_name": "Team of Experts",
+        }
+
     message = request.message
     chat_id = request.chat_id
     user_id = request.user_id

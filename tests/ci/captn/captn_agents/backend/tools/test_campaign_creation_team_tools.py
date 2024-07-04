@@ -291,7 +291,7 @@ class TestAdGroupAdForCreation:
             "H14",
         ]
         headlines.append(headline)
-        if expected == ValueError:
+        if expected is ValueError:
             with pytest.raises(ValueError):
                 AdGroupAdForCreation(
                     customer_id="2222",

@@ -11,11 +11,20 @@ from ._functions import (
     LAST_MESSAGE_BEGINNING,
     MAX_LINKS_TO_CLICK_DESCRIPTION,
     MIN_RELEVANT_PAGES_DESCRIPTION,
+    REPLY_TO_CLIENT_DESCRIPTION,
     BaseContext,
     get_get_info_from_the_web_page,
     get_info_from_the_web_page_description,
     reply_to_client,
-    reply_to_client_description,
+)
+
+__all__ = (
+    "Context",
+    "DelegateTask",
+    "DELEGATE_TASK_DESCRIPTION",
+    "delagate_task",
+    "GET_BRIEF_TEMPLATE_DESCRIPTION",
+    "get_brief_template",
 )
 
 
@@ -81,6 +90,78 @@ def _change_the_team_and_start_new_chat(
     return last_message
 
 
+DELEGATE_TASK_DESCRIPTION = "Delegate the task to the selected team. Use this function only once you have scraped the web page and filled in the customer brief!"
+
+
+def delagate_task(
+    task_and_context_to_delegate: Annotated[
+        DelegateTask,
+        "All the information needed to delegate the task. Make sure to fill in all the fields!",
+    ],
+    context: Context,
+) -> str:
+    get_info_from_web_page_result = context.get_info_from_web_page_result
+    if get_info_from_web_page_result == "":
+        return "You need to scrape the web page first by using the get_info_from_the_web_page command."
+
+    user_id = context.user_id
+    conv_id = context.conv_id
+
+    team_class: Type[Team] = Team.get_class_by_registred_team_name(
+        task_and_context_to_delegate.team_name
+    )
+
+    final_task = f"""Here is the customer brief:
+{task_and_context_to_delegate.customers_business_brief}
+
+Additional info from the web page:
+{get_info_from_web_page_result}
+
+And the task is following:
+{task_and_context_to_delegate.task}
+"""
+
+    last_message = _change_the_team_and_start_new_chat(
+        user_id=user_id,
+        conv_id=conv_id,
+        final_task=final_task,
+        team_class=team_class,
+    )
+    return last_message
+
+
+GET_BRIEF_TEMPLATE_DESCRIPTION = (
+    "Get the TEMPLATE for the customer brief you will need to create"
+)
+
+
+def get_brief_template(
+    team_name: Annotated[
+        str,
+        "The name of the team which will be responsible for the task. Make sure to select the right team for the task!",
+    ],
+    context: Context,
+) -> str:
+    counter = context.function_call_counter
+    key = f"get_brief_template_{team_name}"
+    if key in counter:
+        return "You have already received the brief template, please sproceed with the task."
+
+    counter[key] = True
+    team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
+    brief_template = f"""Here is the customer brief we have received from the previous team:
+
+{context.initial_brief}
+Use this information to fill in the rest of the fields in the customer brief template.
+
+
+Here is a template for the customer brief you will need to create:
+{team_class.get_brief_template()}
+"""
+
+    return brief_template
+
+
 def create_brief_creation_team_toolbox(
     user_id: int,
     conv_id: int,
@@ -97,73 +178,8 @@ def create_brief_creation_team_toolbox(
     web_page_info = WebPageInfo()
     web_page_info_f = web_page_info.get_info_from_the_web_page_f()
 
-    @toolbox.add_function(
-        "Get the TEMPLATE for the customer brief you will need to create"
-    )
-    def get_brief_template(
-        team_name: Annotated[
-            str,
-            "The name of the team which will be responsible for the task. Make sure to select the right team for the task!",
-        ],
-        context: Context,
-    ) -> str:
-        counter = context.function_call_counter
-        key = f"get_brief_template_{team_name}"
-        if key in counter:
-            return "You have already received the brief template, please sproceed with the task."
-
-        counter[key] = True
-        team_class: Type[Team] = Team.get_class_by_registred_team_name(team_name)
-        brief_template = f"""Here is the customer brief we have received from the previous team:
-
-{context.initial_brief}
-Use this information to fill in the rest of the fields in the customer brief template.
-
-
-Here is a template for the customer brief you will need to create:
-{team_class.get_brief_template()}
-"""
-
-        return brief_template
-
-    @toolbox.add_function(
-        "Delegate the task to the selected team. Use this function only once you have scraped the web page and filled in the customer brief!"
-    )
-    def delagate_task(
-        task_and_context_to_delegate: Annotated[
-            DelegateTask,
-            "All the information needed to delegate the task. Make sure to fill in all the fields!",
-        ],
-        context: Context,
-    ) -> str:
-        get_info_from_web_page_result = context.get_info_from_web_page_result
-        if get_info_from_web_page_result == "":
-            return "You need to scrape the web page first by using the get_info_from_the_web_page command."
-
-        user_id = context.user_id
-        conv_id = context.conv_id
-
-        team_class: Type[Team] = Team.get_class_by_registred_team_name(
-            task_and_context_to_delegate.team_name
-        )
-
-        final_task = f"""Here is the customer brief:
-{task_and_context_to_delegate.customers_business_brief}
-
-Additional info from the web page:
-{get_info_from_web_page_result}
-
-And the task is following:
-{task_and_context_to_delegate.task}
-"""
-
-        last_message = _change_the_team_and_start_new_chat(
-            user_id=user_id,
-            conv_id=conv_id,
-            final_task=final_task,
-            team_class=team_class,
-        )
-        return last_message
+    toolbox.add_function(GET_BRIEF_TEMPLATE_DESCRIPTION)(get_brief_template)
+    toolbox.add_function(DELEGATE_TASK_DESCRIPTION)(delagate_task)
 
     @toolbox.add_function(get_info_from_the_web_page_description)
     def get_info_from_the_web_page(
@@ -196,6 +212,6 @@ If the client does not choose this option, you can use the 'get_info_from_the_we
 """
         return result
 
-    toolbox.add_function(reply_to_client_description)(reply_to_client)
+    toolbox.add_function(REPLY_TO_CLIENT_DESCRIPTION)(reply_to_client)
 
     return toolbox
