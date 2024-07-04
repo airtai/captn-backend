@@ -2,13 +2,12 @@ import contextlib
 import socket
 import threading
 import time
-from pathlib import Path
 from platform import system
 from typing import Annotated, Iterator
 
 import pytest
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 
 
 def create_weather_fastapi_app(host: str, port: int) -> FastAPI:
