@@ -27,10 +27,16 @@ class TestBriefCreationTeam:
             task="do your magic",
         )
 
+        agent_number_of_functions_dict = {
+            "digitial_marketing_strategist": 4,
+            "account_manager": 4,
+            "user_proxy": 0,
+        }
+
         helper_test_init(
             team=brief_creation_team,
-            number_of_team_members=3,
-            number_of_functions=4,
+            number_of_registered_executions=4,
+            agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=BriefCreationTeam,
         )
 

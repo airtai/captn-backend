@@ -17,15 +17,21 @@ class TestGBBInitialTeam:
         yield
 
     def test_init(self) -> None:
-        brief_creation_team = GBBInitialTeam(
+        gbb_initial_team = GBBInitialTeam(
             user_id=123,
             conv_id=456,
             task="do your magic",
         )
 
+        agent_number_of_functions_dict = {
+            "digitial_marketing_strategist": 3,
+            "account_manager": 3,
+            "user_proxy": 0,
+        }
+
         helper_test_init(
-            team=brief_creation_team,
-            number_of_team_members=3,
-            number_of_functions=3,
+            team=gbb_initial_team,
+            number_of_registered_executions=3,
+            agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=GBBInitialTeam,
         )
