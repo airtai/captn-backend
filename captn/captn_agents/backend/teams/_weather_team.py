@@ -16,6 +16,8 @@ class WeatherTeam(TeamWithClient):
             "Name": "Weather_forecaster",
             "Description": """You are a weather forecaster.
 Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
+            "use_client": True,
+            "use_toolbox": False,
         },
         {
             "Name": "News_reporter",
@@ -29,6 +31,8 @@ accomplished work and execute the 'reply_to_client' command. That message will b
 sure it is understandable by non-experts.
 Never introduce yourself when writing messages. E.g. do not write 'As an account manager'
 """,
+            "use_client": False,
+            "use_toolbox": True,
         },
     ]
 
@@ -50,7 +54,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         ] = create_weather_team_toolbox,
         openapi_url: str = "https://weather.tools.fastagency.ai/openapi.json",
     ):
-        roles: List[Dict[str, str]] = self._default_roles
+        roles: List[Dict[str, Any]] = self._default_roles
 
         super().__init__(
             task=task,

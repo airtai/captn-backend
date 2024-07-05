@@ -5,7 +5,7 @@ import pytest
 
 from captn.captn_agents.backend.tools._team_with_client_tools import create_client
 from captn.captn_agents.backend.tools.patch_client import (
-    get_patch_patch_register_for_execution,
+    get_patch_register_for_execution,
 )
 
 
@@ -31,7 +31,7 @@ class TestGoogleSheets:
         kwargs_to_patch = {
             "user_id": 2525,
         }
-        get_patch_patch_register_for_execution(client, kwargs_to_patch)()
+        get_patch_register_for_execution(client, kwargs_to_patch)()
         client.register_for_llm(assistant)
         client.register_for_execution(user_proxy)
 

@@ -8,7 +8,7 @@ from captn.captn_agents.backend.tools._team_with_client_tools import (
     create_client,
 )
 from captn.captn_agents.backend.tools.patch_client import (
-    get_patch_patch_register_for_execution,
+    get_patch_register_for_execution,
 )
 
 
@@ -27,9 +27,7 @@ class TestPatchClient:
         kwargs_to_patch = {
             "city": "San Francisco",
         }
-        get_patch_patch_register_for_execution(
-            client, kwargs_to_patch=kwargs_to_patch
-        )()
+        get_patch_register_for_execution(client, kwargs_to_patch=kwargs_to_patch)()
 
         assistant = autogen.AssistantAgent(
             name="assistant",

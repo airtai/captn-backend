@@ -22,7 +22,7 @@ def _preprocess_decorator(
     return wrapper
 
 
-def get_patch_patch_register_for_execution(
+def get_patch_register_for_execution(
     client: Client, kwargs_to_patch: Dict[str, Any]
 ) -> Callable[..., None]:
     def _patch_register_for_execution() -> None:

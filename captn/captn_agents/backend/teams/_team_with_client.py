@@ -57,6 +57,15 @@ class TeamWithClient(Team):
 
         self._create_members()
 
+        self.roles_with_client = []
+        self.roles_with_toolbox = []
+        for role in self.roles:
+            name = role["Name"].lower()
+            if role["use_client"]:
+                self.roles_with_client.append(name)
+            if role["use_toolbox"]:
+                self.roles_with_toolbox.append(name)
+
         self._add_client()
         self._add_tools()
 
@@ -65,12 +74,13 @@ class TeamWithClient(Team):
     def _add_client(self) -> None:
         self.client = create_client(self.openapi_url)
 
-        self.client.register_for_execution(self.user_proxy)
         for agent in self.members:
-            if agent.name == self.roles[0]["Name"].lower():
+            if agent.name in self.roles_with_client:
                 if agent.llm_config["tools"] is None:
                     agent.llm_config.pop("tools")
                 self.client.register_for_llm(agent)
+
+        self.client.register_for_execution(self.user_proxy)
 
     def _add_tools(self) -> None:
         self.toolbox = self.create_toolbox_func(
@@ -78,5 +88,5 @@ class TeamWithClient(Team):
             self.conv_id,
         )
         for agent in self.members:
-            if agent != self.user_proxy and agent.name != self.roles[0]["Name"].lower():
+            if agent != self.user_proxy and agent.name in self.roles_with_toolbox:
                 self.toolbox.add_to_agent(agent, self.user_proxy)
