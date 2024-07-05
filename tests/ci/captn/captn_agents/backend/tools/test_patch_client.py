@@ -24,7 +24,12 @@ class TestPatchClient:
     def test_patch_client(self, weather_fastapi_openapi_url: str) -> None:
         client = create_weather_team_client(weather_fastapi_openapi_url)
 
-        get_patch_patch_register_for_execution(client)()
+        kwargs_to_patch = {
+            "city": "San Francisco",
+        }
+        get_patch_patch_register_for_execution(
+            client, kwargs_to_patch=kwargs_to_patch
+        )()
 
         assistant = autogen.AssistantAgent(
             name="assistant",
@@ -45,7 +50,9 @@ class TestPatchClient:
         success = False
         for message in messages:
             if "tool_responses" in message:
-                assert message["content"] == "Weather in San Francisco is sunny"
+                assert (
+                    message["content"] == "Weather in San Francisco is sunny"
+                ), message
                 success = True
                 break
 
