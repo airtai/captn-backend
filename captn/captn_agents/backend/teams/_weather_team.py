@@ -5,7 +5,7 @@ from fastagency.openapi.client import Client
 from ..config import Config
 from ..toolboxes import Toolbox
 from ..tools._weather_team_tools import (
-    create_weather_team_client,
+    create_client,
     create_weather_team_toolbox,
 )
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
@@ -51,7 +51,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         create_toolbox_func: Callable[
             [int, int], Toolbox
         ] = create_weather_team_toolbox,
-        create_client_func: Callable[[str], Client] = create_weather_team_client,
+        create_client_func: Callable[[str], Client] = create_client,
         openapi_url: str = "https://weather.tools.fastagency.ai/openapi.json",
     ):
         recommended_modifications_and_answer_list: List[

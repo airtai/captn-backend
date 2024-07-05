@@ -5,7 +5,7 @@ import pytest
 
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._weather_team_tools import (
-    create_weather_team_client,
+    create_client,
 )
 from captn.captn_agents.backend.tools.patch_client import (
     get_patch_patch_register_for_execution,
@@ -22,7 +22,7 @@ class TestPatchClient:
     @pytest.mark.flaky
     @pytest.mark.openai
     def test_patch_client(self, weather_fastapi_openapi_url: str) -> None:
-        client = create_weather_team_client(weather_fastapi_openapi_url)
+        client = create_client(weather_fastapi_openapi_url)
 
         kwargs_to_patch = {
             "city": "San Francisco",
