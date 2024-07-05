@@ -8,8 +8,8 @@ from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.teams._team import Team
+from captn.captn_agents.backend.tools._team_with_client_tools import create_client
 from captn.captn_agents.backend.tools._weather_team_tools import (
-    create_client,
     create_weather_team_toolbox,
 )
 

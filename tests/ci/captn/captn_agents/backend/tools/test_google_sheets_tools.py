@@ -3,7 +3,7 @@ from typing import Dict, List
 import autogen
 import pytest
 
-from captn.captn_agents.backend.tools._weather_team_tools import create_client
+from captn.captn_agents.backend.tools._team_with_client_tools import create_client
 from captn.captn_agents.backend.tools.patch_client import (
     get_patch_patch_register_for_execution,
 )

@@ -4,7 +4,7 @@ import autogen
 import pytest
 
 from captn.captn_agents.backend.config import Config
-from captn.captn_agents.backend.tools._weather_team_tools import (
+from captn.captn_agents.backend.tools._team_with_client_tools import (
     create_client,
 )
 from captn.captn_agents.backend.tools.patch_client import (
