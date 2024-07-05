@@ -112,6 +112,7 @@ agents = [
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
     "fastagency@git+https://github.com/airtai/fastagency.git@3a2346c",
+    "python-multipart==0.0.9", # remove after fastagency is updated
 ]
 
 dev = [
