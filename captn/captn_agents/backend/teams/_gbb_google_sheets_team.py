@@ -90,6 +90,13 @@ Here is the current customers brief/information we have gathered for you as a st
         return """### Guidelines
 1. Do NOT repeat the content of the previous messages nor repeat your role.
 2. When sending requests to the Google Sheets API, use user_id=-1, someone else will handle the authentication.
+3. Your task is to get_all_file_names endpoint from the Google Sheets API.
+4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with new routes.
+Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
+5. In the template spreadsheet, ou must find sheet titles of the ad template and keyword template.
+6. In the spreadsheet with new routes, you must find the title of the sheet with new routes.
+7. Once you have all the necessary information, use process_spreadsheet endpoint to process the spreadsheet.
+8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
 """
 
     @property
