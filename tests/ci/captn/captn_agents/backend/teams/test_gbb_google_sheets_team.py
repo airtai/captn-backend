@@ -25,14 +25,18 @@ class TestGBBGoogleSheetsTeam:
             openapi_url=self.google_sheets_fastapi_openapi_url,
         )
         agent_number_of_functions_dict = {
-            "google_sheets_expert": 2,
+            "google_sheets_expert": 6,
             "account_manager": 1,
             "user_proxy": 0,
         }
 
+        number_of_registered_executions = (
+            agent_number_of_functions_dict["google_sheets_expert"]
+            + agent_number_of_functions_dict["account_manager"]
+        )
         helper_test_init(
             team=google_sheets_team,
-            number_of_registered_executions=3,
+            number_of_registered_executions=number_of_registered_executions,
             agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=GBBGoogleSheetsTeam,
         )

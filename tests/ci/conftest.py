@@ -7,7 +7,8 @@ from typing import Annotated, Any, Callable, Dict, Iterator, List, Optional, Uni
 
 import pytest
 import uvicorn
-from fastapi import FastAPI, Path, Query
+from fastapi import Body, FastAPI, Path, Query, Response, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from captn.captn_agents.backend.config import Config
@@ -38,11 +39,10 @@ def create_weather_fastapi_app(host: str, port: int) -> FastAPI:
 
 
 def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
+    base_url = f"http://{host}:{port}"
     app = FastAPI(
         title="Google Sheet",
-        servers=[
-            {"url": f"http://{host}:{port}", "description": "Local development server"}
-        ],
+        servers=[{"url": base_url, "description": "Local development server"}],
     )
 
     @app.get("/login", description="Get the URL to log in with Google")
@@ -55,6 +55,20 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
         return {
             "url": f"https://accounts.google.com/o/oauth2/auth?user={user_id}&force_new_login={force_new_login}"
         }
+
+    @app.get("/login/success", description="Get the success message after login")
+    def get_login_success() -> Dict[str, str]:
+        return {"login_success": "You have successfully logged in"}
+
+    @app.get("/login/callback")
+    async def login_callback(
+        code: Annotated[
+            Optional[str],
+            Query(description="The authorization code received after successful login"),
+        ] = None,
+        state: Annotated[Optional[str], Query(description="State")] = None,
+    ) -> RedirectResponse:
+        return RedirectResponse(url=f"{base_url}/login/success")
 
     class GoogleSheetValues(BaseModel):
         values: List[List[Any]] = Field(
@@ -80,6 +94,54 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
                 ["Country", "Station From", "Station To"],
                 ["USA", "New York", "Los Angeles"],
             ]
+        )
+
+    @app.post(
+        "/update-sheet",
+        description="Update data in a Google Sheet within the existing spreadsheet",
+    )
+    def update_sheet(
+        user_id: Annotated[
+            int, Query(description="The user ID for which the data is requested")
+        ] = None,
+        spreadsheet_id: Annotated[
+            Optional[str],
+            Query(description="ID of the Google Sheet to fetch data from"),
+        ] = None,
+        title: Annotated[
+            Optional[str],
+            Query(description="The title of the sheet to update"),
+        ] = None,
+        sheet_values: Annotated[
+            Optional[GoogleSheetValues],
+            Body(embed=True, description="Values to be written to the Google Sheet"),
+        ] = None,
+    ) -> Response:
+        return Response(
+            status_code=status.HTTP_200_OK,
+            content=f"Sheet with the name '{title}' has been updated successfully.",
+        )
+
+    @app.post(
+        "/create-sheet",
+        description="Create a new Google Sheet within the existing spreadsheet",
+    )
+    def create_sheet(
+        user_id: Annotated[
+            int, Query(description="The user ID for which the data is requested")
+        ],
+        spreadsheet_id: Annotated[
+            Optional[str],
+            Query(description="ID of the Google Sheet to fetch data from"),
+        ] = None,
+        title: Annotated[
+            Optional[str],
+            Query(description="The title of the new sheet"),
+        ] = None,
+    ) -> Response:
+        return Response(
+            status_code=status.HTTP_201_CREATED,
+            content=f"Sheet with the name '{title}' has been created successfully.",
         )
 
     return app
