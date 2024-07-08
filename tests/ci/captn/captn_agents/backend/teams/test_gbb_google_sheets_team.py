@@ -1,7 +1,12 @@
+from tempfile import TemporaryDirectory
 from typing import Iterator
 
 import pytest
+from autogen.cache import Cache
 
+from captn.captn_agents.backend.benchmarking.helpers import (
+    get_client_response_for_the_team_conv,
+)
 from captn.captn_agents.backend.teams import (
     GBBGoogleSheetsTeam,
     Team,
@@ -54,17 +59,40 @@ class TestGBBGoogleSheetsTeam:
             openapi_url=google_sheets_fastapi_openapi_url,
         )
 
-        google_sheets_team.initiate_chat()
+        expected_messages = [
+            "Sheet with the name 'Captn - Ads' has been created successfully.",
+            "Sheet with the name 'Captn - Keywords' has been created successfully.",
+        ]
+        with TemporaryDirectory() as cache_dir:
+            with Cache.disk(cache_path_root=cache_dir) as cache:
+                google_sheets_team.initiate_chat(cache=cache)
 
-        messages = google_sheets_team.get_messages()
-        success = False
-        for message in messages:
-            if (
-                "tool_responses" in message
-                and message["content"]
-                == '{"values": [["Country", "Station From", "Station To"], ["USA", "New York", "Los Angeles"]]}'
-            ):
-                success = True
-                break
+                while True:
+                    messages = google_sheets_team.get_messages()
+                    for message in messages:
+                        if "tool_responses" in message:
+                            expected_messages_copy = expected_messages.copy()
+                            for expected_message in expected_messages_copy:
+                                if expected_message in message["content"]:
+                                    expected_messages.remove(expected_message)
+                                    print(f"Found message: {expected_message}")
 
-        assert success, messages
+                        if len(expected_messages) == 0:
+                            break
+                    if len(expected_messages) == 0:
+                        break
+
+                    num_messages = len(messages)
+                    if num_messages < google_sheets_team.max_round:
+                        customers_response = get_client_response_for_the_team_conv(
+                            user_id=123,
+                            conv_id=456,
+                            message=google_sheets_team.get_last_message(),
+                            cache=cache,
+                            # client_system_message=_client_system_messages,
+                        )
+                        google_sheets_team.continue_chat(message=customers_response)
+
+        assert (
+            len(expected_messages) == 0
+        ), f"Expected messages left: {expected_messages}"

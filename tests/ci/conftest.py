@@ -250,11 +250,12 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
                 description="The target resource to be updated, options: 'ad' or 'keyword'"
             ),
         ] = None,
-    ) -> Response:
-        return Response(
-            status_code=status.HTTP_201_CREATED,
-            content=f"Sheet with the name 'Captn - {target_resource.capitalize()}s' has been created successfully.",
-        )
+    ) -> str:
+        # return Response(
+        #     status_code=status.HTTP_201_CREATED,
+        #     content=f"Sheet with the name 'Captn - {target_resource.capitalize()}s' has been created successfully.",
+        # )
+        return f"Sheet with the name 'Captn - {target_resource.capitalize()}s' has been created successfully."
 
     return app
 
