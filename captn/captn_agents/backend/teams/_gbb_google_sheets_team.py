@@ -58,6 +58,10 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
     ):
         roles: List[Dict[str, Any]] = self._default_roles
 
+        kwargs_to_patch = {
+            "user_id": user_id,
+        }
+
         super().__init__(
             task=task,
             user_id=user_id,
@@ -65,6 +69,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             roles=roles,
             create_toolbox_func=create_toolbox_func,
             openapi_url=openapi_url,
+            kwargs_to_patch=kwargs_to_patch,
             work_dir=work_dir,
             max_round=max_round,
             seed=seed,

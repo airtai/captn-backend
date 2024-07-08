@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from ..config import Config
 from ..toolboxes import Toolbox
 from ..tools._team_with_client_tools import create_client
+from ..tools.patch_client import get_patch_register_for_execution
 from ._team import Team
 
 __all__ = ("TeamWithClient",)
@@ -20,6 +21,7 @@ class TeamWithClient(Team):
         roles: List[Dict[str, str]],
         create_toolbox_func: Callable[[int, int], Toolbox],
         openapi_url: str,
+        kwargs_to_patch: Optional[Dict[str, Any]] = None,
         work_dir: str = "team_with_client",
         max_round: int = 80,
         seed: int = 42,
@@ -54,6 +56,7 @@ class TeamWithClient(Team):
         )
         self.create_toolbox_func = create_toolbox_func
         self.openapi_url = openapi_url
+        self.kwargs_to_patch = kwargs_to_patch
 
         self._create_members()
 
@@ -73,6 +76,8 @@ class TeamWithClient(Team):
 
     def _add_client(self) -> None:
         self.client = create_client(self.openapi_url)
+        if self.kwargs_to_patch:
+            get_patch_register_for_execution(self.client, self.kwargs_to_patch)()
 
         for agent in self.members:
             if agent.name in self.roles_with_client:
