@@ -75,7 +75,6 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
             Query(description="The title of the sheet to fetch data from"),
         ] = None,
     ) -> Union[str, GoogleSheetValues]:
-        assert user_id != -1
         return GoogleSheetValues(
             values=[
                 ["Country", "Station From", "Station To"],

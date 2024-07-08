@@ -20,7 +20,6 @@ def helper_test_init(
             # execution of the tools
             number_of_functions_in_function_map = len(agent.function_map)
             if isinstance(agent, UserProxyAgent):
-                print(agent.function_map)
                 assert (
                     number_of_functions_in_function_map
                     == number_of_registered_executions
