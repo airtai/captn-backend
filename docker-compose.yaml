@@ -49,6 +49,7 @@ services:
       - REACT_APP_API_URL=${REACT_APP_API_URL}
       - REDIRECT_DOMAIN=${REDIRECT_DOMAIN}
       - DOMAIN=${DOMAIN}
+      - GOOGLE_SHEETS_OPENAPI_URL=${GOOGLE_SHEETS_OPENAPI_URL}
     logging: *default-logging
 
   prometheus:  # nosemgrep

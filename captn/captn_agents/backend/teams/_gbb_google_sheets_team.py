@@ -1,3 +1,4 @@
+from os import environ
 from typing import Any, Callable, Dict, List, Optional
 
 from ..toolboxes import Toolbox
@@ -9,6 +10,10 @@ from ..tools._weather_team_tools import (
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 from ._team_with_client import TeamWithClient
+
+GOOGLE_SHEETS_OPENAPI_URL = environ.get(
+    "GOOGLE_SHEETS_OPENAPI_URL", "http://localhost:8000/openapi.json"
+)
 
 
 @Team.register_team("gbb_google_sheets_team")
@@ -54,7 +59,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         create_toolbox_func: Callable[
             [int, int], Toolbox
         ] = create_weather_team_toolbox,
-        openapi_url: str = "https://google-sheets.tools.staging.fastagency.ai/openapi.json",
+        openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
     ):
         roles: List[Dict[str, Any]] = self._default_roles
 
