@@ -52,9 +52,10 @@ class TestGBBGoogleSheetsTeam:
     def test_google_sheets_team_end2end(
         self, google_sheets_fastapi_openapi_url: str
     ) -> None:
+        user_id = 123
         google_sheets_team = GBBGoogleSheetsTeam(
-            task="I want to get the data from the Google spreadsheet id: 1234, title: 'New'.",
-            user_id=123,
+            task="Do your job.",
+            user_id=user_id,
             conv_id=456,
             openapi_url=google_sheets_fastapi_openapi_url,
         )
@@ -85,7 +86,7 @@ class TestGBBGoogleSheetsTeam:
                     num_messages = len(messages)
                     if num_messages < google_sheets_team.max_round:
                         customers_response = get_client_response_for_the_team_conv(
-                            user_id=123,
+                            user_id=user_id,
                             conv_id=456,
                             message=google_sheets_team.get_last_message(),
                             cache=cache,
