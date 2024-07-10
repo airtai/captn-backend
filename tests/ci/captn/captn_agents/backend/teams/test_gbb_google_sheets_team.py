@@ -47,13 +47,12 @@ class TestGBBGoogleSheetsTeam:
             team_class=GBBGoogleSheetsTeam,
         )
 
-    @pytest.mark.flaky
-    @pytest.mark.openai
-    @pytest.mark.fastapi_openapi_team
-    def test_google_sheets_team_end2end(
-        self, google_sheets_fastapi_openapi_url: str, mock_get_conv_uuid: Iterator[Any]
+    def _test_google_sheets_team_end2end(
+        self,
+        user_id: int,
+        google_sheets_fastapi_openapi_url: str,
+        mock_get_conv_uuid: Iterator[Any],
     ) -> None:
-        user_id = 123
         with mock_get_conv_uuid:
             google_sheets_team = GBBGoogleSheetsTeam(
                 task="Do your job.",
@@ -99,3 +98,27 @@ class TestGBBGoogleSheetsTeam:
         assert (
             len(expected_messages) == 0
         ), f"Expected messages left: {expected_messages}"
+
+    @pytest.mark.flaky
+    @pytest.mark.openai
+    @pytest.mark.fastapi_openapi_team
+    def test_google_sheets_team_end2end(
+        self, google_sheets_fastapi_openapi_url: str, mock_get_conv_uuid: Iterator[Any]
+    ) -> None:
+        self._test_google_sheets_team_end2end(
+            user_id=123,
+            google_sheets_fastapi_openapi_url=google_sheets_fastapi_openapi_url,
+            mock_get_conv_uuid=mock_get_conv_uuid,
+        )
+
+    @pytest.mark.flaky
+    @pytest.mark.openai
+    @pytest.mark.fastapi_openapi_team
+    def test_google_sheets_real_fastapi_team_end2end(
+        self, mock_get_conv_uuid: Iterator[Any]
+    ) -> None:
+        self._test_google_sheets_team_end2end(
+            user_id=13,
+            google_sheets_fastapi_openapi_url="https://google-sheets.tools.staging.fastagency.ai/openapi.json",
+            mock_get_conv_uuid=mock_get_conv_uuid,
+        )
