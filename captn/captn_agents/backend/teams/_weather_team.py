@@ -1,24 +1,23 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
-from fastagency.openapi.client import Client
-
-from ..config import Config
 from ..toolboxes import Toolbox
 from ..tools._weather_team_tools import (
-    create_weather_team_client,
     create_weather_team_toolbox,
 )
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
+from ._team_with_client import TeamWithClient
 
 
 @Team.register_team("weather_team")
-class WeatherTeam(Team):
+class WeatherTeam(TeamWithClient):
     _default_roles = [
         {
             "Name": "Weather_forecaster",
             "Description": """You are a weather forecaster.
 Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
+            "use_client": True,
+            "use_toolbox": False,
         },
         {
             "Name": "News_reporter",
@@ -32,6 +31,8 @@ accomplished work and execute the 'reply_to_client' command. That message will b
 sure it is understandable by non-experts.
 Never introduce yourself when writing messages. E.g. do not write 'As an account manager'
 """,
+            "use_client": False,
+            "use_toolbox": True,
         },
     ]
 
@@ -51,71 +52,23 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         create_toolbox_func: Callable[
             [int, int], Toolbox
         ] = create_weather_team_toolbox,
-        create_client_func: Callable[[str], Client] = create_weather_team_client,
         openapi_url: str = "https://weather.tools.fastagency.ai/openapi.json",
     ):
-        recommended_modifications_and_answer_list: List[
-            Tuple[Dict[str, Any], Optional[str]]
-        ] = []
-        function_map: Dict[str, Callable[[Any], Any]] = {}
-
-        roles: List[Dict[str, str]] = self._default_roles
+        roles: List[Dict[str, Any]] = self._default_roles
 
         super().__init__(
+            task=task,
             user_id=user_id,
             conv_id=conv_id,
             roles=roles,
-            task=task,
-            function_map=function_map,
+            create_toolbox_func=create_toolbox_func,
+            openapi_url=openapi_url,
             work_dir=work_dir,
             max_round=max_round,
             seed=seed,
             temperature=temperature,
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
-            use_user_proxy=True,
+            config_list=config_list,
         )
-
-        if config_list is None:
-            config = Config()
-            config_list = config.config_list_gpt_4o
-
-        self.llm_config = self._get_llm_config(
-            seed=seed, temperature=temperature, config_list=config_list
-        )
-        self.create_toolbox_func = create_toolbox_func
-        self.create_client_func = create_client_func
-        self.openapi_url = openapi_url
-
-        self._create_members()
-
-        self._add_client()
-        self._add_tools()
-
-        self._create_initial_message()
-
-    def _add_client(self) -> None:
-        self.client = self.create_client_func(self.openapi_url)
-
-        self.client.register_for_execution(self.user_proxy)
-        for agent in self.members:
-            # Add only for Weather_forecaster
-            if agent.name == self._default_roles[0]["Name"].lower():
-                if agent.llm_config["tools"] is None:
-                    agent.llm_config.pop("tools")
-                self.client.register_for_llm(agent)
-
-    def _add_tools(self) -> None:
-        self.toolbox = self.create_toolbox_func(
-            self.user_id,
-            self.conv_id,
-        )
-        # Add only for News_reporter
-        for agent in self.members:
-            if (
-                agent != self.user_proxy
-                and agent.name != self._default_roles[0]["Name"].lower()
-            ):
-                self.toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:

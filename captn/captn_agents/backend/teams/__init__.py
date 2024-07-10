@@ -1,5 +1,6 @@
 from ._brief_creation_team import BriefCreationTeam
 from ._campaign_creation_team import CampaignCreationTeam
+from ._gbb_google_sheets_team import GBBGoogleSheetsTeam
 from ._gbb_initial_team import GBBInitialTeam
 from ._google_ads_team import GoogleAdsTeam
 from ._team import Team
@@ -13,6 +14,7 @@ from ._weekly_analysis_team import (
 __all__ = (
     "BriefCreationTeam",
     "CampaignCreationTeam",
+    "GBBGoogleSheetsTeam",
     "GBBInitialTeam",
     "WeeklyAnalysisTeam",
     "WeatherTeam",

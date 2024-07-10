@@ -227,6 +227,7 @@ markers = [
     "google_ads_team: maker test as end2end testing of the google_ads_team",
     "weekly_analysis_team: maker test as end2end testing of the weekly_analysis_team",
     "get_info_from_the_web_page: maker test as end2end testing of the websurfer",
+    "fastapi_openapi_team: maker test for testing teams with fastapi tools",
 ]
 
 # needed for pytest-retry
