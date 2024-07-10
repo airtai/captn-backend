@@ -59,7 +59,7 @@ jobs:
         AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
         AZURE_OPENAI_API_KEY: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}
         AZURE_OPENAI_API_KEY_GPT4O: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}
-        GOOGLE_SHEETS_OPENAPI_URL: ${{ secrets.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
+        GOOGLE_SHEETS_OPENAPI_URL: ${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
       steps:
         - uses: actions/checkout@v4
         - name: Set up Python
@@ -156,7 +156,7 @@ jobs:
               INFOBIP_API_KEY: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_API_KEY || secrets.STAGING_INFOBIP_API_KEY }}
               INFOBIP_BASE_URL: ${{ github.ref_name == 'main' && secrets.PROD_INFOBIP_BASE_URL || secrets.STAGING_INFOBIP_BASE_URL }}
               SSH_KEY: ${{ github.ref_name == 'main' && secrets.PROD_SSH_KEY || secrets.STAGING_SSH_KEY }}
-              GOOGLE_SHEETS_OPENAPI_URL: ${{ github.ref_name == 'main' && secrets.PROD_GOOGLE_SHEETS_OPENAPI_URL || secrets.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
+              GOOGLE_SHEETS_OPENAPI_URL: ${{ github.ref_name == 'main' && vars.PROD_GOOGLE_SHEETS_OPENAPI_URL || vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
           steps:
               - uses: actions/checkout@v3 # Don't change it to cheackout@v4. V4 is not working with container image.
               # This is to fix GIT not liking owner of the checkout dir - https://github.com/actions/runner/issues/2033#issuecomment-1204205989
