@@ -31,7 +31,7 @@ class TestGBBGoogleSheetsTeam:
                 openapi_url=self.google_sheets_fastapi_openapi_url,
             )
         agent_number_of_functions_dict = {
-            "google_sheets_expert": 10,
+            "google_sheets_expert": 9,
             "account_manager": 1,
             "user_proxy": 0,
         }
