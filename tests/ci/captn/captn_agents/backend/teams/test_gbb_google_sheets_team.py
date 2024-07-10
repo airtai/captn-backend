@@ -1,5 +1,5 @@
 from tempfile import TemporaryDirectory
-from typing import Iterator
+from typing import Any, Iterator
 
 import pytest
 from autogen.cache import Cache
@@ -22,13 +22,14 @@ class TestGBBGoogleSheetsTeam:
         Team._teams.clear()
         yield
 
-    def test_init(self) -> None:
-        google_sheets_team = GBBGoogleSheetsTeam(
-            task="do your magic",
-            user_id=123,
-            conv_id=456,
-            openapi_url=self.google_sheets_fastapi_openapi_url,
-        )
+    def test_init(self, mock_get_conv_uuid: Iterator[Any]) -> None:
+        with mock_get_conv_uuid:
+            google_sheets_team = GBBGoogleSheetsTeam(
+                task="do your magic",
+                user_id=123,
+                conv_id=456,
+                openapi_url=self.google_sheets_fastapi_openapi_url,
+            )
         agent_number_of_functions_dict = {
             "google_sheets_expert": 10,
             "account_manager": 1,
@@ -50,15 +51,16 @@ class TestGBBGoogleSheetsTeam:
     @pytest.mark.openai
     @pytest.mark.fastapi_openapi_team
     def test_google_sheets_team_end2end(
-        self, google_sheets_fastapi_openapi_url: str
+        self, google_sheets_fastapi_openapi_url: str, mock_get_conv_uuid: Iterator[Any]
     ) -> None:
         user_id = 123
-        google_sheets_team = GBBGoogleSheetsTeam(
-            task="Do your job.",
-            user_id=user_id,
-            conv_id=456,
-            openapi_url=google_sheets_fastapi_openapi_url,
-        )
+        with mock_get_conv_uuid:
+            google_sheets_team = GBBGoogleSheetsTeam(
+                task="Do your job.",
+                user_id=user_id,
+                conv_id=456,
+                openapi_url=google_sheets_fastapi_openapi_url,
+            )
 
         expected_messages = [
             "Sheet with the name 'Captn - Ads' has been created successfully.",

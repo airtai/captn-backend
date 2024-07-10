@@ -1,6 +1,7 @@
 from os import environ
 from typing import Any, Callable, Dict, List, Optional
 
+from ....google_ads.client import get_conv_uuid
 from ..toolboxes import Toolbox
 
 # Currently only reply_to_client command within this toolbox
@@ -62,9 +63,11 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
     ):
         roles: List[Dict[str, Any]] = self._default_roles
+        conv_uuid = get_conv_uuid(conv_id=conv_id)
 
         kwargs_to_patch = {
             "user_id": user_id,
+            "conv_uuid": conv_uuid,
         }
 
         super().__init__(
@@ -97,6 +100,9 @@ Here is the current customers brief/information we have gathered for you as a st
 2. When sending requests to the Google Sheets API, use user_id=-1, someone else will handle the authentication.
 3.1. Your task is to 'get_all_file_names_get_all_file_names_get' endpoint from the Google Sheets API.
 3.2. If you receive "User hasn't grant access yet!" from the Google Sheets API, use the Google Sheets API 'get_login_url_login_get' endpoint to authenticate
+- Use user_id=-1 and conv_uuid="abc" (The correct values will be injected by the system).
+- If you receive a login url, forward it to the client by using the 'reply_to_client' function.
+- Do NOT use smart suggestions when forwarding the login url to the client!
 4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with new routes.
 Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
 5. In the template spreadsheet, ou must find sheet titles of the ad template and keyword template (by using 'get_all_sheet_titles_get_all_sheet_titles_get').

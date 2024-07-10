@@ -59,15 +59,14 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
         user_id: Annotated[
             int, Query(description="The user ID for which the data is requested")
         ],
+        conv_uuid: Annotated[
+            Optional[str], Query(description="The conversation UUID")
+        ] = None,
         force_new_login: Annotated[bool, Query(description="Force new login")] = False,
     ) -> Dict[str, str]:
         return {
             "url": f"https://accounts.google.com/o/oauth2/auth?user={user_id}&force_new_login={force_new_login}"
         }
-
-    @app.get("/login/success", description="Get the success message after login")
-    def get_login_success() -> Dict[str, str]:
-        return {"login_success": "You have successfully logged in"}
 
     @app.get("/login/callback")
     async def login_callback(
