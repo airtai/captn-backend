@@ -98,6 +98,14 @@ async def get_user_id_chat_uuid_from_chat_id(
     return user_id, chat_uuid
 
 
+@router.get("/user-id-chat-uuid")
+async def get_chat_uuid_from_chat_id(
+    chat_id: Union[int, str],
+) -> str:
+    _, chat_uuid = await get_user_id_chat_uuid_from_chat_id(chat_id)
+    return chat_uuid
+
+
 async def is_authenticated_for_ads(user_id: int) -> bool:
     await get_user(user_id=user_id)
     async with get_db_connection() as db:

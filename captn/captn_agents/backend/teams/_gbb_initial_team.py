@@ -6,6 +6,8 @@ from ._brief_creation_team import BriefCreationTeam
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
 
+__all__ = ("GBBInitialTeam",)
+
 
 @Team.register_team("gbb_initial_team")
 class GBBInitialTeam(BriefCreationTeam):
@@ -65,7 +67,7 @@ and depending on the clients answer, choose the appropriate team.
 If you fail to choose the appropriate team, you will be penalized!
 
 3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
-{self.construct_team_names_and_descriptions_message(use_only_team_names={"campaign_creation_team"})}
+{self.construct_team_names_and_descriptions_message(use_only_team_names={"gbb_google_sheets_team"})}
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan

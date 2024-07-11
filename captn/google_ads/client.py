@@ -32,6 +32,17 @@ def get_google_ads_team_capability() -> str:
     return prefix + "- " + "\n- ".join(capabilities)
 
 
+def get_conv_uuid(conv_id: int) -> str:
+    params = {
+        "chat_id": conv_id,
+    }
+    response = requests_get(f"{BASE_URL}/user-id-chat-uuid", params=params, timeout=60)
+    if not response.ok:
+        raise ValueError(response.content)
+
+    return response.json()  # type: ignore[no-any-return]
+
+
 def get_login_url(
     user_id: int, conv_id: int, force_new_login: bool = False
 ) -> Dict[str, str]:

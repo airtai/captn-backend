@@ -19,10 +19,16 @@ class TestCampaignCreationTeam:
             task="do your magic",
         )
 
+        agent_number_of_functions_dict = {
+            "copywriter": 7,
+            "account_manager": 7,
+            "user_proxy": 0,
+        }
+
         helper_test_init(
             team=campaign_creation_team,
-            number_of_team_members=3,
-            number_of_functions=7,
+            number_of_registered_executions=7,
+            agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=CampaignCreationTeam,
         )
 

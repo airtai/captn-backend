@@ -1368,10 +1368,18 @@ class TestWeeklyAnalysisTeam:
             task="do your magic",
         )
 
+        agent_number_of_functions_dict = {
+            "google_ads_specialist": 4,
+            "copywriter": 4,
+            "digital_strategist": 4,
+            "account_manager": 4,
+            "user_proxy": 0,
+        }
+
         helper_test_init(
             team=weekly_analysis_team,
-            number_of_team_members=5,
-            number_of_functions=4,
+            number_of_registered_executions=4,
+            agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=WeeklyAnalysisTeam,
         )
 
