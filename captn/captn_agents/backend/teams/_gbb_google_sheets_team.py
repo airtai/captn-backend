@@ -105,11 +105,10 @@ Here is the current customers brief/information we have gathered for you as a st
 - Do NOT use smart suggestions when forwarding the login url to the client!
 4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with new routes.
 Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
-5. In the template spreadsheet, ou must find sheet titles of the ad template and keyword template (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
+5. In the template spreadsheet, you must must check that 'Campaigns', 'ad Groups', 'Keywords' and 'Ads' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 6. In the spreadsheet with new routes, you must find the title of the sheet with new routes (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
-7. Once you have all the necessary information, use process_spreadsheet endpoint to process the spreadsheet (by using 'process_spreadsheet_process_spreadsheet_post').
-- you must do this step twice, once for the ad template and once for the keyword template.
-- query parameters: user_id, template_spreadsheet_id, template_sheet_title, new_campaign_spreadsheet_id, new_campaign_sheet_title, target_resource ('ad' or 'keyword')
+7. Once you have all the necessary information, use 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
+- query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
 8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).

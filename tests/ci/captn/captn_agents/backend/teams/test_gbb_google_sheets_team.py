@@ -31,7 +31,7 @@ class TestGBBGoogleSheetsTeam:
                 openapi_url=self.google_sheets_fastapi_openapi_url,
             )
         agent_number_of_functions_dict = {
-            "google_sheets_expert": 9,
+            "google_sheets_expert": 8,
             "account_manager": 1,
             "user_proxy": 0,
         }
@@ -62,8 +62,8 @@ class TestGBBGoogleSheetsTeam:
             )
 
         expected_messages = [
-            "Sheet with the name 'Captn - Ads' has been created successfully.",
-            "Sheet with the name 'Captn - Keywords' has been created successfully.",
+            "Sheet with the name 'Captn - Ads",
+            "Sheet with the name 'Captn - Keywords",
         ]
         with TemporaryDirectory() as cache_dir:
             with Cache.disk(cache_path_root=cache_dir) as cache:
@@ -93,6 +93,7 @@ class TestGBBGoogleSheetsTeam:
                             cache=cache,
                             # client_system_message=_client_system_messages,
                         )
+                        google_sheets_team.toolbox._context.waiting_for_client_response = False
                         google_sheets_team.continue_chat(message=customers_response)
 
         assert (
