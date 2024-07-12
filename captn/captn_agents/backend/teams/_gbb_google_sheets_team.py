@@ -1,13 +1,11 @@
 from os import environ
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 from ....google_ads.client import get_conv_uuid
 from ..toolboxes import Toolbox
-from ..tools._gbb_google_sheets_team_tools import create_google_ads_expert_toolbox
-
-# Currently only reply_to_client command within this toolbox
-from ..tools._weather_team_tools import (
-    create_weather_team_toolbox,
+from ..tools._gbb_google_sheets_team_tools import (
+    create_google_ads_expert_toolbox,
+    create_reply_to_client_toolbox,
 )
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
@@ -68,8 +66,8 @@ Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
         create_toolbox_func: Callable[
-            [int, int], Toolbox
-        ] = create_weather_team_toolbox,
+            [int, int, Dict[str, Any]], Toolbox
+        ] = create_reply_to_client_toolbox,
         openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
     ):
         roles: List[Dict[str, Any]] = self._default_roles
@@ -95,9 +93,6 @@ Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
             config_list=config_list,
         )
 
-        self.recommended_modifications_and_answer_list: List[
-            Tuple[Dict[str, Any], Optional[str]]
-        ] = []
         self._add_google_ads_tools()
 
     def _add_google_ads_tools(self) -> None:

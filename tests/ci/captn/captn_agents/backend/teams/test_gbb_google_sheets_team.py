@@ -42,7 +42,7 @@ class TestGBBGoogleSheetsTeam:
             )
         agent_number_of_functions_dict = {
             "google_sheets_expert": 8,
-            "account_manager": 1,
+            "account_manager": 2,
             "google_ads_expert": 2,
             "user_proxy": 0,
         }

@@ -1,13 +1,23 @@
 from typing import Annotated, Any, Dict, List, Optional, Tuple
 
 from ..toolboxes import Toolbox
-from ._functions import Context
+from ._functions import (
+    REPLY_TO_CLIENT_DESCRIPTION,
+    BaseContext,
+    Context,
+    ask_client_for_permission,
+    ask_client_for_permission_description,
+    reply_to_client,
+)
 from ._google_ads_team_tools import (
     list_accessible_customers,
     list_accessible_customers_description,
 )
 
-__all__ = ("create_google_ads_expert_toolbox",)
+__all__ = (
+    "create_google_ads_expert_toolbox",
+    "create_reply_to_client_toolbox",
+)
 
 CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION = "Creates Google Ads resources"
 
@@ -57,5 +67,26 @@ def create_google_ads_expert_toolbox(
     toolbox.add_function(CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION)(
         create_google_ads_resources
     )
+
+    return toolbox
+
+
+def create_reply_to_client_toolbox(
+    user_id: int,
+    conv_id: int,
+    kwargs: Dict[str, Any],
+) -> Toolbox:
+    toolbox = Toolbox()
+
+    context = BaseContext(
+        user_id=user_id,
+        conv_id=conv_id,
+    )
+    toolbox.set_context(context)
+
+    toolbox.add_function(REPLY_TO_CLIENT_DESCRIPTION)(reply_to_client)
+    toolbox.add_function(
+        description=ask_client_for_permission_description,
+    )(ask_client_for_permission)
 
     return toolbox
