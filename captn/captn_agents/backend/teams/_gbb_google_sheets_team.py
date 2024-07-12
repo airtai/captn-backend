@@ -4,8 +4,7 @@ from typing import Any, Callable, Dict, List, Optional
 from ....google_ads.client import get_conv_uuid
 from ..toolboxes import Toolbox
 from ..tools._gbb_google_sheets_team_tools import (
-    create_google_ads_expert_toolbox,
-    create_reply_to_client_toolbox,
+    create_google_sheets_team_toolbox,
 )
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 from ._team import Team
@@ -46,9 +45,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             "Description": """Google Ads expert.
 Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
             "use_client": False,
-            # We will add additional toolbox for this agent
-            # Toolbox won't be added in the parent class
-            "use_toolbox": False,
+            "use_toolbox": True,
         },
     ]
 
@@ -67,7 +64,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
         config_list: Optional[List[Dict[str, str]]] = None,
         create_toolbox_func: Callable[
             [int, int, Dict[str, Any]], Toolbox
-        ] = create_reply_to_client_toolbox,
+        ] = create_google_sheets_team_toolbox,
         openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
     ):
         roles: List[Dict[str, Any]] = self._default_roles
@@ -92,18 +89,6 @@ Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
             temperature=temperature,
             config_list=config_list,
         )
-
-        self._add_google_ads_tools()
-
-    def _add_google_ads_tools(self) -> None:
-        self.google_ads_toolbox = create_google_ads_expert_toolbox(
-            self.user_id,
-            self.conv_id,
-            self.recommended_modifications_and_answer_list,
-        )
-        for agent in self.members:
-            if agent.name == "google_ads_expert":
-                self.google_ads_toolbox.add_to_agent(agent, self.user_proxy)
 
     @property
     def _task(self) -> str:
@@ -133,7 +118,8 @@ Use reply_to_client command to check if you found the correct files by providing
 9. If the user verifies that everything is correct the team should do the following:
 - List accessible customers by using the 'list_accessible_customers' function. (this should be done by the Google_ads_expert)
 - Ask the user choose the correct customer id (This should be done by the Account_manager)
-- Once the user chooses the correct customer id, create Google Ads resources by using the 'create_google_ads_resources' function. (this should be done by the Google_ads_expert)
+- Once the user chooses the correct customer id use 'ask_client_for_permission' function to ask the client for permission to make the changes.
+- Once the user has given permission to make the changes, create Google Ads resources by using the 'create_google_ads_resources' function. (this should be done by the Google_ads_expert)
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
 """
@@ -141,16 +127,21 @@ ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are o
     @property
     def _commands(self) -> str:
         return f"""## Commands
-Only News_reporter has access to the following command:
+Only News_reporter has access to the following commands:
 1. {REPLY_TO_CLIENT_COMMAND}
 "smart_suggestions": {{
     'suggestions': ['Use Sheet with title "New"'],
     'type': 'oneOf'
 }}
+2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling 'create_google_ads_resources'
+params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
+ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'!
+function_name: 'create_google_ads_resources'
 
-2. Only Google_sheets_expert has access to Google Sheets API and can read and edit Google Sheets.
 
-3. Only Google_ads_expert has access to the following commands:
+3. Only Google_sheets_expert has access to Google Sheets API and can read and edit Google Sheets.
+
+4. Only Google_ads_expert has access to the following commands:
 - 'list_accessible_customers' (to list accessible Google Ads customers)
 - 'create_google_ads_resources'
 """
