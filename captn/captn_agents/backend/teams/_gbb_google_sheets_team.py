@@ -1,5 +1,5 @@
 from os import environ
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ....google_ads.client import get_conv_uuid
 from ..toolboxes import Toolbox
@@ -95,12 +95,16 @@ Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
             config_list=config_list,
         )
 
+        self.recommended_modifications_and_answer_list: List[
+            Tuple[Dict[str, Any], Optional[str]]
+        ] = []
         self._add_google_ads_tools()
 
     def _add_google_ads_tools(self) -> None:
         self.google_ads_toolbox = create_google_ads_expert_toolbox(
             self.user_id,
             self.conv_id,
+            self.recommended_modifications_and_answer_list,
         )
         for agent in self.members:
             if agent.name == "google_ads_expert":
@@ -131,7 +135,10 @@ Use reply_to_client command to check if you found the correct files by providing
 7. Once you have all the necessary information, use 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
 - query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
 8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
-9. If the user verifies that everything is correct, google_ads_expert should create Google Ads resources by using the 'create_google_ads_resources' function.
+9. If the user verifies that everything is correct the team should do the following:
+- List accessible customers by using the 'list_accessible_customers' function. (this should be done by the Google_ads_expert)
+- Ask the user choose the correct customer id (This should be done by the Account_manager)
+- Once the user chooses the correct customer id, create Google Ads resources by using the 'create_google_ads_resources' function. (this should be done by the Google_ads_expert)
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
 """
@@ -148,7 +155,9 @@ Only News_reporter has access to the following command:
 
 2. Only Google_sheets_expert has access to Google Sheets API and can read and edit Google Sheets.
 
-3. Only Google_ads_expert has access to the 'create_google_ads_resources' function.
+3. Only Google_ads_expert has access to the following commands:
+- 'list_accessible_customers' (to list accessible Google Ads customers)
+- 'create_google_ads_resources'
 """
 
     @classmethod

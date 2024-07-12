@@ -1,7 +1,11 @@
-from typing import Annotated
+from typing import Annotated, Any, Dict, List, Optional, Tuple
 
 from ..toolboxes import Toolbox
-from ._functions import BaseContext
+from ._functions import Context
+from ._google_ads_team_tools import (
+    list_accessible_customers,
+    list_accessible_customers_description,
+)
 
 __all__ = ("create_google_ads_expert_toolbox",)
 
@@ -11,7 +15,7 @@ CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION = "Creates Google Ads resources"
 def create_google_ads_resources(
     customer_id: Annotated[
         str,
-        "The ID of the Google Ads customer account (for now use '123')",
+        "The ID of the Google Ads customer account",
     ],
     spreadsheet_id: Annotated[
         str,
@@ -25,7 +29,7 @@ def create_google_ads_resources(
         str,
         "The title of the sheet with keywords",
     ],
-    context: BaseContext,
+    context: Context,
 ) -> str:
     return "Resources have been created"
 
@@ -33,15 +37,23 @@ def create_google_ads_resources(
 def create_google_ads_expert_toolbox(
     user_id: int,
     conv_id: int,
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
 ) -> Toolbox:
     toolbox = Toolbox()
 
-    context = BaseContext(
+    context = Context(
         user_id=user_id,
         conv_id=conv_id,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        toolbox=toolbox,
     )
     toolbox.set_context(context)
 
+    toolbox.add_function(list_accessible_customers_description)(
+        list_accessible_customers
+    )
     toolbox.add_function(CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION)(
         create_google_ads_resources
     )

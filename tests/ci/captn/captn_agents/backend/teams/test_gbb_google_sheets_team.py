@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 from typing import Any, Iterator
+from unittest.mock import patch
 
 import pytest
 from autogen.cache import Cache
@@ -22,6 +24,14 @@ class TestGBBGoogleSheetsTeam:
         Team._teams.clear()
         yield
 
+    @contextmanager
+    def mock_list_accessible_customers_f(self) -> Iterator[Any]:
+        with patch(
+            "captn.captn_agents.backend.tools._google_ads_team_tools.list_accessible_customers_client",
+            return_value=["1111"],
+        ) as mock_list_accessible_customers:
+            yield mock_list_accessible_customers
+
     def test_init(self, mock_get_conv_uuid: Iterator[Any]) -> None:
         with mock_get_conv_uuid:
             google_sheets_team = GBBGoogleSheetsTeam(
@@ -33,12 +43,14 @@ class TestGBBGoogleSheetsTeam:
         agent_number_of_functions_dict = {
             "google_sheets_expert": 8,
             "account_manager": 1,
+            "google_ads_expert": 2,
             "user_proxy": 0,
         }
 
         number_of_registered_executions = (
             agent_number_of_functions_dict["google_sheets_expert"]
             + agent_number_of_functions_dict["account_manager"]
+            + agent_number_of_functions_dict["google_ads_expert"]
         )
         helper_test_init(
             team=google_sheets_team,
@@ -53,7 +65,10 @@ class TestGBBGoogleSheetsTeam:
         google_sheets_fastapi_openapi_url: str,
         mock_get_conv_uuid: Iterator[Any],
     ) -> None:
-        with mock_get_conv_uuid:
+        with (
+            mock_get_conv_uuid,
+            self.mock_list_accessible_customers_f() as mock_list_accessible_customers,
+        ):
             google_sheets_team = GBBGoogleSheetsTeam(
                 task="Do your job.",
                 user_id=user_id,
@@ -61,45 +76,46 @@ class TestGBBGoogleSheetsTeam:
                 openapi_url=google_sheets_fastapi_openapi_url,
             )
 
-        expected_messages = [
-            "Sheet with the name 'Captn - Ads",
-            "Sheet with the name 'Captn - Keywords",
-            "Resources have been created",
-        ]
-        with TemporaryDirectory() as cache_dir:
-            with Cache.disk(cache_path_root=cache_dir) as cache:
-                google_sheets_team.initiate_chat(cache=cache)
+            expected_messages = [
+                "Sheet with the name 'Captn - Ads",
+                "Sheet with the name 'Captn - Keywords",
+                "Resources have been created",
+            ]
+            with TemporaryDirectory() as cache_dir:
+                with Cache.disk(cache_path_root=cache_dir) as cache:
+                    google_sheets_team.initiate_chat(cache=cache)
 
-                while True:
-                    messages = google_sheets_team.get_messages()
-                    for message in messages:
-                        if "tool_responses" in message:
-                            expected_messages_copy = expected_messages.copy()
-                            for expected_message in expected_messages_copy:
-                                if expected_message in message["content"]:
-                                    expected_messages.remove(expected_message)
-                                    print(f"Found message: {expected_message}")
+                    while True:
+                        messages = google_sheets_team.get_messages()
+                        for message in messages:
+                            if "tool_responses" in message:
+                                expected_messages_copy = expected_messages.copy()
+                                for expected_message in expected_messages_copy:
+                                    if expected_message in message["content"]:
+                                        expected_messages.remove(expected_message)
+                                        print(f"Found message: {expected_message}")
 
+                            if len(expected_messages) == 0:
+                                break
                         if len(expected_messages) == 0:
                             break
-                    if len(expected_messages) == 0:
-                        break
 
-                    num_messages = len(messages)
-                    if num_messages < google_sheets_team.max_round:
-                        customers_response = get_client_response_for_the_team_conv(
-                            user_id=user_id,
-                            conv_id=456,
-                            message=google_sheets_team.get_last_message(),
-                            cache=cache,
-                            # client_system_message=_client_system_messages,
-                        )
-                        google_sheets_team.toolbox._context.waiting_for_client_response = False
-                        google_sheets_team.continue_chat(message=customers_response)
+                        num_messages = len(messages)
+                        if num_messages < google_sheets_team.max_round:
+                            customers_response = get_client_response_for_the_team_conv(
+                                user_id=user_id,
+                                conv_id=456,
+                                message=google_sheets_team.get_last_message(),
+                                cache=cache,
+                                # client_system_message=_client_system_messages,
+                            )
+                            google_sheets_team.toolbox._context.waiting_for_client_response = False
+                            google_sheets_team.continue_chat(message=customers_response)
 
         assert (
             len(expected_messages) == 0
         ), f"Expected messages left: {expected_messages}"
+        mock_list_accessible_customers.assert_called_once()
 
     @pytest.mark.flaky
     @pytest.mark.openai
