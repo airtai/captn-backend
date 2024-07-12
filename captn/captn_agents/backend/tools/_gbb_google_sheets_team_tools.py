@@ -1,5 +1,9 @@
 from typing import Annotated, Any, Dict
 
+from pydantic import BaseModel, Field
+
+from captn.google_ads.client import check_for_client_approval
+
 from ..toolboxes import Toolbox
 from ._functions import (
     REPLY_TO_CLIENT_DESCRIPTION,
@@ -18,25 +22,29 @@ __all__ = ("create_google_sheets_team_toolbox",)
 CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION = "Creates Google Ads resources"
 
 
-def create_google_ads_resources(
+class GoogleAdsResources(BaseModel):
     customer_id: Annotated[
-        str,
-        "The ID of the Google Ads customer account",
-    ],
+        str, Field(..., description="The ID of the Google Ads customer account")
+    ]
     spreadsheet_id: Annotated[
-        str,
-        "The ID of the spreadsheet to retrieve data from",
-    ],
-    ads_title: Annotated[
-        str,
-        "The title of the sheet with ads",
-    ],
+        str, Field(..., description="The ID of the spreadsheet to retrieve data from")
+    ]
+    ads_title: Annotated[str, Field(..., description="The title of the sheet with ads")]
     keywords_title: Annotated[
-        str,
-        "The title of the sheet with keywords",
-    ],
+        str, Field(..., description="The title of the sheet with keywords")
+    ]
+
+
+def create_google_ads_resources(
+    google_ads_resources: GoogleAdsResources,
     context: Context,
 ) -> str:
+    error_msg = check_for_client_approval(
+        modification_function_parameters=google_ads_resources.model_dump(),
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+    )
+    if error_msg:
+        raise ValueError(error_msg)
     return "Resources have been created"
 
 

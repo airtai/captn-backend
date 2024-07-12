@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Any, Iterator
+from typing import Any, Iterator, Tuple
 from unittest.mock import patch
 
 import pytest
@@ -25,12 +25,22 @@ class TestGBBGoogleSheetsTeam:
         yield
 
     @contextmanager
-    def mock_list_accessible_customers_f(self) -> Iterator[Any]:
-        with patch(
-            "captn.captn_agents.backend.tools._google_ads_team_tools.list_accessible_customers_client",
-            return_value=["1111"],
-        ) as mock_list_accessible_customers:
-            yield mock_list_accessible_customers
+    def mock_list_accessible_customers_f(self) -> Iterator[Tuple[Any, Any]]:
+        with (
+            patch(
+                "captn.captn_agents.backend.tools._google_ads_team_tools.list_accessible_customers_client",
+                return_value=["1111"],
+            ) as mock_list_accessible_customers1,
+            patch(
+                "captn.captn_agents.backend.tools._functions.list_accessible_customers",
+                return_value=["1111"],
+            ) as mock_list_accessible_customers2,
+            patch(
+                "captn.captn_agents.backend.tools._functions.BENCHMARKING",
+                True,
+            ),
+        ):
+            yield (mock_list_accessible_customers1, mock_list_accessible_customers2)
 
     def test_init(self, mock_get_conv_uuid: Iterator[Any]) -> None:
         with mock_get_conv_uuid:
@@ -67,7 +77,10 @@ class TestGBBGoogleSheetsTeam:
     ) -> None:
         with (
             mock_get_conv_uuid,
-            self.mock_list_accessible_customers_f() as mock_list_accessible_customers,
+            self.mock_list_accessible_customers_f() as (
+                mock_list_accessible_customers1,
+                mock_list_accessible_customers2,
+            ),
         ):
             google_sheets_team = GBBGoogleSheetsTeam(
                 task="Do your job.",
@@ -115,7 +128,7 @@ class TestGBBGoogleSheetsTeam:
         assert (
             len(expected_messages) == 0
         ), f"Expected messages left: {expected_messages}"
-        mock_list_accessible_customers.assert_called_once()
+        mock_list_accessible_customers1.assert_called_once()
 
     @pytest.mark.flaky
     @pytest.mark.openai
