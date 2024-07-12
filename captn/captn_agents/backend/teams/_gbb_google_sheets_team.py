@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from ....google_ads.client import get_conv_uuid
 from ..toolboxes import Toolbox
+from ..tools._gbb_google_sheets_team_tools import create_google_ads_expert_toolbox
 
 # Currently only reply_to_client command within this toolbox
 from ..tools._weather_team_tools import (
@@ -41,6 +42,15 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
 """,
             "use_client": False,
             "use_toolbox": True,
+        },
+        {
+            "Name": "Google_ads_expert",
+            "Description": """Google Ads expert.
+Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
+            "use_client": False,
+            # We will add additional toolbox for this agent
+            # Toolbox won't be added in the parent class
+            "use_toolbox": False,
         },
     ]
 
@@ -85,9 +95,20 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
             config_list=config_list,
         )
 
+        self._add_google_ads_tools()
+
+    def _add_google_ads_tools(self) -> None:
+        self.google_ads_toolbox = create_google_ads_expert_toolbox(
+            self.user_id,
+            self.conv_id,
+        )
+        for agent in self.members:
+            if agent.name == "google_ads_expert":
+                self.google_ads_toolbox.add_to_agent(agent, self.user_proxy)
+
     @property
     def _task(self) -> str:
-        return f"""You are a team in charge editing Google Sheets.
+        return f"""You are a team in charge editing Google Sheets and creating new Google Ads resources.
 
 Here is the current customers brief/information we have gathered for you as a starting point:
 {self.task}
@@ -110,6 +131,7 @@ Use reply_to_client command to check if you found the correct files by providing
 7. Once you have all the necessary information, use 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
 - query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
 8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
+9. If the user verifies that everything is correct, google_ads_expert should create Google Ads resources by using the 'create_google_ads_resources' function.
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
 """
@@ -125,6 +147,8 @@ Only News_reporter has access to the following command:
 }}
 
 2. Only Google_sheets_expert has access to Google Sheets API and can read and edit Google Sheets.
+
+3. Only Google_ads_expert has access to the 'create_google_ads_resources' function.
 """
 
     @classmethod
