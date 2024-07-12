@@ -1,6 +1,8 @@
-from typing import Annotated, Any, Dict
+from dataclasses import dataclass
+from typing import Annotated, Any, Dict, Union
 
 from pydantic import BaseModel, Field
+from requests import get as requests_get
 
 from captn.google_ads.client import check_for_client_approval
 
@@ -35,9 +37,29 @@ class GoogleAdsResources(BaseModel):
     ]
 
 
+def _get_sheet_data(
+    base_url: str, user_id: int, spreadsheet_id: str, title: str
+) -> Any:
+    params: Dict[str, Union[int, str]] = {
+        "user_id": user_id,
+        "spreadsheet_id": spreadsheet_id,
+        "title": title,
+    }
+    response = requests_get(f"{base_url}/get-sheet", params=params, timeout=60)
+    if not response.ok:
+        raise ValueError(response.content)
+
+    return response.json()
+
+
+@dataclass
+class GoogleSheetsTeamContext(Context):
+    google_sheets_api_url: str
+
+
 def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
-    context: Context,
+    context: GoogleSheetsTeamContext,
 ) -> str:
     error_msg = check_for_client_approval(
         modification_function_parameters=google_ads_resources.model_dump(),
@@ -45,6 +67,20 @@ def create_google_ads_resources(
     )
     if error_msg:
         raise ValueError(error_msg)
+
+    _get_sheet_data(
+        base_url=context.google_sheets_api_url,
+        user_id=context.user_id,
+        spreadsheet_id=google_ads_resources.spreadsheet_id,
+        title=google_ads_resources.ads_title,
+    )
+    _get_sheet_data(
+        base_url=context.google_sheets_api_url,
+        user_id=context.user_id,
+        spreadsheet_id=google_ads_resources.spreadsheet_id,
+        title=google_ads_resources.keywords_title,
+    )
+
     return "Resources have been created"
 
 
@@ -55,12 +91,13 @@ def create_google_sheets_team_toolbox(
 ) -> Toolbox:
     toolbox = Toolbox()
 
-    context = Context(
+    context = GoogleSheetsTeamContext(
         user_id=user_id,
         conv_id=conv_id,
         recommended_modifications_and_answer_list=kwargs[
             "recommended_modifications_and_answer_list"
         ],
+        google_sheets_api_url=kwargs["google_sheets_api_url"],
         toolbox=toolbox,
     )
     toolbox.set_context(context)

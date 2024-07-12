@@ -58,6 +58,8 @@ class TeamWithClient(Team):
         )
         self.create_toolbox_func = create_toolbox_func
         self.openapi_url = openapi_url
+        # google_sheets_api_url is openapi_url without the /openapi.json
+        self.google_sheets_api_url = openapi_url.rsplit("/", 1)[0]
         self.kwargs_to_patch = kwargs_to_patch
 
         self._create_members()
@@ -91,7 +93,8 @@ class TeamWithClient(Team):
 
     def _add_tools(self) -> None:
         kwargs = {
-            "recommended_modifications_and_answer_list": self.recommended_modifications_and_answer_list
+            "recommended_modifications_and_answer_list": self.recommended_modifications_and_answer_list,
+            "google_sheets_api_url": self.google_sheets_api_url,
         }
         self.toolbox = self.create_toolbox_func(
             self.user_id,

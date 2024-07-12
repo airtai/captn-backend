@@ -52,15 +52,14 @@ class TestGBBGoogleSheetsTeam:
             )
         agent_number_of_functions_dict = {
             "google_sheets_expert": 8,
-            "account_manager": 2,
-            "google_ads_expert": 2,
+            "account_manager": 4,
+            "google_ads_expert": 4,
             "user_proxy": 0,
         }
 
         number_of_registered_executions = (
             agent_number_of_functions_dict["google_sheets_expert"]
             + agent_number_of_functions_dict["account_manager"]
-            + agent_number_of_functions_dict["google_ads_expert"]
         )
         helper_test_init(
             team=google_sheets_team,
