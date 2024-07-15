@@ -127,7 +127,7 @@ ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are o
     @property
     def _commands(self) -> str:
         return f"""## Commands
-Only News_reporter has access to the following commands:
+Only Account_manager has access to the following commands:
 1. {REPLY_TO_CLIENT_COMMAND}
 "smart_suggestions": {{
     'suggestions': ['Use Sheet with title "New"'],

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, Union
+from typing import Annotated, Any, Dict, List, Union
 
+import pandas as pd
 from pydantic import BaseModel, Field
 from requests import get as requests_get
 
@@ -37,9 +38,15 @@ class GoogleAdsResources(BaseModel):
     ]
 
 
+class GoogleSheetValues(BaseModel):
+    values: List[List[Any]] = Field(
+        ..., title="Values", description="Values written in the Google Sheet."
+    )
+
+
 def _get_sheet_data(
     base_url: str, user_id: int, spreadsheet_id: str, title: str
-) -> Any:
+) -> Dict[str, List[List[Any]]]:
     params: Dict[str, Union[int, str]] = {
         "user_id": user_id,
         "spreadsheet_id": spreadsheet_id,
@@ -49,12 +56,43 @@ def _get_sheet_data(
     if not response.ok:
         raise ValueError(response.content)
 
-    return response.json()
+    return response.json()  # type: ignore[no-any-return]
 
 
 @dataclass
 class GoogleSheetsTeamContext(Context):
     google_sheets_api_url: str
+
+
+KEYWORDS_MANDATORY_COLUMNS = [
+    "Campaign Name",
+    "Campaign Budget",
+    "Ad Group Name",
+    "Match Type",
+    "Keyword",
+]
+ADS_MANDATORY_COLUMNS = [
+    "Campaign Name",
+    "Campaign Budget",
+    "Ad Group Name",
+    "Match Type",
+    "Headline 1",
+    "Headline 2",
+    "Headline 3",
+    "Description Line 1",
+    "Description Line 2",
+    "Path 1",
+    "Final URL",
+]
+
+
+def _check_mandatory_columns(
+    df: pd.DataFrame, mandatory_columns: List[str], table_title: str
+) -> str:
+    missing_columns = [col for col in mandatory_columns if col not in df.columns]
+    if missing_columns:
+        return f"{table_title} is missing columns: {missing_columns}"
+    return ""
 
 
 def create_google_ads_resources(
@@ -68,18 +106,41 @@ def create_google_ads_resources(
     if error_msg:
         raise ValueError(error_msg)
 
-    _get_sheet_data(
+    ads_data_dict = _get_sheet_data(
         base_url=context.google_sheets_api_url,
         user_id=context.user_id,
         spreadsheet_id=google_ads_resources.spreadsheet_id,
         title=google_ads_resources.ads_title,
     )
-    _get_sheet_data(
+    keywords_data_dict = _get_sheet_data(
         base_url=context.google_sheets_api_url,
         user_id=context.user_id,
         spreadsheet_id=google_ads_resources.spreadsheet_id,
         title=google_ads_resources.keywords_title,
     )
+
+    ads_values = GoogleSheetValues(**ads_data_dict)
+    keywords_values = GoogleSheetValues(**keywords_data_dict)
+
+    ads_df = pd.DataFrame(
+        ads_values.values[1:],
+        columns=ads_values.values[0],
+    )
+    keywords_df = pd.DataFrame(
+        keywords_values.values[1:],
+        columns=keywords_values.values[0],
+    )
+    mandatory_columns_error_msg = _check_mandatory_columns(
+        ads_df, ADS_MANDATORY_COLUMNS, google_ads_resources.ads_title
+    )
+    mandatory_columns_error_msg += _check_mandatory_columns(
+        keywords_df, KEYWORDS_MANDATORY_COLUMNS, google_ads_resources.keywords_title
+    )
+    if mandatory_columns_error_msg:
+        raise ValueError(mandatory_columns_error_msg)
+
+    print(ads_df)
+    print(keywords_df)
 
     return "Resources have been created"
 
