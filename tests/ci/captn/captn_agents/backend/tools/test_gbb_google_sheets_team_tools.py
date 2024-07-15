@@ -10,7 +10,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     create_google_ads_resources,
 )
 
-from .fixtures.google_sheets_team import ads_values, keywords_values
+from ..fixtures.google_sheets_team import ads_values
 
 
 class TesteCreateGoogleAdsResources:
@@ -35,17 +35,6 @@ class TesteCreateGoogleAdsResources:
             recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             google_sheets_api_url="https://google_sheets_api_url.com",
         )
-
-    @pytest.fixture()
-    def mock_get_sheet_data(self) -> Iterator[Any]:
-        with unittest.mock.patch(
-            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
-            side_effect=[
-                ads_values,
-                keywords_values,
-            ],
-        ) as mock_get_sheet_data:
-            yield mock_get_sheet_data
 
     def test_create_google_ads_resources_with_missing_mandatory_columns(self) -> None:
         keywords_values_with_missing_columns = {

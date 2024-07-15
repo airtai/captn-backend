@@ -181,7 +181,6 @@ def create_google_ads_resources(
             return response
         else:
             campaign_id = get_resource_id_from_response(response)
-            print(f"Created campaign '{campaign_name}' with ID {campaign_id}")
             created_campaign_names_and_ids[campaign_name] = campaign_id
 
     for _, row in ads_df.iterrows():

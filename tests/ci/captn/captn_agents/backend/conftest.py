@@ -8,15 +8,17 @@ import pytest
 
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
+from .fixtures.google_sheets_team import ads_values, keywords_values
+
 
 @contextmanager
 @pytest.fixture()
-def mock_get_login_url() -> Iterator[None]:
+def mock_get_login_url() -> Iterator[Any]:
     with unittest.mock.patch(
         "captn.google_ads.client.get_login_url",
         return_value={"login_url": ALREADY_AUTHENTICATED},
-    ):
-        yield
+    ) as mock_get_login_url:
+        yield mock_get_login_url
 
 
 @contextmanager
@@ -32,3 +34,15 @@ def mock_requests_get() -> Iterator[Any]:
             for _ in range(200)
         ]
         yield mock_requests_get
+
+
+@pytest.fixture()
+def mock_get_sheet_data() -> Iterator[Any]:
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
+        side_effect=[
+            ads_values,
+            keywords_values,
+        ],
+    ) as mock_get_sheet_data:
+        yield mock_get_sheet_data

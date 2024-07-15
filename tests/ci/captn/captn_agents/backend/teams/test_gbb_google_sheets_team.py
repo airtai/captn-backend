@@ -73,9 +73,13 @@ class TestGBBGoogleSheetsTeam:
         user_id: int,
         google_sheets_fastapi_openapi_url: str,
         mock_get_conv_uuid: Iterator[Any],
+        mock_get_login_url: Iterator[Any],
+        mock_requests_get: Iterator[Any],
     ) -> None:
         with (
             mock_get_conv_uuid,
+            mock_get_login_url,
+            mock_requests_get,
             self.mock_list_accessible_customers_f() as (
                 mock_list_accessible_customers1,
                 mock_list_accessible_customers2,
@@ -91,7 +95,7 @@ class TestGBBGoogleSheetsTeam:
             expected_messages = [
                 "Sheet with the name 'Captn - Ads",
                 "Sheet with the name 'Captn - Keywords",
-                "Resources have been created",
+                "Keyword 'Rezerviraj odmah': Created resource",
             ]
             with TemporaryDirectory() as cache_dir:
                 with Cache.disk(cache_path_root=cache_dir) as cache:
@@ -133,22 +137,35 @@ class TestGBBGoogleSheetsTeam:
     @pytest.mark.openai
     @pytest.mark.fastapi_openapi_team
     def test_google_sheets_team_end2end(
-        self, google_sheets_fastapi_openapi_url: str, mock_get_conv_uuid: Iterator[Any]
+        self,
+        google_sheets_fastapi_openapi_url: str,
+        mock_get_conv_uuid: Iterator[Any],
+        mock_get_login_url: Iterator[Any],
+        mock_requests_get: Iterator[Any],
+        mock_get_sheet_data: Iterator[Any],
     ) -> None:
-        self._test_google_sheets_team_end2end(
-            user_id=123,
-            google_sheets_fastapi_openapi_url=google_sheets_fastapi_openapi_url,
-            mock_get_conv_uuid=mock_get_conv_uuid,
-        )
+        with mock_get_sheet_data:
+            self._test_google_sheets_team_end2end(
+                user_id=123,
+                google_sheets_fastapi_openapi_url=google_sheets_fastapi_openapi_url,
+                mock_get_conv_uuid=mock_get_conv_uuid,
+                mock_get_login_url=mock_get_login_url,
+                mock_requests_get=mock_requests_get,
+            )
 
     @pytest.mark.flaky
     @pytest.mark.openai
     @pytest.mark.fastapi_openapi_team
     def test_google_sheets_real_fastapi_team_end2end(
-        self, mock_get_conv_uuid: Iterator[Any]
+        self,
+        mock_get_conv_uuid: Iterator[Any],
+        mock_get_login_url: Iterator[Any],
+        mock_requests_get: Iterator[Any],
     ) -> None:
         self._test_google_sheets_team_end2end(
             user_id=13,
             google_sheets_fastapi_openapi_url="https://google-sheets.tools.staging.fastagency.ai/openapi.json",
             mock_get_conv_uuid=mock_get_conv_uuid,
+            mock_get_login_url=mock_get_login_url,
+            mock_requests_get=mock_requests_get,
         )
