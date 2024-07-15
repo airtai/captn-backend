@@ -6,7 +6,13 @@ from pydantic import BaseModel, Field
 from requests import get as requests_get
 
 from captn.google_ads.client import check_for_client_approval
+from google_ads.model import (
+    # AdCopy,
+    Campaign,
+)
 
+# CampaignCriterion,
+from ....google_ads.client import google_ads_create_update
 from ..toolboxes import Toolbox
 from ._functions import (
     REPLY_TO_CLIENT_DESCRIPTION,
@@ -16,6 +22,7 @@ from ._functions import (
     reply_to_client,
 )
 from ._google_ads_team_tools import (
+    get_resource_id_from_response,
     list_accessible_customers,
     list_accessible_customers_description,
 )
@@ -98,7 +105,7 @@ def _check_mandatory_columns(
 def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
-) -> str:
+) -> Union[Dict[str, Any], str]:
     error_msg = check_for_client_approval(
         modification_function_parameters=google_ads_resources.model_dump(),
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -139,8 +146,38 @@ def create_google_ads_resources(
     if mandatory_columns_error_msg:
         raise ValueError(mandatory_columns_error_msg)
 
-    print(ads_df)
-    print(keywords_df)
+    campaign_names_ad_budgets = ads_df[
+        ["Campaign Name", "Campaign Budget"]
+    ].drop_duplicates()
+
+    created_campaign_names_and_ids = {}
+    for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
+        budget_amount_micros = int(campaign_budget) * 1_000_000
+
+        campaign = Campaign(
+            customer_id=google_ads_resources.customer_id,
+            name=campaign_name,
+            budget_amount_micros=budget_amount_micros,
+            status="PAUSED",
+            network_settings_target_google_search=True,
+            network_settings_target_search_network=True,
+            network_settings_target_content_network=True,
+        )
+        response = google_ads_create_update(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad=campaign,
+            endpoint="/create-campaign",
+            already_checked_clients_approval=True,
+        )
+
+        if not isinstance(response, str):
+            return response
+        else:
+            campaign_id = get_resource_id_from_response(response)
+            print(f"Created campaign '{campaign_name}' with ID {campaign_id}")
+            created_campaign_names_and_ids[campaign_name] = campaign_id
 
     return "Resources have been created"
 

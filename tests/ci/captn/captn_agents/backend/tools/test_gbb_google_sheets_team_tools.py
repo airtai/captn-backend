@@ -37,7 +37,7 @@ class TesteCreateGoogleAdsResources:
         )
 
     @pytest.fixture()
-    def get_sheet_data_mock(self) -> Iterator[Any]:
+    def mock_get_sheet_data(self) -> Iterator[Any]:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
             side_effect=[
@@ -81,10 +81,14 @@ class TesteCreateGoogleAdsResources:
                 == "keywords_title is missing columns: ['Campaign Name']"
             )
 
-    def test_create_google_ads_resources(self, get_sheet_data_mock) -> None:
-        with get_sheet_data_mock:
-            response = create_google_ads_resources(
-                google_ads_resources=self.gads_resuces,
-                context=self.context,
-            )
-            assert response == "Resources have been created"
+    def test_create_google_ads_resources(
+        self,
+        mock_get_sheet_data: Iterator[Any],
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+    ) -> None:
+        response = create_google_ads_resources(
+            google_ads_resources=self.gads_resuces,
+            context=self.context,
+        )
+        assert response == "Resources have been created"
