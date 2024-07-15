@@ -91,4 +91,5 @@ class TesteCreateGoogleAdsResources:
             google_ads_resources=self.gads_resuces,
             context=self.context,
         )
-        assert response == "Resources have been created"
+        for expected in ["Ad group ad", "Keyword"]:
+            assert expected in response

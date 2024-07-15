@@ -7,13 +7,18 @@ from requests import get as requests_get
 
 from captn.google_ads.client import check_for_client_approval
 from google_ads.model import (
-    # AdCopy,
     Campaign,
 )
 
-# CampaignCriterion,
 from ....google_ads.client import google_ads_create_update
 from ..toolboxes import Toolbox
+from ._campaign_creation_team_tools import (
+    AdGroupAdForCreation,
+    AdGroupCriterionForCreation,
+    AdGroupForCreation,
+    AdGroupWithAdAndKeywords,
+    _create_ad_group_with_ad_and_keywords,
+)
 from ._functions import (
     REPLY_TO_CLIENT_DESCRIPTION,
     Context,
@@ -179,7 +184,65 @@ def create_google_ads_resources(
             print(f"Created campaign '{campaign_name}' with ID {campaign_id}")
             created_campaign_names_and_ids[campaign_name] = campaign_id
 
-    return "Resources have been created"
+    for _, row in ads_df.iterrows():
+        headlines = [
+            row[col] for col in row.index if col.lower().startswith("headline")
+        ]
+        descriptions = [
+            row[col] for col in row.index if col.lower().startswith("description")
+        ]
+
+        path1 = row.get("Path 1", None)
+        path2 = row.get("Path 2", None)
+        final_url = row.get("Final URL")
+
+        campaign_id = created_campaign_names_and_ids[row["Campaign Name"]]
+        ad_group = AdGroupForCreation(
+            customer_id=google_ads_resources.customer_id,
+            campaign_id=campaign_id,
+            name=row["Ad Group Name"],
+            status="ENABLED",
+        )
+
+        ad_group_ad = AdGroupAdForCreation(
+            customer_id=google_ads_resources.customer_id,
+            campaign_id=campaign_id,
+            status="ENABLED",
+            headlines=headlines,
+            descriptions=descriptions,
+            path1=path1,
+            path2=path2,
+            final_url=final_url,
+        )
+
+        match_type = row["Match Type"]
+        ad_group_name = row["Ad Group Name"]
+        ad_group_keywords = keywords_df[keywords_df["Ad Group Name"] == ad_group_name]
+        keywords_list = ad_group_keywords["Keyword"].tolist()
+        ad_group_keywords = []
+        for keyword in keywords_list:
+            ad_group_keywords.append(
+                AdGroupCriterionForCreation(
+                    customer_id=google_ads_resources.customer_id,
+                    campaign_id=campaign_id,
+                    status="ENABLED",
+                    keyword_text=keyword,
+                    keyword_match_type=match_type.upper(),
+                )
+            )
+
+        ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
+            customer_id=google_ads_resources.customer_id,
+            campaign_id=campaign_id,
+            ad_group=ad_group,
+            ad_group_ad=ad_group_ad,
+            keywords=ad_group_keywords,
+        )
+
+    return _create_ad_group_with_ad_and_keywords(
+        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+        context=context,
+    )
 
 
 def create_google_sheets_team_toolbox(
