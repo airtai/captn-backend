@@ -155,6 +155,7 @@ def create_google_ads_resources(
     if mandatory_columns_error_msg:
         raise ValueError(mandatory_columns_error_msg)
 
+    keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
     campaign_names_ad_budgets = ads_df[
         ["Campaign Name", "Campaign Budget"]
     ].drop_duplicates()
@@ -192,7 +193,7 @@ def create_google_ads_resources(
         negative_campaign_keywords = keywords_df[
             (keywords_df["Campaign Name"] == campaign_name)
             & (keywords_df["Level"] == "Campaign")
-            & (keywords_df["Negative"] == "TRUE")
+            & (keywords_df["Negative"])
         ]
         for _, row in negative_campaign_keywords.iterrows():
             response = google_ads_create_update(
@@ -248,8 +249,7 @@ def create_google_ads_resources(
         match_type = row["Match Type"]
         ad_group_name = row["Ad Group Name"]
         ad_group_positive_keywords = keywords_df[
-            (keywords_df["Ad Group Name"] == ad_group_name)
-            & (keywords_df["Negative"] == "FALSE")
+            (keywords_df["Ad Group Name"] == ad_group_name) & (~keywords_df["Negative"])
         ]
         positive_keywords_list = ad_group_positive_keywords["Keyword"].tolist()
         ad_group_positive_keywords = []
@@ -283,8 +283,7 @@ def create_google_ads_resources(
         final_response += response + "\n"
 
         ad_group_negative_keywords = keywords_df[
-            (keywords_df["Ad Group Name"] == ad_group_name)
-            & (keywords_df["Negative"] == "TRUE")
+            (keywords_df["Ad Group Name"] == ad_group_name) & (keywords_df["Negative"])
         ]
         for _, row in ad_group_negative_keywords.iterrows():
             keyword = row["Keyword"]
