@@ -158,6 +158,69 @@ def _validate_and_convert_to_df(
     return ads_df, keywords_df
 
 
+def _create_campaign(
+    campaign_name: str,
+    campaign_budget: str,
+    customer_id: str,
+    context: GoogleSheetsTeamContext,
+) -> Union[Dict[str, Any], str]:
+    budget_amount_micros = int(campaign_budget) * 1_000_000
+
+    campaign = Campaign(
+        customer_id=customer_id,
+        name=campaign_name,
+        budget_amount_micros=budget_amount_micros,
+        status="PAUSED",
+        network_settings_target_google_search=True,
+        network_settings_target_search_network=True,
+        network_settings_target_content_network=True,
+    )
+    response = google_ads_create_update(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        ad=campaign,
+        endpoint="/create-campaign",
+        already_checked_clients_approval=True,
+    )
+
+    return response
+
+
+def _create_negative_campaign_keywords(
+    customer_id: str,
+    campaign_id: str,
+    campaign_name: str,
+    keywords_df: pd.DataFrame,
+    context: GoogleSheetsTeamContext,
+) -> Union[Dict[str, Any], str]:
+    negative_campaign_keywords = keywords_df[
+        (keywords_df["Campaign Name"] == campaign_name)
+        & (keywords_df["Level"] == "Campaign")
+        & (keywords_df["Negative"])
+    ]
+    final_response = ""
+    for _, row in negative_campaign_keywords.iterrows():
+        response = google_ads_create_update(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            ad=CampaignCriterion(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                status="ENABLED",
+                keyword_match_type=row["Match Type"].upper(),
+                keyword_text=row["Keyword"],
+                negative=True,
+            ),
+            endpoint="/add-negative-keywords-to-campaign",
+            already_checked_clients_approval=True,
+        )
+        final_response += f"Negative campaign keyword {row['Keyword']}\n{response}\n"
+
+    return final_response
+
+
 def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
@@ -175,24 +238,11 @@ def create_google_ads_resources(
     final_response = ""
     created_campaign_names_and_ids = {}
     for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
-        budget_amount_micros = int(campaign_budget) * 1_000_000
-
-        campaign = Campaign(
+        response = _create_campaign(
+            campaign_name=campaign_name,
+            campaign_budget=campaign_budget,
             customer_id=google_ads_resources.customer_id,
-            name=campaign_name,
-            budget_amount_micros=budget_amount_micros,
-            status="PAUSED",
-            network_settings_target_google_search=True,
-            network_settings_target_search_network=True,
-            network_settings_target_content_network=True,
-        )
-        response = google_ads_create_update(
-            user_id=context.user_id,
-            conv_id=context.conv_id,
-            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
-            ad=campaign,
-            endpoint="/create-campaign",
-            already_checked_clients_approval=True,
+            context=context,
         )
         final_response += f"Campaign {campaign_name}\n{response}\n"
 
@@ -202,30 +252,16 @@ def create_google_ads_resources(
             campaign_id = get_resource_id_from_response(response)
             created_campaign_names_and_ids[campaign_name] = campaign_id
 
-        negative_campaign_keywords = keywords_df[
-            (keywords_df["Campaign Name"] == campaign_name)
-            & (keywords_df["Level"] == "Campaign")
-            & (keywords_df["Negative"])
-        ]
-        for _, row in negative_campaign_keywords.iterrows():
-            response = google_ads_create_update(
-                user_id=context.user_id,
-                conv_id=context.conv_id,
-                recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
-                ad=CampaignCriterion(
-                    customer_id=google_ads_resources.customer_id,
-                    campaign_id=campaign_id,
-                    status="ENABLED",
-                    keyword_match_type=row["Match Type"].upper(),
-                    keyword_text=row["Keyword"],
-                    negative=True,
-                ),
-                endpoint="/add-negative-keywords-to-campaign",
-                already_checked_clients_approval=True,
-            )
-            final_response += (
-                f"Negative campaign keyword {row['Keyword']}\n{response}\n"
-            )
+        response = _create_negative_campaign_keywords(
+            customer_id=google_ads_resources.customer_id,
+            campaign_id=campaign_id,
+            campaign_name=campaign_name,
+            keywords_df=keywords_df,
+            context=context,
+        )
+        if not isinstance(response, str):
+            return response
+        final_response += response
 
     for _, row in ads_df.iterrows():
         headlines = [
