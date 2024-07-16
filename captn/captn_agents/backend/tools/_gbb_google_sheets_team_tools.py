@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, List, Union
+from typing import Annotated, Any, Dict, List, Tuple, Union
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -111,10 +111,10 @@ def _check_mandatory_columns(
     return ""
 
 
-def create_google_ads_resources(
+def _validate_and_convert_to_df(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
-) -> Union[Dict[str, Any], str]:
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     error_msg = check_for_client_approval(
         modification_function_parameters=google_ads_resources.model_dump(),
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -154,6 +154,18 @@ def create_google_ads_resources(
     )
     if mandatory_columns_error_msg:
         raise ValueError(mandatory_columns_error_msg)
+
+    return ads_df, keywords_df
+
+
+def create_google_ads_resources(
+    google_ads_resources: GoogleAdsResources,
+    context: GoogleSheetsTeamContext,
+) -> Union[Dict[str, Any], str]:
+    ads_df, keywords_df = _validate_and_convert_to_df(
+        google_ads_resources=google_ads_resources,
+        context=context,
+    )
 
     keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
     campaign_names_ad_budgets = ads_df[
