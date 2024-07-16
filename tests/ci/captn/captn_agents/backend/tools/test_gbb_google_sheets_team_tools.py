@@ -80,5 +80,10 @@ class TesteCreateGoogleAdsResources:
             google_ads_resources=self.gads_resuces,
             context=self.context,
         )
-        for expected in ["Ad group ad", "Keyword"]:
+        for expected in [
+            "Ad group ad",
+            "Keyword",
+            "Negative campaign keyword Neg Campaign",
+            "Negative ad group keyword Neg",
+        ]:
             assert expected in response

@@ -98,8 +98,17 @@ keywords_values = {
             "10",
             "Pristina to Skoplje Transport | Exact",
             "Exact",
-            "Rezerviraj odmah",
+            "Neg Ad Group",
             "Ad Group",
+            "TRUE",
+        ],
+        [
+            "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
+            "10",
+            None,
+            "Exact",
+            "Neg Campaign",
+            "Campaign",
             "TRUE",
         ],
     ]

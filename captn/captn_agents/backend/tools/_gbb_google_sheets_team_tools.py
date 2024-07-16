@@ -9,6 +9,7 @@ from captn.google_ads.client import check_for_client_approval
 from google_ads.model import (
     AdGroupCriterion,
     Campaign,
+    CampaignCriterion,
 )
 
 from ....google_ads.client import google_ads_create_update
@@ -158,6 +159,7 @@ def create_google_ads_resources(
         ["Campaign Name", "Campaign Budget"]
     ].drop_duplicates()
 
+    final_response = ""
     created_campaign_names_and_ids = {}
     for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
         budget_amount_micros = int(campaign_budget) * 1_000_000
@@ -179,6 +181,7 @@ def create_google_ads_resources(
             endpoint="/create-campaign",
             already_checked_clients_approval=True,
         )
+        final_response += f"Campaign {campaign_name}\n{response}\n"
 
         if not isinstance(response, str):
             return response
@@ -186,7 +189,31 @@ def create_google_ads_resources(
             campaign_id = get_resource_id_from_response(response)
             created_campaign_names_and_ids[campaign_name] = campaign_id
 
-    final_response = ""
+        negative_campaign_keywords = keywords_df[
+            (keywords_df["Campaign Name"] == campaign_name)
+            & (keywords_df["Level"] == "Campaign")
+            & (keywords_df["Negative"] == "TRUE")
+        ]
+        for _, row in negative_campaign_keywords.iterrows():
+            response = google_ads_create_update(
+                user_id=context.user_id,
+                conv_id=context.conv_id,
+                recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+                ad=CampaignCriterion(
+                    customer_id=google_ads_resources.customer_id,
+                    campaign_id=campaign_id,
+                    status="ENABLED",
+                    keyword_match_type=row["Match Type"].upper(),
+                    keyword_text=row["Keyword"],
+                    negative=True,
+                ),
+                endpoint="/add-negative-keywords-to-campaign",
+                already_checked_clients_approval=True,
+            )
+            final_response += (
+                f"Negative campaign keyword {row['Keyword']}\n{response}\n"
+            )
+
     for _, row in ads_df.iterrows():
         headlines = [
             row[col] for col in row.index if col.lower().startswith("headline")
