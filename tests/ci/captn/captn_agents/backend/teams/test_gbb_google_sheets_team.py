@@ -109,7 +109,6 @@ class TestGBBGoogleSheetsTeam:
                                 for expected_message in expected_messages_copy:
                                     if expected_message in message["content"]:
                                         expected_messages.remove(expected_message)
-                                        print(f"Found message: {expected_message}")
 
                             if len(expected_messages) == 0:
                                 break

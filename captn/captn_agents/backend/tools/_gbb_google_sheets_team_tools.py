@@ -383,23 +383,36 @@ def create_google_ads_resources(
             final_url=final_url,
         )
 
+        # If ad group already exists, create only ad group ad
         if row["Ad Group Name"] in created_ad_group_names_and_ids:
             ad_group_ad.ad_group_id = created_ad_group_names_and_ids[
                 row["Ad Group Name"]
             ]
-            # TODO: Create only Ad if Ad Group already exists
-            continue
-
-        final_response += _create_ad_group_with_ad_and_keywords_helper(
-            customer_id=google_ads_resources.customer_id,
-            campaign_id=campaign_id,
-            ad_group_name=row["Ad Group Name"],
-            match_type=row["Match Type"],
-            keywords_df=keywords_df,
-            ad_group_ad=ad_group_ad,
-            context=context,
-        )
-        created_ad_group_names_and_ids[row["Ad Group Name"]] = ad_group_ad.ad_group_id  # type: ignore[assignment]
+            response = google_ads_create_update(
+                user_id=context.user_id,
+                conv_id=context.conv_id,
+                recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+                ad=ad_group_ad,
+                endpoint="/create-ad-group-ad",
+                already_checked_clients_approval=True,
+            )
+            if not isinstance(response, str):
+                raise ValueError(response)
+            final_response += f"Ad group ad\n{response}\n"
+        # Otherwise, create ad group, ad group ad, and keywords
+        else:
+            final_response += _create_ad_group_with_ad_and_keywords_helper(
+                customer_id=google_ads_resources.customer_id,
+                campaign_id=campaign_id,
+                ad_group_name=row["Ad Group Name"],
+                match_type=row["Match Type"],
+                keywords_df=keywords_df,
+                ad_group_ad=ad_group_ad,
+                context=context,
+            )
+            created_ad_group_names_and_ids[row["Ad Group Name"]] = (
+                ad_group_ad.ad_group_id  # type: ignore[assignment]
+            )
 
     return final_response
 

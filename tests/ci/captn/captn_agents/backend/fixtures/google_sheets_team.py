@@ -3,6 +3,35 @@ __all__ = (
     "keywords_values",
 )
 
+ad_copy = [
+    "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
+    "10",
+    "Pristina to Skoplje Transport | Exact",
+    "Exact",
+    "H1 - Pristina",
+    "H2 - Skoplje",
+    "Rezerviraj odmah",
+    "Rezerviraj odmah 2",
+    "Rezerviraj odmah 3",
+    "Rezerviraj odmah 4",
+    "Rezerviraj odmah 5",
+    "Rezerviraj odmah 6",
+    "Rezerviraj odmah 7",
+    "Rezerviraj odmah 8",
+    "Rezerviraj odmah 9",
+    "Rezerviraj odmah 10",
+    "Rezerviraj odmah 11",
+    "Rezerviraj odmah 12",
+    "Rezerviraj odmah 13",
+    "Povezujemo više od 80 država i preko 20.000 gradova",
+    "Preko 1500 sniženih karata Iskoristite popuste do 50%",
+    "Preko 1500 sniženih karata Iskoristite popuste do 60%",
+    "Preko 1500 sniženih karata Iskoristite popuste do 70%",
+    "Pristina",
+    "Skoplje",
+    "getbybus.com/en/pristina-skoplje",
+]
+
 ads_values = {
     "values": [
         [
@@ -33,34 +62,8 @@ ads_values = {
             "Path 2",
             "Final URL",
         ],
-        [
-            "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
-            "10",
-            "Pristina to Skoplje Transport | Exact",
-            "Exact",
-            "H1 - Pristina",
-            "H2 - Skoplje",
-            "Rezerviraj odmah",
-            "Rezerviraj odmah 2",
-            "Rezerviraj odmah 3",
-            "Rezerviraj odmah 4",
-            "Rezerviraj odmah 5",
-            "Rezerviraj odmah 6",
-            "Rezerviraj odmah 7",
-            "Rezerviraj odmah 8",
-            "Rezerviraj odmah 9",
-            "Rezerviraj odmah 10",
-            "Rezerviraj odmah 11",
-            "Rezerviraj odmah 12",
-            "Rezerviraj odmah 13",
-            "Povezujemo više od 80 država i preko 20.000 gradova",
-            "Preko 1500 sniženih karata Iskoristite popuste do 50%",
-            "Preko 1500 sniženih karata Iskoristite popuste do 60%",
-            "Preko 1500 sniženih karata Iskoristite popuste do 70%",
-            "Pristina",
-            "Skoplje",
-            "getbybus.com/en/pristina-skoplje",
-        ],
+        ad_copy,
+        ad_copy,  # Duplicate ad
     ]
 }
 
