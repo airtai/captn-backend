@@ -257,6 +257,68 @@ def _create_negative_ad_group_keywords(
     return final_response
 
 
+def _create_ad_group_with_ad_and_keywords_helper(
+    customer_id: str,
+    campaign_id: str,
+    ad_group_name: str,
+    match_type: str,
+    keywords_df: pd.DataFrame,
+    ad_group_ad: AdGroupAdForCreation,
+    context: GoogleSheetsTeamContext,
+) -> str:
+    ad_group = AdGroupForCreation(
+        customer_id=customer_id,
+        campaign_id=campaign_id,
+        name=ad_group_name,
+        status="ENABLED",
+    )
+
+    ad_group_positive_keywords = keywords_df[
+        (keywords_df["Ad Group Name"] == ad_group_name) & (~keywords_df["Negative"])
+    ]
+    positive_keywords_list = ad_group_positive_keywords["Keyword"].tolist()
+    ad_group_positive_keywords = []
+    for keyword in positive_keywords_list:
+        ad_group_positive_keywords.append(
+            AdGroupCriterionForCreation(
+                customer_id=customer_id,
+                campaign_id=campaign_id,
+                status="ENABLED",
+                keyword_text=keyword,
+                keyword_match_type=match_type.upper(),
+            )
+        )
+
+    ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
+        customer_id=customer_id,
+        campaign_id=campaign_id,
+        ad_group=ad_group,
+        ad_group_ad=ad_group_ad,
+        keywords=ad_group_positive_keywords,
+    )
+
+    response = _create_ad_group_with_ad_and_keywords(
+        ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+        context=context,
+    )
+
+    if not isinstance(response, str):
+        raise ValueError(response)
+
+    final_response = response + "\n"
+
+    response = _create_negative_ad_group_keywords(
+        customer_id=customer_id,
+        campaign_id=campaign_id,
+        ad_group_id=ad_group_ad.ad_group_id,  # type: ignore[arg-type]
+        ad_group_name=ad_group_name,
+        keywords_df=keywords_df,
+        context=context,
+    )
+    final_response += response
+    return final_response
+
+
 def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
@@ -288,14 +350,13 @@ def create_google_ads_resources(
             campaign_id = get_resource_id_from_response(response)
             created_campaign_names_and_ids[campaign_name] = campaign_id
 
-        response = _create_negative_campaign_keywords(
+        final_response += _create_negative_campaign_keywords(
             customer_id=google_ads_resources.customer_id,
             campaign_id=campaign_id,
             campaign_name=campaign_name,
             keywords_df=keywords_df,
             context=context,
         )
-        final_response += response
 
     created_ad_group_names_and_ids: Dict[str, str] = {}
     for _, row in ads_df.iterrows():
@@ -329,59 +390,16 @@ def create_google_ads_resources(
             # TODO: Create only Ad if Ad Group already exists
             continue
 
-        ad_group = AdGroupForCreation(
+        final_response += _create_ad_group_with_ad_and_keywords_helper(
             customer_id=google_ads_resources.customer_id,
             campaign_id=campaign_id,
-            name=row["Ad Group Name"],
-            status="ENABLED",
-        )
-
-        match_type = row["Match Type"]
-        ad_group_name = row["Ad Group Name"]
-        ad_group_positive_keywords = keywords_df[
-            (keywords_df["Ad Group Name"] == ad_group_name) & (~keywords_df["Negative"])
-        ]
-        positive_keywords_list = ad_group_positive_keywords["Keyword"].tolist()
-        ad_group_positive_keywords = []
-        for keyword in positive_keywords_list:
-            ad_group_positive_keywords.append(
-                AdGroupCriterionForCreation(
-                    customer_id=google_ads_resources.customer_id,
-                    campaign_id=campaign_id,
-                    status="ENABLED",
-                    keyword_text=keyword,
-                    keyword_match_type=match_type.upper(),
-                )
-            )
-
-        ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
-            customer_id=google_ads_resources.customer_id,
-            campaign_id=campaign_id,
-            ad_group=ad_group,
-            ad_group_ad=ad_group_ad,
-            keywords=ad_group_positive_keywords,
-        )
-
-        response = _create_ad_group_with_ad_and_keywords(
-            ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
-            context=context,
-        )
-
-        if not isinstance(response, str):
-            return response
-
-        final_response += response + "\n"
-        created_ad_group_names_and_ids[ad_group_name] = ad_group_ad.ad_group_id  # type: ignore[assignment]
-
-        response = _create_negative_ad_group_keywords(
-            customer_id=google_ads_resources.customer_id,
-            campaign_id=campaign_id,
-            ad_group_id=ad_group_ad.ad_group_id,  # type: ignore[arg-type]
-            ad_group_name=ad_group_name,
+            ad_group_name=row["Ad Group Name"],
+            match_type=row["Match Type"],
             keywords_df=keywords_df,
+            ad_group_ad=ad_group_ad,
             context=context,
         )
-        final_response += response
+        created_ad_group_names_and_ids[row["Ad Group Name"]] = ad_group_ad.ad_group_id  # type: ignore[assignment]
 
     return final_response
 
