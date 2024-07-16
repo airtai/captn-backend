@@ -72,6 +72,8 @@ keywords_values = {
             "Ad Group Name",
             "Match Type",
             "Keyword",
+            "Level",
+            "Negative",
         ],
         [
             "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
@@ -79,6 +81,8 @@ keywords_values = {
             "Pristina to Skoplje Transport | Exact",
             "Exact",
             "Svi autobusni polasci",
+            None,
+            "FALSE",
         ],
         [
             "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
@@ -86,6 +90,17 @@ keywords_values = {
             "Pristina to Skoplje Transport | Exact",
             "Exact",
             "Rezerviraj odmah",
+            None,
+            "FALSE",
+        ],
+        [
+            "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
+            "10",
+            "Pristina to Skoplje Transport | Exact",
+            "Exact",
+            "Rezerviraj odmah",
+            "Ad Group",
+            "TRUE",
         ],
     ]
 }

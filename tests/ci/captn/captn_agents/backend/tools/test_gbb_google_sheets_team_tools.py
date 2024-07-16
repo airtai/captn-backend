@@ -67,7 +67,7 @@ class TesteCreateGoogleAdsResources:
                 )
             assert (
                 str(exc_info.value)
-                == "keywords_title is missing columns: ['Campaign Name']"
+                == "keywords_title is missing columns: ['Campaign Name', 'Level', 'Negative']"
             )
 
     def test_create_google_ads_resources(
