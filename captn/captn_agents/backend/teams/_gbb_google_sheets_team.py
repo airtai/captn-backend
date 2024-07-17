@@ -109,7 +109,8 @@ Here is the current customers brief/information we have gathered for you as a st
 - If you receive a login url, forward it to the client by using the 'reply_to_client' function.
 - Do NOT use smart suggestions when forwarding the login url to the client!
 4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with new routes.
-Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
+- Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
+- Do NOT forget this step, because the client needs to confirm that you have found the correct files, otherwise you will be penalized!
 5. In the template spreadsheet, you must must check that 'Campaigns', 'ad Groups', 'Keywords' and 'Ads' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 6. In the spreadsheet with new routes, you must find the title of the sheet with new routes (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 7. Once you have all the necessary information, use 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
@@ -122,6 +123,9 @@ Use reply_to_client command to check if you found the correct files by providing
 - Once the user has given permission to make the changes, create Google Ads resources by using the 'create_google_ads_resources' function. (this should be done by the Google_ads_expert)
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
+
+OFTEN MISTAKES:
+- Do NOT forget the 'modification_function_parameters' when calling 'ask_client_for_permission' function!
 """
 
     @property
@@ -135,7 +139,7 @@ Only Account_manager has access to the following commands:
 }}
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling 'create_google_ads_resources'
 params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
-ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'!
+ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'. If you forget this parameter, you will be penalized!
 function_name: 'create_google_ads_resources'
 
 
