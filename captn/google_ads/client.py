@@ -78,6 +78,27 @@ def list_accessible_customers(
     return respone_json  # type: ignore[no-any-return]
 
 
+def list_accessible_customers_with_account_types(
+    user_id: int, conv_id: int
+) -> Dict[str, Any]:
+    login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
+    if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
+        return login_url_response
+
+    params = {
+        "user_id": user_id,
+    }
+    response = requests_get(
+        f"{BASE_URL}/list-accessible-customers-with-account-types",
+        params=params,
+        timeout=60,
+    )
+    if not response.ok:
+        raise ValueError(response.content)
+
+    return response.json()  # type: ignore[no-any-return]
+
+
 def clean_error_response(content: bytes) -> str:
     content_str = str(content, "utf-8")
 

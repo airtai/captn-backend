@@ -306,11 +306,14 @@ async def search(
     user_id: int = Query(title="User ID"),
     customer_ids: List[str] = Query(None),  # noqa
     query: str = Query(None, title="Google ads query"),
+    manager_customer_id: str = Query(None, title="Manager customer ID"),
 ) -> Dict[str, List[Any]]:
     user_credentials = await load_user_credentials(user_id)
     client = await create_google_ads_client(
         user_id=user_id, user_credentials=user_credentials
     )
+    if manager_customer_id:
+        client.login_customer_id = manager_customer_id
     service = client.get_service("GoogleAdsService")
 
     # Replace this with your actual Google Ads API query to fetch campaign data
@@ -346,6 +349,40 @@ async def search(
         ) from e
 
     return campaign_data
+
+
+@router.get("/list-accessible-customers-with-account-types")
+async def list_accessible_customers_with_account_types(
+    user_id: int = Query(title="User ID"),
+) -> Dict[str, Any]:
+    customers_ids = await list_accessible_customers(
+        user_id=user_id, get_only_non_manager_accounts=False
+    )
+
+    query = """
+SELECT
+    customer_client.manager,
+    customer_client.descriptive_name,
+    customer_client.id
+FROM
+    customer_client
+"""
+
+    search_results = {}
+    for customer_id in customers_ids:
+        search_result = await search(
+            user_id=user_id,
+            customer_ids=[customer_id],
+            query=query,
+            manager_customer_id=customer_id,
+        )
+        search_result_customer = [
+            customer
+            for customer in search_result[customer_id]
+            if customer["customerClient"]["id"] == customer_id
+        ]
+        search_results[customer_id] = search_result_customer
+    return search_results
 
 
 # Route 5: Fetch user's emails
