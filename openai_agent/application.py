@@ -279,7 +279,7 @@ async def chat(
             "team_status": "inprogress",
             "team_name": user_initial_team.initial_team.name,
             "team_id": request.chat_id,
-            "customer_brief": "This is my customer brief.",
+            "customer_brief": request.message[-1]["content"],
             "conversation_name": "Team of Experts",
         }
 

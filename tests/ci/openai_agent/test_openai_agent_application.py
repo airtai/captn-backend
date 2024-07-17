@@ -47,7 +47,7 @@ class TestChat:
                 "team_status": "inprogress",
                 "team_name": "test_team",
                 "team_id": 234,
-                "customer_brief": "This is my customer brief.",
+                "customer_brief": "Hello",
                 "conversation_name": "Team of Experts",
             }
             assert response.json() == expected

@@ -19,7 +19,7 @@ class TeamWithClient(Team):
         user_id: int,
         conv_id: int,
         roles: List[Dict[str, str]],
-        create_toolbox_func: Callable[[int, int], Toolbox],
+        create_toolbox_func: Callable[[int, int, Dict[str, Any]], Toolbox],
         openapi_url: str,
         kwargs_to_patch: Optional[Dict[str, Any]] = None,
         work_dir: str = "team_with_client",
@@ -27,10 +27,12 @@ class TeamWithClient(Team):
         seed: int = 42,
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
+        recommended_modifications_and_answer_list: Optional[
+            List[Tuple[Dict[str, Any], Optional[str]]]
+        ] = None,
     ):
-        recommended_modifications_and_answer_list: List[
-            Tuple[Dict[str, Any], Optional[str]]
-        ] = []
+        if recommended_modifications_and_answer_list is None:
+            recommended_modifications_and_answer_list = []
         function_map: Dict[str, Callable[[Any], Any]] = {}
 
         super().__init__(
@@ -56,6 +58,8 @@ class TeamWithClient(Team):
         )
         self.create_toolbox_func = create_toolbox_func
         self.openapi_url = openapi_url
+        # google_sheets_api_url is openapi_url without the /openapi.json
+        self.google_sheets_api_url = openapi_url.rsplit("/", 1)[0]
         self.kwargs_to_patch = kwargs_to_patch
 
         self._create_members()
@@ -88,9 +92,14 @@ class TeamWithClient(Team):
         self.client.register_for_execution(self.user_proxy)
 
     def _add_tools(self) -> None:
+        kwargs = {
+            "recommended_modifications_and_answer_list": self.recommended_modifications_and_answer_list,
+            "google_sheets_api_url": self.google_sheets_api_url,
+        }
         self.toolbox = self.create_toolbox_func(
             self.user_id,
             self.conv_id,
+            kwargs,
         )
         for agent in self.members:
             if agent != self.user_proxy and agent.name in self.roles_with_toolbox:

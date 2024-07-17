@@ -200,7 +200,7 @@ YES_OR_NO_SMART_SUGGESTIONS = SmartSuggestions(
 ).model_dump()
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Context(BaseContext):
     recommended_modifications_and_answer_list: List[
         Tuple[Dict[str, Any], Optional[str]]

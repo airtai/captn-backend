@@ -180,7 +180,7 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
         ] = None,
     ) -> List[str]:
         if spreadsheet_id == "fabdbdfw1233":
-            return ["Keywords", "Ads"]
+            return ["Campaigns", "Ad Groups", "Keywords", "Ads"]
         elif spreadsheet_id == "fabdbdfw1234":
             return ["New"]
         return ["Sheet1", "Sheet2", "Sheet3"]
