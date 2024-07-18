@@ -13,6 +13,12 @@ from google_ads.model import (
 )
 
 from ....google_ads.client import google_ads_create_update
+from ....google_ads.client import (
+    list_accessible_customers_with_account_types as list_accessible_customers_with_account_types_client,
+)
+from ....google_ads.client import (
+    list_sub_accounts as list_sub_accounts_client,
+)
 from ..toolboxes import Toolbox
 from ._campaign_creation_team_tools import (
     AdGroupAdForCreation,
@@ -30,8 +36,6 @@ from ._functions import (
 )
 from ._google_ads_team_tools import (
     get_resource_id_from_response,
-    list_accessible_customers,
-    list_accessible_customers_description,
 )
 
 __all__ = ("create_google_sheets_team_toolbox",)
@@ -40,6 +44,13 @@ CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION = "Creates Google Ads resources"
 
 
 class GoogleAdsResources(BaseModel):
+    login_customer_id: Annotated[
+        str,
+        Field(
+            ...,
+            description="The ID of the Google Ads manager account. If customer_id is not a part of a manager account, use the same ID for both login_customer_id and customer_id.",
+        ),
+    ]
     customer_id: Annotated[
         str, Field(..., description="The ID of the Google Ads customer account")
     ]
@@ -417,6 +428,42 @@ def create_google_ads_resources(
     return final_response
 
 
+LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION = (
+    "List accessible customers with account types"
+)
+
+
+def list_accessible_customers_with_account_types(
+    context: Context,
+) -> Dict[str, Any]:
+    return list_accessible_customers_with_account_types_client(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+    )
+
+
+LIST_SUB_ACCOUNTS_DESCRIPTION = """Use this function to list sub accounts of a Google Ads manager account.
+login_customer_id is the ID of the Google Ads manager account, you can get all available accounts by using list_accessible_customers_with_account_types function.
+customer_id is the ID of the Google Ads account you want to list sub accounts of."""
+
+
+def list_sub_accounts(
+    login_customer_id: Annotated[
+        str, "The ID of the Google Ads manager customer account"
+    ],
+    customer_id: Annotated[
+        str,
+        "The ID of the Google Ads customer account whose sub accounts you want to list",
+    ],
+    context: Context,
+) -> Any:
+    return list_sub_accounts_client(
+        user_id=context.user_id,
+        login_customer_id=login_customer_id,
+        customer_id=customer_id,
+    )
+
+
 def create_google_sheets_team_toolbox(
     user_id: int,
     conv_id: int,
@@ -439,9 +486,10 @@ def create_google_sheets_team_toolbox(
     toolbox.add_function(
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)
-    toolbox.add_function(list_accessible_customers_description)(
-        list_accessible_customers
+    toolbox.add_function(LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION)(
+        list_accessible_customers_with_account_types
     )
+    toolbox.add_function(LIST_SUB_ACCOUNTS_DESCRIPTION)(list_sub_accounts)
     toolbox.add_function(CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION)(
         create_google_ads_resources
     )

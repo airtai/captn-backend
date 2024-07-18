@@ -117,8 +117,9 @@ Here is the current customers brief/information we have gathered for you as a st
 - query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
 8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
 9. If the user verifies that everything is correct the team should do the following:
-- List accessible customers by using the 'list_accessible_customers' function. (this should be done by the Google_ads_expert)
+- List accessible customers by using the 'list_accessible_customers_with_account_types' function. (this should be done by the Google_ads_expert)
 - Ask the user choose the correct customer id (This should be done by the Account_manager)
+- If the chosen customer is a Manager Account, list sub-accounts by using the 'list_sub_accounts' function. (this should be done by the Google_ads_expert) and ask the user to choose the correct sub-account.
 - Once the user chooses the correct customer id use 'ask_client_for_permission' function to ask the client for permission to make the changes.
 - Once the user has given permission to make the changes, create Google Ads resources by using the 'create_google_ads_resources' function. (this should be done by the Google_ads_expert)
 
@@ -146,7 +147,8 @@ function_name: 'create_google_ads_resources'
 3. Only Google_sheets_expert has access to Google Sheets API and can read and edit Google Sheets.
 
 4. Only Google_ads_expert has access to the following commands:
-- 'list_accessible_customers' (to list accessible Google Ads customers)
+- 'list_accessible_customers_with_account_types' (to list accessible Google Ads customers with account types)
+- 'list_sub_accounts' (to list sub-accounts of a Google Ads customer, use it if the client wants to use Manager Account)
 - 'create_google_ads_resources'
 """
 
