@@ -100,7 +100,9 @@ def list_accessible_customers_with_account_types(
     return response.json()  # type: ignore[no-any-return]
 
 
-def list_sub_accounts(user_id: int, login_customer_id: str, customer_id: str) -> Any:
+def list_sub_accounts(
+    user_id: int, login_customer_id: str, customer_id: str
+) -> Dict[str, List[Dict[str, Any]]]:
     query = """
 SELECT
     customer_client.manager,
@@ -131,7 +133,7 @@ FROM
             for x in response_json[customer_id]
             if x["customerClient"]["id"] != customer_id
         ]
-    return response_json
+    return response_json  # type: ignore[no-any-return]
 
 
 def clean_error_response(content: bytes) -> str:

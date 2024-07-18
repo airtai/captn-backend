@@ -28,7 +28,12 @@ from autogen.cache import Cache
 from pydantic import BaseModel, Field, HttpUrl, ValidationError, field_validator
 from typing_extensions import _AnnotatedAlias
 
-from ....google_ads.client import clean_nones, execute_query, list_accessible_customers
+from ....google_ads.client import (
+    clean_nones,
+    execute_query,
+    list_accessible_customers,
+    list_sub_accounts,
+)
 from ...model import SmartSuggestions
 from ..config import Config
 from ..toolboxes.base import Toolbox
@@ -460,12 +465,30 @@ def ask_client_for_permission(
         raise ValueError(
             "The 'customer_id' parameter is missing in the 'modification_function_parameters'."
         )
-
-    accessible_customer_ids = list_accessible_customers(
-        user_id=context.user_id,
-        conv_id=context.conv_id,
-        get_only_non_manager_accounts=context.get_only_non_manager_accounts,
+    login_customer_id = _find_value_in_nested_dict(
+        dictionary=modification_function_parameters, key="login_customer_id"
     )
+
+    if login_customer_id is None:
+        accessible_customer_ids = list_accessible_customers(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            get_only_non_manager_accounts=context.get_only_non_manager_accounts,
+        )
+    else:
+        accessible_customers = list_sub_accounts(
+            user_id=context.user_id,
+            login_customer_id=login_customer_id,
+            customer_id=customer_id,
+        )
+        accessible_customers_ids_and_names = {
+            customer["customerClient"]["id"]: customer["customerClient"][
+                "descriptiveName"
+            ]
+            for customer in accessible_customers[customer_id]
+        }
+        accessible_customer_ids = list(accessible_customers_ids_and_names.keys())
+
     if not isinstance(accessible_customer_ids, list):
         return accessible_customer_ids
 
@@ -491,15 +514,21 @@ Here is the list of accessible customer IDs: {accessible_customer_ids}"""
         context.recommended_modifications_and_answer_list
     )
 
-    query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
-    query_result = execute_query(
-        user_id=user_id, conv_id=conv_id, customer_ids=[customer_id], query=query
-    )
-    descriptiveName = ast.literal_eval(query_result)[customer_id][0]["customer"][  # type: ignore
-        "descriptiveName"
-    ]
+    if login_customer_id is None:
+        query = f"SELECT customer.descriptive_name FROM customer WHERE customer.id = '{customer_id}'"  # nosec: [B608]
+        query_result = execute_query(
+            user_id=user_id,
+            conv_id=conv_id,
+            customer_ids=[customer_id],
+            query=query,
+        )
+        descriptive_name = ast.literal_eval(query_result)[customer_id][0]["customer"][  # type: ignore
+            "descriptiveName"
+        ]
+    else:
+        descriptive_name = accessible_customers_ids_and_names[customer_id]
 
-    customer_to_update = f"We propose changes for the following customer: '{descriptiveName}' (ID: {customer_id})"
+    customer_to_update = f"We propose changes for the following customer: '{descriptive_name}' (ID: {customer_id})"
     message = _create_reply_message_for_client(
         customer_to_update=customer_to_update,
         resource_details=resource_details,
