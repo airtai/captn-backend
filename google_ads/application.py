@@ -209,7 +209,10 @@ async def load_user_credentials(user_id: Union[int, str]) -> Any:
 
 # Initialize Google Ads API client
 async def create_google_ads_client(
-    user_id: int, user_credentials: Dict[str, Any], use_proto_plus: bool = False
+    user_id: int,
+    user_credentials: Dict[str, Any],
+    login_customer_id: Optional[str],
+    use_proto_plus: bool = False,
 ) -> GoogleAdsClient:
     # Create a dictionary with the required structure for GoogleAdsClient
     google_ads_credentials = {
@@ -218,8 +221,9 @@ async def create_google_ads_client(
         "client_id": oauth2_settings["clientId"],
         "client_secret": oauth2_settings["clientSecret"],
         "refresh_token": user_credentials["refresh_token"],
-        # "login_customer_id": "7119828439",
     }
+    if login_customer_id:
+        google_ads_credentials["login_customer_id"] = login_customer_id
 
     # Initialize the Google Ads API client with the properly structured dictionary
     try:
@@ -270,7 +274,7 @@ async def list_accessible_customers(
     try:
         user_credentials = await load_user_credentials(user_id)
         client = await create_google_ads_client(
-            user_id=user_id, user_credentials=user_credentials
+            user_id=user_id, user_credentials=user_credentials, login_customer_id=None
         )
         customer_service = client.get_service("CustomerService")
         accessible_customers = await asyncify(
@@ -306,14 +310,14 @@ async def search(
     user_id: int = Query(title="User ID"),
     customer_ids: List[str] = Query(None),  # noqa
     query: str = Query(None, title="Google ads query"),
-    manager_customer_id: str = Query(None, title="Manager customer ID"),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
 ) -> Dict[str, List[Any]]:
     user_credentials = await load_user_credentials(user_id)
     client = await create_google_ads_client(
-        user_id=user_id, user_credentials=user_credentials
+        user_id=user_id,
+        user_credentials=user_credentials,
+        login_customer_id=login_customer_id,
     )
-    if manager_customer_id:
-        client.login_customer_id = manager_customer_id
     service = client.get_service("GoogleAdsService")
 
     # Replace this with your actual Google Ads API query to fetch campaign data
@@ -374,7 +378,7 @@ FROM
             user_id=user_id,
             customer_ids=[customer_id],
             query=query,
-            manager_customer_id=customer_id,
+            login_customer_id=customer_id,
         )
         search_result_customer = [
             customer
@@ -396,10 +400,15 @@ async def get_user_ids_and_emails(day_of_week_created: Optional[str] = None) -> 
 AVALIABLE_KEYS = ["campaign", "ad_group", "ad_group_ad", "ad_group_criterion"]
 
 
-async def _get_client(user_id: int) -> GoogleAdsClient:
+async def _get_client(
+    user_id: int, login_customer_id: Optional[str]
+) -> GoogleAdsClient:
     user_credentials = await load_user_credentials(user_id)
     client = await create_google_ads_client(
-        user_id=user_id, user_credentials=user_credentials, use_proto_plus=True
+        user_id=user_id,
+        user_credentials=user_credentials,
+        use_proto_plus=True,
+        login_customer_id=login_customer_id,
     )
     return client
 
@@ -594,8 +603,9 @@ async def _get_necessary_parameters(
     service_operation_and_function_names: Dict[str, Any],
     crud_operation_name: str,
     mandatory_fields: List[str],
+    login_customer_id: Optional[str],
 ) -> Tuple[GoogleAdsClient, Any, Any, Dict[str, Any], str, Any, List[Any]]:
-    client = await _get_client(user_id=user_id)
+    client = await _get_client(user_id=user_id, login_customer_id=login_customer_id)
 
     service = client.get_service(service_operation_and_function_names["service"])
     operation = client.get_type(service_operation_and_function_names["operation"])
@@ -629,13 +639,17 @@ async def _get_existing_ad_group_criterion(
     user_id: int,
     customer_id: str,
     criterion_id: Optional[str],
+    login_customer_id: Optional[str],
 ) -> Any:
     query = f"""SELECT ad_group_criterion.status, ad_group_criterion.negative,
 ad_group_criterion.keyword.match_type, ad_group_criterion.keyword.text
 FROM ad_group_criterion
 WHERE ad_group_criterion.criterion_id = {criterion_id}"""  # nosec: [B608]
     ad_group_criterion = await search(
-        user_id=user_id, customer_ids=[customer_id], query=query
+        user_id=user_id,
+        customer_ids=[customer_id],
+        query=query,
+        login_customer_id=login_customer_id,
     )
     return ad_group_criterion[customer_id][0]["adGroupCriterion"]
 
@@ -645,6 +659,7 @@ async def _update(
     model: AdBase,
     service_operation_and_function_names: Dict[str, Any],
     mandatory_fields: List[str],
+    login_customer_id: Optional[str],
 ) -> str:
     (
         client,
@@ -660,6 +675,7 @@ async def _update(
         service_operation_and_function_names=service_operation_and_function_names,
         crud_operation_name="update",
         mandatory_fields=mandatory_fields,
+        login_customer_id=login_customer_id,
     )
 
     try:
@@ -870,7 +886,11 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
 
 
 @router.get("/update-ad-group-ad")
-async def update_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
+async def update_ad_group_ad(
+    user_id: int,
+    ad_model: AdGroupAd = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
 
@@ -879,6 +899,7 @@ async def update_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> s
         model=ad_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id", "ad_id"],
+        login_customer_id=login_customer_id,
     )
 
 
@@ -909,7 +930,11 @@ def _create_campaign_budget(client: Any, customer_id: str, amount_micros: int) -
 
 
 @router.get("/create-campaign")
-async def create_campaign(user_id: int, ad_model: Campaign = Depends()) -> str:
+async def create_campaign(
+    user_id: int,
+    ad_model: Campaign = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["campaign"]
 
@@ -927,6 +952,7 @@ async def create_campaign(user_id: int, ad_model: Campaign = Depends()) -> str:
         service_operation_and_function_names=service_operation_and_function_names,
         crud_operation_name="create",
         mandatory_fields=["customer_id"],
+        login_customer_id=login_customer_id,
     )
     try:
         # Create a campaign budget resource.
@@ -957,7 +983,11 @@ async def create_campaign(user_id: int, ad_model: Campaign = Depends()) -> str:
 
 
 @router.get("/create-ad-group")
-async def create_ad_group(user_id: int, ad_model: AdGroup = Depends()) -> str:
+async def create_ad_group(
+    user_id: int,
+    ad_model: AdGroup = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_group"]
 
@@ -966,11 +996,16 @@ async def create_ad_group(user_id: int, ad_model: AdGroup = Depends()) -> str:
         model=ad_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "campaign_id"],
+        login_customer_id=login_customer_id,
     )
 
 
 @router.get("/create-ad-group-ad")
-async def create_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> str:
+async def create_ad_group_ad(
+    user_id: int,
+    ad_model: AdGroupAd = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad"]
 
@@ -979,11 +1014,16 @@ async def create_ad_group_ad(user_id: int, ad_model: AdGroupAd = Depends()) -> s
         model=ad_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id"],
+        login_customer_id=login_customer_id,
     )
 
 
 @router.get("/create-update-ad-copy")
-async def create_update_ad_copy(user_id: int, ad_model: AdCopy = Depends()) -> str:
+async def create_update_ad_copy(
+    user_id: int,
+    ad_model: AdCopy = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_copy"]
 
@@ -992,11 +1032,16 @@ async def create_update_ad_copy(user_id: int, ad_model: AdCopy = Depends()) -> s
         model=ad_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_id"],
+        login_customer_id=login_customer_id,
     )
 
 
 @router.get("/update-ad-group")
-async def update_ad_group(user_id: int, ad_group_model: AdGroup = Depends()) -> str:
+async def update_ad_group(
+    user_id: int,
+    ad_group_model: AdGroup = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["ad_group"]
 
@@ -1005,11 +1050,16 @@ async def update_ad_group(user_id: int, ad_group_model: AdGroup = Depends()) -> 
         model=ad_group_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id"],
+        login_customer_id=login_customer_id,
     )
 
 
 @router.get("/update-campaign")
-async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) -> str:
+async def update_campaign(
+    user_id: int,
+    campaign_model: Campaign = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT["campaign"]
 
@@ -1018,6 +1068,7 @@ async def update_campaign(user_id: int, campaign_model: Campaign = Depends()) ->
         model=campaign_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "campaign_id"],
+        login_customer_id=login_customer_id,
     )
 
 
@@ -1038,12 +1089,15 @@ REMOVE_EXISTING_AND_CREATE_NEW_CRITERION = "When updating keyword text or match 
 
 
 async def _remove_existing_create_new_ad_group_criterion(
-    user_id: int, ad_group_criterion_model: AdGroupCriterion
+    user_id: int,
+    ad_group_criterion_model: AdGroupCriterion,
+    login_customer_id: Optional[str],
 ) -> str:
     ad_group_criterion_copy = await _get_existing_ad_group_criterion(
         user_id=user_id,
         customer_id=ad_group_criterion_model.customer_id,
         criterion_id=ad_group_criterion_model.criterion_id,
+        login_customer_id=login_customer_id,
     )
 
     ad_group_criterion_model.status = (
@@ -1064,6 +1118,7 @@ async def _remove_existing_create_new_ad_group_criterion(
     create_response = await add_keywords_to_ad_group(
         user_id=user_id,
         model=ad_group_criterion_model,
+        login_customer_id=login_customer_id,
     )
 
     remove_resource = RemoveResource(
@@ -1075,6 +1130,7 @@ async def _remove_existing_create_new_ad_group_criterion(
     remove_response = await remove_google_ads_resource(
         user_id=user_id,
         model=remove_resource,
+        login_customer_id=login_customer_id,
     )
 
     response = f"{REMOVE_EXISTING_AND_CREATE_NEW_CRITERION}\n{create_response}\n{remove_response}"
@@ -1084,7 +1140,9 @@ async def _remove_existing_create_new_ad_group_criterion(
 
 @router.get("/update-ad-group-criterion")
 async def update_ad_group_criterion(
-    user_id: int, ad_group_criterion_model: AdGroupCriterion = Depends()
+    user_id: int,
+    ad_group_criterion_model: AdGroupCriterion = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
 ) -> str:
     # keyword text and match type can NOT be updated - NEW ad_group_criterion must be created
     if (
@@ -1094,6 +1152,7 @@ async def update_ad_group_criterion(
         return await _remove_existing_create_new_ad_group_criterion(
             user_id=user_id,
             ad_group_criterion_model=ad_group_criterion_model,
+            login_customer_id=login_customer_id,
         )
 
     global GOOGLE_ADS_RESOURCE_DICT
@@ -1106,6 +1165,7 @@ async def update_ad_group_criterion(
         model=ad_group_criterion_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id", "criterion_id"],
+        login_customer_id=login_customer_id,
     )
 
 
@@ -1114,6 +1174,7 @@ async def _add(
     model: AdBase,
     service_operation_and_function_names: Dict[str, Any],
     mandatory_fields: List[str],
+    login_customer_id: Optional[str],
 ) -> str:
     (
         client,
@@ -1129,6 +1190,7 @@ async def _add(
         service_operation_and_function_names=service_operation_and_function_names,
         crud_operation_name="create",
         mandatory_fields=mandatory_fields,
+        login_customer_id=login_customer_id,
     )
     try:
         setattr_func = service_operation_and_function_names["setattr_create_func"]
@@ -1165,7 +1227,9 @@ async def _add(
 
 @router.get("/add-negative-keywords-to-campaign")
 async def add_negative_keywords_to_campaign(
-    user_id: int, campaign_criterion_model: CampaignCriterion = Depends()
+    user_id: int,
+    campaign_criterion_model: CampaignCriterion = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
 ) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[
@@ -1177,6 +1241,7 @@ async def add_negative_keywords_to_campaign(
         model=campaign_criterion_model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "campaign_id"],
+        login_customer_id=login_customer_id,
     )
 
 
@@ -1236,7 +1301,9 @@ async def update_campaigns_negative_keywords(
 
 @router.get("/add-keywords-to-ad-group")
 async def add_keywords_to_ad_group(
-    user_id: int, model: AdGroupCriterion = Depends()
+    user_id: int,
+    model: AdGroupCriterion = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
 ) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[
@@ -1248,6 +1315,7 @@ async def add_keywords_to_ad_group(
         model=model,
         service_operation_and_function_names=service_operation_and_function_names,
         mandatory_fields=["customer_id", "ad_group_id"],
+        login_customer_id=login_customer_id,
     )
 
 
@@ -1335,7 +1403,9 @@ def _create_locations_by_ids_to_campaign(
 
 @router.get("/create-geo-targeting-for-campaign")
 async def create_geo_targeting_for_campaign(
-    user_id: int, model: GeoTargetCriterion = Depends()
+    user_id: int,
+    model: GeoTargetCriterion = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
 ) -> str:
     location_names = (
         model.location_names if isinstance(model.location_names, list) else None
@@ -1347,7 +1417,7 @@ async def create_geo_targeting_for_campaign(
             detail="Either location_names or location_ids must be provided.",
         )
 
-    client = await _get_client(user_id=user_id)
+    client = await _get_client(user_id=user_id, login_customer_id=login_customer_id)
 
     if location_ids is None:
         return _get_geo_target_constant_by_names(
@@ -1366,12 +1436,14 @@ async def create_geo_targeting_for_campaign(
 
 @router.get("/remove-google-ads-resource")
 async def remove_google_ads_resource(
-    user_id: int, model: RemoveResource = Depends()
+    user_id: int,
+    model: RemoveResource = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
 ) -> str:
     global GOOGLE_ADS_RESOURCE_DICT
     service_operation_and_function_names = GOOGLE_ADS_RESOURCE_DICT[model.resource_type]
 
-    client = await _get_client(user_id=user_id)
+    client = await _get_client(user_id=user_id, login_customer_id=login_customer_id)
 
     try:
         service = client.get_service(service_operation_and_function_names["service"])
