@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 
 import pytest
 from requests.models import Response
@@ -12,6 +13,7 @@ from captn.google_ads.client import (
     clean_error_response,
     clean_nones,
     execute_query,
+    list_sub_accounts,
 )
 
 
@@ -132,3 +134,40 @@ def test_execute_query_when_google_ads_api_raises_error(error_message) -> None:
         assert (
             error_dict[error_message]["excepted_substr"] in exc_info.value.args[0]
         ), exc_info.value.args[0]
+
+
+def test_list_sub_accounts() -> None:
+    non_manager_json = {
+        "customerClient": {
+            "resourceName": "customers/345/customerClients/567",
+            "manager": False,
+            "descriptiveName": "customer d.o.o.",
+            "currencyCode": "EUR",
+            "id": "567",
+        }
+    }
+    response_json = {
+        "345": [
+            non_manager_json,
+            {
+                "customerClient": {
+                    "resourceName": "customers/345/customerClients/345",
+                    "manager": True,
+                    "descriptiveName": "Manager Account",
+                    "currencyCode": "HRK",
+                    "id": "345",
+                }
+            },
+        ]
+    }
+
+    with unittest.mock.patch(
+        "captn.google_ads.client.requests_get",
+        return_value=MagicMock(),
+    ) as mock_requests_get:
+        mock_requests_get.return_value.status_code = 200
+        mock_requests_get.return_value.json.return_value = response_json
+        resp = list_sub_accounts(123, "345", "345")
+
+        assert "345" in resp
+        assert resp["345"] == [non_manager_json]
