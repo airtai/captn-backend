@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, List, Tuple, Union
+from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -13,6 +13,12 @@ from google_ads.model import (
 )
 
 from ....google_ads.client import google_ads_create_update
+from ....google_ads.client import (
+    list_accessible_customers_with_account_types as list_accessible_customers_with_account_types_client,
+)
+from ....google_ads.client import (
+    list_sub_accounts as list_sub_accounts_client,
+)
 from ..toolboxes import Toolbox
 from ._campaign_creation_team_tools import (
     AdGroupAdForCreation,
@@ -30,8 +36,6 @@ from ._functions import (
 )
 from ._google_ads_team_tools import (
     get_resource_id_from_response,
-    list_accessible_customers,
-    list_accessible_customers_description,
 )
 
 __all__ = ("create_google_sheets_team_toolbox",)
@@ -40,6 +44,13 @@ CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION = "Creates Google Ads resources"
 
 
 class GoogleAdsResources(BaseModel):
+    login_customer_id: Annotated[
+        str,
+        Field(
+            ...,
+            description="The ID of the Google Ads manager account. If customer_id is not a part of a manager account, use the same ID for both login_customer_id and customer_id.",
+        ),
+    ]
     customer_id: Annotated[
         str, Field(..., description="The ID of the Google Ads customer account")
     ]
@@ -162,6 +173,7 @@ def _create_campaign(
     campaign_name: str,
     campaign_budget: str,
     customer_id: str,
+    login_customer_id: Optional[str],
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
     budget_amount_micros = int(campaign_budget) * 1_000_000
@@ -180,6 +192,7 @@ def _create_campaign(
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
         ad=campaign,
+        login_customer_id=login_customer_id,
         endpoint="/create-campaign",
         already_checked_clients_approval=True,
     )
@@ -189,6 +202,7 @@ def _create_campaign(
 
 def _create_negative_campaign_keywords(
     customer_id: str,
+    login_customer_id: Optional[str],
     campaign_id: str,
     campaign_name: str,
     keywords_df: pd.DataFrame,
@@ -214,6 +228,7 @@ def _create_negative_campaign_keywords(
                 negative=True,
             ),
             endpoint="/add-negative-keywords-to-campaign",
+            login_customer_id=login_customer_id,
             already_checked_clients_approval=True,
         )
         final_response += f"Negative campaign keyword {row['Keyword']}\n{response}\n"
@@ -223,6 +238,7 @@ def _create_negative_campaign_keywords(
 
 def _create_negative_ad_group_keywords(
     customer_id: str,
+    login_customer_id: Optional[str],
     campaign_id: str,
     ad_group_id: str,
     ad_group_name: str,
@@ -250,6 +266,7 @@ def _create_negative_ad_group_keywords(
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
             ad=negative_keyword,
             endpoint="/add-keywords-to-ad-group",
+            login_customer_id=login_customer_id,
             already_checked_clients_approval=True,
         )
 
@@ -259,6 +276,7 @@ def _create_negative_ad_group_keywords(
 
 def _create_ad_group_with_ad_and_keywords_helper(
     customer_id: str,
+    login_customer_id: Optional[str],
     campaign_id: str,
     ad_group_name: str,
     match_type: str,
@@ -300,6 +318,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     response = _create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
         context=context,
+        login_customer_id=login_customer_id,
     )
 
     if not isinstance(response, str):
@@ -309,6 +328,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
 
     response = _create_negative_ad_group_keywords(
         customer_id=customer_id,
+        login_customer_id=login_customer_id,
         campaign_id=campaign_id,
         ad_group_id=ad_group_ad.ad_group_id,  # type: ignore[arg-type]
         ad_group_name=ad_group_name,
@@ -340,6 +360,7 @@ def create_google_ads_resources(
             campaign_name=campaign_name,
             campaign_budget=campaign_budget,
             customer_id=google_ads_resources.customer_id,
+            login_customer_id=google_ads_resources.login_customer_id,
             context=context,
         )
         final_response += f"Campaign {campaign_name}\n{response}\n"
@@ -352,6 +373,7 @@ def create_google_ads_resources(
 
         final_response += _create_negative_campaign_keywords(
             customer_id=google_ads_resources.customer_id,
+            login_customer_id=google_ads_resources.login_customer_id,
             campaign_id=campaign_id,
             campaign_name=campaign_name,
             keywords_df=keywords_df,
@@ -394,6 +416,7 @@ def create_google_ads_resources(
                 recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
                 ad=ad_group_ad,
                 endpoint="/create-ad-group-ad",
+                login_customer_id=google_ads_resources.login_customer_id,
                 already_checked_clients_approval=True,
             )
             if not isinstance(response, str):
@@ -403,6 +426,7 @@ def create_google_ads_resources(
         else:
             final_response += _create_ad_group_with_ad_and_keywords_helper(
                 customer_id=google_ads_resources.customer_id,
+                login_customer_id=google_ads_resources.login_customer_id,
                 campaign_id=campaign_id,
                 ad_group_name=row["Ad Group Name"],
                 match_type=row["Match Type"],
@@ -415,6 +439,42 @@ def create_google_ads_resources(
             )
 
     return final_response
+
+
+LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION = (
+    "List accessible customers with account types"
+)
+
+
+def list_accessible_customers_with_account_types(
+    context: Context,
+) -> Dict[str, Any]:
+    return list_accessible_customers_with_account_types_client(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+    )
+
+
+LIST_SUB_ACCOUNTS_DESCRIPTION = """Use this function to list sub accounts of a Google Ads manager account.
+login_customer_id is the ID of the Google Ads manager account, you can get all available accounts by using list_accessible_customers_with_account_types function.
+customer_id is the ID of the Google Ads account you want to list sub accounts of."""
+
+
+def list_sub_accounts(
+    login_customer_id: Annotated[
+        str, "The ID of the Google Ads manager customer account"
+    ],
+    customer_id: Annotated[
+        str,
+        "The ID of the Google Ads customer account whose sub accounts you want to list",
+    ],
+    context: Context,
+) -> Any:
+    return list_sub_accounts_client(
+        user_id=context.user_id,
+        login_customer_id=login_customer_id,
+        customer_id=customer_id,
+    )
 
 
 def create_google_sheets_team_toolbox(
@@ -439,9 +499,10 @@ def create_google_sheets_team_toolbox(
     toolbox.add_function(
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)
-    toolbox.add_function(list_accessible_customers_description)(
-        list_accessible_customers
+    toolbox.add_function(LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION)(
+        list_accessible_customers_with_account_types
     )
+    toolbox.add_function(LIST_SUB_ACCOUNTS_DESCRIPTION)(list_sub_accounts)
     toolbox.add_function(CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION)(
         create_google_ads_resources
     )

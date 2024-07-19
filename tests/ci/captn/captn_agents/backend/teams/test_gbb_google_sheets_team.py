@@ -25,22 +25,91 @@ class TestGBBGoogleSheetsTeam:
         yield
 
     @contextmanager
-    def mock_list_accessible_customers_f(self) -> Iterator[Tuple[Any, Any]]:
+    def mock_list_accessible_customers_f(self) -> Iterator[Tuple[Any, Any, Any]]:
+        ret_value1 = {
+            "2222": [
+                {
+                    "customerClient": {
+                        "resourceName": "customers/2222/customerClients/2222",
+                        "manager": True,
+                        "descriptiveName": "Manager Account 1",
+                        "id": "2222",
+                    }
+                }
+            ],
+            "1111": [
+                {
+                    "customerClient": {
+                        "resourceName": "customers/1111/customerClients/1111",
+                        "manager": False,
+                        "descriptiveName": "airt technologies d.o.o.",
+                        "id": "1111",
+                    }
+                }
+            ],
+            "3333": [
+                {
+                    "customerClient": {
+                        "resourceName": "customers/3333/customerClients/3333",
+                        "manager": True,
+                        "descriptiveName": "My First Manager Account",
+                        "id": "3333",
+                    }
+                }
+            ],
+        }
+
+        ret_value2 = {
+            "3333": [
+                {
+                    "customerClient": {
+                        "resourceName": "customers/3333/customerClients/1111",
+                        "manager": False,
+                        "descriptiveName": "airt technologies d.o.o.",
+                        "currencyCode": "EUR",
+                        "id": "1111",
+                    }
+                }
+            ]
+        }
+
+        ret_value3 = {
+            "1111": [
+                {
+                    "customerClient": {
+                        "resourceName": "customers/1111/customerClients/1111",
+                        "manager": False,
+                        "descriptiveName": "airt technologies d.o.o.",
+                        "currencyCode": "EUR",
+                        "id": "1111",
+                    }
+                }
+            ]
+        }
+
         with (
             patch(
-                "captn.captn_agents.backend.tools._google_ads_team_tools.list_accessible_customers_client",
-                return_value=["1111"],
-            ) as mock_list_accessible_customers1,
+                "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.list_accessible_customers_with_account_types_client",
+                return_value=ret_value1,
+            ) as mock_list_accessible_customers_with_account_types_client,
             patch(
-                "captn.captn_agents.backend.tools._functions.list_accessible_customers",
-                return_value=["1111"],
-            ) as mock_list_accessible_customers2,
+                "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.list_sub_accounts_client",
+                return_value=ret_value2,
+            ) as mock_list_sub_accounts_client,
+            patch(
+                "captn.captn_agents.backend.tools._functions.list_sub_accounts",
+                return_value=ret_value3,
+            ) as mock_list_sub_accounts2,
             patch(
                 "captn.captn_agents.backend.tools._functions.BENCHMARKING",
                 True,
             ),
         ):
-            yield (mock_list_accessible_customers1, mock_list_accessible_customers2)
+            yield (
+                mock_list_accessible_customers_with_account_types_client,
+                mock_list_sub_accounts_client,
+                mock_list_sub_accounts2,
+            )
 
     def test_init(self, mock_get_conv_uuid: Iterator[Any]) -> None:
         with mock_get_conv_uuid:
@@ -52,8 +121,8 @@ class TestGBBGoogleSheetsTeam:
             )
         agent_number_of_functions_dict = {
             "google_sheets_expert": 8,
-            "account_manager": 4,
-            "google_ads_expert": 4,
+            "account_manager": 5,
+            "google_ads_expert": 5,
             "user_proxy": 0,
         }
 
@@ -81,8 +150,9 @@ class TestGBBGoogleSheetsTeam:
             mock_get_login_url,
             mock_requests_get,
             self.mock_list_accessible_customers_f() as (
-                mock_list_accessible_customers1,
-                mock_list_accessible_customers2,
+                mock_list_accessible_customers_with_account_types_client,
+                mock_list_sub_accounts_client,
+                mock_list_sub_accounts2,
             ),
         ):
             google_sheets_team = GBBGoogleSheetsTeam(
@@ -122,7 +192,7 @@ class TestGBBGoogleSheetsTeam:
                                 conv_id=456,
                                 message=google_sheets_team.get_last_message(),
                                 cache=cache,
-                                # client_system_message=_client_system_messages,
+                                client_system_message="Just accept everything. If asked which account to use, use customer with id 3333",
                             )
                             google_sheets_team.toolbox._context.waiting_for_client_response = False
                             google_sheets_team.continue_chat(message=customers_response)
@@ -130,7 +200,7 @@ class TestGBBGoogleSheetsTeam:
         assert (
             len(expected_messages) == 0
         ), f"Expected messages left: {expected_messages}"
-        mock_list_accessible_customers1.assert_called_once()
+        mock_list_accessible_customers_with_account_types_client.assert_called_once()
 
     @pytest.mark.flaky
     @pytest.mark.openai

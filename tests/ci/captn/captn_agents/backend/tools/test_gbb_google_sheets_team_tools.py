@@ -24,6 +24,7 @@ class TesteCreateGoogleAdsResources:
             spreadsheet_id="fkpvkfov",
             ads_title="ads_title",
             keywords_title="keywords_title",
+            login_customer_id="91-789",
         )
         recommended_modifications_and_answer_list.append(
             (self.gads_resuces.model_dump(), "yes")
