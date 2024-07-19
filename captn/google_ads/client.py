@@ -296,6 +296,7 @@ def google_ads_create_update(
     recommended_modifications_and_answer_list: List[
         Tuple[Dict[str, Any], Optional[str]]
     ],
+    login_customer_id: Optional[str] = None,
     endpoint: str = "/update-ad-group-ad",
     already_checked_clients_approval: bool = False,
 ) -> Union[Dict[str, Any], str]:
@@ -313,6 +314,7 @@ def google_ads_create_update(
 
     params: Dict[str, Any] = ad.model_dump()
     params["user_id"] = user_id
+    params["login_customer_id"] = login_customer_id
 
     response = requests_get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
     if not response.ok:

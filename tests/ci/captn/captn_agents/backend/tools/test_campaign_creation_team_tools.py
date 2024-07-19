@@ -153,6 +153,7 @@ class TestTools:
                             resource_type="ad_group_criterion",
                         ),
                     ],
+                    login_customer_id=None,
                 )
 
             else:

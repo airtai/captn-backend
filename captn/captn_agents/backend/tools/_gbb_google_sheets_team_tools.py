@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, List, Tuple, Union
+from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -173,6 +173,7 @@ def _create_campaign(
     campaign_name: str,
     campaign_budget: str,
     customer_id: str,
+    login_customer_id: Optional[str],
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
     budget_amount_micros = int(campaign_budget) * 1_000_000
@@ -191,6 +192,7 @@ def _create_campaign(
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
         ad=campaign,
+        login_customer_id=login_customer_id,
         endpoint="/create-campaign",
         already_checked_clients_approval=True,
     )
@@ -200,6 +202,7 @@ def _create_campaign(
 
 def _create_negative_campaign_keywords(
     customer_id: str,
+    login_customer_id: Optional[str],
     campaign_id: str,
     campaign_name: str,
     keywords_df: pd.DataFrame,
@@ -225,6 +228,7 @@ def _create_negative_campaign_keywords(
                 negative=True,
             ),
             endpoint="/add-negative-keywords-to-campaign",
+            login_customer_id=login_customer_id,
             already_checked_clients_approval=True,
         )
         final_response += f"Negative campaign keyword {row['Keyword']}\n{response}\n"
@@ -234,6 +238,7 @@ def _create_negative_campaign_keywords(
 
 def _create_negative_ad_group_keywords(
     customer_id: str,
+    login_customer_id: Optional[str],
     campaign_id: str,
     ad_group_id: str,
     ad_group_name: str,
@@ -261,6 +266,7 @@ def _create_negative_ad_group_keywords(
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
             ad=negative_keyword,
             endpoint="/add-keywords-to-ad-group",
+            login_customer_id=login_customer_id,
             already_checked_clients_approval=True,
         )
 
@@ -270,6 +276,7 @@ def _create_negative_ad_group_keywords(
 
 def _create_ad_group_with_ad_and_keywords_helper(
     customer_id: str,
+    login_customer_id: Optional[str],
     campaign_id: str,
     ad_group_name: str,
     match_type: str,
@@ -311,6 +318,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     response = _create_ad_group_with_ad_and_keywords(
         ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
         context=context,
+        login_customer_id=login_customer_id,
     )
 
     if not isinstance(response, str):
@@ -320,6 +328,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
 
     response = _create_negative_ad_group_keywords(
         customer_id=customer_id,
+        login_customer_id=login_customer_id,
         campaign_id=campaign_id,
         ad_group_id=ad_group_ad.ad_group_id,  # type: ignore[arg-type]
         ad_group_name=ad_group_name,
@@ -351,6 +360,7 @@ def create_google_ads_resources(
             campaign_name=campaign_name,
             campaign_budget=campaign_budget,
             customer_id=google_ads_resources.customer_id,
+            login_customer_id=google_ads_resources.login_customer_id,
             context=context,
         )
         final_response += f"Campaign {campaign_name}\n{response}\n"
@@ -363,6 +373,7 @@ def create_google_ads_resources(
 
         final_response += _create_negative_campaign_keywords(
             customer_id=google_ads_resources.customer_id,
+            login_customer_id=google_ads_resources.login_customer_id,
             campaign_id=campaign_id,
             campaign_name=campaign_name,
             keywords_df=keywords_df,
@@ -405,6 +416,7 @@ def create_google_ads_resources(
                 recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
                 ad=ad_group_ad,
                 endpoint="/create-ad-group-ad",
+                login_customer_id=google_ads_resources.login_customer_id,
                 already_checked_clients_approval=True,
             )
             if not isinstance(response, str):
@@ -414,6 +426,7 @@ def create_google_ads_resources(
         else:
             final_response += _create_ad_group_with_ad_and_keywords_helper(
                 customer_id=google_ads_resources.customer_id,
+                login_customer_id=google_ads_resources.login_customer_id,
                 campaign_id=campaign_id,
                 ad_group_name=row["Ad Group Name"],
                 match_type=row["Match Type"],
