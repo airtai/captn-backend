@@ -324,6 +324,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
         ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
         context=context,
         login_customer_id=login_customer_id,
+        remove_on_error=False,
     )
 
     if not isinstance(response, str):
@@ -419,6 +420,8 @@ def create_google_ads_resources(
     final_response = ""
     created_campaign_names_and_ids = {}
     for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
+        if campaign_name in skip_campaigns:
+            continue
         response = _create_campaign(
             campaign_name=campaign_name,
             campaign_budget=campaign_budget,
@@ -426,10 +429,9 @@ def create_google_ads_resources(
             login_customer_id=google_ads_resources.login_customer_id,
             context=context,
         )
-        final_response += f"Campaign {campaign_name}\n{response}\n"
 
         if not isinstance(response, str):
-            return response
+            raise ValueError(response)
         else:
             campaign_id = get_resource_id_from_response(response)
             created_campaign_names_and_ids[campaign_name] = {
@@ -446,63 +448,65 @@ def create_google_ads_resources(
             context=context,
         )
 
-    for _, row in ads_df.iterrows():
-        headlines = [
-            row[col] for col in row.index if col.lower().startswith("headline")
-        ]
-        descriptions = [
-            row[col] for col in row.index if col.lower().startswith("description")
-        ]
+        for _, row in ads_df[ads_df["Campaign Name"] == campaign_name].iterrows():
+            headlines = [
+                row[col] for col in row.index if col.lower().startswith("headline")
+            ]
+            descriptions = [
+                row[col] for col in row.index if col.lower().startswith("description")
+            ]
 
-        path1 = row.get("Path 1", None)
-        path2 = row.get("Path 2", None)
-        final_url = row.get("Final URL")
+            path1 = row.get("Path 1", None)
+            path2 = row.get("Path 2", None)
+            final_url = row.get("Final URL")
 
-        campaign = created_campaign_names_and_ids[row["Campaign Name"]]
-        campaign_id = campaign["campaign_id"]  # type: ignore[assignment]
-        ad_group_ad = AdGroupAdForCreation(
-            customer_id=google_ads_resources.customer_id,
-            campaign_id=campaign_id,
-            status="ENABLED",
-            headlines=headlines,
-            descriptions=descriptions,
-            path1=path1,
-            path2=path2,
-            final_url=final_url,
-        )
-
-        # If ad group already exists, create only ad group ad
-        if row["Ad Group Name"] in campaign["ad_groups"]:
-            ad_group_ad.ad_group_id = campaign["ad_groups"][row["Ad Group Name"]]  # type: ignore[index]
-            response = google_ads_create_update(
-                user_id=context.user_id,
-                conv_id=context.conv_id,
-                recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
-                ad=ad_group_ad,
-                endpoint="/create-ad-group-ad",
-                login_customer_id=google_ads_resources.login_customer_id,
-                already_checked_clients_approval=True,
-            )
-            if not isinstance(response, str):
-                raise ValueError(response)
-            final_response += f"Ad group ad\n{response}\n"
-        # Otherwise, create ad group, ad group ad, and keywords
-        else:
-            final_response += _create_ad_group_with_ad_and_keywords_helper(
+            campaign = created_campaign_names_and_ids[campaign_name]
+            ad_group_ad = AdGroupAdForCreation(
                 customer_id=google_ads_resources.customer_id,
-                login_customer_id=google_ads_resources.login_customer_id,
                 campaign_id=campaign_id,
-                ad_group_name=row["Ad Group Name"],
-                match_type=row["Match Type"],
-                keywords_df=keywords_df,
-                ad_group_ad=ad_group_ad,
-                context=context,
+                status="ENABLED",
+                headlines=headlines,
+                descriptions=descriptions,
+                path1=path1,
+                path2=path2,
+                final_url=final_url,
             )
-            campaign["ad_groups"][row["Ad Group Name"]] = ad_group_ad.ad_group_id  # type: ignore[index]
+
+            # If ad group already exists, create only ad group ad
+            if row["Ad Group Name"] in campaign["ad_groups"]:
+                ad_group_ad.ad_group_id = campaign["ad_groups"][row["Ad Group Name"]]  # type: ignore[index]
+                response = google_ads_create_update(
+                    user_id=context.user_id,
+                    conv_id=context.conv_id,
+                    recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+                    ad=ad_group_ad,
+                    endpoint="/create-ad-group-ad",
+                    login_customer_id=google_ads_resources.login_customer_id,
+                    already_checked_clients_approval=True,
+                )
+                if not isinstance(response, str):
+                    raise ValueError(response)
+                final_response += f"Ad group ad\n{response}\n"
+            # Otherwise, create ad group, ad group ad, and keywords
+            else:
+                final_response += _create_ad_group_with_ad_and_keywords_helper(
+                    customer_id=google_ads_resources.customer_id,
+                    login_customer_id=google_ads_resources.login_customer_id,
+                    campaign_id=campaign_id,
+                    ad_group_name=row["Ad Group Name"],
+                    match_type=row["Match Type"],
+                    keywords_df=keywords_df,
+                    ad_group_ad=ad_group_ad,
+                    context=context,
+                )
+                campaign["ad_groups"][row["Ad Group Name"]] = ad_group_ad.ad_group_id  # type: ignore[index]
+
+        final_response += f"Campaign {campaign_name}\n{response}\n"
 
     final_response += f"Execution time: {time.time() - start_time} seconds"
     resource_creation_response = ResourceCreationResponse(
         skip_campaigns=skip_campaigns,
+        created_campaigns=list(created_campaign_names_and_ids.keys()),
     )
 
     return final_response + "\n" + resource_creation_response.response()
