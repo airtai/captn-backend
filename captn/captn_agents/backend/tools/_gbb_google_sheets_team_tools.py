@@ -1,3 +1,4 @@
+import json
 import time
 from dataclasses import dataclass
 from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
@@ -13,7 +14,10 @@ from google_ads.model import (
     CampaignCriterion,
 )
 
-from ....google_ads.client import google_ads_create_update
+from ....google_ads.client import (
+    execute_query,
+    google_ads_create_update,
+)
 from ....google_ads.client import (
     list_accessible_customers_with_account_types as list_accessible_customers_with_account_types_client,
 )
@@ -340,6 +344,55 @@ def _create_ad_group_with_ad_and_keywords_helper(
     return final_response
 
 
+def _get_alredy_existing_campaigns(
+    df: pd.DataFrame,
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+) -> List[str]:
+    distinct_campaign_names = df["Campaign Name"].unique().tolist()
+    distinct_campaign_names_str = ", ".join(
+        [f"'{name}'" for name in distinct_campaign_names]
+    )
+
+    query = f"""SELECT campaign.id, campaign.name
+FROM campaign
+WHERE campaign.name IN ({distinct_campaign_names_str}) AND campaign.status != 'REMOVED'
+"""  # nosec: [B608]
+    response = execute_query(
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        login_customer_id=login_customer_id,
+        query=query,
+    )
+    if not isinstance(response, str):
+        raise ValueError(response)
+
+    response_json = json.loads(response.replace("'", '"'))
+    alredy_existing_campaigns = [
+        campaign["campaign"]["name"] for campaign in response_json[customer_id]
+    ]
+    return alredy_existing_campaigns
+
+
+class ResourceCreationResponse(BaseModel):
+    skip_campaigns: Optional[List[str]] = None
+    created_campaigns: Optional[List[str]] = None
+    failed_campaigns: Optional[List[str]] = None
+
+    def response(self) -> str:
+        response = ""
+        if self.skip_campaigns:
+            response += f"Skipped campaigns: {', '.join(self.skip_campaigns)}\n"
+        if self.created_campaigns:
+            response += f"Created campaigns: {', '.join(self.created_campaigns)}\n"
+        if self.failed_campaigns:
+            response += f"Failed campaigns: {', '.join(self.failed_campaigns)}\n"
+        return response
+
+
 def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
@@ -354,6 +407,14 @@ def create_google_ads_resources(
     campaign_names_ad_budgets = ads_df[
         ["Campaign Name", "Campaign Budget"]
     ].drop_duplicates()
+
+    skip_campaigns = _get_alredy_existing_campaigns(
+        ads_df,
+        context.user_id,
+        context.conv_id,
+        google_ads_resources.customer_id,
+        google_ads_resources.login_customer_id,
+    )
 
     final_response = ""
     created_campaign_names_and_ids = {}
@@ -440,8 +501,11 @@ def create_google_ads_resources(
             campaign["ad_groups"][row["Ad Group Name"]] = ad_group_ad.ad_group_id  # type: ignore[index]
 
     final_response += f"Execution time: {time.time() - start_time} seconds"
+    resource_creation_response = ResourceCreationResponse(
+        skip_campaigns=skip_campaigns,
+    )
 
-    return final_response
+    return final_response + "\n" + resource_creation_response.response()
 
 
 LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION = (

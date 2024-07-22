@@ -158,6 +158,7 @@ def execute_query(
     conv_id: int,
     work_dir: Optional[str] = None,
     customer_ids: Optional[List[str]] = None,
+    login_customer_id: Optional[str] = None,
     query: Optional[str] = None,
 ) -> Union[str, Dict[str, str]]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
@@ -166,6 +167,7 @@ def execute_query(
 
     params: Dict[str, Any] = {
         "user_id": user_id,
+        "login_customer_id": login_customer_id,
     }
     if customer_ids:
         params["customer_ids"] = customer_ids
