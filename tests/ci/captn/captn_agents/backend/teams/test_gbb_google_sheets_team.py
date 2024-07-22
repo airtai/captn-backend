@@ -175,7 +175,7 @@ class TestGBBGoogleSheetsTeam:
             expected_messages = [
                 "Sheet with the name 'Captn - Ads",
                 "Sheet with the name 'Captn - Keywords",
-                "Keyword 'Rezerviraj odmah': Created resource",
+                "Created campaigns:",
             ]
             with TemporaryDirectory() as cache_dir:
                 with Cache.disk(cache_path_root=cache_dir) as cache:

@@ -212,15 +212,14 @@ def _create_negative_campaign_keywords(
     campaign_name: str,
     keywords_df: pd.DataFrame,
     context: GoogleSheetsTeamContext,
-) -> str:
+) -> None:
     negative_campaign_keywords = keywords_df[
         (keywords_df["Campaign Name"] == campaign_name)
         & (keywords_df["Level"] == "Campaign")
         & (keywords_df["Negative"])
     ]
-    final_response = ""
     for _, row in negative_campaign_keywords.iterrows():
-        response = google_ads_create_update(
+        google_ads_create_update(
             user_id=context.user_id,
             conv_id=context.conv_id,
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -236,9 +235,6 @@ def _create_negative_campaign_keywords(
             login_customer_id=login_customer_id,
             already_checked_clients_approval=True,
         )
-        final_response += f"Negative campaign keyword {row['Keyword']}\n{response}\n"
-
-    return final_response
 
 
 def _create_negative_ad_group_keywords(
@@ -249,11 +245,10 @@ def _create_negative_ad_group_keywords(
     ad_group_name: str,
     keywords_df: pd.DataFrame,
     context: GoogleSheetsTeamContext,
-) -> str:
+) -> None:
     ad_group_negative_keywords = keywords_df[
         (keywords_df["Ad Group Name"] == ad_group_name) & (keywords_df["Negative"])
     ]
-    final_response = ""
     for _, row in ad_group_negative_keywords.iterrows():
         negative_keyword = AdGroupCriterion(
             customer_id=customer_id,
@@ -265,7 +260,7 @@ def _create_negative_ad_group_keywords(
             negative=True,
         )
 
-        response = google_ads_create_update(
+        google_ads_create_update(
             user_id=context.user_id,
             conv_id=context.conv_id,
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -274,9 +269,6 @@ def _create_negative_ad_group_keywords(
             login_customer_id=login_customer_id,
             already_checked_clients_approval=True,
         )
-
-        final_response += f"Negative ad group keyword {row['Keyword']}\n{response}\n"
-    return final_response
 
 
 def _create_ad_group_with_ad_and_keywords_helper(
@@ -288,7 +280,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     keywords_df: pd.DataFrame,
     ad_group_ad: AdGroupAdForCreation,
     context: GoogleSheetsTeamContext,
-) -> str:
+) -> None:
     ad_group = AdGroupForCreation(
         customer_id=customer_id,
         campaign_id=campaign_id,
@@ -330,9 +322,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     if not isinstance(response, str):
         raise ValueError(response)
 
-    final_response = response + "\n"
-
-    response = _create_negative_ad_group_keywords(
+    _create_negative_ad_group_keywords(
         customer_id=customer_id,
         login_customer_id=login_customer_id,
         campaign_id=campaign_id,
@@ -341,8 +331,6 @@ def _create_ad_group_with_ad_and_keywords_helper(
         keywords_df=keywords_df,
         context=context,
     )
-    final_response += response
-    return final_response
 
 
 def _get_alredy_existing_campaigns(
@@ -385,12 +373,19 @@ class ResourceCreationResponse(BaseModel):
 
     def response(self) -> str:
         response = ""
+        backslash_n = "\n"
         if self.skip_campaigns:
-            response += f"Skipped campaigns: {', '.join(self.skip_campaigns)}\n"
+            response += (
+                f"Skipped campaigns:\n{backslash_n.join(self.skip_campaigns)}\n\n"
+            )
         if self.created_campaigns:
-            response += f"Created campaigns: {', '.join(self.created_campaigns)}\n"
+            response += (
+                f"Created campaigns:\n{backslash_n.join(self.created_campaigns)}\n\n"
+            )
         if self.failed_campaigns:
-            response += f"Failed campaigns: {', '.join(self.failed_campaigns)}\n"
+            response += (
+                f"Failed campaigns:\n{backslash_n.join(self.failed_campaigns)}\n"
+            )
         return response
 
 
@@ -403,6 +398,8 @@ def create_google_ads_resources(
         google_ads_resources=google_ads_resources,
         context=context,
     )
+    ads_df = ads_df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    keywords_df = keywords_df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
     keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
     campaign_names_ad_budgets = ads_df[
@@ -417,7 +414,6 @@ def create_google_ads_resources(
         google_ads_resources.login_customer_id,
     )
 
-    final_response = ""
     created_campaign_names_and_ids = {}
     for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
         if campaign_name in skip_campaigns:
@@ -439,7 +435,7 @@ def create_google_ads_resources(
                 "ad_groups": {},
             }
 
-        final_response += _create_negative_campaign_keywords(
+        _create_negative_campaign_keywords(
             customer_id=google_ads_resources.customer_id,
             login_customer_id=google_ads_resources.login_customer_id,
             campaign_id=campaign_id,
@@ -486,10 +482,9 @@ def create_google_ads_resources(
                 )
                 if not isinstance(response, str):
                     raise ValueError(response)
-                final_response += f"Ad group ad\n{response}\n"
             # Otherwise, create ad group, ad group ad, and keywords
             else:
-                final_response += _create_ad_group_with_ad_and_keywords_helper(
+                _create_ad_group_with_ad_and_keywords_helper(
                     customer_id=google_ads_resources.customer_id,
                     login_customer_id=google_ads_resources.login_customer_id,
                     campaign_id=campaign_id,
@@ -501,15 +496,15 @@ def create_google_ads_resources(
                 )
                 campaign["ad_groups"][row["Ad Group Name"]] = ad_group_ad.ad_group_id  # type: ignore[index]
 
-        final_response += f"Campaign {campaign_name}\n{response}\n"
-
-    final_response += f"Execution time: {time.time() - start_time} seconds"
     resource_creation_response = ResourceCreationResponse(
         skip_campaigns=skip_campaigns,
         created_campaigns=list(created_campaign_names_and_ids.keys()),
     )
 
-    return final_response + "\n" + resource_creation_response.response()
+    return (
+        f"Execution time: {time.time() - start_time} seconds\n"
+        + resource_creation_response.response()
+    )
 
 
 LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION = (

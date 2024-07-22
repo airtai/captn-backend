@@ -116,11 +116,11 @@ class TesteCreateGoogleAdsResources:
                 context=self.context,
             )
             for expected in [
-                "Ad group ad",
-                "Keyword",
-                "Negative campaign keyword Neg Campaign",
-                "Negative ad group keyword Neg",
-                "Skipped campaigns: netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN, Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+                """Skipped campaigns:
+netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN
+Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN""",
+                """Created campaigns:
+Kosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN""",
             ]:
                 assert expected in response
 
