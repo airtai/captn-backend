@@ -215,9 +215,7 @@ def _create_negative_campaign_keywords(
     context: GoogleSheetsTeamContext,
 ) -> None:
     negative_campaign_keywords = keywords_df[
-        (keywords_df["Campaign Name"] == campaign_name)
-        & (keywords_df["Level"] == "Campaign")
-        & (keywords_df["Negative"])
+        (keywords_df["Level"] == "Campaign") & (keywords_df["Negative"])
     ]
     for _, row in negative_campaign_keywords.iterrows():
         google_ads_create_update(
@@ -243,12 +241,11 @@ def _create_negative_ad_group_keywords(
     login_customer_id: Optional[str],
     campaign_id: str,
     ad_group_id: str,
-    ad_group_name: str,
-    keywords_df: pd.DataFrame,
+    ad_group_keywords_df: pd.DataFrame,
     context: GoogleSheetsTeamContext,
 ) -> None:
-    ad_group_negative_keywords = keywords_df[
-        (keywords_df["Ad Group Name"] == ad_group_name) & (keywords_df["Negative"])
+    ad_group_negative_keywords = ad_group_keywords_df[
+        (ad_group_keywords_df["Negative"])
     ]
     for _, row in ad_group_negative_keywords.iterrows():
         negative_keyword = AdGroupCriterion(
@@ -278,7 +275,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     campaign_id: str,
     ad_group_name: str,
     match_type: str,
-    keywords_df: pd.DataFrame,
+    ad_group_keywords_df: pd.DataFrame,
     ad_group_ad: AdGroupAdForCreation,
     context: GoogleSheetsTeamContext,
 ) -> None:
@@ -289,8 +286,8 @@ def _create_ad_group_with_ad_and_keywords_helper(
         status="ENABLED",
     )
 
-    ad_group_positive_keywords = keywords_df[
-        (keywords_df["Ad Group Name"] == ad_group_name) & (~keywords_df["Negative"])
+    ad_group_positive_keywords = ad_group_keywords_df[
+        (~ad_group_keywords_df["Negative"])
     ]
     positive_keywords_list = ad_group_positive_keywords["Keyword"].tolist()
     ad_group_positive_keywords = []
@@ -328,8 +325,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
         login_customer_id=login_customer_id,
         campaign_id=campaign_id,
         ad_group_id=ad_group_ad.ad_group_id,  # type: ignore[arg-type]
-        ad_group_name=ad_group_name,
-        keywords_df=keywords_df,
+        ad_group_keywords_df=ad_group_keywords_df,
         context=context,
     )
 
@@ -399,8 +395,8 @@ def create_google_ads_resources(
         google_ads_resources=google_ads_resources,
         context=context,
     )
-    ads_df = ads_df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-    keywords_df = keywords_df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    ads_df = ads_df.map(lambda x: x.strip() if isinstance(x, str) else x)
+    keywords_df = keywords_df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
     keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
     campaign_names_ad_budgets = ads_df[
@@ -440,12 +436,16 @@ def create_google_ads_resources(
                     "ad_groups": {},
                 }
 
+            all_campaign_keywords = keywords_df[
+                (keywords_df["Campaign Name"] == campaign_name)
+            ]
+
             _create_negative_campaign_keywords(
                 customer_id=google_ads_resources.customer_id,
                 login_customer_id=google_ads_resources.login_customer_id,
                 campaign_id=campaign_id,
                 campaign_name=campaign_name,
-                keywords_df=keywords_df,
+                keywords_df=all_campaign_keywords,
                 context=context,
             )
 
@@ -493,13 +493,16 @@ def create_google_ads_resources(
                         raise ValueError(response)
                 # Otherwise, create ad group, ad group ad, and keywords
                 else:
+                    all_ad_group_keywords = all_campaign_keywords[
+                        all_campaign_keywords["Ad Group Name"] == row["Ad Group Name"]
+                    ]
                     _create_ad_group_with_ad_and_keywords_helper(
                         customer_id=google_ads_resources.customer_id,
                         login_customer_id=google_ads_resources.login_customer_id,
                         campaign_id=campaign_id,
                         ad_group_name=row["Ad Group Name"],
                         match_type=row["Match Type"],
-                        keywords_df=keywords_df,
+                        ad_group_keywords_df=all_ad_group_keywords,
                         ad_group_ad=ad_group_ad,
                         context=context,
                     )
