@@ -116,7 +116,7 @@ class TesteCreateGoogleAdsResources:
                 context=self.context,
             )
             for expected in [
-                """Skipped campaigns:
+                """The following campaigns already exist:
 netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN
 Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN""",
                 """Created campaigns:
