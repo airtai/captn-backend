@@ -141,6 +141,17 @@ Only Account_manager has access to the following commands:
 2. ask_client_for_permission: Ask the client for permission to make the changes. Use this method before calling 'create_google_ads_resources'
 params: (resource_details: str, function_name: str, modification_function_parameters: Dict[str, Any])
 ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'. If you forget this parameter, you will be penalized!
+'modification_function_parameters' should be a dictionary with the following keys:
+{{
+    "login_customer_id":
+    "customer_id":
+    "spreadsheet_id":
+    "ads_title":
+    "keywords_title":
+}}
+
+'resource_details' should use human readable names and add id-s in the brackets.
+
 function_name: 'create_google_ads_resources'
 
 
