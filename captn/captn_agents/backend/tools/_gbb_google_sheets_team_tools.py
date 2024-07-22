@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
 
@@ -343,6 +344,7 @@ def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
+    start_time = time.time()
     ads_df, keywords_df = _validate_and_convert_to_df(
         google_ads_resources=google_ads_resources,
         context=context,
@@ -369,7 +371,10 @@ def create_google_ads_resources(
             return response
         else:
             campaign_id = get_resource_id_from_response(response)
-            created_campaign_names_and_ids[campaign_name] = campaign_id
+            created_campaign_names_and_ids[campaign_name] = {
+                "campaign_id": campaign_id,
+                "ad_groups": {},
+            }
 
         final_response += _create_negative_campaign_keywords(
             customer_id=google_ads_resources.customer_id,
@@ -380,7 +385,6 @@ def create_google_ads_resources(
             context=context,
         )
 
-    created_ad_group_names_and_ids: Dict[str, str] = {}
     for _, row in ads_df.iterrows():
         headlines = [
             row[col] for col in row.index if col.lower().startswith("headline")
@@ -393,7 +397,8 @@ def create_google_ads_resources(
         path2 = row.get("Path 2", None)
         final_url = row.get("Final URL")
 
-        campaign_id = created_campaign_names_and_ids[row["Campaign Name"]]
+        campaign = created_campaign_names_and_ids[row["Campaign Name"]]
+        campaign_id = campaign["campaign_id"]  # type: ignore[assignment]
         ad_group_ad = AdGroupAdForCreation(
             customer_id=google_ads_resources.customer_id,
             campaign_id=campaign_id,
@@ -406,10 +411,8 @@ def create_google_ads_resources(
         )
 
         # If ad group already exists, create only ad group ad
-        if row["Ad Group Name"] in created_ad_group_names_and_ids:
-            ad_group_ad.ad_group_id = created_ad_group_names_and_ids[
-                row["Ad Group Name"]
-            ]
+        if row["Ad Group Name"] in campaign["ad_groups"]:
+            ad_group_ad.ad_group_id = campaign["ad_groups"][row["Ad Group Name"]]  # type: ignore[index]
             response = google_ads_create_update(
                 user_id=context.user_id,
                 conv_id=context.conv_id,
@@ -434,9 +437,9 @@ def create_google_ads_resources(
                 ad_group_ad=ad_group_ad,
                 context=context,
             )
-            created_ad_group_names_and_ids[row["Ad Group Name"]] = (
-                ad_group_ad.ad_group_id  # type: ignore[assignment]
-            )
+            campaign["ad_groups"][row["Ad Group Name"]] = ad_group_ad.ad_group_id  # type: ignore[index]
+
+    final_response += f"Execution time: {time.time() - start_time} seconds"
 
     return final_response
 
