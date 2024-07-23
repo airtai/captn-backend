@@ -374,12 +374,17 @@ FROM
 
     search_results = {}
     for customer_id in customers_ids:
-        search_result = await search(
-            user_id=user_id,
-            customer_ids=[customer_id],
-            query=query,
-            login_customer_id=customer_id,
-        )
+        try:
+            search_result = await search(
+                user_id=user_id,
+                customer_ids=[customer_id],
+                query=query,
+                login_customer_id=customer_id,
+            )
+        except Exception as e:
+            # usually happens when the customer isn't enabled or is deactivated
+            print(f"Exception for {customer_id}: {e}")
+            continue
         search_result_customer = [
             customer
             for customer in search_result[customer_id]
