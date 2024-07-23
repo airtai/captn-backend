@@ -12,6 +12,8 @@ __all__ = (
     "get_google_ads_team_capability",
     "get_login_url",
     "list_accessible_customers",
+    "list_accessible_customers_with_account_types",
+    "list_sub_accounts",
     "execute_query",
     "get_user_ids_and_emails",
     "google_ads_create_update",
@@ -72,10 +74,66 @@ def list_accessible_customers(
     )
     if not response.ok:
         raise ValueError(response.content)
-    # return ["8942812744", "2324127278", "7119828439", "6505006790", "8913146119"]
 
     respone_json = response.json()
     return respone_json  # type: ignore[no-any-return]
+
+
+def list_accessible_customers_with_account_types(
+    user_id: int, conv_id: int
+) -> Dict[str, Any]:
+    login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
+    if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
+        return login_url_response
+
+    params = {
+        "user_id": user_id,
+    }
+    response = requests_get(
+        f"{BASE_URL}/list-accessible-customers-with-account-types",
+        params=params,
+        timeout=60,
+    )
+    if not response.ok:
+        raise ValueError(response.content)
+
+    return response.json()  # type: ignore[no-any-return]
+
+
+def list_sub_accounts(
+    user_id: int, login_customer_id: str, customer_id: str
+) -> Dict[str, List[Dict[str, Any]]]:
+    query = """
+SELECT
+    customer_client.manager,
+    customer_client.descriptive_name,
+    customer_client.currency_code,
+    customer_client.id
+FROM
+    customer_client
+"""
+
+    params: Dict[str, Any] = {
+        "user_id": user_id,
+        "login_customer_id": login_customer_id,
+        "customer_ids": [customer_id],
+        "query": query,
+    }
+
+    response = requests_get(f"{BASE_URL}/search", params=params, timeout=60)
+
+    if response.status_code != 200:
+        raise Exception(response.json())
+
+    response_json = response.json()
+    if len(response_json[customer_id]) > 1:
+        # remove the account that is the same as the manager account
+        response_json[customer_id] = [
+            x
+            for x in response_json[customer_id]
+            if x["customerClient"]["id"] != customer_id
+        ]
+    return response_json  # type: ignore[no-any-return]
 
 
 def clean_error_response(content: bytes) -> str:
@@ -100,6 +158,7 @@ def execute_query(
     conv_id: int,
     work_dir: Optional[str] = None,
     customer_ids: Optional[List[str]] = None,
+    login_customer_id: Optional[str] = None,
     query: Optional[str] = None,
 ) -> Union[str, Dict[str, str]]:
     login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
@@ -108,6 +167,7 @@ def execute_query(
 
     params: Dict[str, Any] = {
         "user_id": user_id,
+        "login_customer_id": login_customer_id,
     }
     if customer_ids:
         params["customer_ids"] = customer_ids
@@ -238,6 +298,7 @@ def google_ads_create_update(
     recommended_modifications_and_answer_list: List[
         Tuple[Dict[str, Any], Optional[str]]
     ],
+    login_customer_id: Optional[str] = None,
     endpoint: str = "/update-ad-group-ad",
     already_checked_clients_approval: bool = False,
 ) -> Union[Dict[str, Any], str]:
@@ -255,6 +316,7 @@ def google_ads_create_update(
 
     params: Dict[str, Any] = ad.model_dump()
     params["user_id"] = user_id
+    params["login_customer_id"] = login_customer_id
 
     response = requests_get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
     if not response.ok:

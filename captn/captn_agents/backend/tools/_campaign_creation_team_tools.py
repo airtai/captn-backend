@@ -146,6 +146,7 @@ def _create_ad_group(
         Tuple[Dict[str, Any], Optional[str]]
     ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
+    login_customer_id: Optional[str] = None,
 ) -> Union[Dict[str, Any], str]:
     ad_group = ad_group_with_ad_and_keywords.ad_group
     ad_group.customer_id = ad_group_with_ad_and_keywords.customer_id
@@ -157,6 +158,7 @@ def _create_ad_group(
         recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group,
         endpoint="/create-ad-group",
+        login_customer_id=login_customer_id,
         already_checked_clients_approval=True,
     )
 
@@ -171,6 +173,7 @@ def _create_ad_group_ad(
     ],
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
     ad_group_id: str,
+    login_customer_id: Optional[str] = None,
 ) -> Union[Dict[str, Any], str]:
     ad_group_ad = ad_group_with_ad_and_keywords.ad_group_ad
     ad_group_ad.customer_id = ad_group_with_ad_and_keywords.customer_id
@@ -182,6 +185,7 @@ def _create_ad_group_ad(
         recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group_ad,
         endpoint="/create-ad-group-ad",
+        login_customer_id=login_customer_id,
         already_checked_clients_approval=True,
     )
     return ad_group_ad_response
@@ -196,6 +200,7 @@ def _create_ad_group_keyword(
     ad_group_keyword: AdGroupCriterionForCreation,
     ad_group_id: str,
     customer_id: str,
+    login_customer_id: Optional[str] = None,
 ) -> Union[Dict[str, Any], str]:
     ad_group_keyword.customer_id = customer_id
     ad_group_keyword.ad_group_id = ad_group_id
@@ -205,6 +210,7 @@ def _create_ad_group_keyword(
         recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
         ad=ad_group_keyword,
         endpoint="/add-keywords-to-ad-group",
+        login_customer_id=login_customer_id,
         already_checked_clients_approval=True,
     )
     return keyword_response
@@ -219,6 +225,7 @@ def _create_ad_group_keywords(
     ad_group_with_ad_and_keywords: AdGroupWithAdAndKeywords,
     ad_group_id: str,
     list_of_resources: List[RemoveResource],
+    login_customer_id: Optional[str] = None,
 ) -> Union[Dict[str, Any], str]:
     response = ""
     for keyword in ad_group_with_ad_and_keywords.keywords:
@@ -229,6 +236,7 @@ def _create_ad_group_keywords(
             ad_group_keyword=keyword,
             ad_group_id=ad_group_id,
             customer_id=ad_group_with_ad_and_keywords.customer_id,
+            login_customer_id=login_customer_id,
         )
         keyword_id = get_resource_id_from_response(keyword_response)  # type: ignore[arg-type]
         list_of_resources.append(
@@ -244,7 +252,10 @@ def _create_ad_group_keywords(
 
 
 def _remove_resources(
-    user_id: int, conv_id: int, list_of_resources: List[RemoveResource]
+    user_id: int,
+    conv_id: int,
+    list_of_resources: List[RemoveResource],
+    login_customer_id: Optional[str] = None,
 ) -> None:
     for remove_resource in list_of_resources[::-1]:
         remove_response = google_ads_create_update(
@@ -253,6 +264,7 @@ def _remove_resources(
             recommended_modifications_and_answer_list=[],
             ad=remove_resource,
             endpoint="/remove-google-ads-resource",
+            login_customer_id=login_customer_id,
             already_checked_clients_approval=True,
         )
         print(remove_response)
@@ -264,6 +276,8 @@ def _create_ad_group_with_ad_and_keywords(
         AdGroupWithAdAndKeywords, "An ad group with an ad and a list of keywords"
     ],
     context: Context,
+    login_customer_id: Optional[str] = None,
+    remove_on_error: bool = True,
 ) -> Union[Dict[str, Any], str]:
     list_of_resources = []
     try:
@@ -272,6 +286,7 @@ def _create_ad_group_with_ad_and_keywords(
             conv_id=context.conv_id,
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
+            login_customer_id=login_customer_id,
         )
         if isinstance(ad_group_response, dict):
             return ad_group_response
@@ -291,6 +306,7 @@ def _create_ad_group_with_ad_and_keywords(
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
             ad_group_id=ad_group_id,
+            login_customer_id=login_customer_id,
         )
         ad_group_ad_id = get_resource_id_from_response(ad_group_ad_response)  # type: ignore[arg-type]
         list_of_resources.append(
@@ -311,15 +327,18 @@ def _create_ad_group_with_ad_and_keywords(
             ad_group_with_ad_and_keywords=ad_group_with_ad_and_keywords,
             ad_group_id=ad_group_id,
             list_of_resources=list_of_resources,
+            login_customer_id=login_customer_id,
         )
         response += ad_group_keywords_response  # type: ignore
         context.changes_made += f"\n{response}"
     except Exception as e:
-        _remove_resources(
-            user_id=context.user_id,
-            conv_id=context.conv_id,
-            list_of_resources=list_of_resources,
-        )
+        if remove_on_error:
+            _remove_resources(
+                user_id=context.user_id,
+                conv_id=context.conv_id,
+                list_of_resources=list_of_resources,
+                login_customer_id=login_customer_id,
+            )
         raise e
 
     return response

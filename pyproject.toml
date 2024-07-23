@@ -58,20 +58,20 @@ lint = [
     "mypy==1.10.1",
     "black==24.4.2",
     "isort>=5",
-    "ruff==0.5.0",
+    "ruff==0.5.4",
     "pyupgrade-directories",
     "bandit==1.7.9",
-    "semgrep==1.75.0",
+    "semgrep==1.78.0",
     "pre-commit==3.7.1",
     "detect-secrets==1.5.0",
 ]
 
 test-core = [
-    "coverage[toml]==7.5.4",
+    "coverage[toml]==7.6.0",
     "pytest==8.2.2",
     "pytest-asyncio>=0.23.6",
     "dirty-equals==0.7.1.post0",
-    "pyarrow==16.1.0",
+    "pyarrow==17.0.0",
     "pytest-retry==1.6.3",
     "pytest-repeat==0.9.3",
 ]
@@ -84,26 +84,25 @@ testing = [
 ]
 
 benchmarking = [
-    "typer==0.9.4", # downgraded because fastagency
+    "typer==0.12.3",
     "filelock==3.15.4",
     "tabulate==0.9.0",
 ]
 
 agents = [
-    "fastapi>=0.110.2,<0.111.0", # downgraded because fastagency
+    "fastapi==0.111.1",
     "APScheduler==3.10.4",
     "prisma==0.13.1",
     "google-ads==24.1.0",
     "httpx==0.27.0",
     "uvicorn==0.30.1",
     "python-dotenv==1.0.1",
-    "pyautogen[websurfer,websockets]==0.2.31",
+    "pyautogen[websurfer,websockets]==0.2.32",
     "pandas>=2.1",
-    "fastcore==1.5.48",
+    "fastcore==1.5.54",
     "asyncer==0.0.7",
-    "pydantic==2.7.4",
-    "markdownify==0.12.1",
-    "tenacity==8.4.2",
+    "pydantic==2.8.2",
+    "tenacity==8.5.0",
     "prometheus-client==0.20.0",
     "opentelemetry-distro==0.46b0",
     "opentelemetry-instrumentation-fastapi==0.46b0",
@@ -111,8 +110,8 @@ agents = [
     "opentelemetry-exporter-otlp==1.25.0",
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
-    "fastagency@git+https://github.com/airtai/fastagency.git@3a2346c",
-    "python-multipart==0.0.9", # remove after fastagency is updated
+    "fastagency@git+https://github.com/airtai/fastagency.git@dev",
+    "markdownify==0.13.1",
 ]
 
 dev = [

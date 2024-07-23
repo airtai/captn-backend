@@ -180,44 +180,10 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
         ] = None,
     ) -> List[str]:
         if spreadsheet_id == "fabdbdfw1233":
-            return ["Keywords", "Ads"]
+            return ["Campaigns", "Ad Groups", "Keywords", "Ads"]
         elif spreadsheet_id == "fabdbdfw1234":
             return ["New"]
         return ["Sheet1", "Sheet2", "Sheet3"]
-
-    @app.post(
-        "/process-data",
-        description="Process data to generate new ads or keywords based on the template",
-    )
-    def process_data(
-        template_sheet_values: Annotated[
-            Optional[GoogleSheetValues],
-            Body(
-                embed=True,
-                description="Template values to be used for generating new ads or keywords",
-            ),
-        ] = None,
-        new_campaign_sheet_values: Annotated[
-            Optional[GoogleSheetValues],
-            Body(
-                embed=True,
-                description="New campaign values to be used for generating new ads or keywords",
-            ),
-        ] = None,
-        target_resource: Annotated[
-            Optional[str],
-            Query(
-                description="The target resource to be updated. This can be 'ad' or 'keyword'"
-            ),
-        ] = None,
-    ) -> GoogleSheetValues:
-        return GoogleSheetValues(
-            values=[
-                ["Ad ID", "Ad Text", "Ad URL"],
-                ["1", "Ad 1", "https://example.com/ad1"],
-                ["2", "Ad 2", "https://example.com/ad2"],
-            ]
-        )
 
     @app.post(
         "/process-spreadsheet",
@@ -231,10 +197,6 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
             Optional[str],
             Query(description="ID of the Google Sheet with the template data"),
         ] = None,
-        template_sheet_title: Annotated[
-            Optional[str],
-            Query(description="The title of the sheet with the template data"),
-        ] = None,
         new_campaign_spreadsheet_id: Annotated[
             Optional[str],
             Query(description="ID of the Google Sheet with the new campaign data"),
@@ -243,18 +205,9 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
             Optional[str],
             Query(description="The title of the sheet with the new campaign data"),
         ] = None,
-        target_resource: Annotated[
-            Optional[str],
-            Query(
-                description="The target resource to be updated, options: 'ad' or 'keyword'"
-            ),
-        ] = None,
     ) -> str:
-        # return Response(
-        #     status_code=status.HTTP_201_CREATED,
-        #     content=f"Sheet with the name 'Captn - {target_resource.capitalize()}s' has been created successfully.",
-        # )
-        return f"Sheet with the name 'Captn - {target_resource.capitalize()}s' has been created successfully."
+        return """Sheet with the name 'Captn - Ads' has been created successfully.
+Sheet with the name 'Captn - Keywords' has been created successfully."""
 
     return app
 

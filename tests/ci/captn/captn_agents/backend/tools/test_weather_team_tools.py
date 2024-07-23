@@ -26,6 +26,7 @@ class TestTools:
         self.toolbox = create_weather_team_toolbox(
             user_id=12345,
             conv_id=67890,
+            kwargs={},
         )
 
         yield

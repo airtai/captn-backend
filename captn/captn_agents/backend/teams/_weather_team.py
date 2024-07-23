@@ -50,7 +50,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As an account
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
         create_toolbox_func: Callable[
-            [int, int], Toolbox
+            [int, int, Dict[str, Any]], Toolbox
         ] = create_weather_team_toolbox,
         openapi_url: str = "https://weather.tools.fastagency.ai/openapi.json",
     ):
