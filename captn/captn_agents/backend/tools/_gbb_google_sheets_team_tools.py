@@ -210,7 +210,6 @@ def _create_negative_campaign_keywords(
     customer_id: str,
     login_customer_id: Optional[str],
     campaign_id: str,
-    campaign_name: str,
     keywords_df: pd.DataFrame,
     context: GoogleSheetsTeamContext,
 ) -> None:
@@ -444,7 +443,6 @@ def create_google_ads_resources(
                 customer_id=google_ads_resources.customer_id,
                 login_customer_id=google_ads_resources.login_customer_id,
                 campaign_id=campaign_id,
-                campaign_name=campaign_name,
                 keywords_df=all_campaign_keywords,
                 context=context,
             )

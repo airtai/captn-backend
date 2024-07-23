@@ -1,18 +1,23 @@
 import unittest
-from typing import Any, Iterator, List
+from typing import Any, Dict, Iterator, List
 
 import pandas as pd
 import pytest
+from autogen.agentchat import AssistantAgent, UserProxyAgent
 
-from captn.captn_agents.backend.toolboxes import Toolbox
+from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
+    ResourceCreationResponse,
+    _check_mandatory_columns,
     _get_alredy_existing_campaigns,
     create_google_ads_resources,
+    create_google_sheets_team_toolbox,
 )
 
 from ..fixtures.google_sheets_team import ads_values
+from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
 def mock_execute_query_f(
@@ -43,11 +48,22 @@ def mock_execute_query_f(
     return str(response_json)
 
 
-class TesteCreateGoogleAdsResources:
+class TestCreateGoogleAdsResources:
     @pytest.fixture(autouse=True)
     def setup(self) -> Iterator[None]:
-        toolbox = Toolbox()
+        self.llm_config = {
+            "config_list": Config().config_list_gpt_3_5,
+        }
+        user_id = 123
+        conv_id = 456
         recommended_modifications_and_answer_list = []
+        kwargs = {
+            "recommended_modifications_and_answer_list": recommended_modifications_and_answer_list,
+            "google_sheets_api_url": "https://google_sheets_api_url.com",
+        }
+        self.toolbox = create_google_sheets_team_toolbox(
+            user_id=user_id, conv_id=conv_id, kwargs=kwargs
+        )
 
         self.gads_resuces = GoogleAdsResources(
             customer_id="56-789",
@@ -60,12 +76,62 @@ class TesteCreateGoogleAdsResources:
             (self.gads_resuces.model_dump(), "yes")
         )
         self.context = GoogleSheetsTeamContext(
-            user_id=123,
-            conv_id=456,
-            toolbox=toolbox,
+            user_id=user_id,
+            conv_id=conv_id,
+            toolbox=self.toolbox,
             recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             google_sheets_api_url="https://google_sheets_api_url.com",
         )
+
+    def test_llm_config(self) -> None:
+        agent = AssistantAgent(name="agent", llm_config=self.llm_config)
+        user_proxy = UserProxyAgent(name="user_proxy", code_execution_config=False)
+
+        self.toolbox.add_to_agent(agent, user_proxy)
+        llm_config = agent.llm_config
+
+        check_llm_config_total_tools(llm_config, 5)
+        check_llm_config_descriptions(
+            llm_config,
+            {
+                "reply_to_client": r"Respond to the client \(answer to his task or question for additional information\)",
+                "ask_client_for_permission": "Ask the client for permission to make the changes.",
+                "list_accessible_customers_with_account_types": "List accessible customers with account types",
+                "list_sub_accounts": "Use this function to list sub accounts of a Google Ads manager account",
+                "create_google_ads_resources": "Creates Google Ads resources",
+            },
+        )
+
+    @pytest.mark.parametrize(
+        ("mandatory_columns", "expected"),
+        [
+            (
+                ["Campaign Name", "Level", "Negative"],
+                "",
+            ),
+            (
+                ["Campaign Name", "Level", "Negative", "Ad Group Name"],
+                "table_title is missing columns: ['Ad Group Name']",
+            ),
+        ],
+    )
+    def test_check_mandatory_columns(
+        self, mandatory_columns: List[str], expected: str
+    ) -> None:
+        df = pd.DataFrame(
+            {
+                "Campaign Name": ["abcd"],
+                "Level": ["abcd"],
+                "Negative": ["abcd"],
+            }
+        )
+        result = _check_mandatory_columns(
+            df=df,
+            mandatory_columns=mandatory_columns,
+            table_title="table_title",
+        )
+
+        assert result == expected
 
     def test_create_google_ads_resources_with_missing_mandatory_columns(self) -> None:
         keywords_values_with_missing_columns = {
@@ -152,3 +218,57 @@ Kosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN""",
                 "netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
                 "Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
             ]
+
+
+class TestResourceCreationResponse:
+    @pytest.mark.parametrize(
+        ("skip_campaigns", "created_campaigns", "failed_campaigns", "expected"),
+        [
+            (
+                ["Camp 1"],
+                ["Camp 2"],
+                {"Camp 3": "error 3", "Camp 4": "error 4"},
+                """Created campaigns:
+Camp 2
+
+The following campaigns already exist:
+Camp 1
+
+Failed to create the following campaigns:
+Camp 3:
+error 3
+
+Camp 4:
+error 4
+
+""",
+            ),
+            (
+                [],
+                [],
+                {"Camp 3": "error 3"},
+                """No campaigns were created.
+
+Failed to create the following campaigns:
+Camp 3:
+error 3
+
+""",
+            ),
+        ],
+    )
+    def test_response(
+        self,
+        skip_campaigns: List[str],
+        created_campaigns: List[str],
+        failed_campaigns: Dict[str, str],
+        expected: str,
+    ) -> None:
+        resource_response = ResourceCreationResponse(
+            skip_campaigns=skip_campaigns,
+            created_campaigns=created_campaigns,
+            failed_campaigns=failed_campaigns,
+        )
+
+        print(resource_response.response())
+        assert resource_response.response() == expected
