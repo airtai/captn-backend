@@ -410,7 +410,7 @@ def _validate_modification_parameters(
             continue
 
         param_type = func_parameters[param_name].annotation
-        if type(param_type) == _AnnotatedAlias:
+        if type(param_type) is _AnnotatedAlias:
             param_type = param_type.__args__[0]
         if issubclass(param_type, BaseModel):
             try:
@@ -418,7 +418,7 @@ def _validate_modification_parameters(
             except Exception as e:
                 enriched_error = f"""modification_function_parameters validation failed for param_name {param_name} with error: {e}."""
                 error_msg += enriched_error + "\n"
-        elif type(param_value) != param_type:
+        elif type(param_value) is not param_type:
             error_msg += (
                 f"parameter {param_name} type mismatch. Expected {param_type}, got {type(param_value)}."
                 + "\n"

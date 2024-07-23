@@ -277,6 +277,7 @@ def _create_ad_group_with_ad_and_keywords(
     ],
     context: Context,
     login_customer_id: Optional[str] = None,
+    remove_on_error: bool = True,
 ) -> Union[Dict[str, Any], str]:
     list_of_resources = []
     try:
@@ -331,12 +332,13 @@ def _create_ad_group_with_ad_and_keywords(
         response += ad_group_keywords_response  # type: ignore
         context.changes_made += f"\n{response}"
     except Exception as e:
-        _remove_resources(
-            user_id=context.user_id,
-            conv_id=context.conv_id,
-            list_of_resources=list_of_resources,
-            login_customer_id=login_customer_id,
-        )
+        if remove_on_error:
+            _remove_resources(
+                user_id=context.user_id,
+                conv_id=context.conv_id,
+                list_of_resources=list_of_resources,
+                login_customer_id=login_customer_id,
+            )
         raise e
 
     return response

@@ -1,16 +1,46 @@
 import unittest
-from typing import Any, Iterator
+from typing import Any, Iterator, List
 
+import pandas as pd
 import pytest
 
 from captn.captn_agents.backend.toolboxes import Toolbox
 from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
+    _get_alredy_existing_campaigns,
     create_google_ads_resources,
 )
 
 from ..fixtures.google_sheets_team import ads_values
+
+
+def mock_execute_query_f(
+    user_id: int,
+    conv_id: int,
+    customer_ids: List[str],
+    login_customer_id: str,
+    query: str,
+) -> str:
+    response_json = {
+        customer_ids[0]: [
+            {
+                "campaign": {
+                    "resourceName": "blah",
+                    "name": "netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+                    "id": "12345",
+                }
+            },
+            {
+                "campaign": {
+                    "resourceName": "blah",
+                    "name": "Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+                    "id": "23456",
+                }
+            },
+        ]
+    }
+    return str(response_json)
 
 
 class TesteCreateGoogleAdsResources:
@@ -77,14 +107,48 @@ class TesteCreateGoogleAdsResources:
         mock_get_login_url: Iterator[None],
         mock_requests_get: Iterator[Any],
     ) -> None:
-        response = create_google_ads_resources(
-            google_ads_resources=self.gads_resuces,
-            context=self.context,
-        )
-        for expected in [
-            "Ad group ad",
-            "Keyword",
-            "Negative campaign keyword Neg Campaign",
-            "Negative ad group keyword Neg",
-        ]:
-            assert expected in response
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
+            wraps=mock_execute_query_f,
+        ) as mock_execute_query:
+            response = create_google_ads_resources(
+                google_ads_resources=self.gads_resuces,
+                context=self.context,
+            )
+            for expected in [
+                """The following campaigns already exist:
+netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN
+Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN""",
+                """Created campaigns:
+Kosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN""",
+            ]:
+                assert expected in response
+
+            assert mock_execute_query.call_count == 1
+
+    def test_get_alredy_existing_campaigns(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
+            wraps=mock_execute_query_f,
+        ):
+            df = pd.DataFrame(
+                {
+                    "Campaign Name": [
+                        "abcd",
+                        "netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+                        "Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+                    ],
+                }
+            )
+
+            alredy_existing_campaigns = _get_alredy_existing_campaigns(
+                df=df,
+                user_id=123,
+                conv_id=456,
+                customer_id="123-456",
+                login_customer_id="123-456",
+            )
+            assert alredy_existing_campaigns == [
+                "netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+                "Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+            ]

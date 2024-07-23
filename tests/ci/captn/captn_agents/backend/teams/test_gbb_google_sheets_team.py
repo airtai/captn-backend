@@ -24,6 +24,14 @@ class TestGBBGoogleSheetsTeam:
         Team._teams.clear()
         yield
 
+    @pytest.fixture
+    def mock_execute_query_f(self) -> Iterator[Any]:
+        with patch(
+            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
+            return_value="{'1111': []}",
+        ) as mock_execute_query:
+            yield mock_execute_query
+
     @contextmanager
     def mock_list_accessible_customers_f(self) -> Iterator[Tuple[Any, Any, Any]]:
         ret_value1 = {
@@ -144,11 +152,13 @@ class TestGBBGoogleSheetsTeam:
         mock_get_conv_uuid: Iterator[Any],
         mock_get_login_url: Iterator[Any],
         mock_requests_get: Iterator[Any],
+        mock_execute_query_f: Iterator[Any],
     ) -> None:
         with (
             mock_get_conv_uuid,
             mock_get_login_url,
             mock_requests_get,
+            mock_execute_query_f,
             self.mock_list_accessible_customers_f() as (
                 mock_list_accessible_customers_with_account_types_client,
                 mock_list_sub_accounts_client,
@@ -165,7 +175,7 @@ class TestGBBGoogleSheetsTeam:
             expected_messages = [
                 "Sheet with the name 'Captn - Ads",
                 "Sheet with the name 'Captn - Keywords",
-                "Keyword 'Rezerviraj odmah': Created resource",
+                "Created campaigns:",
             ]
             with TemporaryDirectory() as cache_dir:
                 with Cache.disk(cache_path_root=cache_dir) as cache:
@@ -212,6 +222,7 @@ class TestGBBGoogleSheetsTeam:
         mock_get_login_url: Iterator[Any],
         mock_requests_get: Iterator[Any],
         mock_get_sheet_data: Iterator[Any],
+        mock_execute_query_f: Iterator[Any],
     ) -> None:
         with mock_get_sheet_data:
             self._test_google_sheets_team_end2end(
@@ -220,6 +231,7 @@ class TestGBBGoogleSheetsTeam:
                 mock_get_conv_uuid=mock_get_conv_uuid,
                 mock_get_login_url=mock_get_login_url,
                 mock_requests_get=mock_requests_get,
+                mock_execute_query_f=mock_execute_query_f,
             )
 
     @pytest.mark.flaky
@@ -230,6 +242,7 @@ class TestGBBGoogleSheetsTeam:
         mock_get_conv_uuid: Iterator[Any],
         mock_get_login_url: Iterator[Any],
         mock_requests_get: Iterator[Any],
+        mock_execute_query_f: Iterator[Any],
     ) -> None:
         self._test_google_sheets_team_end2end(
             user_id=13,
@@ -237,4 +250,5 @@ class TestGBBGoogleSheetsTeam:
             mock_get_conv_uuid=mock_get_conv_uuid,
             mock_get_login_url=mock_get_login_url,
             mock_requests_get=mock_requests_get,
+            mock_execute_query_f=mock_execute_query_f,
         )
