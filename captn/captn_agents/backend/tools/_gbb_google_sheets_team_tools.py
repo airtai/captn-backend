@@ -367,9 +367,9 @@ WHERE campaign.name IN ({distinct_campaign_names_str}) AND campaign.status != 'R
 
 
 class ResourceCreationResponse(BaseModel):
-    skip_campaigns: Optional[List[str]] = None
-    created_campaigns: Optional[List[str]] = None
-    failed_campaigns: Optional[Dict[str, str]] = None
+    skip_campaigns: List[str]
+    created_campaigns: List[str]
+    failed_campaigns: Dict[str, str]
 
     def response(self) -> str:
         response = ""
@@ -520,6 +520,107 @@ def _setup_campaign(
         return False, error_msg
 
 
+def _setup_campaigns(
+    customer_id: str,
+    login_customer_id: str,
+    context: GoogleSheetsTeamContext,
+    skip_campaigns: List[str],
+    campaign_names_ad_budgets: pd.DataFrame,
+    keywords_df: pd.DataFrame,
+    ads_df: pd.DataFrame,
+    iostream: IOStream,
+) -> ResourceCreationResponse:
+    created_campaigns: List[str] = []
+    failed_campaigns: Dict[str, str] = {}
+    for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
+        success, error_message = _setup_campaign(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_name=campaign_name,
+            campaign_budget=campaign_budget,
+            context=context,
+            keywords_df=keywords_df,
+            ads_df=ads_df,
+            iostream=iostream,
+        )
+
+        if success:
+            created_campaigns.append(campaign_name)
+        else:
+            failed_campaigns[campaign_name] = error_message  # type: ignore[assignment]
+
+    resource_creation_response = ResourceCreationResponse(
+        skip_campaigns=skip_campaigns,
+        created_campaigns=created_campaigns,
+        failed_campaigns=failed_campaigns,
+    )
+
+    return resource_creation_response
+
+
+def _setup_campaigns_with_retry(
+    customer_id: str,
+    login_customer_id: str,
+    context: GoogleSheetsTeamContext,
+    skip_campaigns: List[str],
+    campaign_names_ad_budgets: pd.DataFrame,
+    keywords_df: pd.DataFrame,
+    ads_df: pd.DataFrame,
+    iostream: IOStream,
+    retry_count: int = 2,
+) -> ResourceCreationResponse:
+    resource_creation_response = _setup_campaigns(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        context=context,
+        skip_campaigns=skip_campaigns,
+        campaign_names_ad_budgets=campaign_names_ad_budgets,
+        keywords_df=keywords_df,
+        ads_df=ads_df,
+        iostream=iostream,
+    )
+
+    for i in range(retry_count):
+        if not resource_creation_response.failed_campaigns:
+            break
+
+        # add exponential backoff
+        time.sleep(2**i)
+
+        iostream.print(
+            colored(f"{i}. retry to create failed campaigns.", "yellow"), flush=True
+        )
+        retry_campaign_names_ad_budgets = campaign_names_ad_budgets[
+            campaign_names_ad_budgets["Campaign Name"].isin(
+                resource_creation_response.failed_campaigns.keys()
+            )
+        ]
+        retry_resource_creation_response = _setup_campaigns(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            context=context,
+            skip_campaigns=skip_campaigns,
+            campaign_names_ad_budgets=retry_campaign_names_ad_budgets,
+            keywords_df=keywords_df,
+            ads_df=ads_df,
+            iostream=iostream,
+        )
+
+        resource_creation_response.created_campaigns.extend(
+            retry_resource_creation_response.created_campaigns
+        )
+        # Remove failed campaigns that were successfully created in the retry
+        for campaign_name in retry_resource_creation_response.created_campaigns:
+            resource_creation_response.failed_campaigns.pop(campaign_name)
+
+        resource_creation_response.failed_campaigns.update(
+            retry_resource_creation_response.failed_campaigns
+        )
+        retry_count -= 1
+
+    return resource_creation_response
+
+
 def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
@@ -558,29 +659,15 @@ def create_google_ads_resources(
         ~campaign_names_ad_budgets["Campaign Name"].isin(skip_campaigns)
     ]
 
-    created_campaigns: List[str] = []
-    failed_campaigns: Dict[str, str] = {}
-    for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
-        success, error_message = _setup_campaign(
-            customer_id=google_ads_resources.customer_id,
-            login_customer_id=google_ads_resources.login_customer_id,
-            campaign_name=campaign_name,
-            campaign_budget=campaign_budget,
-            context=context,
-            keywords_df=keywords_df,
-            ads_df=ads_df,
-            iostream=iostream,
-        )
-
-        if success:
-            created_campaigns.append(campaign_name)
-        else:
-            failed_campaigns[campaign_name] = error_message  # type: ignore[assignment]
-
-    resource_creation_response = ResourceCreationResponse(
+    resource_creation_response = _setup_campaigns_with_retry(
+        customer_id=google_ads_resources.customer_id,
+        login_customer_id=google_ads_resources.login_customer_id,
+        context=context,
         skip_campaigns=skip_campaigns,
-        created_campaigns=created_campaigns,
-        failed_campaigns=failed_campaigns,
+        campaign_names_ad_budgets=campaign_names_ad_budgets,
+        keywords_df=keywords_df,
+        ads_df=ads_df,
+        iostream=iostream,
     )
 
     return (
