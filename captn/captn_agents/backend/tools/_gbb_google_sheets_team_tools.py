@@ -393,9 +393,10 @@ ZAGREB_TIMEZONE = timezone("Europe/Zagreb")
 
 
 def _setup_campaign(
+    customer_id: str,
+    login_customer_id: str,
     campaign_name: str,
     campaign_budget: str,
-    google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
     keywords_df: pd.DataFrame,
     ads_df: pd.DataFrame,
@@ -407,8 +408,8 @@ def _setup_campaign(
         response = _create_campaign(
             campaign_name=campaign_name,
             campaign_budget=campaign_budget,
-            customer_id=google_ads_resources.customer_id,
-            login_customer_id=google_ads_resources.login_customer_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
             context=context,
         )
 
@@ -426,8 +427,8 @@ def _setup_campaign(
         ]
 
         _create_negative_campaign_keywords(
-            customer_id=google_ads_resources.customer_id,
-            login_customer_id=google_ads_resources.login_customer_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
             campaign_id=campaign_id,
             keywords_df=all_campaign_keywords,
             context=context,
@@ -447,7 +448,7 @@ def _setup_campaign(
 
             campaign = created_campaign_names_and_ids[campaign_name]
             ad_group_ad = AdGroupAdForCreation(
-                customer_id=google_ads_resources.customer_id,
+                customer_id=customer_id,
                 campaign_id=campaign_id,
                 status="ENABLED",
                 headlines=headlines,
@@ -466,7 +467,7 @@ def _setup_campaign(
                     recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
                     ad=ad_group_ad,
                     endpoint="/create-ad-group-ad",
-                    login_customer_id=google_ads_resources.login_customer_id,
+                    login_customer_id=login_customer_id,
                     already_checked_clients_approval=True,
                 )
                 if not isinstance(response, str):
@@ -477,8 +478,8 @@ def _setup_campaign(
                     all_campaign_keywords["Ad Group Name"] == row["Ad Group Name"]
                 ]
                 _create_ad_group_with_ad_and_keywords_helper(
-                    customer_id=google_ads_resources.customer_id,
-                    login_customer_id=google_ads_resources.login_customer_id,
+                    customer_id=customer_id,
+                    login_customer_id=login_customer_id,
                     campaign_id=campaign_id,
                     ad_group_name=row["Ad Group Name"],
                     match_type=row["Match Type"],
@@ -500,7 +501,7 @@ def _setup_campaign(
         try:
             if campaign_id:
                 remove_resource = RemoveResource(
-                    customer_id=google_ads_resources.customer_id,
+                    customer_id=customer_id,
                     resource_id=campaign_id,
                     resource_type="campaign",
                 )
@@ -510,7 +511,7 @@ def _setup_campaign(
                     recommended_modifications_and_answer_list=[],
                     ad=remove_resource,
                     endpoint="/remove-google-ads-resource",
-                    login_customer_id=google_ads_resources.login_customer_id,
+                    login_customer_id=login_customer_id,
                     already_checked_clients_approval=True,
                 )
         except Exception as e:
@@ -561,9 +562,10 @@ def create_google_ads_resources(
     failed_campaigns: Dict[str, str] = {}
     for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
         success, error_message = _setup_campaign(
+            customer_id=google_ads_resources.customer_id,
+            login_customer_id=google_ads_resources.login_customer_id,
             campaign_name=campaign_name,
             campaign_budget=campaign_budget,
-            google_ads_resources=google_ads_resources,
             context=context,
             keywords_df=keywords_df,
             ads_df=ads_df,
