@@ -1,5 +1,5 @@
 import unittest
-from typing import Any, Dict, Iterator, List
+from typing import Any, Dict, Iterator, List, Optional
 
 import pandas as pd
 import pytest
@@ -7,6 +7,7 @@ from autogen.agentchat import AssistantAgent, UserProxyAgent
 from autogen.io.base import IOStream
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
@@ -197,85 +198,6 @@ Kosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN""",
 
             assert mock_execute_query.call_count == 1
 
-    @pytest.mark.parametrize(
-        ("headline", "expected_error_msg"),
-        [
-            (
-                "Svi autobusni polasci",
-                None,
-            ),
-            (
-                "a" * 31,
-                "Value error, Each headlines must be less than 30 characters!",
-            ),
-        ],
-    )
-    def test_setup_campaign(
-        self,
-        headline: str,
-        expected_error_msg: str,
-        mock_get_login_url: Iterator[None],
-        mock_requests_get: Iterator[Any],
-    ) -> None:
-        ads_df = pd.DataFrame(
-            {
-                "Campaign Name": ["My Campaign"],
-                "Campaign Budget": ["10"],
-                "Ad Group Name": ["My Campaign Ad Group"],
-                "Match Type": ["Exact"],
-                "Headline 1": [headline],
-                "Headline 2": ["Svi autobusni polasci"],
-                "Headline 3": ["Svi autobusni polasci"],
-                "Headline 4": ["Svi autobusni polasci"],
-                "Headline 5": ["Svi autobusni polasci"],
-                "Headline 6": ["Svi autobusni polasci"],
-                "Headline 7": ["Svi autobusni polasci"],
-                "Headline 8": ["Svi autobusni polasci"],
-                "Headline 9": ["Svi autobusni polasci"],
-                "Headline 10": ["Svi autobusni polasci"],
-                "Headline 11": ["Svi autobusni polasci"],
-                "Headline 12": ["Svi autobusni polasci"],
-                "Headline 13": ["Svi autobusni polasci"],
-                "Headline 14": ["Svi autobusni polasci"],
-                "Headline 15": ["Svi autobusni polasci"],
-                "Description Line 1": ["Svi autobusni polasci"],
-                "Description Line 2": ["Svi autobusni polasci"],
-                "Description Line 3": ["Svi autobusni polasci"],
-                "Description Line 4": ["Svi autobusni polasci"],
-                "Path 1": [None],
-                "Path 2": [None],
-                "Final URL": ["https://www.example.com"],
-            }
-        )
-
-        kewords_df = pd.DataFrame(
-            {
-                "Campaign Name": ["My Campaign"],
-                "Campaign Budget": ["10"],
-                "Ad Group Name": ["My Campaign Ad Group"],
-                "Match Type": ["Exact"],
-                "Keyword": ["Svi autobusni polasci"],
-                "Level": [None],
-                "Negative": [False],
-            }
-        )
-
-        _, error_msg = _setup_campaign(
-            customer_id=self.customer_id,
-            login_customer_id=self.login_customer_id,
-            campaign_name="My Campaign",
-            campaign_budget="10",
-            context=self.context,
-            ads_df=ads_df,
-            keywords_df=kewords_df,
-            iostream=IOStream.get_default(),
-        )
-
-        if expected_error_msg is None:
-            assert error_msg is None
-        else:
-            assert expected_error_msg in error_msg
-
     def test_get_alredy_existing_campaigns(self) -> None:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
@@ -354,5 +276,101 @@ error 3
             failed_campaigns=failed_campaigns,
         )
 
-        print(resource_response.response())
         assert resource_response.response() == expected
+
+
+class TestSetupCampaigns:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+        self.user_id = 123
+        self.conv_id = 456
+
+        self.customer_id = "56-789"
+        self.login_customer_id = "91-789"
+
+        self.context = GoogleSheetsTeamContext(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+            toolbox=Toolbox(),
+            recommended_modifications_and_answer_list=[],
+            google_sheets_api_url="https://google_sheets_api_url.com",
+        )
+
+    @pytest.mark.parametrize(
+        ("headline", "expected_error_msg"),
+        [
+            (
+                "Svi autobusni polasci",
+                None,
+            ),
+            (
+                "a" * 31,
+                "Value error, Each headlines must be less than 30 characters!",
+            ),
+        ],
+    )
+    def test_setup_campaign(
+        self,
+        headline: str,
+        expected_error_msg: Optional[str],
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+    ) -> None:
+        ads_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign"],
+                "Campaign Budget": ["10"],
+                "Ad Group Name": ["My Campaign Ad Group"],
+                "Match Type": ["Exact"],
+                "Headline 1": [headline],
+                "Headline 2": ["Svi autobusni polasci"],
+                "Headline 3": ["Svi autobusni polasci"],
+                "Headline 4": ["Svi autobusni polasci"],
+                "Headline 5": ["Svi autobusni polasci"],
+                "Headline 6": ["Svi autobusni polasci"],
+                "Headline 7": ["Svi autobusni polasci"],
+                "Headline 8": ["Svi autobusni polasci"],
+                "Headline 9": ["Svi autobusni polasci"],
+                "Headline 10": ["Svi autobusni polasci"],
+                "Headline 11": ["Svi autobusni polasci"],
+                "Headline 12": ["Svi autobusni polasci"],
+                "Headline 13": ["Svi autobusni polasci"],
+                "Headline 14": ["Svi autobusni polasci"],
+                "Headline 15": ["Svi autobusni polasci"],
+                "Description Line 1": ["Svi autobusni polasci"],
+                "Description Line 2": ["Svi autobusni polasci"],
+                "Description Line 3": ["Svi autobusni polasci"],
+                "Description Line 4": ["Svi autobusni polasci"],
+                "Path 1": [None],
+                "Path 2": [None],
+                "Final URL": ["https://www.example.com"],
+            }
+        )
+
+        kewords_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign"],
+                "Campaign Budget": ["10"],
+                "Ad Group Name": ["My Campaign Ad Group"],
+                "Match Type": ["Exact"],
+                "Keyword": ["Svi autobusni polasci"],
+                "Level": [None],
+                "Negative": [False],
+            }
+        )
+
+        _, error_msg = _setup_campaign(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_name="My Campaign",
+            campaign_budget="10",
+            context=self.context,
+            ads_df=ads_df,
+            keywords_df=kewords_df,
+            iostream=IOStream.get_default(),
+        )
+
+        if expected_error_msg is None:
+            assert error_msg is None
+        else:
+            assert expected_error_msg in error_msg
