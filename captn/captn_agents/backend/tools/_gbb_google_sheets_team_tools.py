@@ -1,10 +1,14 @@
 import json
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+from autogen.formatting_utils import colored
+from autogen.io.base import IOStream
 from pydantic import BaseModel, Field
+from pytz import timezone
 from requests import get as requests_get
 
 from captn.google_ads.client import check_for_client_approval
@@ -385,6 +389,9 @@ class ResourceCreationResponse(BaseModel):
         return response
 
 
+ZAGREB_TIMEZONE = timezone("Europe/Zagreb")
+
+
 def create_google_ads_resources(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
@@ -409,6 +416,15 @@ def create_google_ads_resources(
         google_ads_resources.customer_id,
         google_ads_resources.login_customer_id,
     )
+
+    iostream = IOStream.get_default()
+
+    if skip_campaigns:
+        backslash_n = "\n"
+        message = f"The following campaigns already exist:\n{backslash_n.join(skip_campaigns)}\n\n"
+        iostream.print(colored(message, "yellow"), flush=True)
+    message = "Creating campaigns and resources, usually takes 90 seconds to setup one campaign."
+    iostream.print(colored(message, "yellow"), flush=True)
 
     created_campaign_names_and_ids = {}
     failed_campaigns = {}
@@ -508,8 +524,13 @@ def create_google_ads_resources(
                         ad_group_ad.ad_group_id
                     )
 
+            message = f"[{datetime.now(ZAGREB_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')}] Created campaign: {campaign_name}"
+            iostream.print(colored(message, "green"), flush=True)
+
         except Exception as e:
             failed_campaigns[campaign_name] = str(e)
+            message = f"[{datetime.now(ZAGREB_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')}] Failed to create campaign: {campaign_name}: {str(e)}"
+            iostream.print(colored(message, "red"), flush=True)
 
             try:
                 if campaign_id:
