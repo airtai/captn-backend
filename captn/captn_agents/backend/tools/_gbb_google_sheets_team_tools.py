@@ -584,7 +584,7 @@ def _setup_campaigns_with_retry(
         if not resource_creation_response.failed_campaigns:
             break
 
-        # add exponential backoff
+        # exponential backoff for retries
         time.sleep(2**i)
 
         iostream.print(

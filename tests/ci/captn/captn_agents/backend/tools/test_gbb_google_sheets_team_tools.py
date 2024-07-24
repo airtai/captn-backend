@@ -524,8 +524,6 @@ class TestSetupCampaigns:
             }
         )
 
-        # Mock _create_negative_campaign_keywords to raise an error in the first call
-
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._create_negative_campaign_keywords",
             side_effect=[
