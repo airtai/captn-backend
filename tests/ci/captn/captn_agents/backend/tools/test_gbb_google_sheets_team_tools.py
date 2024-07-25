@@ -1,17 +1,22 @@
 import unittest
-from typing import Any, Dict, Iterator, List
+from typing import Any, Dict, Iterator, List, Optional
 
 import pandas as pd
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
+from autogen.io.base import IOStream
 
 from captn.captn_agents.backend.config import Config
+from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
     ResourceCreationResponse,
     _check_mandatory_columns,
     _get_alredy_existing_campaigns,
+    _setup_campaign,
+    _setup_campaigns,
+    _setup_campaigns_with_retry,
     create_google_ads_resources,
     create_google_sheets_team_toolbox,
 )
@@ -54,30 +59,33 @@ class TestCreateGoogleAdsResources:
         self.llm_config = {
             "config_list": Config().config_list_gpt_3_5,
         }
-        user_id = 123
-        conv_id = 456
+        self.user_id = 123
+        self.conv_id = 456
         recommended_modifications_and_answer_list = []
         kwargs = {
             "recommended_modifications_and_answer_list": recommended_modifications_and_answer_list,
             "google_sheets_api_url": "https://google_sheets_api_url.com",
         }
         self.toolbox = create_google_sheets_team_toolbox(
-            user_id=user_id, conv_id=conv_id, kwargs=kwargs
+            user_id=self.user_id, conv_id=self.conv_id, kwargs=kwargs
         )
 
+        self.customer_id = "56-789"
+        self.login_customer_id = "91-789"
+
         self.gads_resuces = GoogleAdsResources(
-            customer_id="56-789",
+            customer_id=self.customer_id,
             spreadsheet_id="fkpvkfov",
             ads_title="ads_title",
             keywords_title="keywords_title",
-            login_customer_id="91-789",
+            login_customer_id=self.login_customer_id,
         )
         recommended_modifications_and_answer_list.append(
             (self.gads_resuces.model_dump(), "yes")
         )
         self.context = GoogleSheetsTeamContext(
-            user_id=user_id,
-            conv_id=conv_id,
+            user_id=self.user_id,
+            conv_id=self.conv_id,
             toolbox=self.toolbox,
             recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
             google_sheets_api_url="https://google_sheets_api_url.com",
@@ -270,5 +278,271 @@ error 3
             failed_campaigns=failed_campaigns,
         )
 
-        print(resource_response.response())
         assert resource_response.response() == expected
+
+
+class TestSetupCampaigns:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> Iterator[None]:
+        self.user_id = 123
+        self.conv_id = 456
+
+        self.customer_id = "56-789"
+        self.login_customer_id = "91-789"
+
+        self.context = GoogleSheetsTeamContext(
+            user_id=self.user_id,
+            conv_id=self.conv_id,
+            toolbox=Toolbox(),
+            recommended_modifications_and_answer_list=[],
+            google_sheets_api_url="https://google_sheets_api_url.com",
+        )
+
+    @pytest.mark.parametrize(
+        ("headline", "expected_error_msg"),
+        [
+            (
+                "Svi autobusni polasci",
+                None,
+            ),
+            (
+                "a" * 31,
+                "Value error, Each headlines must be less than 30 characters!",
+            ),
+        ],
+    )
+    def test_setup_campaign(
+        self,
+        headline: str,
+        expected_error_msg: Optional[str],
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+    ) -> None:
+        ads_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign"],
+                "Campaign Budget": ["10"],
+                "Ad Group Name": ["My Campaign Ad Group"],
+                "Match Type": ["Exact"],
+                "Headline 1": [headline],
+                "Headline 2": ["Svi autobusni polasci"],
+                "Headline 3": ["Svi autobusni polasci"],
+                "Headline 4": ["Svi autobusni polasci"],
+                "Headline 5": ["Svi autobusni polasci"],
+                "Headline 6": ["Svi autobusni polasci"],
+                "Headline 7": ["Svi autobusni polasci"],
+                "Headline 8": ["Svi autobusni polasci"],
+                "Headline 9": ["Svi autobusni polasci"],
+                "Headline 10": ["Svi autobusni polasci"],
+                "Headline 11": ["Svi autobusni polasci"],
+                "Headline 12": ["Svi autobusni polasci"],
+                "Headline 13": ["Svi autobusni polasci"],
+                "Headline 14": ["Svi autobusni polasci"],
+                "Headline 15": ["Svi autobusni polasci"],
+                "Description Line 1": ["Svi autobusni polasci"],
+                "Description Line 2": ["Svi autobusni polasci"],
+                "Description Line 3": ["Svi autobusni polasci"],
+                "Description Line 4": ["Svi autobusni polasci"],
+                "Path 1": [None],
+                "Path 2": [None],
+                "Final URL": ["https://www.example.com"],
+            }
+        )
+
+        keywords_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign"],
+                "Campaign Budget": ["10"],
+                "Ad Group Name": ["My Campaign Ad Group"],
+                "Match Type": ["Exact"],
+                "Keyword": ["Svi autobusni polasci"],
+                "Level": [None],
+                "Negative": [False],
+            }
+        )
+
+        _, error_msg = _setup_campaign(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_name="My Campaign",
+            campaign_budget="10",
+            context=self.context,
+            ads_df=ads_df,
+            keywords_df=keywords_df,
+            iostream=IOStream.get_default(),
+        )
+
+        if expected_error_msg is None:
+            assert error_msg is None
+        else:
+            assert expected_error_msg in error_msg
+
+    def _get_ads_df(
+        self, headline: str, headline_1_1: str, headline_1_2: str
+    ) -> pd.DataFrame:
+        ads_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
+                "Campaign Budget": ["10", "10"],
+                "Ad Group Name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
+                "Match Type": ["Exact", "Exact"],
+                "Headline 1": [headline_1_1, headline_1_2],
+                "Headline 2": [headline, headline],
+                "Headline 3": [headline, headline],
+                "Headline 4": [headline, headline],
+                "Headline 5": [headline, headline],
+                "Headline 6": [headline, headline],
+                "Headline 7": [headline, headline],
+                "Headline 8": [headline, headline],
+                "Headline 9": [headline, headline],
+                "Headline 10": [headline, headline],
+                "Headline 11": [headline, headline],
+                "Headline 12": [headline, headline],
+                "Headline 13": [headline, headline],
+                "Headline 14": [headline, headline],
+                "Headline 15": [headline, headline],
+                "Description Line 1": [headline, headline],
+                "Description Line 2": [headline, headline],
+                "Description Line 3": [headline, headline],
+                "Description Line 4": [headline, headline],
+                "Path 1": [None, None],
+                "Path 2": [None, None],
+                "Final URL": ["https://www.example.com", "https://www.example.com"],
+            }
+        )
+        return ads_df
+
+    @pytest.mark.parametrize(
+        ("num_failed_campaigns", "error_msg"),
+        [
+            (
+                0,
+                None,
+            ),
+            (
+                1,
+                "Value error, Each headlines must be less than 30 characters!",
+            ),
+            (
+                2,
+                "Value error, Each headlines must be less than 30 characters!",
+            ),
+        ],
+    )
+    def test_setup_campaigns(
+        self,
+        num_failed_campaigns: int,
+        error_msg: Optional[str],
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+    ) -> None:
+        headline = "Svi autobusni polasci"
+
+        if num_failed_campaigns == 0:
+            headline_1_1 = headline
+            headline_1_2 = headline
+        elif num_failed_campaigns == 1:
+            headline_1_1 = "a" * 31
+            headline_1_2 = headline
+        else:
+            headline_1_1 = "a" * 31
+            headline_1_2 = "a" * 31
+
+        ads_df = self._get_ads_df(headline, headline_1_1, headline_1_2)
+
+        keywords_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
+                "Campaign Budget": ["10", "10"],
+                "Ad Group Name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
+                "Match Type": ["Exact", "Exact"],
+                "Keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
+                "Level": [None, None],
+                "Negative": [False, False],
+            }
+        )
+
+        campaign_names_and_budgets = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
+                "Campaign Budget": ["10", "10"],
+            }
+        )
+
+        response = _setup_campaigns(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            skip_campaigns=[],
+            context=self.context,
+            campaign_names_ad_budgets=campaign_names_and_budgets,
+            ads_df=ads_df,
+            keywords_df=keywords_df,
+            iostream=IOStream.get_default(),
+        )
+
+        if num_failed_campaigns == 0:
+            assert response.created_campaigns == ["My Campaign 1", "My Campaign 2"]
+            assert response.failed_campaigns == {}
+        elif num_failed_campaigns == 1:
+            assert response.created_campaigns == ["My Campaign 2"]
+            assert response.failed_campaigns.keys() == {"My Campaign 1"}
+            assert error_msg in response.failed_campaigns["My Campaign 1"]
+        else:
+            assert response.created_campaigns == []
+            assert response.failed_campaigns.keys() == {
+                "My Campaign 1",
+                "My Campaign 2",
+            }
+            assert error_msg in response.failed_campaigns["My Campaign 1"]
+            assert error_msg in response.failed_campaigns["My Campaign 2"]
+
+    def test_setup_campaigns_with_retry(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+    ) -> None:
+        headline = "Svi autobusni polasci"
+
+        ads_df = self._get_ads_df(headline, headline, headline)
+
+        keywords_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
+                "Campaign Budget": ["10", "10"],
+                "Ad Group Name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
+                "Match Type": ["Exact", "Exact"],
+                "Keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
+                "Level": [None, None],
+                "Negative": [False, False],
+            }
+        )
+
+        campaign_names_and_budgets = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
+                "Campaign Budget": ["10", "10"],
+            }
+        )
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._create_negative_campaign_keywords",
+            side_effect=[
+                Exception("Some error"),
+                None,
+                None,
+            ],
+        ) as mock_create_negative_campaign_keywords:
+            response = _setup_campaigns_with_retry(
+                customer_id=self.customer_id,
+                login_customer_id=self.login_customer_id,
+                skip_campaigns=[],
+                context=self.context,
+                campaign_names_ad_budgets=campaign_names_and_budgets,
+                ads_df=ads_df,
+                keywords_df=keywords_df,
+                iostream=IOStream.get_default(),
+            )
+
+        assert response.created_campaigns == ["My Campaign 2", "My Campaign 1"]
+        assert response.failed_campaigns == {}
+        assert mock_create_negative_campaign_keywords.call_count == 3
