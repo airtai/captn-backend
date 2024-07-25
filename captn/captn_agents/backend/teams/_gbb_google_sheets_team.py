@@ -116,6 +116,8 @@ Here is the current customers brief/information we have gathered for you as a st
 7. Once you have all the necessary information, use 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
 - query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
 8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
+- If you are informed that the new sheet contains 'Issues' column, you must inform the client that the 'Issues' column has been added to the new sheet and that the client should check it and try to resolve it manually.
+- Do NOT proceed with the next steps until the client confirms that has resolved the issues. Use only ONE smart suggestion 'I have resolved the issues' and do not offer to help with the issues because you are not experienced in that area.
 9. If the user verifies that everything is correct the team should do the following:
 - List accessible customers by using the 'list_accessible_customers_with_account_types' function. (this should be done by the Google_ads_expert)
 - Ask the user choose the correct customer id (This should be done by the Account_manager)
