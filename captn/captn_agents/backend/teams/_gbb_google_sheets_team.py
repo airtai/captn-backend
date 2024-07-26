@@ -111,8 +111,10 @@ Here is the current customers brief/information we have gathered for you as a st
 4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with new routes.
 - Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
 - Do NOT forget this step, because the client needs to confirm that you have found the correct files, otherwise you will be penalized!
+- ALWAYS add final sentence "If these are NOT the correct files, please paste the whole URL of the correct files."
 5. In the template spreadsheet, you must must check that 'Campaigns', 'ad Groups', 'Keywords' and 'Ads' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 6. In the spreadsheet with new routes, you must find the title of the sheet with new routes (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
+- If there are multiple sheets within the spreadsheet, ask the client to choose the correct sheet.
 7. Once you have all the necessary information, use 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
 - query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
 8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
@@ -129,6 +131,13 @@ ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are o
 
 OFTEN MISTAKES:
 - Do NOT forget the 'modification_function_parameters' when calling 'ask_client_for_permission' function!
+- If the client wants to change the Google Ads account or refresh token, use 'change_google_ads_account_or_refresh_token' function.
+- If the client wants to change the Google Sheets account, use 'get_login_url_login_get' function with 'force_new_login' parameter set to True.
+
+ADDITIONAL NOTES:
+- ALWAYS use hyperlinks to the Google Sheets UI when referring it to the client.
+e.g. "Are these the correct files?\n\n1. ROUTES: [new-routes](https://docs.google.com/spreadsheets/d/insert_correct_sheet_id) \n\n2. TEMPLATES: [template](https://docs.google.com/spreadsheets/d/insert_correct_sheet_id)"
+- ALWAYS use names of the sheets and google ads customer account names when referring them to the client. You can add id-s in the brackets.
 """
 
     @property
@@ -158,11 +167,14 @@ function_name: 'create_google_ads_resources'
 
 
 3. Only Google_sheets_expert has access to Google Sheets API and can read and edit Google Sheets.
+- 'get_login_url_login_get' - which will return the login url for the Google Sheets API (This can't be used for Google Ads account)
+If you want to refresh google sheets token or change google sheets use 'get_login_url_login_get' with 'force_new_login' parameter set to True.
 
 4. Only Google_ads_expert has access to the following commands:
 - 'list_accessible_customers_with_account_types' (to list accessible Google Ads customers with account types)
 - 'list_sub_accounts' (to list sub-accounts of a Google Ads customer, use it if the client wants to use Manager Account)
 - 'create_google_ads_resources'
+- 'change_google_ads_account_or_refresh_token' - to change Google Ads account or refresh token (This can't be used for Google Sheets account)
 """
 
     @classmethod
