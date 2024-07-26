@@ -98,7 +98,7 @@ class TestCreateGoogleAdsResources:
         self.toolbox.add_to_agent(agent, user_proxy)
         llm_config = agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 5)
+        check_llm_config_total_tools(llm_config, 6)
         check_llm_config_descriptions(
             llm_config,
             {
@@ -107,6 +107,7 @@ class TestCreateGoogleAdsResources:
                 "list_accessible_customers_with_account_types": "List accessible customers with account types",
                 "list_sub_accounts": "Use this function to list sub accounts of a Google Ads manager account",
                 "create_google_ads_resources": "Creates Google Ads resources",
+                "change_google_ads_account_or_refresh_token": "Change Google Ads account or refresh access token",
             },
         )
 

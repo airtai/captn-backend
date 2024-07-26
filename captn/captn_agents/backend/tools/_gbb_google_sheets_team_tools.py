@@ -45,6 +45,7 @@ from ._functions import (
     reply_to_client,
 )
 from ._google_ads_team_tools import (
+    change_google_account,
     get_resource_id_from_response,
 )
 
@@ -741,5 +742,13 @@ def create_google_sheets_team_toolbox(
     toolbox.add_function(CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION)(
         create_google_ads_resources
     )
+
+    change_google_ads_account_description = (
+        "Change Google Ads account or refresh access token"
+    )
+    toolbox.add_function(
+        description=change_google_ads_account_description,
+        name="change_google_ads_account_or_refresh_token",
+    )(change_google_account)
 
     return toolbox
