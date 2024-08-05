@@ -55,7 +55,7 @@ lint = [
     "types-Pygments",
     "types-docutils",
     "types-requests",
-    "mypy==1.10.1",
+    "mypy==1.11.1",
     "black==24.4.2",
     "isort>=5",
     "ruff==0.5.4",
