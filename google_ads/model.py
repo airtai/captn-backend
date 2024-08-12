@@ -13,6 +13,7 @@ class AdBase(BaseModel):
 class Campaign(AdBase):
     campaign_id: Optional[str] = None
     budget_amount_micros: Optional[int] = None
+    budget_explicitly_shared: Optional[bool] = None
     network_settings_target_google_search: Optional[bool] = None
     network_settings_target_search_network: Optional[bool] = None
     # network_settings_target_partner_search_network: Optional[bool] = None

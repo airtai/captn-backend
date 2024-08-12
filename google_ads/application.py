@@ -910,7 +910,9 @@ async def update_ad_group_ad(
     )
 
 
-def _create_campaign_budget(client: Any, customer_id: str, amount_micros: int) -> Any:
+def _create_campaign_budget(
+    client: Any, customer_id: str, amount_micros: int, explicitly_shared: Optional[bool]
+) -> Any:
     """Creates campaign budget resource.
 
     Args:
@@ -927,6 +929,7 @@ def _create_campaign_budget(client: Any, customer_id: str, amount_micros: int) -
     campaign_budget.name = f"Campaign budget {uuid.uuid4()}"
     campaign_budget.delivery_method = client.enums.BudgetDeliveryMethodEnum.STANDARD
     campaign_budget.amount_micros = amount_micros
+    campaign_budget.explicitly_shared = explicitly_shared
 
     # Add budget.
     campaign_budget_response = campaign_budget_service.mutate_campaign_budgets(
@@ -967,8 +970,10 @@ async def create_campaign(
             client=client,
             customer_id=customer_id,
             amount_micros=ad_model.budget_amount_micros,  # type: ignore
+            explicitly_shared=ad_model.budget_explicitly_shared,
         )
         model_dict.pop("budget_amount_micros")
+        model_dict.pop("budget_explicitly_shared")
         operation_create.campaign_budget = campaign_budget
 
         setattr_func = service_operation_and_function_names["setattr_create_func"]
