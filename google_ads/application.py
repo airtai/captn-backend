@@ -726,7 +726,9 @@ def _create_campaign_setattr(
 ) -> None:
     for attribute_name, attribute_value in model_dict.items():
         if attribute_value is not None:
-            if "network_settings" in attribute_name:
+            if attribute_name == "manual_cpc":
+                operation_create.manual_cpc.enhanced_cpc_enabled = attribute_value
+            elif "network_settings" in attribute_name:
                 attribute_name = attribute_name.replace("network_settings_", "")
                 setattr(
                     operation_create.network_settings, attribute_name, attribute_value
@@ -738,12 +740,12 @@ def _create_campaign_setattr(
         client.enums.AdvertisingChannelTypeEnum.SEARCH
     )
 
-    # Set the bidding strategy and budget.
-    # The bidding strategy for Maximize Clicks is TargetSpend.
-    # The target_spend_micros is deprecated so don't put any value.
-    # See other bidding strategies you can select in the link below.
-    # https://developers.google.com/google-ads/api/reference/rpc/v11/Campaign#campaign_bidding_strategy
-    operation_create.target_spend.target_spend_micros = 0
+    if not model_dict["manual_cpc"]:
+        # The bidding strategy for Maximize Clicks is TargetSpend.
+        # The target_spend_micros is deprecated so don't put any value.
+        # See other bidding strategies you can select in the link below.
+        # https://developers.google.com/google-ads/api/reference/rpc/v11/Campaign#campaign_bidding_strategy
+        operation_create.target_spend.target_spend_micros = 0
 
     # # Optional: Set the start date.
     # start_time = datetime.date.today() + datetime.timedelta(days=1)

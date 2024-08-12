@@ -17,6 +17,7 @@ class Campaign(AdBase):
     network_settings_target_search_network: Optional[bool] = None
     # network_settings_target_partner_search_network: Optional[bool] = None
     network_settings_target_content_network: Optional[bool] = None
+    manual_cpc: Optional[bool] = None
 
 
 class AdGroup(Campaign):
