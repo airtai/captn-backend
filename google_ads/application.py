@@ -1,14 +1,17 @@
 import json
+import os
 import urllib.parse
 import uuid
 from os import environ
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
+import pandas as pd
 from asyncer import asyncify
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
+from google.ads.googleads.v17.common.types.criteria import LanguageInfo
 from google.api_core import protobuf_helpers
 from google.auth.exceptions import RefreshError
 from google.protobuf import json_format
@@ -939,6 +942,22 @@ def _create_campaign_budget(
     return campaign_budget_response.results[0].resource_name
 
 
+def _read_avaliable_languages() -> Dict[str, int]:
+    language_codes = pd.read_csv(
+        os.path.join(os.path.dirname(__file__), "language_codes.csv")
+    )
+    return dict(
+        zip(
+            language_codes["Language code"],
+            language_codes["Criterion ID"],
+            strict=False,
+        )
+    )
+
+
+avalible_languages = _read_avaliable_languages()
+
+
 @router.get("/create-campaign")
 async def create_campaign(
     user_id: int,
@@ -950,7 +969,7 @@ async def create_campaign(
 
     (
         client,
-        service,
+        campaign_service,
         operation,
         model_dict,
         customer_id,
@@ -982,11 +1001,43 @@ async def create_campaign(
         )
 
         response = await _mutate(
-            service,
+            campaign_service,
             service_operation_and_function_names["mutate"],
             customer_id,
             operation,
         )
+
+        # TODO
+        campaign_id = response.results[0].resource_name.split("/")[-1]
+
+        print(f"Response type: {type(response)}")
+
+        campaign_criterion_service = client.get_service("CampaignCriterionService")
+
+        # Create the campaign criterion operation
+        campaign_criterion_operation = client.get_type("CampaignCriterionOperation")
+        campaign_criterion = campaign_criterion_operation.create
+        campaign_criterion.campaign = campaign_service.campaign_path(
+            customer_id, campaign_id
+        )
+        # list of language constants: https://developers.google.com/adwords/api/docs/appendix/codes-formats#expandable-7
+        language_id = 1000
+        campaign_criterion.language = LanguageInfo(
+            language_constant=f"languageConstants/{language_id}"
+        )
+
+        campaign_criterion_response = (
+            campaign_criterion_service.mutate_campaign_criteria(
+                customer_id=customer_id, operations=[campaign_criterion_operation]
+            )
+        )
+        print(
+            "Campaign criterion with resource name "
+            f'"{campaign_criterion_response.results[0].resource_name}" was '
+            "modified."
+        )
+        # End of TODO
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)

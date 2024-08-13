@@ -20,7 +20,7 @@ repos:
         args: []#[--ignore-words=.codespell-whitelist.txt]
         exclude: |
             (?x)^(
-                docs/overrides/home.html
+                google_ads/language_codes.csv
             )$
 
 -   repo: local
