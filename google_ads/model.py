@@ -10,6 +10,13 @@ class AdBase(BaseModel):
     status: Optional[Literal["ENABLED", "PAUSED"]] = None
 
 
+class CampaignLanguageCriterion(BaseModel):
+    customer_id: str
+    campaign_id: str
+    language_codes: List[str] = Field(Query(default=[]))
+    negative: bool = False
+
+
 class Campaign(AdBase):
     campaign_id: Optional[str] = None
     budget_amount_micros: Optional[int] = None

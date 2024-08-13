@@ -6,9 +6,11 @@ from fastapi import HTTPException, status
 from google_ads.application import (
     MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG,
     _check_if_customer_id_is_manager_or_exception_is_raised,
+    _read_avaliable_languages,
     _set_fields_ad_copy,
     _set_headline_or_description,
     create_geo_targeting_for_campaign,
+    get_languages,
 )
 from google_ads.model import AdCopy, GeoTargetCriterion
 
@@ -333,3 +335,36 @@ async def test_set_fields_ad_copy_max_headlines_and_descriptions() -> None:
         str(exc.value)
         == f"{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} headlines: 15\n{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} descriptions: 4"
     )
+
+
+class TestLanguages:
+    NUMBERS_OF_LANGUAGES = 51
+
+    def test_read_avaliable_languages(self) -> None:
+        languages = _read_avaliable_languages()
+        assert len(languages) == TestLanguages.NUMBERS_OF_LANGUAGES
+
+    @pytest.mark.parametrize(
+        ("language_codes", "negative", "expected"),
+        [
+            (["en", "HR "], False, 2),
+            (["EN", "hr"], True, NUMBERS_OF_LANGUAGES - 2),
+            (["en", "hr", "es", "de", "fr"], False, 5),
+            (["en", "hr", "es", "de", "fr"], True, NUMBERS_OF_LANGUAGES - 5),
+        ],
+    )
+    def test_get_languages(self, language_codes, negative, expected) -> None:
+        languages = get_languages(language_codes, negative)
+        assert len(languages) == expected
+
+        language_codes = [language.lower().strip() for language in language_codes]
+        if negative:
+            assert all(language not in language_codes for language in languages)
+        else:
+            assert all(language in language_codes for language in languages)
+
+    def test_get_languages_for_non_valid_codes(self) -> None:
+        language_codes = ["en", "hr", "xyz"]
+        with pytest.raises(ValueError) as exc:
+            get_languages(language_codes, False)
+        assert str(exc.value) == "Invalid language codes: ['xyz']"

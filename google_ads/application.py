@@ -26,6 +26,7 @@ from .model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    CampaignLanguageCriterion,
     Criterion,
     GeoTargetCriterion,
     RemoveResource,
@@ -958,6 +959,23 @@ def _read_avaliable_languages() -> Dict[str, int]:
 avalible_languages = _read_avaliable_languages()
 
 
+def get_languages(languages_codes: List[str], negative: bool) -> Dict[str, int]:
+    languages_codes = [code.lower().strip() for code in languages_codes]
+
+    # check if the language codes are valid
+    non_valid_codes = [
+        code for code in languages_codes if code not in avalible_languages.keys()
+    ]
+    if non_valid_codes:
+        raise ValueError(f"Invalid language codes: {non_valid_codes}")
+
+    if negative:
+        # take all languages except the ones in the list
+        return {k: v for k, v in avalible_languages.items() if k not in languages_codes}
+    # take only the languages in the list
+    return {k: v for k, v in avalible_languages.items() if k in languages_codes}
+
+
 @router.get("/create-campaign")
 async def create_campaign(
     user_id: int,
@@ -1006,43 +1024,53 @@ async def create_campaign(
             customer_id,
             operation,
         )
-
-        # TODO
-        campaign_id = response.results[0].resource_name.split("/")[-1]
-
-        print(f"Response type: {type(response)}")
-
-        campaign_criterion_service = client.get_service("CampaignCriterionService")
-
-        # Create the campaign criterion operation
-        campaign_criterion_operation = client.get_type("CampaignCriterionOperation")
-        campaign_criterion = campaign_criterion_operation.create
-        campaign_criterion.campaign = campaign_service.campaign_path(
-            customer_id, campaign_id
-        )
-        # list of language constants: https://developers.google.com/adwords/api/docs/appendix/codes-formats#expandable-7
-        language_id = 1000
-        campaign_criterion.language = LanguageInfo(
-            language_constant=f"languageConstants/{language_id}"
-        )
-
-        campaign_criterion_response = (
-            campaign_criterion_service.mutate_campaign_criteria(
-                customer_id=customer_id, operations=[campaign_criterion_operation]
-            )
-        )
-        print(
-            "Campaign criterion with resource name "
-            f'"{campaign_criterion_response.results[0].resource_name}" was '
-            "modified."
-        )
-        # End of TODO
-
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
     return f"Created {response.results[0].resource_name}."
+
+
+@router.get("/update-campaign-language-criterion")
+async def update_campaign_language_criterion(
+    user_id: int,
+    language_criterion_model: CampaignLanguageCriterion = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
+    client = await _get_client(user_id=user_id, login_customer_id=login_customer_id)
+    campaign_service = client.get_service("CampaignService")
+    campaign_criterion_service = client.get_service("CampaignCriterionService")
+    campaign_criterion_operation = client.get_type("CampaignCriterionOperation")
+
+    campaign_criterion = campaign_criterion_operation.create
+    campaign_criterion.campaign = campaign_service.campaign_path(
+        customer_id=language_criterion_model.customer_id,
+        campaign_id=language_criterion_model.campaign_id,
+    )
+    try:
+        languages = get_languages(
+            languages_codes=language_criterion_model.language_codes,
+            negative=language_criterion_model.negative,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
+
+    # Add one by one the languages to the campaign
+    for language_id in languages.values():
+        campaign_criterion.language = LanguageInfo(
+            language_constant=f"languageConstants/{language_id}"
+        )
+
+        await _mutate(
+            campaign_criterion_service,
+            "mutate_campaign_criteria",
+            language_criterion_model.customer_id,
+            campaign_criterion_operation,
+        )
+
+    return f"Updated campaign '{language_criterion_model.campaign_id}' with language codes: {list(languages.keys())}"
 
 
 @router.get("/create-ad-group")
