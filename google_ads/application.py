@@ -1410,9 +1410,9 @@ async def add_keywords_to_ad_group(
     )
 
 
-def _get_geo_target_constant_by_names(
-    client: GoogleAdsClient, location_names: List[str]
-) -> str:
+def _get_geo_target_constant_suggestions(
+    client: GoogleAdsClient, location_names: List[str], target_type: Optional[str]
+) -> Any:
     gtc_service = client.get_service("GeoTargetConstantService")
     gtc_request = client.get_type("SuggestGeoTargetConstantsRequest")
 
@@ -1421,11 +1421,40 @@ def _get_geo_target_constant_by_names(
 
     results = gtc_service.suggest_geo_target_constants(gtc_request)
 
+    geo_target_constant_suggestions = results.geo_target_constant_suggestions
+
+    # filter by target type
+    if target_type:
+        geo_target_constant_suggestions = [
+            suggestion
+            for suggestion in geo_target_constant_suggestions
+            if suggestion.geo_target_constant.target_type == target_type
+        ]
+
+    return geo_target_constant_suggestions
+
+
+def _get_geo_target_constant_by_names(
+    client: GoogleAdsClient,
+    location_names: List[str],
+    target_type: Optional[str],
+    add_all_suggestions: Optional[bool],
+) -> Union[str | List[str]]:
+    geo_target_constant_suggestions = _get_geo_target_constant_suggestions(
+        client=client, location_names=location_names, target_type=target_type
+    )
+
+    if add_all_suggestions:
+        return [
+            suggestion.geo_target_constant.id
+            for suggestion in geo_target_constant_suggestions
+        ]
+
     return_text = (
         "Below is a list of possible locations in the following format '(name, country_code, target_type)'."
         "Please send them to the client as smart suggestions with type 'manyOf' (do not display the location_id to him):\n\n"
     )
-    for suggestion in results.geo_target_constant_suggestions:
+    for suggestion in geo_target_constant_suggestions:
         geo_target_constant = suggestion.geo_target_constant
         text = (
             f"location_id: {geo_target_constant.id}, "
@@ -1511,18 +1540,28 @@ async def create_geo_targeting_for_campaign(
     client = await _get_client(user_id=user_id, login_customer_id=login_customer_id)
 
     if location_ids is None:
-        return _get_geo_target_constant_by_names(
+        suggestions_or_ids = _get_geo_target_constant_by_names(
             client=client,
             location_names=location_names,  # type: ignore[arg-type]
+            target_type=model.target_type,
+            add_all_suggestions=model.add_all_suggestions,
         )
-
-    return _create_locations_by_ids_to_campaign(
-        client=client,
-        customer_id=model.customer_id,  # type: ignore
-        campaign_id=model.campaign_id,  # type: ignore
-        location_ids=location_ids,
-        negative=model.negative,
-    )
+        if isinstance(suggestions_or_ids, str):
+            return suggestions_or_ids
+        else:
+            location_ids = suggestions_or_ids
+    try:
+        return _create_locations_by_ids_to_campaign(
+            client=client,
+            customer_id=model.customer_id,  # type: ignore
+            campaign_id=model.campaign_id,  # type: ignore
+            location_ids=location_ids,
+            negative=model.negative,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
 
 
 @router.get("/remove-google-ads-resource")
