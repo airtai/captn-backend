@@ -155,3 +155,5 @@ class GeoTargetCriterion(BaseModel):
     location_ids: Optional[List[str]] = Field(Query(default=None))
     location_names: Optional[List[str]] = Field(Query(default=None))
     negative: Optional[bool] = None
+    target_type: Optional[Literal["Country", "County", "City", "Region"]] = None
+    add_all_suggestions: Optional[bool] = None

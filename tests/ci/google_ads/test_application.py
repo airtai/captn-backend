@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException, status
@@ -33,29 +34,46 @@ async def test_add_geo_targeting_to_campaign_raises_exception_if_location_names_
 
 
 @pytest.mark.asyncio
-async def test_add_geo_targeting_to_campaign_raises_exception_if_location_ids_are_none() -> (
-    None
-):
+async def test_add_geo_targeting_to_campaign_success() -> None:
     geo_target = GeoTargetCriterion(
         customer_id="123",
         campaign_id="456",
         location_names=["New York"],
         location_ids=None,
+        add_all_suggestions=True,
     )
 
-    with unittest.mock.patch(
-        "google_ads.application._get_geo_target_constant_by_names",
-    ) as mock_get_geo_target_constant_by_names:
-        with unittest.mock.patch(
-            "google_ads.application._get_client",
-        ) as mock_get_client:
-            mock_get_geo_target_constant_by_names.return_value = None
-            mock_get_client.return_value = None
+    suggestions = [
+        MagicMock(geo_target_constant=MagicMock(id="123")),
+        MagicMock(geo_target_constant=MagicMock(id="345")),
+    ]
 
-            await create_geo_targeting_for_campaign(user_id=-1, model=geo_target)
-            mock_get_geo_target_constant_by_names.assert_called_once_with(
-                client=None, location_names=["New York"]
-            )
+    with (
+        unittest.mock.patch(
+            "google_ads.application._get_client",
+            return_value=None,
+        ),
+        unittest.mock.patch(
+            "google_ads.application._get_geo_target_constant_suggestions",
+            return_value=suggestions,
+        ) as mock_get_geo_target_constant_suggestions,
+        unittest.mock.patch(
+            "google_ads.application._create_locations_by_ids_to_campaign",
+            return_value="Created",
+        ) as mock_create_locations_by_ids_to_campaign,
+    ):
+        await create_geo_targeting_for_campaign(user_id=-1, model=geo_target)
+        mock_get_geo_target_constant_suggestions.assert_called_once_with(
+            client=None, location_names=["New York"], target_type=None
+        )
+
+        mock_create_locations_by_ids_to_campaign.assert_called_once_with(
+            client=None,
+            customer_id="123",
+            campaign_id="456",
+            location_ids=["123", "345"],
+            negative=None,
+        )
 
 
 @pytest.mark.asyncio
