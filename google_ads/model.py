@@ -10,13 +10,22 @@ class AdBase(BaseModel):
     status: Optional[Literal["ENABLED", "PAUSED"]] = None
 
 
+class CampaignLanguageCriterion(BaseModel):
+    customer_id: str
+    campaign_id: str
+    language_codes: List[str] = Field(Query(default=[]))
+    negative: bool = False
+
+
 class Campaign(AdBase):
     campaign_id: Optional[str] = None
     budget_amount_micros: Optional[int] = None
+    budget_explicitly_shared: Optional[bool] = None
     network_settings_target_google_search: Optional[bool] = None
     network_settings_target_search_network: Optional[bool] = None
     # network_settings_target_partner_search_network: Optional[bool] = None
     network_settings_target_content_network: Optional[bool] = None
+    manual_cpc: Optional[bool] = None
 
 
 class AdGroup(Campaign):
