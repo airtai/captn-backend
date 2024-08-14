@@ -1,7 +1,7 @@
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import Query
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class AdBase(BaseModel):
@@ -157,3 +157,30 @@ class GeoTargetCriterion(BaseModel):
     negative: Optional[bool] = None
     target_type: Optional[Literal["Country", "County", "City", "Region"]] = None
     add_all_suggestions: Optional[bool] = None
+
+
+class SiteLink(BaseModel):
+    final_urls: List[str]
+    link_text: str = Field(max_length=25)
+    description1: Optional[str] = Field(default=None, max_length=35)
+    description2: Optional[str] = Field(default=None, max_length=35)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_descriptions(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        description1 = values.get("description1")
+        description2 = values.get("description2")
+
+        if (description1 is None) != (description2 is None):
+            raise ValueError(
+                "Either both description1 and description2 should be provided, or neither."
+            )
+
+        return values
+
+
+class CampaignSitelinks(BaseModel):
+    customer_id: str
+    login_customer_id: Optional[str] = None
+    campaign_id: str
+    site_links: List[SiteLink]

@@ -27,6 +27,7 @@ from .model import (
     Campaign,
     CampaignCriterion,
     CampaignLanguageCriterion,
+    CampaignSitelinks,
     Criterion,
     GeoTargetCriterion,
     RemoveResource,
@@ -1603,3 +1604,75 @@ async def remove_google_ads_resource(
         ) from e
 
     return f"Removed {response.results[0].resource_name}."
+
+
+def _link_sitelinks_to_campaign(
+    client: Any, customer_id: str, campaign_id: str, resource_names: List[str]
+) -> None:
+    campaign_service = client.get_service("CampaignService")
+    operations = []
+    for resource_name in resource_names:
+        operation = client.get_type("CampaignAssetOperation")
+        campaign_asset = operation.create
+        campaign_asset.asset = resource_name
+        campaign_asset.campaign = campaign_service.campaign_path(
+            customer_id, campaign_id
+        )
+        campaign_asset.field_type = client.enums.AssetFieldTypeEnum.SITELINK
+        operations.append(operation)
+
+    campaign_asset_service = client.get_service("CampaignAssetService")
+    campaign_asset_service.mutate_campaign_assets(
+        customer_id=customer_id, operations=operations
+    )
+
+
+def _create_sitelink_assets(client: Any, model: CampaignSitelinks) -> List[str]:
+    operations = []
+    for site_link in model.site_links:
+        operation = client.get_type("AssetOperation")
+        asset = operation.create
+        asset.final_urls.extend(site_link.final_urls)
+        if site_link.description1:
+            asset.sitelink_asset.description1 = site_link.description1
+        if site_link.description2:
+            asset.sitelink_asset.description2 = site_link.description2
+        asset.sitelink_asset.link_text = site_link.link_text
+        operations.append(operation)
+
+    asset_service = client.get_service("AssetService")
+    response = asset_service.mutate_assets(
+        customer_id=model.customer_id,
+        operations=operations,
+    )
+
+    resource_names = [result.resource_name for result in response.results]
+
+    for resource_name in resource_names:
+        print(f"Created sitelink asset with resource name '{resource_name}'.")
+
+    return resource_names
+
+
+@router.post("/create-sitelinks-for-campaign")
+async def create_sitelinks_for_campaign(
+    user_id: int,
+    model: CampaignSitelinks,
+) -> str:
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    try:
+        resource_names = _create_sitelink_assets(client, model)
+        _link_sitelinks_to_campaign(
+            client=client,
+            customer_id=model.customer_id,
+            campaign_id=model.campaign_id,
+            resource_names=resource_names,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    return f"Linked following sitelinks to campaign '{model.campaign_id}': {resource_names}"
