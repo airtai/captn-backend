@@ -25,6 +25,7 @@ from .model import (
     AdGroupAd,
     AdGroupCriterion,
     Campaign,
+    CampaignCallouts,
     CampaignCriterion,
     CampaignLanguageCriterion,
     CampaignSitelinks,
@@ -1606,8 +1607,12 @@ async def remove_google_ads_resource(
     return f"Removed {response.results[0].resource_name}."
 
 
-def _link_sitelinks_to_campaign(
-    client: Any, customer_id: str, campaign_id: str, resource_names: List[str]
+def _link_assets_to_campaign(
+    client: Any,
+    customer_id: str,
+    campaign_id: str,
+    resource_names: List[str],
+    field_type: Any,
 ) -> None:
     campaign_service = client.get_service("CampaignService")
     operations = []
@@ -1618,7 +1623,8 @@ def _link_sitelinks_to_campaign(
         campaign_asset.campaign = campaign_service.campaign_path(
             customer_id, campaign_id
         )
-        campaign_asset.field_type = client.enums.AssetFieldTypeEnum.SITELINK
+        campaign_asset.field_type = field_type
+        # campaign_asset.field_type = client.enums.AssetFieldTypeEnum.CALLOUT
         operations.append(operation)
 
     campaign_asset_service = client.get_service("CampaignAssetService")
@@ -1627,7 +1633,7 @@ def _link_sitelinks_to_campaign(
     )
 
 
-def _create_sitelink_assets(client: Any, model: CampaignSitelinks) -> List[str]:
+def _create_sitelink_operations(client: Any, model: CampaignSitelinks) -> List[Any]:
     operations = []
     for site_link in model.site_links:
         operation = client.get_type("AssetOperation")
@@ -1639,6 +1645,26 @@ def _create_sitelink_assets(client: Any, model: CampaignSitelinks) -> List[str]:
             asset.sitelink_asset.description2 = site_link.description2
         asset.sitelink_asset.link_text = site_link.link_text
         operations.append(operation)
+    return operations
+
+
+def _create_callout_operations(client: Any, model: CampaignCallouts) -> List[Any]:
+    operations = []
+    for callout in model.callouts:
+        operation = client.get_type("AssetOperation")
+        asset = operation.create
+        asset.callout_asset.callout_text = callout
+        operations.append(operation)
+    return operations
+
+
+def _create_assets(
+    client: Any, model: Union[CampaignSitelinks, CampaignCallouts]
+) -> List[str]:
+    if isinstance(model, CampaignSitelinks):
+        operations = _create_sitelink_operations(client, model)
+    else:
+        operations = _create_callout_operations(client, model)
 
     asset_service = client.get_service("AssetService")
     response = asset_service.mutate_assets(
@@ -1648,10 +1674,30 @@ def _create_sitelink_assets(client: Any, model: CampaignSitelinks) -> List[str]:
 
     resource_names = [result.resource_name for result in response.results]
 
-    for resource_name in resource_names:
-        print(f"Created sitelink asset with resource name '{resource_name}'.")
-
     return resource_names
+
+
+def _create_assets_helper(
+    client: Any,
+    model: Union[CampaignSitelinks, CampaignCallouts],
+    field_type: Any,
+) -> str:
+    try:
+        resource_names = _create_assets(client, model)
+        _link_assets_to_campaign(
+            client=client,
+            customer_id=model.customer_id,
+            campaign_id=model.campaign_id,
+            resource_names=resource_names,
+            field_type=field_type,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    return (
+        f"Linked following assets to campaign '{model.campaign_id}': {resource_names}"
+    )
 
 
 @router.post("/create-sitelinks-for-campaign")
@@ -1663,16 +1709,24 @@ async def create_sitelinks_for_campaign(
         user_id=user_id, login_customer_id=model.login_customer_id
     )
 
-    try:
-        resource_names = _create_sitelink_assets(client, model)
-        _link_sitelinks_to_campaign(
-            client=client,
-            customer_id=model.customer_id,
-            campaign_id=model.campaign_id,
-            resource_names=resource_names,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        ) from e
-    return f"Linked following sitelinks to campaign '{model.campaign_id}': {resource_names}"
+    result = _create_assets_helper(
+        client=client, model=model, field_type=client.enums.AssetFieldTypeEnum.SITELINK
+    )
+
+    return result
+
+
+@router.post("/create-callouts-for-campaign")
+async def create_callouts_for_campaign(
+    user_id: int,
+    model: CampaignCallouts,
+) -> str:
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    result = _create_assets_helper(
+        client=client, model=model, field_type=client.enums.AssetFieldTypeEnum.CALLOUT
+    )
+
+    return result

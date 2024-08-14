@@ -184,3 +184,20 @@ class CampaignSitelinks(BaseModel):
     login_customer_id: Optional[str] = None
     campaign_id: str
     site_links: List[SiteLink]
+
+
+class CampaignCallouts(BaseModel):
+    customer_id: str
+    login_customer_id: Optional[str] = None
+    campaign_id: str
+    callouts: List[str]
+
+    @field_validator("callouts")
+    def callouts_validator(cls, callouts: List[str]) -> List[str]:
+        error_message = check_max_string_length_for_each_item(
+            field_name="callouts", field=callouts, max_string_length=25
+        )
+
+        if error_message:
+            raise ValueError(error_message)
+        return callouts
