@@ -1,7 +1,14 @@
+from typing import Optional
+
 import pytest
 from pydantic import ValidationError
 
-from google_ads.model import AdGroupAd, _remove_keyword_insertion_chars
+from google_ads.model import (
+    AdGroupAd,
+    CampaignCallouts,
+    SiteLink,
+    _remove_keyword_insertion_chars,
+)
 
 
 class TestAdGroupAd:
@@ -70,4 +77,68 @@ class TestAdGroupAd:
                 customer_id="2222",
                 headlines=headlines,
                 descriptions=["Description 1", "Description 2"],
+            )
+
+
+class TestSiteLink:
+    def test_link_text_longer_than_25_characters(self) -> None:
+        with pytest.raises(ValueError) as exc_info:
+            SiteLink(link_text="A" * 26, final_urls=["https://www.example.com"])
+
+        assert "String should have at most 25 characters" in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        ("description1", "description2", "expected"),
+        [
+            ("Description 1", "Description 2", None),
+            ("Description 1", None, ValueError),
+            (None, "Description 2", ValueError),
+            (None, None, None),
+        ],
+    )
+    def test_descritptions(
+        self, description1: str, description2: str, expected: Optional[Exception]
+    ) -> None:
+        if expected is not None:
+            with pytest.raises(ValueError) as exc_info:
+                SiteLink(
+                    link_text="Link Text",
+                    final_urls=["https://www.example.com"],
+                    description1=description1,
+                    description2=description2,
+                )
+            assert (
+                "Either both description1 and description2 should be provided, or neither"
+                in str(exc_info.value)
+            )
+        else:
+            SiteLink(
+                link_text="Link Text",
+                final_urls=["https://www.example.com"],
+                description1=description1,
+                description2=description2,
+            )
+
+
+class TestCampaignCallouts:
+    @pytest.mark.parametrize(
+        "callouts, expected",
+        [
+            (["Callout 1", "Callout 2", "Callout 3"], None),
+            (["Callout 1", "Callout 2", "C" * 26], ValueError),
+        ],
+    )
+    def test_maximum_callout_string_length(self, callouts, expected):
+        if expected is not None:
+            with pytest.raises(ValueError):
+                CampaignCallouts(
+                    customer_id="2222",
+                    campaign_id="3333",
+                    callouts=callouts,
+                )
+        else:
+            CampaignCallouts(
+                customer_id="2222",
+                campaign_id="3333",
+                callouts=callouts,
             )
