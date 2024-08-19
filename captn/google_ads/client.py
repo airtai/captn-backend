@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 from requests import get as requests_get
+from requests import post as requests_post
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
@@ -291,6 +292,30 @@ def check_for_client_approval(
     return NOT_APPROVED
 
 
+def _check_for_approval_and_get_login_url(
+    user_id: int,
+    conv_id: int,
+    model: BaseModel,
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
+    already_checked_clients_approval: bool,
+) -> Optional[Dict[str, str]]:
+    if not already_checked_clients_approval:
+        error_msg = check_for_client_approval(
+            modification_function_parameters=model.model_dump(),
+            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        )
+        if error_msg:
+            raise ValueError(error_msg)
+
+    login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
+    if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
+        return login_url_response
+
+    return None
+
+
 def google_ads_create_update(
     user_id: int,
     conv_id: int,
@@ -302,16 +327,14 @@ def google_ads_create_update(
     endpoint: str = "/update-ad-group-ad",
     already_checked_clients_approval: bool = False,
 ) -> Union[Dict[str, Any], str]:
-    if not already_checked_clients_approval:
-        error_msg = check_for_client_approval(
-            modification_function_parameters=ad.model_dump(),
-            recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
-        )
-        if error_msg:
-            raise ValueError(error_msg)
-
-    login_url_response = get_login_url(user_id=user_id, conv_id=conv_id)
-    if not login_url_response.get("login_url") == ALREADY_AUTHENTICATED:
+    login_url_response = _check_for_approval_and_get_login_url(
+        user_id=user_id,
+        conv_id=conv_id,
+        model=ad,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        already_checked_clients_approval=already_checked_clients_approval,
+    )
+    if login_url_response:
         return login_url_response
 
     params: Dict[str, Any] = ad.model_dump()
@@ -319,6 +342,43 @@ def google_ads_create_update(
     params["login_customer_id"] = login_customer_id
 
     response = requests_get(f"{BASE_URL}{endpoint}", params=params, timeout=60)
+    if not response.ok:
+        raise ValueError(response.content)
+
+    response_dict: Union[Dict[str, Any], str] = response.json()
+    return response_dict
+
+
+def google_ads_create_assets(
+    user_id: int,
+    conv_id: int,
+    model: BaseModel,
+    recommended_modifications_and_answer_list: List[
+        Tuple[Dict[str, Any], Optional[str]]
+    ],
+    endpoint: str,
+    already_checked_clients_approval: bool = False,
+) -> Union[Dict[str, Any], str]:
+    login_url_response = _check_for_approval_and_get_login_url(
+        user_id=user_id,
+        conv_id=conv_id,
+        model=model,
+        recommended_modifications_and_answer_list=recommended_modifications_and_answer_list,
+        already_checked_clients_approval=already_checked_clients_approval,
+    )
+    if login_url_response:
+        return login_url_response
+
+    params = {
+        "user_id": user_id,
+    }
+
+    body = model.model_dump()
+
+    response = requests_post(
+        f"{BASE_URL}{endpoint}", json=body, params=params, timeout=60
+    )
+
     if not response.ok:
         raise ValueError(response.content)
 

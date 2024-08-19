@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException, status
@@ -6,9 +7,11 @@ from fastapi import HTTPException, status
 from google_ads.application import (
     MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG,
     _check_if_customer_id_is_manager_or_exception_is_raised,
+    _read_avaliable_languages,
     _set_fields_ad_copy,
     _set_headline_or_description,
     create_geo_targeting_for_campaign,
+    get_languages,
 )
 from google_ads.model import AdCopy, GeoTargetCriterion
 
@@ -31,29 +34,46 @@ async def test_add_geo_targeting_to_campaign_raises_exception_if_location_names_
 
 
 @pytest.mark.asyncio
-async def test_add_geo_targeting_to_campaign_raises_exception_if_location_ids_are_none() -> (
-    None
-):
+async def test_add_geo_targeting_to_campaign_success() -> None:
     geo_target = GeoTargetCriterion(
         customer_id="123",
         campaign_id="456",
         location_names=["New York"],
         location_ids=None,
+        add_all_suggestions=True,
     )
 
-    with unittest.mock.patch(
-        "google_ads.application._get_geo_target_constant_by_names",
-    ) as mock_get_geo_target_constant_by_names:
-        with unittest.mock.patch(
-            "google_ads.application._get_client",
-        ) as mock_get_client:
-            mock_get_geo_target_constant_by_names.return_value = None
-            mock_get_client.return_value = None
+    suggestions = [
+        MagicMock(geo_target_constant=MagicMock(id="123")),
+        MagicMock(geo_target_constant=MagicMock(id="345")),
+    ]
 
-            await create_geo_targeting_for_campaign(user_id=-1, model=geo_target)
-            mock_get_geo_target_constant_by_names.assert_called_once_with(
-                client=None, location_names=["New York"]
-            )
+    with (
+        unittest.mock.patch(
+            "google_ads.application._get_client",
+            return_value=None,
+        ),
+        unittest.mock.patch(
+            "google_ads.application._get_geo_target_constant_suggestions",
+            return_value=suggestions,
+        ) as mock_get_geo_target_constant_suggestions,
+        unittest.mock.patch(
+            "google_ads.application._create_locations_by_ids_to_campaign",
+            return_value="Created",
+        ) as mock_create_locations_by_ids_to_campaign,
+    ):
+        await create_geo_targeting_for_campaign(user_id=-1, model=geo_target)
+        mock_get_geo_target_constant_suggestions.assert_called_once_with(
+            client=None, location_names=["New York"], target_type=None
+        )
+
+        mock_create_locations_by_ids_to_campaign.assert_called_once_with(
+            client=None,
+            customer_id="123",
+            campaign_id="456",
+            location_ids=["123", "345"],
+            negative=None,
+        )
 
 
 @pytest.mark.asyncio
@@ -333,3 +353,36 @@ async def test_set_fields_ad_copy_max_headlines_and_descriptions() -> None:
         str(exc.value)
         == f"{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} headlines: 15\n{MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG} descriptions: 4"
     )
+
+
+class TestLanguages:
+    NUMBERS_OF_LANGUAGES = 51
+
+    def test_read_avaliable_languages(self) -> None:
+        languages = _read_avaliable_languages()
+        assert len(languages) == TestLanguages.NUMBERS_OF_LANGUAGES
+
+    @pytest.mark.parametrize(
+        ("language_codes", "negative", "expected"),
+        [
+            (["en", "HR "], False, 2),
+            (["EN", "hr"], True, NUMBERS_OF_LANGUAGES - 2),
+            (["en", "hr", "es", "de", "fr"], False, 5),
+            (["en", "hr", "es", "de", "fr"], True, NUMBERS_OF_LANGUAGES - 5),
+        ],
+    )
+    def test_get_languages(self, language_codes, negative, expected) -> None:
+        languages = get_languages(language_codes, negative)
+        assert len(languages) == expected
+
+        language_codes = [language.lower().strip() for language in language_codes]
+        if negative:
+            assert all(language not in language_codes for language in languages)
+        else:
+            assert all(language in language_codes for language in languages)
+
+    def test_get_languages_for_non_valid_codes(self) -> None:
+        language_codes = ["en", "hr", "xyz"]
+        with pytest.raises(ValueError) as exc:
+            get_languages(language_codes, False)
+        assert str(exc.value) == "Invalid language codes: ['xyz']"

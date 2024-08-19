@@ -1,14 +1,17 @@
 import json
+import os
 import urllib.parse
 import uuid
 from os import environ
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
+import pandas as pd
 from asyncer import asyncify
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
+from google.ads.googleads.v17.common.types.criteria import LanguageInfo
 from google.api_core import protobuf_helpers
 from google.auth.exceptions import RefreshError
 from google.protobuf import json_format
@@ -22,7 +25,10 @@ from .model import (
     AdGroupAd,
     AdGroupCriterion,
     Campaign,
+    CampaignCallouts,
     CampaignCriterion,
+    CampaignLanguageCriterion,
+    CampaignSitelinks,
     Criterion,
     GeoTargetCriterion,
     RemoveResource,
@@ -726,7 +732,9 @@ def _create_campaign_setattr(
 ) -> None:
     for attribute_name, attribute_value in model_dict.items():
         if attribute_value is not None:
-            if "network_settings" in attribute_name:
+            if attribute_name == "manual_cpc":
+                operation_create.manual_cpc.enhanced_cpc_enabled = attribute_value
+            elif "network_settings" in attribute_name:
                 attribute_name = attribute_name.replace("network_settings_", "")
                 setattr(
                     operation_create.network_settings, attribute_name, attribute_value
@@ -738,12 +746,12 @@ def _create_campaign_setattr(
         client.enums.AdvertisingChannelTypeEnum.SEARCH
     )
 
-    # Set the bidding strategy and budget.
-    # The bidding strategy for Maximize Clicks is TargetSpend.
-    # The target_spend_micros is deprecated so don't put any value.
-    # See other bidding strategies you can select in the link below.
-    # https://developers.google.com/google-ads/api/reference/rpc/v11/Campaign#campaign_bidding_strategy
-    operation_create.target_spend.target_spend_micros = 0
+    if not model_dict["manual_cpc"]:
+        # The bidding strategy for Maximize Clicks is TargetSpend.
+        # The target_spend_micros is deprecated so don't put any value.
+        # See other bidding strategies you can select in the link below.
+        # https://developers.google.com/google-ads/api/reference/rpc/v11/Campaign#campaign_bidding_strategy
+        operation_create.target_spend.target_spend_micros = 0
 
     # # Optional: Set the start date.
     # start_time = datetime.date.today() + datetime.timedelta(days=1)
@@ -908,7 +916,9 @@ async def update_ad_group_ad(
     )
 
 
-def _create_campaign_budget(client: Any, customer_id: str, amount_micros: int) -> Any:
+def _create_campaign_budget(
+    client: Any, customer_id: str, amount_micros: int, explicitly_shared: Optional[bool]
+) -> Any:
     """Creates campaign budget resource.
 
     Args:
@@ -925,6 +935,7 @@ def _create_campaign_budget(client: Any, customer_id: str, amount_micros: int) -
     campaign_budget.name = f"Campaign budget {uuid.uuid4()}"
     campaign_budget.delivery_method = client.enums.BudgetDeliveryMethodEnum.STANDARD
     campaign_budget.amount_micros = amount_micros
+    campaign_budget.explicitly_shared = explicitly_shared
 
     # Add budget.
     campaign_budget_response = campaign_budget_service.mutate_campaign_budgets(
@@ -932,6 +943,39 @@ def _create_campaign_budget(client: Any, customer_id: str, amount_micros: int) -
     )
 
     return campaign_budget_response.results[0].resource_name
+
+
+def _read_avaliable_languages() -> Dict[str, int]:
+    language_codes = pd.read_csv(
+        os.path.join(os.path.dirname(__file__), "language_codes.csv")
+    )
+    return dict(
+        zip(
+            language_codes["Language code"],
+            language_codes["Criterion ID"],
+            strict=False,
+        )
+    )
+
+
+avalible_languages = _read_avaliable_languages()
+
+
+def get_languages(languages_codes: List[str], negative: bool) -> Dict[str, int]:
+    languages_codes = [code.lower().strip() for code in languages_codes]
+
+    # check if the language codes are valid
+    non_valid_codes = [
+        code for code in languages_codes if code not in avalible_languages.keys()
+    ]
+    if non_valid_codes:
+        raise ValueError(f"Invalid language codes: {non_valid_codes}")
+
+    if negative:
+        # take all languages except the ones in the list
+        return {k: v for k, v in avalible_languages.items() if k not in languages_codes}
+    # take only the languages in the list
+    return {k: v for k, v in avalible_languages.items() if k in languages_codes}
 
 
 @router.get("/create-campaign")
@@ -945,7 +989,7 @@ async def create_campaign(
 
     (
         client,
-        service,
+        campaign_service,
         operation,
         model_dict,
         customer_id,
@@ -965,8 +1009,10 @@ async def create_campaign(
             client=client,
             customer_id=customer_id,
             amount_micros=ad_model.budget_amount_micros,  # type: ignore
+            explicitly_shared=ad_model.budget_explicitly_shared,
         )
         model_dict.pop("budget_amount_micros")
+        model_dict.pop("budget_explicitly_shared")
         operation_create.campaign_budget = campaign_budget
 
         setattr_func = service_operation_and_function_names["setattr_create_func"]
@@ -975,7 +1021,7 @@ async def create_campaign(
         )
 
         response = await _mutate(
-            service,
+            campaign_service,
             service_operation_and_function_names["mutate"],
             customer_id,
             operation,
@@ -985,6 +1031,48 @@ async def create_campaign(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
     return f"Created {response.results[0].resource_name}."
+
+
+@router.get("/update-campaign-language-criterion")
+async def update_campaign_language_criterion(
+    user_id: int,
+    language_criterion_model: CampaignLanguageCriterion = Depends(),
+    login_customer_id: Optional[str] = Query(None, title="Login customer ID"),
+) -> str:
+    client = await _get_client(user_id=user_id, login_customer_id=login_customer_id)
+    campaign_service = client.get_service("CampaignService")
+    campaign_criterion_service = client.get_service("CampaignCriterionService")
+    campaign_criterion_operation = client.get_type("CampaignCriterionOperation")
+
+    campaign_criterion = campaign_criterion_operation.create
+    campaign_criterion.campaign = campaign_service.campaign_path(
+        customer_id=language_criterion_model.customer_id,
+        campaign_id=language_criterion_model.campaign_id,
+    )
+    try:
+        languages = get_languages(
+            languages_codes=language_criterion_model.language_codes,
+            negative=language_criterion_model.negative,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
+
+    # Add one by one the languages to the campaign
+    for language_id in languages.values():
+        campaign_criterion.language = LanguageInfo(
+            language_constant=f"languageConstants/{language_id}"
+        )
+
+        await _mutate(
+            campaign_criterion_service,
+            "mutate_campaign_criteria",
+            language_criterion_model.customer_id,
+            campaign_criterion_operation,
+        )
+
+    return f"Updated campaign '{language_criterion_model.campaign_id}' with language codes: {list(languages.keys())}"
 
 
 @router.get("/create-ad-group")
@@ -1324,9 +1412,9 @@ async def add_keywords_to_ad_group(
     )
 
 
-def _get_geo_target_constant_by_names(
-    client: GoogleAdsClient, location_names: List[str]
-) -> str:
+def _get_geo_target_constant_suggestions(
+    client: GoogleAdsClient, location_names: List[str], target_type: Optional[str]
+) -> Any:
     gtc_service = client.get_service("GeoTargetConstantService")
     gtc_request = client.get_type("SuggestGeoTargetConstantsRequest")
 
@@ -1335,11 +1423,40 @@ def _get_geo_target_constant_by_names(
 
     results = gtc_service.suggest_geo_target_constants(gtc_request)
 
+    geo_target_constant_suggestions = results.geo_target_constant_suggestions
+
+    # filter by target type
+    if target_type:
+        geo_target_constant_suggestions = [
+            suggestion
+            for suggestion in geo_target_constant_suggestions
+            if suggestion.geo_target_constant.target_type == target_type
+        ]
+
+    return geo_target_constant_suggestions
+
+
+def _get_geo_target_constant_by_names(
+    client: GoogleAdsClient,
+    location_names: List[str],
+    target_type: Optional[str],
+    add_all_suggestions: Optional[bool],
+) -> Union[str | List[str]]:
+    geo_target_constant_suggestions = _get_geo_target_constant_suggestions(
+        client=client, location_names=location_names, target_type=target_type
+    )
+
+    if add_all_suggestions:
+        return [
+            suggestion.geo_target_constant.id
+            for suggestion in geo_target_constant_suggestions
+        ]
+
     return_text = (
         "Below is a list of possible locations in the following format '(name, country_code, target_type)'."
         "Please send them to the client as smart suggestions with type 'manyOf' (do not display the location_id to him):\n\n"
     )
-    for suggestion in results.geo_target_constant_suggestions:
+    for suggestion in geo_target_constant_suggestions:
         geo_target_constant = suggestion.geo_target_constant
         text = (
             f"location_id: {geo_target_constant.id}, "
@@ -1425,18 +1542,28 @@ async def create_geo_targeting_for_campaign(
     client = await _get_client(user_id=user_id, login_customer_id=login_customer_id)
 
     if location_ids is None:
-        return _get_geo_target_constant_by_names(
+        suggestions_or_ids = _get_geo_target_constant_by_names(
             client=client,
             location_names=location_names,  # type: ignore[arg-type]
+            target_type=model.target_type,
+            add_all_suggestions=model.add_all_suggestions,
         )
-
-    return _create_locations_by_ids_to_campaign(
-        client=client,
-        customer_id=model.customer_id,  # type: ignore
-        campaign_id=model.campaign_id,  # type: ignore
-        location_ids=location_ids,
-        negative=model.negative,
-    )
+        if isinstance(suggestions_or_ids, str):
+            return suggestions_or_ids
+        else:
+            location_ids = suggestions_or_ids
+    try:
+        return _create_locations_by_ids_to_campaign(
+            client=client,
+            customer_id=model.customer_id,  # type: ignore
+            campaign_id=model.campaign_id,  # type: ignore
+            location_ids=location_ids,
+            negative=model.negative,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
 
 
 @router.get("/remove-google-ads-resource")
@@ -1478,3 +1605,128 @@ async def remove_google_ads_resource(
         ) from e
 
     return f"Removed {response.results[0].resource_name}."
+
+
+def _link_assets_to_campaign(
+    client: Any,
+    customer_id: str,
+    campaign_id: str,
+    resource_names: List[str],
+    field_type: Any,
+) -> None:
+    campaign_service = client.get_service("CampaignService")
+    operations = []
+    for resource_name in resource_names:
+        operation = client.get_type("CampaignAssetOperation")
+        campaign_asset = operation.create
+        campaign_asset.asset = resource_name
+        campaign_asset.campaign = campaign_service.campaign_path(
+            customer_id, campaign_id
+        )
+        campaign_asset.field_type = field_type
+        # campaign_asset.field_type = client.enums.AssetFieldTypeEnum.CALLOUT
+        operations.append(operation)
+
+    campaign_asset_service = client.get_service("CampaignAssetService")
+    campaign_asset_service.mutate_campaign_assets(
+        customer_id=customer_id, operations=operations
+    )
+
+
+def _create_sitelink_operations(client: Any, model: CampaignSitelinks) -> List[Any]:
+    operations = []
+    for site_link in model.site_links:
+        operation = client.get_type("AssetOperation")
+        asset = operation.create
+        asset.final_urls.extend(site_link.final_urls)
+        if site_link.description1:
+            asset.sitelink_asset.description1 = site_link.description1
+        if site_link.description2:
+            asset.sitelink_asset.description2 = site_link.description2
+        asset.sitelink_asset.link_text = site_link.link_text
+        operations.append(operation)
+    return operations
+
+
+def _create_callout_operations(client: Any, model: CampaignCallouts) -> List[Any]:
+    operations = []
+    for callout in model.callouts:
+        operation = client.get_type("AssetOperation")
+        asset = operation.create
+        asset.callout_asset.callout_text = callout
+        operations.append(operation)
+    return operations
+
+
+def _create_assets(
+    client: Any, model: Union[CampaignSitelinks, CampaignCallouts]
+) -> List[str]:
+    if isinstance(model, CampaignSitelinks):
+        operations = _create_sitelink_operations(client, model)
+    else:
+        operations = _create_callout_operations(client, model)
+
+    asset_service = client.get_service("AssetService")
+    response = asset_service.mutate_assets(
+        customer_id=model.customer_id,
+        operations=operations,
+    )
+
+    resource_names = [result.resource_name for result in response.results]
+
+    return resource_names
+
+
+def _create_assets_helper(
+    client: Any,
+    model: Union[CampaignSitelinks, CampaignCallouts],
+    field_type: Any,
+) -> str:
+    try:
+        resource_names = _create_assets(client, model)
+        _link_assets_to_campaign(
+            client=client,
+            customer_id=model.customer_id,
+            campaign_id=model.campaign_id,
+            resource_names=resource_names,
+            field_type=field_type,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+    return (
+        f"Linked following assets to campaign '{model.campaign_id}': {resource_names}"
+    )
+
+
+@router.post("/create-sitelinks-for-campaign")
+async def create_sitelinks_for_campaign(
+    user_id: int,
+    model: CampaignSitelinks,
+) -> str:
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    result = _create_assets_helper(
+        client=client, model=model, field_type=client.enums.AssetFieldTypeEnum.SITELINK
+    )
+
+    return result
+
+
+@router.post("/create-callouts-for-campaign")
+async def create_callouts_for_campaign(
+    user_id: int,
+    model: CampaignCallouts,
+) -> str:
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    result = _create_assets_helper(
+        client=client, model=model, field_type=client.enums.AssetFieldTypeEnum.CALLOUT
+    )
+
+    return result
