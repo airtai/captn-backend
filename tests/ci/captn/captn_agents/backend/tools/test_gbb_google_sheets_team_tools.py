@@ -17,6 +17,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     _setup_campaign,
     _setup_campaigns,
     _setup_campaigns_with_retry,
+    _update_geo_targeting,
     create_google_ads_resources,
     create_google_sheets_team_toolbox,
 )
@@ -563,3 +564,54 @@ class TestSetupCampaigns:
         assert response.created_campaigns == ["My Campaign 2", "My Campaign 1"]
         assert response.failed_campaigns == {}
         assert mock_create_negative_campaign_keywords.call_count == 3
+
+    @pytest.mark.parametrize(
+        ("columns_prefix", "negative", "expected_location_names"),
+        [
+            (
+                "include location",
+                False,
+                ["Croatia", "Slovenia"],
+            ),
+            (
+                "exclude location",
+                True,
+                ["Montenegro"],
+            ),
+        ],
+    )
+    def test_update_geo_targeting(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+        columns_prefix: str,
+        negative: bool,
+        expected_location_names: List[str],
+    ) -> None:
+        campaign_row = pd.Series(
+            {
+                "Campaign Name": "My Campaign",
+                "Include Location 1": "Croatia",
+                "Include Location 2": "Slovenia",
+                "Include Location 3": None,
+                "Exclude Location 1": "Montenegro",
+                "Exclude Location 2": None,
+                "Exclude Location 3": None,
+            }
+        )
+
+        _update_geo_targeting(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id="12345",
+            campaign_row=campaign_row,
+            context=self.context,
+            columns_prefix=columns_prefix,
+            negative=negative,
+        )
+
+        mock_requests_get.assert_called_once()
+        call = mock_requests_get.call_args_list[0]
+
+        assert call[1]["params"]["location_names"] == expected_location_names
+        assert call[1]["params"]["negative"] == negative

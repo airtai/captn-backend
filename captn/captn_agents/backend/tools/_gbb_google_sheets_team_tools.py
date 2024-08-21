@@ -16,6 +16,7 @@ from google_ads.model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    GeoTargetCriterion,
     RemoveResource,
 )
 
@@ -425,6 +426,67 @@ class ResourceCreationResponse(BaseModel):
 ZAGREB_TIMEZONE = timezone("Europe/Zagreb")
 
 
+def _update_geo_targeting(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+    columns_prefix: str,
+    negative: bool = False,
+) -> None:
+    columns = [
+        col for col in campaign_row.index if col.lower().startswith(columns_prefix)
+    ]
+    location_names = [campaign_row[col] for col in columns if campaign_row[col]]
+    if len(location_names) == 0:
+        return
+
+    model = GeoTargetCriterion(
+        customer_id=customer_id,
+        campaign_id=campaign_id,
+        location_names=location_names,
+        location_ids=None,
+        target_type="Country",
+        negative=negative,
+        add_all_suggestions=True,
+    )
+
+    response = google_ads_create_update(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        ad=model,
+        endpoint="/create-geo-targeting-for-campaign",
+        already_checked_clients_approval=True,
+        login_customer_id=login_customer_id,
+    )
+    if not isinstance(response, str):
+        raise ValueError(response)
+
+
+def _update_campaign_with_additional_settings(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    for columns_prefix, negative in [
+        ("include location", False),
+        ("exclude location", True),
+    ]:
+        _update_geo_targeting(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=context,
+            columns_prefix=columns_prefix,
+            negative=negative,
+        )
+
+
 def _setup_campaign(
     customer_id: str,
     login_customer_id: str,
@@ -453,6 +515,14 @@ def _setup_campaign(
                 "campaign_id": campaign_id,
                 "ad_groups": {},
             }
+
+        _update_campaign_with_additional_settings(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=context,
+        )
 
         all_campaign_keywords = keywords_df[
             (keywords_df["Campaign Name"] == campaign_name)
