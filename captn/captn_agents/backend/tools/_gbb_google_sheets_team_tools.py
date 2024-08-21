@@ -555,19 +555,21 @@ def _setup_campaigns(
     login_customer_id: str,
     context: GoogleSheetsTeamContext,
     skip_campaigns: List[str],
-    campaign_names_ad_budgets: pd.DataFrame,
+    campaigns_df: pd.DataFrame,
     keywords_df: pd.DataFrame,
     ads_df: pd.DataFrame,
     iostream: IOStream,
 ) -> ResourceCreationResponse:
     created_campaigns: List[str] = []
     failed_campaigns: Dict[str, str] = {}
-    for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
+    for _, campaign_row in campaigns_df.iterrows():
+        campaign_name = campaign_row["Campaign Name"]
+
         success, error_message = _setup_campaign(
             customer_id=customer_id,
             login_customer_id=login_customer_id,
             campaign_name=campaign_name,
-            campaign_budget=campaign_budget,
+            campaign_budget=campaign_row["Campaign Budget"],
             context=context,
             keywords_df=keywords_df,
             ads_df=ads_df,
@@ -593,7 +595,7 @@ def _setup_campaigns_with_retry(
     login_customer_id: str,
     context: GoogleSheetsTeamContext,
     skip_campaigns: List[str],
-    campaign_names_ad_budgets: pd.DataFrame,
+    campaigns_df: pd.DataFrame,
     keywords_df: pd.DataFrame,
     ads_df: pd.DataFrame,
     iostream: IOStream,
@@ -604,7 +606,7 @@ def _setup_campaigns_with_retry(
         login_customer_id=login_customer_id,
         context=context,
         skip_campaigns=skip_campaigns,
-        campaign_names_ad_budgets=campaign_names_ad_budgets,
+        campaigns_df=campaigns_df,
         keywords_df=keywords_df,
         ads_df=ads_df,
         iostream=iostream,
@@ -620,8 +622,8 @@ def _setup_campaigns_with_retry(
         iostream.print(
             colored(f"{i}. retry to create failed campaigns.", "yellow"), flush=True
         )
-        retry_campaign_names_ad_budgets = campaign_names_ad_budgets[
-            campaign_names_ad_budgets["Campaign Name"].isin(
+        retry_campaigns = campaigns_df[
+            campaigns_df["Campaign Name"].isin(
                 resource_creation_response.failed_campaigns.keys()
             )
         ]
@@ -630,7 +632,7 @@ def _setup_campaigns_with_retry(
             login_customer_id=login_customer_id,
             context=context,
             skip_campaigns=skip_campaigns,
-            campaign_names_ad_budgets=retry_campaign_names_ad_budgets,
+            campaigns_df=retry_campaigns,
             keywords_df=keywords_df,
             ads_df=ads_df,
             iostream=iostream,
@@ -665,9 +667,6 @@ def create_google_ads_resources(
     keywords_df = keywords_df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
     keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
-    campaign_names_ad_budgets = campaigns_df[
-        ["Campaign Name", "Campaign Budget"]
-    ].drop_duplicates()
 
     skip_campaigns = _get_alredy_existing_campaigns(
         campaigns_df,
@@ -686,16 +685,14 @@ def create_google_ads_resources(
     message = "Creating campaigns and resources, usually takes 90 seconds to setup one campaign."
     iostream.print(colored(message, "yellow"), flush=True)
 
-    campaign_names_ad_budgets = campaign_names_ad_budgets[
-        ~campaign_names_ad_budgets["Campaign Name"].isin(skip_campaigns)
-    ]
+    campaigns_df = campaigns_df[~campaigns_df["Campaign Name"].isin(skip_campaigns)]
 
     resource_creation_response = _setup_campaigns_with_retry(
         customer_id=google_ads_resources.customer_id,
         login_customer_id=google_ads_resources.login_customer_id,
         context=context,
         skip_campaigns=skip_campaigns,
-        campaign_names_ad_budgets=campaign_names_ad_budgets,
+        campaigns_df=campaigns_df,
         keywords_df=keywords_df,
         ads_df=ads_df,
         iostream=iostream,

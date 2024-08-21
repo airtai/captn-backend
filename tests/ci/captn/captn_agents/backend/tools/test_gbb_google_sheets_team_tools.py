@@ -465,7 +465,7 @@ class TestSetupCampaigns:
             }
         )
 
-        campaign_names_and_budgets = pd.DataFrame(
+        campaigns_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
                 "Campaign Budget": ["10", "10"],
@@ -477,7 +477,7 @@ class TestSetupCampaigns:
             login_customer_id=self.login_customer_id,
             skip_campaigns=[],
             context=self.context,
-            campaign_names_ad_budgets=campaign_names_and_budgets,
+            campaigns_df=campaigns_df,
             ads_df=ads_df,
             keywords_df=keywords_df,
             iostream=IOStream.get_default(),
@@ -520,7 +520,7 @@ class TestSetupCampaigns:
             }
         )
 
-        campaign_names_and_budgets = pd.DataFrame(
+        campaigns_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
                 "Campaign Budget": ["10", "10"],
@@ -540,7 +540,7 @@ class TestSetupCampaigns:
                 login_customer_id=self.login_customer_id,
                 skip_campaigns=[],
                 context=self.context,
-                campaign_names_ad_budgets=campaign_names_and_budgets,
+                campaigns_df=campaigns_df,
                 ads_df=ads_df,
                 keywords_df=keywords_df,
                 iostream=IOStream.get_default(),
