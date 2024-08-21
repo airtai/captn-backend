@@ -210,22 +210,23 @@ def _validate_all_and_convert_to_df(
 
 
 def _create_campaign(
-    campaign_name: str,
-    campaign_budget: str,
+    campaign_row: pd.Series,
     customer_id: str,
     login_customer_id: Optional[str],
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
-    budget_amount_micros = int(campaign_budget) * 1_000_000
+    budget_amount_micros = int(campaign_row["Campaign Budget"]) * 1_000_000
 
     campaign = Campaign(
         customer_id=customer_id,
-        name=campaign_name,
+        name=campaign_row["Campaign Name"],
         budget_amount_micros=budget_amount_micros,
         status="PAUSED",
-        network_settings_target_google_search=True,
-        network_settings_target_search_network=True,
-        network_settings_target_content_network=True,
+        network_settings_target_google_search=campaign_row["Google Search Network"],
+        network_settings_target_search_network=campaign_row["Search Network"],
+        network_settings_target_content_network=False,
+        manual_cpc=True,
+        budget_explicitly_shared=False,
     )
     response = google_ads_create_update(
         user_id=context.user_id,
@@ -425,8 +426,7 @@ ZAGREB_TIMEZONE = timezone("Europe/Zagreb")
 def _setup_campaign(
     customer_id: str,
     login_customer_id: str,
-    campaign_name: str,
-    campaign_budget: str,
+    campaign_row: pd.Series,
     context: GoogleSheetsTeamContext,
     keywords_df: pd.DataFrame,
     ads_df: pd.DataFrame,
@@ -434,10 +434,10 @@ def _setup_campaign(
 ) -> Tuple[bool, Optional[str]]:
     campaign_id = None
     created_campaign_names_and_ids: Dict[str, Dict[str, Any]] = {}
+    campaign_name = campaign_row["Campaign Name"]
     try:
         response = _create_campaign(
-            campaign_name=campaign_name,
-            campaign_budget=campaign_budget,
+            campaign_row=campaign_row,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
             context=context,
@@ -568,8 +568,7 @@ def _setup_campaigns(
         success, error_message = _setup_campaign(
             customer_id=customer_id,
             login_customer_id=login_customer_id,
-            campaign_name=campaign_name,
-            campaign_budget=campaign_row["Campaign Budget"],
+            campaign_row=campaign_row,
             context=context,
             keywords_df=keywords_df,
             ads_df=ads_df,
@@ -666,6 +665,12 @@ def create_google_ads_resources(
     ads_df = ads_df.map(lambda x: x.strip() if isinstance(x, str) else x)
     keywords_df = keywords_df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
+    campaigns_df["Google Search Network"] = (
+        campaigns_df["Google Search Network"].str.upper().eq("TRUE")
+    )
+    campaigns_df["Search Network"] = (
+        campaigns_df["Search Network"].str.upper().eq("TRUE")
+    )
     keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
 
     skip_campaigns = _get_alredy_existing_campaigns(

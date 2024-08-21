@@ -321,6 +321,16 @@ class TestSetupCampaigns:
         mock_get_login_url: Iterator[None],
         mock_requests_get: Iterator[Any],
     ) -> None:
+        campaigns_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign"],
+                "Campaign Budget": ["10"],
+                "Search Network": [True],
+                "Google Search Network": [True],
+                "Default max. CPC": ["0.30"],
+            }
+        )
+
         ads_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign"],
@@ -367,8 +377,7 @@ class TestSetupCampaigns:
         _, error_msg = _setup_campaign(
             customer_id=self.customer_id,
             login_customer_id=self.login_customer_id,
-            campaign_name="My Campaign",
-            campaign_budget="10",
+            campaign_row=campaigns_df.iloc[0],
             context=self.context,
             ads_df=ads_df,
             keywords_df=keywords_df,
@@ -469,6 +478,9 @@ class TestSetupCampaigns:
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
                 "Campaign Budget": ["10", "10"],
+                "Search Network": [True, True],
+                "Google Search Network": [True, True],
+                "Default max. CPC": ["0.30", "0.30"],
             }
         )
 
@@ -511,7 +523,6 @@ class TestSetupCampaigns:
         keywords_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
-                "Campaign Budget": ["10", "10"],
                 "Ad Group Name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
                 "Match Type": ["Exact", "Exact"],
                 "Keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
@@ -524,6 +535,9 @@ class TestSetupCampaigns:
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
                 "Campaign Budget": ["10", "10"],
+                "Search Network": [True, True],
+                "Google Search Network": [True, True],
+                "Default max. CPC": ["0.30", "0.30"],
             }
         )
 
