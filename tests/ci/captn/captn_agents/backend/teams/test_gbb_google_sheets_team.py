@@ -173,6 +173,7 @@ class TestGBBGoogleSheetsTeam:
             )
 
             expected_messages = [
+                "Sheet with the name 'Captn - Campaigns",
                 "Sheet with the name 'Captn - Ads",
                 "Sheet with the name 'Captn - Keywords",
                 "Created campaigns:",
