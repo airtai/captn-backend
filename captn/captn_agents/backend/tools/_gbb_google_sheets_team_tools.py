@@ -307,6 +307,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     customer_id: str,
     login_customer_id: Optional[str],
     campaign_id: str,
+    max_cpc: float,
     ad_group_name: str,
     match_type: str,
     ad_group_keywords_df: pd.DataFrame,
@@ -318,6 +319,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
         campaign_id=campaign_id,
         name=ad_group_name,
         status="ENABLED",
+        cpc_bid_micros=int(max_cpc * 1_000_000),
     )
 
     ad_group_positive_keywords = ad_group_keywords_df[
@@ -511,6 +513,7 @@ def _setup_campaign(
                     customer_id=customer_id,
                     login_customer_id=login_customer_id,
                     campaign_id=campaign_id,
+                    max_cpc=float(campaign_row["Default max. CPC"]),
                     ad_group_name=row["Ad Group Name"],
                     match_type=row["Match Type"],
                     ad_group_keywords_df=all_ad_group_keywords,
