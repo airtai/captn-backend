@@ -1730,3 +1730,63 @@ async def create_callouts_for_campaign(
     )
 
     return result
+
+
+async def _get_callout_resource_names(
+    user_id: int,
+    model: CampaignCallouts,
+) -> List[str]:
+    query = f"""
+SELECT
+  asset.id,
+  asset.name,
+  asset.type,
+  asset.callout_asset.callout_text
+FROM
+  asset
+WHERE
+  asset.type = 'CALLOUT' AND
+  asset.callout_asset.callout_text IN ({", ".join([f'"{text}"' for text in model.callouts])})"""  # nosec: [B608]
+    callouts_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    callout_texts_added = []
+    resource_names = []
+    for asset in callouts_response[model.customer_id]:
+        # don't add duplicates
+        if asset["asset"]["calloutAsset"]["calloutText"] not in callout_texts_added:
+            resource_names.append(asset["asset"]["resourceName"])
+            callout_texts_added.append(asset["asset"]["calloutAsset"]["calloutText"])
+
+    return resource_names
+
+
+@router.post("/add-callouts-to-campaign")
+async def add_callouts_to_campaign(
+    user_id: int,
+    model: CampaignCallouts,
+) -> str:
+    callout_resource_names = await _get_callout_resource_names(user_id, model)
+    if len(callout_resource_names) == 0:
+        return "No callouts found to add to the campaign."
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    try:
+        _link_assets_to_campaign(
+            client=client,
+            customer_id=model.customer_id,
+            campaign_id=model.campaign_id,
+            resource_names=callout_resource_names,
+            field_type=client.enums.AssetFieldTypeEnum.CALLOUT,
+        )
+        return f"Linked following callouts to campaign '{model.campaign_id}': {callout_resource_names}"
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e

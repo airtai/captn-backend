@@ -7,13 +7,14 @@ from fastapi import HTTPException, status
 from google_ads.application import (
     MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG,
     _check_if_customer_id_is_manager_or_exception_is_raised,
+    _get_callout_resource_names,
     _read_avaliable_languages,
     _set_fields_ad_copy,
     _set_headline_or_description,
     create_geo_targeting_for_campaign,
     get_languages,
 )
-from google_ads.model import AdCopy, GeoTargetCriterion
+from google_ads.model import AdCopy, CampaignCallouts, GeoTargetCriterion
 
 
 @pytest.mark.asyncio
@@ -386,3 +387,41 @@ class TestLanguages:
         with pytest.raises(ValueError) as exc:
             get_languages(language_codes, False)
         assert str(exc.value) == "Invalid language codes: ['xyz']"
+
+
+@pytest.mark.asyncio
+async def test_get_callout_resource_names() -> None:
+    campaign_callouts = CampaignCallouts(
+        customer_id="123",
+        campaign_id="456",
+        callouts=["Callout 1", "Callout 2"],
+    )
+
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.return_value = {
+            "123": [
+                {
+                    "asset": {
+                        "resourceName": "resource_name_1",
+                        "calloutAsset": {
+                            "calloutText": "Callout 1",
+                        },
+                    }
+                },
+                {
+                    "asset": {
+                        "resourceName": "resource_name_2",
+                        "calloutAsset": {
+                            "calloutText": "Callout 2",
+                        },
+                    }
+                },
+            ]
+        }
+
+        response = await _get_callout_resource_names(
+            user_id=-1, model=campaign_callouts
+        )
+        assert response == ["resource_name_1", "resource_name_2"]
