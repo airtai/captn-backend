@@ -8,7 +8,7 @@ import pytest
 
 from captn.google_ads.client import ALREADY_AUTHENTICATED
 
-from .fixtures.google_sheets_team import ads_values, keywords_values
+from .fixtures.google_sheets_team import ads_values, campaigns_values, keywords_values
 
 
 @contextmanager
@@ -41,6 +41,7 @@ def mock_get_sheet_data() -> Iterator[Any]:
     with unittest.mock.patch(
         "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
         side_effect=[
+            campaigns_values,
             ads_values,
             keywords_values,
         ],

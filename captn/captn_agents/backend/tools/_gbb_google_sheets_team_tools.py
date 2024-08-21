@@ -68,6 +68,9 @@ class GoogleAdsResources(BaseModel):
     spreadsheet_id: Annotated[
         str, Field(..., description="The ID of the spreadsheet to retrieve data from")
     ]
+    campaigns_title: Annotated[
+        str, Field(..., description="The title of the sheet with campaigns")
+    ]
     ads_title: Annotated[str, Field(..., description="The title of the sheet with ads")]
     keywords_title: Annotated[
         str, Field(..., description="The title of the sheet with keywords")
@@ -100,9 +103,16 @@ class GoogleSheetsTeamContext(Context):
     google_sheets_api_url: str
 
 
+CAMPAIGN_MANDATORY_COLUMNS = [
+    "Campaign Name",
+    "Language Code",
+    "Campaign Budget",
+    "Search Network",
+    "Google Search Network",
+    "Default max. CPC",
+]
 KEYWORDS_MANDATORY_COLUMNS = [
     "Campaign Name",
-    "Campaign Budget",
     "Ad Group Name",
     "Match Type",
     "Keyword",
@@ -111,7 +121,6 @@ KEYWORDS_MANDATORY_COLUMNS = [
 ]
 ADS_MANDATORY_COLUMNS = [
     "Campaign Name",
-    "Campaign Budget",
     "Ad Group Name",
     "Match Type",
     "Headline 1",
@@ -133,10 +142,32 @@ def _check_mandatory_columns(
     return ""
 
 
-def _validate_and_convert_to_df(
+def _validat_and_convert_to_df(
+    base_url: str,
+    user_id: int,
+    spreadsheet_id: str,
+    title: str,
+    mandatory_columns: List[str],
+) -> Tuple[pd.DataFrame, str]:
+    data_dict = _get_sheet_data(
+        base_url=base_url,
+        user_id=user_id,
+        spreadsheet_id=spreadsheet_id,
+        title=title,
+    )
+    values = GoogleSheetValues(**data_dict)
+    df = pd.DataFrame(
+        values.values[1:],
+        columns=values.values[0],
+    )
+    mandatory_columns_error_msg = _check_mandatory_columns(df, mandatory_columns, title)
+    return df, mandatory_columns_error_msg
+
+
+def _validate_all_and_convert_to_df(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     error_msg = check_for_client_approval(
         modification_function_parameters=google_ads_resources.model_dump(),
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -144,40 +175,38 @@ def _validate_and_convert_to_df(
     if error_msg:
         raise ValueError(error_msg)
 
-    ads_data_dict = _get_sheet_data(
+    campaign_df, mandatory_columns_error_msg_1 = _validat_and_convert_to_df(
+        base_url=context.google_sheets_api_url,
+        user_id=context.user_id,
+        spreadsheet_id=google_ads_resources.spreadsheet_id,
+        title=google_ads_resources.campaigns_title,
+        mandatory_columns=CAMPAIGN_MANDATORY_COLUMNS,
+    )
+    ads_df, mandatory_columns_error_msg_2 = _validat_and_convert_to_df(
         base_url=context.google_sheets_api_url,
         user_id=context.user_id,
         spreadsheet_id=google_ads_resources.spreadsheet_id,
         title=google_ads_resources.ads_title,
+        mandatory_columns=ADS_MANDATORY_COLUMNS,
     )
-    keywords_data_dict = _get_sheet_data(
+    keywords_df, mandatory_columns_error_msg_3 = _validat_and_convert_to_df(
         base_url=context.google_sheets_api_url,
         user_id=context.user_id,
         spreadsheet_id=google_ads_resources.spreadsheet_id,
         title=google_ads_resources.keywords_title,
+        mandatory_columns=KEYWORDS_MANDATORY_COLUMNS,
     )
 
-    ads_values = GoogleSheetValues(**ads_data_dict)
-    keywords_values = GoogleSheetValues(**keywords_data_dict)
+    mandatory_columns_error_msg = (
+        mandatory_columns_error_msg_1
+        + mandatory_columns_error_msg_2
+        + mandatory_columns_error_msg_3
+    )
 
-    ads_df = pd.DataFrame(
-        ads_values.values[1:],
-        columns=ads_values.values[0],
-    )
-    keywords_df = pd.DataFrame(
-        keywords_values.values[1:],
-        columns=keywords_values.values[0],
-    )
-    mandatory_columns_error_msg = _check_mandatory_columns(
-        ads_df, ADS_MANDATORY_COLUMNS, google_ads_resources.ads_title
-    )
-    mandatory_columns_error_msg += _check_mandatory_columns(
-        keywords_df, KEYWORDS_MANDATORY_COLUMNS, google_ads_resources.keywords_title
-    )
     if mandatory_columns_error_msg:
         raise ValueError(mandatory_columns_error_msg)
 
-    return ads_df, keywords_df
+    return campaign_df, ads_df, keywords_df
 
 
 def _create_campaign(
@@ -627,20 +656,21 @@ def create_google_ads_resources(
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
     start_time = time.time()
-    ads_df, keywords_df = _validate_and_convert_to_df(
+    campaigns_df, ads_df, keywords_df = _validate_all_and_convert_to_df(
         google_ads_resources=google_ads_resources,
         context=context,
     )
+    campaigns_df = campaigns_df.map(lambda x: x.strip() if isinstance(x, str) else x)
     ads_df = ads_df.map(lambda x: x.strip() if isinstance(x, str) else x)
     keywords_df = keywords_df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
     keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
-    campaign_names_ad_budgets = ads_df[
+    campaign_names_ad_budgets = campaigns_df[
         ["Campaign Name", "Campaign Budget"]
     ].drop_duplicates()
 
     skip_campaigns = _get_alredy_existing_campaigns(
-        ads_df,
+        campaigns_df,
         context.user_id,
         context.conv_id,
         google_ads_resources.customer_id,

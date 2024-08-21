@@ -21,7 +21,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     create_google_sheets_team_toolbox,
 )
 
-from ..fixtures.google_sheets_team import ads_values
+from ..fixtures.google_sheets_team import ads_values, campaigns_values
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
@@ -76,6 +76,7 @@ class TestCreateGoogleAdsResources:
         self.gads_resuces = GoogleAdsResources(
             customer_id=self.customer_id,
             spreadsheet_id="fkpvkfov",
+            campaigns_title="campaigns_title",
             ads_title="ads_title",
             keywords_title="keywords_title",
             login_customer_id=self.login_customer_id,
@@ -162,6 +163,7 @@ class TestCreateGoogleAdsResources:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
             side_effect=[
+                campaigns_values,
                 ads_values,
                 keywords_values_with_missing_columns,
             ],
@@ -195,7 +197,7 @@ class TestCreateGoogleAdsResources:
 netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN
 Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN""",
                 """Created campaigns:
-Kosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN""",
+Croatia | Ancona-Split | Search | Croatia | EN""",
             ]:
                 assert expected in response
 

@@ -1,11 +1,11 @@
 __all__ = (
     "ads_values",
+    "campaigns_values",
     "keywords_values",
 )
 
 ad_copy = [
     "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
-    "10",
     "Pristina to Skoplje Transport | Exact",
     "Exact",
     "H1 - Pristina",
@@ -36,7 +36,6 @@ ads_values = {
     "values": [
         [
             "Campaign Name",
-            "Campaign Budget",
             "Ad Group Name",
             "Match Type",
             "Headline 1",
@@ -67,11 +66,95 @@ ads_values = {
     ]
 }
 
+
+campaign_1 = [
+    "\nCroatia | Ancona-Split | Search | Croatia | EN",
+    "EN",
+    "10",
+    "TRUE",
+    "TRUE",
+    "All Departures Here",
+    "Affordable Bus Tickets",
+    "GetByBus",
+    "Hassle-Free Booking",
+    "Free cancellation",
+    "Professional Support",
+    "Return tickets",
+    "Reservation",
+    "",
+    "0.3",
+    "",
+    "",
+    "",
+    "Croatia",
+    None,
+    None,
+    None,
+    None,
+    None,
+]
+campaign_2 = [
+    "netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
+    "EN",
+    "10",
+    "TRUE",
+    "TRUE",
+    "All Departures Here",
+    "Affordable Bus Tickets",
+    "GetByBus",
+    "Hassle-Free Booking",
+    "Free cancellation",
+    "Professional Support",
+    "Return tickets",
+    "Reservation",
+    "",
+    "0.3",
+    "",
+    "",
+    "",
+    "Croatia",
+    None,
+    None,
+    None,
+    None,
+    None,
+]
+campaigns_values = {
+    "values": [
+        [
+            "Campaign Name",
+            "Language Code",
+            "Campaign Budget",
+            "Search Network",
+            "Google Search Network",
+            "Sitelink 1",
+            "Sitelink 2",
+            "Sitelink 3",
+            "Sitelink 4",
+            "Callout 1",
+            "Callout 2",
+            "Callout 3",
+            "Callout 4",
+            "Callout 5",
+            "Default max. CPC",
+            "Target Language 1",
+            "Target Language 2",
+            "Target Language 3",
+            "Include Location 1",
+            "Include Location 2",
+            "Include Location 3",
+            "Exclude Location 1",
+            "Exclude Location 2",
+            "Exclude Location 3",
+        ],
+        campaign_1,
+    ]
+}
+
 keywords_values = {
     "values": [
         [
             "Campaign Name",
-            "Campaign Budget",
             "Ad Group Name",
             "Match Type",
             "Keyword",
@@ -80,7 +163,6 @@ keywords_values = {
         ],
         [
             "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
-            "10",
             "Pristina to Skoplje Transport | Exact",
             "Exact",
             "Svi autobusni polasci",
@@ -89,7 +171,6 @@ keywords_values = {
         ],
         [
             "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
-            "10",
             "Pristina to Skoplje Transport | Exact",
             "Exact",
             "Rezerviraj odmah",
@@ -98,7 +179,6 @@ keywords_values = {
         ],
         [
             "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
-            "10",
             "Pristina to Skoplje Transport | Exact",
             "Exact",
             "Neg Ad Group",
@@ -107,7 +187,6 @@ keywords_values = {
         ],
         [
             "\nKosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN",
-            "10",
             None,
             "Exact",
             "Neg Campaign",
