@@ -430,9 +430,9 @@ ZAGREB_TIMEZONE = timezone("Europe/Zagreb")
 languages_df = get_languages_df()
 
 
-def _get_language_codes(campaign_row: pd.Series) -> List[str]:
+def _get_language_codes(campaign_row: pd.Series, columns_prefix: str) -> List[str]:
     language_columns = [
-        col for col in campaign_row.index if col.lower().startswith("target language")
+        col for col in campaign_row.index if col.lower().startswith(columns_prefix)
     ]
     languages = {
         str(campaign_row[col]).strip().lower()
@@ -459,8 +459,10 @@ def _update_language_targeting(
     campaign_id: str,
     campaign_row: pd.Series,
     context: GoogleSheetsTeamContext,
+    columns_prefix: str,
+    negative: bool = False,
 ) -> None:
-    language_codes = _get_language_codes(campaign_row)
+    language_codes = _get_language_codes(campaign_row, columns_prefix)
 
     if len(language_codes) == 0:
         return
@@ -469,7 +471,7 @@ def _update_language_targeting(
         customer_id=customer_id,
         campaign_id=campaign_id,
         language_codes=language_codes,
-        negative=True,
+        negative=negative,
     )
 
     response = google_ads_create_update(
@@ -525,6 +527,28 @@ def _update_geo_targeting(
         raise ValueError(response)
 
 
+def _check_if_both_include_and_exclude_language_values_exist(
+    campaign_row: pd.Series,
+    columns_prefixes: List[str],
+) -> None:
+    for columns_prefix in columns_prefixes:
+        language_columns = [
+            col for col in campaign_row.index if col.lower().startswith(columns_prefix)
+        ]
+        languages = {
+            str(campaign_row[col]).strip().lower()
+            for col in language_columns
+            if campaign_row[col]
+        }
+
+        if len(languages) == 0:
+            return
+
+    raise ValueError(
+        "Both Include and Exclude language columns with non-empty values exist. Please provide values only in one of the columns."
+    )
+
+
 def _update_campaign_with_additional_settings(
     customer_id: str,
     login_customer_id: str,
@@ -537,6 +561,25 @@ def _update_campaign_with_additional_settings(
         ("exclude location", True),
     ]:
         _update_geo_targeting(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=context,
+            columns_prefix=columns_prefix,
+            negative=negative,
+        )
+
+    # check if there are both include and exclude language columns with non-empty values
+    # if there are, raise an error
+    columns_prefixes = ["include language", "exclude language"]
+    _check_if_both_include_and_exclude_language_values_exist(
+        campaign_row=campaign_row,
+        columns_prefixes=columns_prefixes,
+    )
+
+    for columns_prefix, negative in zip(columns_prefixes, [False, True], strict=False):
+        _update_language_targeting(
             customer_id=customer_id,
             login_customer_id=login_customer_id,
             campaign_id=campaign_id,

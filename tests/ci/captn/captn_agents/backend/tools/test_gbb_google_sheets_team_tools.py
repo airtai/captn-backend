@@ -12,6 +12,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
     ResourceCreationResponse,
+    _check_if_both_include_and_exclude_language_values_exist,
     _check_mandatory_columns,
     _get_alredy_existing_campaigns,
     _get_language_codes,
@@ -624,9 +625,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Target Language 1": "English",
-                        "Target Language 2": "Croatian",
-                        "Target Language 3": None,
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": None,
                     }
                 ),
                 ["en", "hr"],
@@ -634,9 +635,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Target Language 1": "English",
-                        "Target Language 2": "Croatian",
-                        "Target Language 3": "German",
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": "German",
                     }
                 ),
                 ["en", "hr", "de"],
@@ -644,9 +645,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Target Language 1": "English",
-                        "Target Language 2": "English",
-                        "Target Language 3": None,
+                        "Include Language 1": "English",
+                        "Include Language 2": "English",
+                        "Include Language 3": None,
                     }
                 ),
                 ["en"],
@@ -654,10 +655,10 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Target Language 1": "English",
-                        "Target Language 2": "Croatian",
-                        "Target Language 3": "German",
-                        "Target Language 4": "Non valid language",
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": "German",
+                        "Include Language 4": "Non valid language",
                     }
                 ),
                 ValueError,
@@ -668,12 +669,14 @@ class TestSetupCampaigns:
         self, row: pd.Series, expected: Union[List[str], ValueError]
     ) -> None:
         if isinstance(expected, list):
-            language_codes = _get_language_codes(row)
+            language_codes = _get_language_codes(row, columns_prefix="include language")
             assert language_codes.sort() == expected.sort()
 
         else:
             with pytest.raises(ValueError):
-                language_codes = _get_language_codes(row)
+                language_codes = _get_language_codes(
+                    row, columns_prefix="include language"
+                )
 
     @pytest.mark.parametrize(
         ("campaign_row", "expected"),
@@ -681,9 +684,58 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Target Language 1": "English",
-                        "Target Language 2": "Croatian",
-                        "Target Language 3": None,
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": None,
+                    }
+                ),
+                None,
+            ),
+            (
+                pd.Series(
+                    {
+                        "Exclude Language 1": "English",
+                        "Exclude Language 2": "Croatian",
+                        "Exclude Language 3": "German",
+                    }
+                ),
+                None,
+            ),
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Exclude Language 2": "Croatian",
+                    }
+                ),
+                ValueError,
+            ),
+        ],
+    )
+    def test_check_if_both_include_and_exclude_language_values_exist(
+        self, campaign_row: pd.Series, expected: Optional[ValueError]
+    ) -> None:
+        if expected is None:
+            _check_if_both_include_and_exclude_language_values_exist(
+                campaign_row=campaign_row,
+                columns_prefixes=["include language", "exclude language"],
+            )
+        else:
+            with pytest.raises(ValueError):
+                _check_if_both_include_and_exclude_language_values_exist(
+                    campaign_row=campaign_row,
+                    columns_prefixes=["include language", "exclude language"],
+                )
+
+    @pytest.mark.parametrize(
+        ("campaign_row", "expected"),
+        [
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": None,
                     }
                 ),
                 ["en", "hr"],
@@ -691,9 +743,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Target Language 1": "English",
-                        "Target Language 2": "Croatian",
-                        "Target Language 3": "German",
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": "German",
                     }
                 ),
                 ["en", "hr", "de"],
@@ -701,8 +753,8 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Target Language 1": None,
-                        "Target Language 2": None,
+                        "Include Language 1": None,
+                        "Include Language 2": None,
                     }
                 ),
                 None,
@@ -711,15 +763,12 @@ class TestSetupCampaigns:
     )
     def test_update_language_targeting(
         self,
-        # mock_get_login_url: Iterator[None],
-        # mock_requests_get: Iterator[Any],
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
         campaign_row: pd.Series,
         expected: Optional[List[str]],
     ) -> None:
-        campaign_id = "21607084515"
-        self.context.user_id = 1
-        self.login_customer_id = "7587037554"
-        self.customer_id = "7119828439"
+        campaign_id = "112345"
 
         _update_language_targeting(
             customer_id=self.customer_id,
@@ -727,12 +776,13 @@ class TestSetupCampaigns:
             campaign_id=campaign_id,
             campaign_row=campaign_row,
             context=self.context,
+            columns_prefix="include language",
         )
 
-        # if expected is None:
-        #     mock_requests_get.assert_not_called()
-        # else:
-        #     mock_requests_get.assert_called_once()
-        #     call = mock_requests_get.call_args_list[0]
+        if expected is None:
+            mock_requests_get.assert_not_called()
+        else:
+            mock_requests_get.assert_called_once()
+            call = mock_requests_get.call_args_list[0]
 
-        #     assert call[1]["params"]["language_codes"].sort() == expected.sort()
+            assert call[1]["params"]["language_codes"].sort() == expected.sort()
