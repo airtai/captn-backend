@@ -1,5 +1,5 @@
 import unittest
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import pandas as pd
 import pytest
@@ -14,10 +14,12 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     ResourceCreationResponse,
     _check_mandatory_columns,
     _get_alredy_existing_campaigns,
+    _get_language_codes,
     _setup_campaign,
     _setup_campaigns,
     _setup_campaigns_with_retry,
     _update_geo_targeting,
+    _update_language_targeting,
     create_google_ads_resources,
     create_google_sheets_team_toolbox,
 )
@@ -615,3 +617,122 @@ class TestSetupCampaigns:
 
         assert call[1]["params"]["location_names"] == expected_location_names
         assert call[1]["params"]["negative"] == negative
+
+    @pytest.mark.parametrize(
+        ("row", "expected"),
+        [
+            (
+                pd.Series(
+                    {
+                        "Target Language 1": "English",
+                        "Target Language 2": "Croatian",
+                        "Target Language 3": None,
+                    }
+                ),
+                ["en", "hr"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Target Language 1": "English",
+                        "Target Language 2": "Croatian",
+                        "Target Language 3": "German",
+                    }
+                ),
+                ["en", "hr", "de"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Target Language 1": "English",
+                        "Target Language 2": "English",
+                        "Target Language 3": None,
+                    }
+                ),
+                ["en"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Target Language 1": "English",
+                        "Target Language 2": "Croatian",
+                        "Target Language 3": "German",
+                        "Target Language 4": "Non valid language",
+                    }
+                ),
+                ValueError,
+            ),
+        ],
+    )
+    def test_get_language_codes(
+        self, row: pd.Series, expected: Union[List[str], ValueError]
+    ) -> None:
+        if isinstance(expected, list):
+            language_codes = _get_language_codes(row)
+            assert language_codes.sort() == expected.sort()
+
+        else:
+            with pytest.raises(ValueError):
+                language_codes = _get_language_codes(row)
+
+    @pytest.mark.parametrize(
+        ("campaign_row", "expected"),
+        [
+            (
+                pd.Series(
+                    {
+                        "Target Language 1": "English",
+                        "Target Language 2": "Croatian",
+                        "Target Language 3": None,
+                    }
+                ),
+                ["en", "hr"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Target Language 1": "English",
+                        "Target Language 2": "Croatian",
+                        "Target Language 3": "German",
+                    }
+                ),
+                ["en", "hr", "de"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Target Language 1": None,
+                        "Target Language 2": None,
+                    }
+                ),
+                None,
+            ),
+        ],
+    )
+    def test_update_language_targeting(
+        self,
+        # mock_get_login_url: Iterator[None],
+        # mock_requests_get: Iterator[Any],
+        campaign_row: pd.Series,
+        expected: Optional[List[str]],
+    ) -> None:
+        campaign_id = "21607084515"
+        self.context.user_id = 1
+        self.login_customer_id = "7587037554"
+        self.customer_id = "7119828439"
+
+        _update_language_targeting(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=self.context,
+        )
+
+        # if expected is None:
+        #     mock_requests_get.assert_not_called()
+        # else:
+        #     mock_requests_get.assert_called_once()
+        #     call = mock_requests_get.call_args_list[0]
+
+        #     assert call[1]["params"]["language_codes"].sort() == expected.sort()

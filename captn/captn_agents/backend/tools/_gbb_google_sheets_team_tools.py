@@ -12,10 +12,12 @@ from pytz import timezone
 from requests import get as requests_get
 
 from captn.google_ads.client import check_for_client_approval
+from google_ads import get_languages_df
 from google_ads.model import (
     AdGroupCriterion,
     Campaign,
     CampaignCriterion,
+    CampaignLanguageCriterion,
     GeoTargetCriterion,
     RemoveResource,
 )
@@ -424,6 +426,64 @@ class ResourceCreationResponse(BaseModel):
 
 
 ZAGREB_TIMEZONE = timezone("Europe/Zagreb")
+
+languages_df = get_languages_df()
+
+
+def _get_language_codes(campaign_row: pd.Series) -> List[str]:
+    language_columns = [
+        col for col in campaign_row.index if col.lower().startswith("target language")
+    ]
+    languages = {
+        str(campaign_row[col]).strip().lower()
+        for col in language_columns
+        if campaign_row[col]
+    }
+
+    for language in languages:
+        if language not in languages_df["Language name"].str.lower().values:
+            raise ValueError(
+                f"Language '{language}' does not exist in Google Ads. Here is the list of available languages: {languages_df['Language name'].tolist()}"
+            )
+
+    language_codes = languages_df[
+        languages_df["Language name"].str.lower().isin(languages)
+    ]["Language code"].tolist()
+
+    return language_codes  # type: ignore[no-any-return]
+
+
+def _update_language_targeting(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    language_codes = _get_language_codes(campaign_row)
+
+    if len(language_codes) == 0:
+        return
+
+    model = CampaignLanguageCriterion(
+        customer_id=customer_id,
+        campaign_id=campaign_id,
+        language_codes=language_codes,
+        negative=True,
+    )
+
+    response = google_ads_create_update(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        ad=model,
+        endpoint="/update-campaign-language-criterion",
+        already_checked_clients_approval=True,
+        login_customer_id=login_customer_id,
+    )
+
+    if not isinstance(response, str):
+        raise ValueError(response)
 
 
 def _update_geo_targeting(
