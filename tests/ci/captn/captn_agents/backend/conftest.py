@@ -36,6 +36,21 @@ def mock_requests_get() -> Iterator[Any]:
         yield mock_requests_get
 
 
+@contextmanager
+@pytest.fixture()
+def mock_requests_post() -> Iterator[Any]:
+    with unittest.mock.patch(
+        "captn.google_ads.client.requests_post",
+        return_value=MagicMock(),
+    ) as mock_requests_post:
+        mock_requests_post.return_value.ok = True
+        mock_requests_post.return_value.json.side_effect = [
+            f"Created resource/{random.randint(100, 1000)}"  # nosec: [B311]
+            for _ in range(200)
+        ]
+        yield mock_requests_post
+
+
 @pytest.fixture()
 def mock_get_sheet_data() -> Iterator[Any]:
     with unittest.mock.patch(

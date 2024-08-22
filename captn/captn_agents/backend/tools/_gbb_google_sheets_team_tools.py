@@ -16,6 +16,7 @@ from google_ads import get_languages_df
 from google_ads.model import (
     AdGroupCriterion,
     Campaign,
+    CampaignCallouts,
     CampaignCriterion,
     CampaignLanguageCriterion,
     GeoTargetCriterion,
@@ -25,6 +26,7 @@ from google_ads.model import (
 from ....google_ads.client import (
     execute_query,
     google_ads_create_update,
+    google_ads_create_update_assets,
 )
 from ....google_ads.client import (
     list_accessible_customers_with_account_types as list_accessible_customers_with_account_types_client,
@@ -453,6 +455,38 @@ def _get_language_codes(campaign_row: pd.Series, columns_prefix: str) -> List[st
     return language_codes  # type: ignore[no-any-return]
 
 
+def _update_callouts(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    columns = [col for col in campaign_row.index if col.lower().startswith("callout")]
+    callouts = [campaign_row[col] for col in columns if campaign_row[col]]
+    if len(callouts) == 0:
+        return
+
+    model = CampaignCallouts(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        callouts=callouts,
+    )
+
+    response = google_ads_create_update_assets(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        model=model,
+        endpoint="/add-callouts-to-campaign",
+        already_checked_clients_approval=True,
+    )
+
+    if not isinstance(response, str):
+        raise ValueError(response)
+
+
 def _update_language_targeting(
     customer_id: str,
     login_customer_id: str,
@@ -588,6 +622,14 @@ def _update_campaign_with_additional_settings(
             columns_prefix=columns_prefix,
             negative=negative,
         )
+
+    _update_callouts(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
 
 
 def _setup_campaign(

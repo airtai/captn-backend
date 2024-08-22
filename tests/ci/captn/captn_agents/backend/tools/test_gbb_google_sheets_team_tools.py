@@ -19,6 +19,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     _setup_campaign,
     _setup_campaigns,
     _setup_campaigns_with_retry,
+    _update_callouts,
     _update_geo_targeting,
     _update_language_targeting,
     create_google_ads_resources,
@@ -187,6 +188,7 @@ class TestCreateGoogleAdsResources:
         mock_get_sheet_data: Iterator[Any],
         mock_get_login_url: Iterator[None],
         mock_requests_get: Iterator[Any],
+        mock_requests_post: Iterator[Any],
     ) -> None:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
@@ -786,3 +788,29 @@ class TestSetupCampaigns:
             call = mock_requests_get.call_args_list[0]
 
             assert call[1]["params"]["language_codes"].sort() == expected.sort()
+
+    def test_update_callouts(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_post: Iterator[Any],
+    ) -> None:
+        campaign_row = pd.Series(
+            {
+                "Campaign Name": "My Campaign",
+                "Callout 1": "Callout 1",
+                "Callout 2": "Callout 2",
+                "Callout 3": None,
+            }
+        )
+
+        _update_callouts(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id="12345",
+            campaign_row=campaign_row,
+            context=self.context,
+        )
+
+        mock_requests_post.assert_called_once()
+        call = mock_requests_post.call_args_list[0]
+        assert call[1]["json"]["callouts"] == ["Callout 1", "Callout 2"]
