@@ -797,8 +797,8 @@ class TestSetupCampaigns:
         campaign_row = pd.Series(
             {
                 "Campaign Name": "My Campaign",
-                "Callout 1": "Callout 1",
-                "Callout 2": "Callout 2",
+                "Callout 1": "Free cancellation",
+                "Callout 2": "Return tickets",
                 "Callout 3": None,
             }
         )
@@ -813,4 +813,4 @@ class TestSetupCampaigns:
 
         mock_requests_post.assert_called_once()
         call = mock_requests_post.call_args_list[0]
-        assert call[1]["json"]["callouts"] == ["Callout 1", "Callout 2"]
+        assert call[1]["json"]["callouts"] == ["Free cancellation", "Return tickets"]
