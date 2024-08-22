@@ -22,10 +22,9 @@ def mock_get_login_url() -> Iterator[Any]:
 
 
 @contextmanager
-@pytest.fixture()
-def mock_requests_get() -> Iterator[Any]:
+def mock_requests(method: str) -> Iterator[Any]:
     with unittest.mock.patch(
-        "captn.google_ads.client.requests_get",
+        f"captn.google_ads.client.requests_{method}",
         return_value=MagicMock(),
     ) as mock_requests_get:
         mock_requests_get.return_value.ok = True
@@ -38,16 +37,15 @@ def mock_requests_get() -> Iterator[Any]:
 
 @contextmanager
 @pytest.fixture()
+def mock_requests_get() -> Iterator[Any]:
+    with mock_requests("get") as mock_requests_get:
+        yield mock_requests_get
+
+
+@contextmanager
+@pytest.fixture()
 def mock_requests_post() -> Iterator[Any]:
-    with unittest.mock.patch(
-        "captn.google_ads.client.requests_post",
-        return_value=MagicMock(),
-    ) as mock_requests_post:
-        mock_requests_post.return_value.ok = True
-        mock_requests_post.return_value.json.side_effect = [
-            f"Created resource/{random.randint(100, 1000)}"  # nosec: [B311]
-            for _ in range(200)
-        ]
+    with mock_requests("post") as mock_requests_post:
         yield mock_requests_post
 
 
