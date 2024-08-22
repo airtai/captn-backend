@@ -206,7 +206,8 @@ def create_google_sheet_fastapi_app(host: str, port: int) -> FastAPI:
             Query(description="The title of the sheet with the new campaign data"),
         ] = None,
     ) -> str:
-        return """Sheet with the name 'Captn - Ads' has been created successfully.
+        return """Sheet with the name 'Captn - Campaigns' has been created successfully.
+Sheet with the name 'Captn - Ads' has been created successfully.
 Sheet with the name 'Captn - Keywords' has been created successfully."""
 
     return app

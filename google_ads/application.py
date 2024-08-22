@@ -1,8 +1,8 @@
 import json
-import os
 import urllib.parse
 import uuid
 from os import environ
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
@@ -945,10 +945,13 @@ def _create_campaign_budget(
     return campaign_budget_response.results[0].resource_name
 
 
+def get_languages_df() -> pd.DataFrame:
+    file_path = Path(__file__).parent / "language_codes.csv"
+    return pd.read_csv(file_path)
+
+
 def _read_avaliable_languages() -> Dict[str, int]:
-    language_codes = pd.read_csv(
-        os.path.join(os.path.dirname(__file__), "language_codes.csv")
-    )
+    language_codes = get_languages_df()
     return dict(
         zip(
             language_codes["Language code"],
