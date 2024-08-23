@@ -837,7 +837,7 @@ def _setup_campaigns_with_retry(
         time.sleep(2**i)
 
         iostream.print(
-            colored(f"{i}. retry to create failed campaigns.", "yellow"), flush=True
+            colored(f"{i + 1}. retry to create failed campaigns.", "yellow"), flush=True
         )
         retry_campaigns = campaigns_df[
             campaigns_df["Campaign Name"].isin(
