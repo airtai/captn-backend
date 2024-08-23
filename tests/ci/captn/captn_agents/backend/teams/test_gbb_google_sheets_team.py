@@ -152,12 +152,14 @@ class TestGBBGoogleSheetsTeam:
         mock_get_conv_uuid: Iterator[Any],
         mock_get_login_url: Iterator[Any],
         mock_requests_get: Iterator[Any],
+        mock_requests_post: Iterator[Any],
         mock_execute_query_f: Iterator[Any],
     ) -> None:
         with (
             mock_get_conv_uuid,
             mock_get_login_url,
             mock_requests_get,
+            mock_requests_post,
             mock_execute_query_f,
             self.mock_list_accessible_customers_f() as (
                 mock_list_accessible_customers_with_account_types_client,
@@ -173,6 +175,7 @@ class TestGBBGoogleSheetsTeam:
             )
 
             expected_messages = [
+                "Sheet with the name 'Captn - Campaigns",
                 "Sheet with the name 'Captn - Ads",
                 "Sheet with the name 'Captn - Keywords",
                 "Created campaigns:",
@@ -221,6 +224,7 @@ class TestGBBGoogleSheetsTeam:
         mock_get_conv_uuid: Iterator[Any],
         mock_get_login_url: Iterator[Any],
         mock_requests_get: Iterator[Any],
+        mock_requests_post: Iterator[Any],
         mock_get_sheet_data: Iterator[Any],
         mock_execute_query_f: Iterator[Any],
     ) -> None:
@@ -231,6 +235,7 @@ class TestGBBGoogleSheetsTeam:
                 mock_get_conv_uuid=mock_get_conv_uuid,
                 mock_get_login_url=mock_get_login_url,
                 mock_requests_get=mock_requests_get,
+                mock_requests_post=mock_requests_post,
                 mock_execute_query_f=mock_execute_query_f,
             )
 
@@ -242,6 +247,7 @@ class TestGBBGoogleSheetsTeam:
         mock_get_conv_uuid: Iterator[Any],
         mock_get_login_url: Iterator[Any],
         mock_requests_get: Iterator[Any],
+        mock_requests_post: Iterator[Any],
         mock_execute_query_f: Iterator[Any],
     ) -> None:
         self._test_google_sheets_team_end2end(
@@ -250,5 +256,6 @@ class TestGBBGoogleSheetsTeam:
             mock_get_conv_uuid=mock_get_conv_uuid,
             mock_get_login_url=mock_get_login_url,
             mock_requests_get=mock_requests_get,
+            mock_requests_post=mock_requests_post,
             mock_execute_query_f=mock_execute_query_f,
         )

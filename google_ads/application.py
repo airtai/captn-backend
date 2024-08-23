@@ -1,8 +1,8 @@
 import json
-import os
 import urllib.parse
 import uuid
 from os import environ
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import httpx
@@ -945,10 +945,13 @@ def _create_campaign_budget(
     return campaign_budget_response.results[0].resource_name
 
 
+def get_languages_df() -> pd.DataFrame:
+    file_path = Path(__file__).parent / "language_codes.csv"
+    return pd.read_csv(file_path)
+
+
 def _read_avaliable_languages() -> Dict[str, int]:
-    language_codes = pd.read_csv(
-        os.path.join(os.path.dirname(__file__), "language_codes.csv")
-    )
+    language_codes = get_languages_df()
     return dict(
         zip(
             language_codes["Language code"],
@@ -1730,3 +1733,63 @@ async def create_callouts_for_campaign(
     )
 
     return result
+
+
+async def _get_callout_resource_names(
+    user_id: int,
+    model: CampaignCallouts,
+) -> List[str]:
+    query = f"""
+SELECT
+  asset.id,
+  asset.name,
+  asset.type,
+  asset.callout_asset.callout_text
+FROM
+  asset
+WHERE
+  asset.type = 'CALLOUT' AND
+  asset.callout_asset.callout_text IN ({", ".join([f'"{text}"' for text in model.callouts])})"""  # nosec: [B608]
+    callouts_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    callout_texts_added = []
+    resource_names = []
+    for asset in callouts_response[model.customer_id]:
+        # don't add duplicates
+        if asset["asset"]["calloutAsset"]["calloutText"] not in callout_texts_added:
+            resource_names.append(asset["asset"]["resourceName"])
+            callout_texts_added.append(asset["asset"]["calloutAsset"]["calloutText"])
+
+    return resource_names
+
+
+@router.post("/add-callouts-to-campaign")
+async def add_callouts_to_campaign(
+    user_id: int,
+    model: CampaignCallouts,
+) -> str:
+    callout_resource_names = await _get_callout_resource_names(user_id, model)
+    if len(callout_resource_names) == 0:
+        return "No callouts found to add to the campaign."
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    try:
+        _link_assets_to_campaign(
+            client=client,
+            customer_id=model.customer_id,
+            campaign_id=model.campaign_id,
+            resource_names=callout_resource_names,
+            field_type=client.enums.AssetFieldTypeEnum.CALLOUT,
+        )
+        return f"Linked following callouts to campaign '{model.campaign_id}': {callout_resource_names}"
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e

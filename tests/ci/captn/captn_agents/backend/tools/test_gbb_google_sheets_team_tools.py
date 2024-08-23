@@ -1,5 +1,5 @@
 import unittest
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import pandas as pd
 import pytest
@@ -12,16 +12,21 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
     ResourceCreationResponse,
+    _check_if_both_include_and_exclude_language_values_exist,
     _check_mandatory_columns,
     _get_alredy_existing_campaigns,
+    _get_language_codes,
     _setup_campaign,
     _setup_campaigns,
     _setup_campaigns_with_retry,
+    _update_callouts,
+    _update_geo_targeting,
+    _update_language_targeting,
     create_google_ads_resources,
     create_google_sheets_team_toolbox,
 )
 
-from ..fixtures.google_sheets_team import ads_values
+from ..fixtures.google_sheets_team import ads_values, campaigns_values
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
@@ -76,6 +81,7 @@ class TestCreateGoogleAdsResources:
         self.gads_resuces = GoogleAdsResources(
             customer_id=self.customer_id,
             spreadsheet_id="fkpvkfov",
+            campaigns_title="campaigns_title",
             ads_title="ads_title",
             keywords_title="keywords_title",
             login_customer_id=self.login_customer_id,
@@ -162,6 +168,7 @@ class TestCreateGoogleAdsResources:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
             side_effect=[
+                campaigns_values,
                 ads_values,
                 keywords_values_with_missing_columns,
             ],
@@ -181,6 +188,7 @@ class TestCreateGoogleAdsResources:
         mock_get_sheet_data: Iterator[Any],
         mock_get_login_url: Iterator[None],
         mock_requests_get: Iterator[Any],
+        mock_requests_post: Iterator[Any],
     ) -> None:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
@@ -195,7 +203,7 @@ class TestCreateGoogleAdsResources:
 netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN
 Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN""",
                 """Created campaigns:
-Kosovo-Macedonia | Pristina-Skoplje | Search | Worldwide | EN""",
+Croatia | Ancona-Split | Search | Croatia | EN""",
             ]:
                 assert expected in response
 
@@ -319,6 +327,16 @@ class TestSetupCampaigns:
         mock_get_login_url: Iterator[None],
         mock_requests_get: Iterator[Any],
     ) -> None:
+        campaigns_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign"],
+                "Campaign Budget": ["10"],
+                "Search Network": [True],
+                "Google Search Network": [True],
+                "Default max. CPC": ["0.30"],
+            }
+        )
+
         ads_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign"],
@@ -365,8 +383,7 @@ class TestSetupCampaigns:
         _, error_msg = _setup_campaign(
             customer_id=self.customer_id,
             login_customer_id=self.login_customer_id,
-            campaign_name="My Campaign",
-            campaign_budget="10",
+            campaign_row=campaigns_df.iloc[0],
             context=self.context,
             ads_df=ads_df,
             keywords_df=keywords_df,
@@ -463,10 +480,13 @@ class TestSetupCampaigns:
             }
         )
 
-        campaign_names_and_budgets = pd.DataFrame(
+        campaigns_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
                 "Campaign Budget": ["10", "10"],
+                "Search Network": [True, True],
+                "Google Search Network": [True, True],
+                "Default max. CPC": ["0.30", "0.30"],
             }
         )
 
@@ -475,7 +495,7 @@ class TestSetupCampaigns:
             login_customer_id=self.login_customer_id,
             skip_campaigns=[],
             context=self.context,
-            campaign_names_ad_budgets=campaign_names_and_budgets,
+            campaigns_df=campaigns_df,
             ads_df=ads_df,
             keywords_df=keywords_df,
             iostream=IOStream.get_default(),
@@ -509,7 +529,6 @@ class TestSetupCampaigns:
         keywords_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
-                "Campaign Budget": ["10", "10"],
                 "Ad Group Name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
                 "Match Type": ["Exact", "Exact"],
                 "Keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
@@ -518,10 +537,13 @@ class TestSetupCampaigns:
             }
         )
 
-        campaign_names_and_budgets = pd.DataFrame(
+        campaigns_df = pd.DataFrame(
             {
                 "Campaign Name": ["My Campaign 1", "My Campaign 2"],
                 "Campaign Budget": ["10", "10"],
+                "Search Network": [True, True],
+                "Google Search Network": [True, True],
+                "Default max. CPC": ["0.30", "0.30"],
             }
         )
 
@@ -538,7 +560,7 @@ class TestSetupCampaigns:
                 login_customer_id=self.login_customer_id,
                 skip_campaigns=[],
                 context=self.context,
-                campaign_names_ad_budgets=campaign_names_and_budgets,
+                campaigns_df=campaigns_df,
                 ads_df=ads_df,
                 keywords_df=keywords_df,
                 iostream=IOStream.get_default(),
@@ -547,3 +569,248 @@ class TestSetupCampaigns:
         assert response.created_campaigns == ["My Campaign 2", "My Campaign 1"]
         assert response.failed_campaigns == {}
         assert mock_create_negative_campaign_keywords.call_count == 3
+
+    @pytest.mark.parametrize(
+        ("columns_prefix", "negative", "expected_location_names"),
+        [
+            (
+                "include location",
+                False,
+                ["Croatia", "Slovenia"],
+            ),
+            (
+                "exclude location",
+                True,
+                ["Montenegro"],
+            ),
+        ],
+    )
+    def test_update_geo_targeting(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+        columns_prefix: str,
+        negative: bool,
+        expected_location_names: List[str],
+    ) -> None:
+        campaign_row = pd.Series(
+            {
+                "Campaign Name": "My Campaign",
+                "Include Location 1": "Croatia",
+                "Include Location 2": "Slovenia",
+                "Include Location 3": None,
+                "Exclude Location 1": "Montenegro",
+                "Exclude Location 2": None,
+                "Exclude Location 3": None,
+            }
+        )
+
+        _update_geo_targeting(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id="12345",
+            campaign_row=campaign_row,
+            context=self.context,
+            columns_prefix=columns_prefix,
+            negative=negative,
+        )
+
+        mock_requests_get.assert_called_once()
+        call = mock_requests_get.call_args_list[0]
+
+        assert call[1]["params"]["location_names"] == expected_location_names
+        assert call[1]["params"]["negative"] == negative
+
+    @pytest.mark.parametrize(
+        ("row", "expected"),
+        [
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": None,
+                    }
+                ),
+                ["en", "hr"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": "German",
+                    }
+                ),
+                ["en", "hr", "de"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "English",
+                        "Include Language 3": None,
+                    }
+                ),
+                ["en"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": "German",
+                        "Include Language 4": "Non valid language",
+                    }
+                ),
+                ValueError,
+            ),
+        ],
+    )
+    def test_get_language_codes(
+        self, row: pd.Series, expected: Union[List[str], ValueError]
+    ) -> None:
+        if isinstance(expected, list):
+            language_codes = _get_language_codes(row, columns_prefix="include language")
+            assert language_codes.sort() == expected.sort()
+
+        else:
+            with pytest.raises(ValueError):
+                language_codes = _get_language_codes(
+                    row, columns_prefix="include language"
+                )
+
+    @pytest.mark.parametrize(
+        ("campaign_row", "expected"),
+        [
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": None,
+                    }
+                ),
+                None,
+            ),
+            (
+                pd.Series(
+                    {
+                        "Exclude Language 1": "English",
+                        "Exclude Language 2": "Croatian",
+                        "Exclude Language 3": "German",
+                    }
+                ),
+                None,
+            ),
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Exclude Language 2": "Croatian",
+                    }
+                ),
+                ValueError,
+            ),
+        ],
+    )
+    def test_check_if_both_include_and_exclude_language_values_exist(
+        self, campaign_row: pd.Series, expected: Optional[ValueError]
+    ) -> None:
+        if expected is None:
+            _check_if_both_include_and_exclude_language_values_exist(
+                campaign_row=campaign_row,
+                columns_prefixes=["include language", "exclude language"],
+            )
+        else:
+            with pytest.raises(ValueError):
+                _check_if_both_include_and_exclude_language_values_exist(
+                    campaign_row=campaign_row,
+                    columns_prefixes=["include language", "exclude language"],
+                )
+
+    @pytest.mark.parametrize(
+        ("campaign_row", "expected"),
+        [
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": None,
+                    }
+                ),
+                ["en", "hr"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": "English",
+                        "Include Language 2": "Croatian",
+                        "Include Language 3": "German",
+                    }
+                ),
+                ["en", "hr", "de"],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Include Language 1": None,
+                        "Include Language 2": None,
+                    }
+                ),
+                None,
+            ),
+        ],
+    )
+    def test_update_language_targeting(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_get: Iterator[Any],
+        campaign_row: pd.Series,
+        expected: Optional[List[str]],
+    ) -> None:
+        campaign_id = "112345"
+
+        _update_language_targeting(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=self.context,
+            columns_prefix="include language",
+        )
+
+        if expected is None:
+            mock_requests_get.assert_not_called()
+        else:
+            mock_requests_get.assert_called_once()
+            call = mock_requests_get.call_args_list[0]
+
+            assert call[1]["params"]["language_codes"].sort() == expected.sort()
+
+    def test_update_callouts(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_post: Iterator[Any],
+    ) -> None:
+        campaign_row = pd.Series(
+            {
+                "Campaign Name": "My Campaign",
+                "Callout 1": "Free cancellation",
+                "Callout 2": "Return tickets",
+                "Callout 3": None,
+            }
+        )
+
+        _update_callouts(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id="12345",
+            campaign_row=campaign_row,
+            context=self.context,
+        )
+
+        mock_requests_post.assert_called_once()
+        call = mock_requests_post.call_args_list[0]
+        assert call[1]["json"]["callouts"] == ["Free cancellation", "Return tickets"]

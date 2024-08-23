@@ -119,10 +119,9 @@ class AdGroupForCreation(AdBase):
         Field(..., description=properties_config["campaign_id"]["description"]),
     ] = None
     name: Annotated[str, Field(..., description="The name of the Ad Group")]
-    # budget for the ad group isn't needed for creation
-    # cpc_bid_micros: Annotated[
-    #     Optional[int], properties_config["cpc_bid_micros"]["description"]
-    # ] = None
+    cpc_bid_micros: Annotated[
+        Optional[int], properties_config["cpc_bid_micros"]["description"]
+    ] = None
 
 
 class AdGroupWithAdAndKeywords(BaseModel):

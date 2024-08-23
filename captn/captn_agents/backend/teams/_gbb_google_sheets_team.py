@@ -157,6 +157,7 @@ ALL parameters are mandatory, do NOT forget to include 'modification_function_pa
     "login_customer_id":
     "customer_id":
     "spreadsheet_id":
+    "campaigns_title":
     "ads_title":
     "keywords_title":
 }}

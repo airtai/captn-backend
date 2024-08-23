@@ -12,16 +12,21 @@ from pytz import timezone
 from requests import get as requests_get
 
 from captn.google_ads.client import check_for_client_approval
+from google_ads import get_languages_df
 from google_ads.model import (
     AdGroupCriterion,
     Campaign,
+    CampaignCallouts,
     CampaignCriterion,
+    CampaignLanguageCriterion,
+    GeoTargetCriterion,
     RemoveResource,
 )
 
 from ....google_ads.client import (
     execute_query,
     google_ads_create_update,
+    google_ads_create_update_assets,
 )
 from ....google_ads.client import (
     list_accessible_customers_with_account_types as list_accessible_customers_with_account_types_client,
@@ -68,6 +73,9 @@ class GoogleAdsResources(BaseModel):
     spreadsheet_id: Annotated[
         str, Field(..., description="The ID of the spreadsheet to retrieve data from")
     ]
+    campaigns_title: Annotated[
+        str, Field(..., description="The title of the sheet with campaigns")
+    ]
     ads_title: Annotated[str, Field(..., description="The title of the sheet with ads")]
     keywords_title: Annotated[
         str, Field(..., description="The title of the sheet with keywords")
@@ -100,9 +108,16 @@ class GoogleSheetsTeamContext(Context):
     google_sheets_api_url: str
 
 
+CAMPAIGN_MANDATORY_COLUMNS = [
+    "Campaign Name",
+    "Language Code",
+    "Campaign Budget",
+    "Search Network",
+    "Google Search Network",
+    "Default max. CPC",
+]
 KEYWORDS_MANDATORY_COLUMNS = [
     "Campaign Name",
-    "Campaign Budget",
     "Ad Group Name",
     "Match Type",
     "Keyword",
@@ -111,7 +126,6 @@ KEYWORDS_MANDATORY_COLUMNS = [
 ]
 ADS_MANDATORY_COLUMNS = [
     "Campaign Name",
-    "Campaign Budget",
     "Ad Group Name",
     "Match Type",
     "Headline 1",
@@ -133,10 +147,32 @@ def _check_mandatory_columns(
     return ""
 
 
-def _validate_and_convert_to_df(
+def _validat_and_convert_to_df(
+    base_url: str,
+    user_id: int,
+    spreadsheet_id: str,
+    title: str,
+    mandatory_columns: List[str],
+) -> Tuple[pd.DataFrame, str]:
+    data_dict = _get_sheet_data(
+        base_url=base_url,
+        user_id=user_id,
+        spreadsheet_id=spreadsheet_id,
+        title=title,
+    )
+    values = GoogleSheetValues(**data_dict)
+    df = pd.DataFrame(
+        values.values[1:],
+        columns=values.values[0],
+    )
+    mandatory_columns_error_msg = _check_mandatory_columns(df, mandatory_columns, title)
+    return df, mandatory_columns_error_msg
+
+
+def _validate_all_and_convert_to_df(
     google_ads_resources: GoogleAdsResources,
     context: GoogleSheetsTeamContext,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     error_msg = check_for_client_approval(
         modification_function_parameters=google_ads_resources.model_dump(),
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -144,59 +180,58 @@ def _validate_and_convert_to_df(
     if error_msg:
         raise ValueError(error_msg)
 
-    ads_data_dict = _get_sheet_data(
+    campaign_df, mandatory_columns_error_msg_1 = _validat_and_convert_to_df(
+        base_url=context.google_sheets_api_url,
+        user_id=context.user_id,
+        spreadsheet_id=google_ads_resources.spreadsheet_id,
+        title=google_ads_resources.campaigns_title,
+        mandatory_columns=CAMPAIGN_MANDATORY_COLUMNS,
+    )
+    ads_df, mandatory_columns_error_msg_2 = _validat_and_convert_to_df(
         base_url=context.google_sheets_api_url,
         user_id=context.user_id,
         spreadsheet_id=google_ads_resources.spreadsheet_id,
         title=google_ads_resources.ads_title,
+        mandatory_columns=ADS_MANDATORY_COLUMNS,
     )
-    keywords_data_dict = _get_sheet_data(
+    keywords_df, mandatory_columns_error_msg_3 = _validat_and_convert_to_df(
         base_url=context.google_sheets_api_url,
         user_id=context.user_id,
         spreadsheet_id=google_ads_resources.spreadsheet_id,
         title=google_ads_resources.keywords_title,
+        mandatory_columns=KEYWORDS_MANDATORY_COLUMNS,
     )
 
-    ads_values = GoogleSheetValues(**ads_data_dict)
-    keywords_values = GoogleSheetValues(**keywords_data_dict)
+    mandatory_columns_error_msg = (
+        mandatory_columns_error_msg_1
+        + mandatory_columns_error_msg_2
+        + mandatory_columns_error_msg_3
+    )
 
-    ads_df = pd.DataFrame(
-        ads_values.values[1:],
-        columns=ads_values.values[0],
-    )
-    keywords_df = pd.DataFrame(
-        keywords_values.values[1:],
-        columns=keywords_values.values[0],
-    )
-    mandatory_columns_error_msg = _check_mandatory_columns(
-        ads_df, ADS_MANDATORY_COLUMNS, google_ads_resources.ads_title
-    )
-    mandatory_columns_error_msg += _check_mandatory_columns(
-        keywords_df, KEYWORDS_MANDATORY_COLUMNS, google_ads_resources.keywords_title
-    )
     if mandatory_columns_error_msg:
         raise ValueError(mandatory_columns_error_msg)
 
-    return ads_df, keywords_df
+    return campaign_df, ads_df, keywords_df
 
 
 def _create_campaign(
-    campaign_name: str,
-    campaign_budget: str,
+    campaign_row: pd.Series,
     customer_id: str,
     login_customer_id: Optional[str],
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
-    budget_amount_micros = int(campaign_budget) * 1_000_000
+    budget_amount_micros = int(campaign_row["Campaign Budget"]) * 1_000_000
 
     campaign = Campaign(
         customer_id=customer_id,
-        name=campaign_name,
+        name=campaign_row["Campaign Name"],
         budget_amount_micros=budget_amount_micros,
         status="PAUSED",
-        network_settings_target_google_search=True,
-        network_settings_target_search_network=True,
-        network_settings_target_content_network=True,
+        network_settings_target_google_search=campaign_row["Google Search Network"],
+        network_settings_target_search_network=campaign_row["Search Network"],
+        network_settings_target_content_network=False,
+        manual_cpc=True,
+        budget_explicitly_shared=False,
     )
     response = google_ads_create_update(
         user_id=context.user_id,
@@ -277,6 +312,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     customer_id: str,
     login_customer_id: Optional[str],
     campaign_id: str,
+    max_cpc: float,
     ad_group_name: str,
     match_type: str,
     ad_group_keywords_df: pd.DataFrame,
@@ -288,6 +324,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
         campaign_id=campaign_id,
         name=ad_group_name,
         status="ENABLED",
+        cpc_bid_micros=int(max_cpc * 1_000_000),
     )
 
     ad_group_positive_keywords = ad_group_keywords_df[
@@ -392,12 +429,213 @@ class ResourceCreationResponse(BaseModel):
 
 ZAGREB_TIMEZONE = timezone("Europe/Zagreb")
 
+languages_df = get_languages_df()
+
+
+def _get_language_codes(campaign_row: pd.Series, columns_prefix: str) -> List[str]:
+    language_columns = [
+        col for col in campaign_row.index if col.lower().startswith(columns_prefix)
+    ]
+    languages = {
+        str(campaign_row[col]).strip().lower()
+        for col in language_columns
+        if campaign_row[col]
+    }
+
+    for language in languages:
+        if language not in languages_df["Language name"].str.lower().values:
+            raise ValueError(
+                f"Language '{language}' does not exist in Google Ads. Here is the list of available languages: {languages_df['Language name'].tolist()}"
+            )
+
+    language_codes = languages_df[
+        languages_df["Language name"].str.lower().isin(languages)
+    ]["Language code"].tolist()
+
+    return language_codes  # type: ignore[no-any-return]
+
+
+def _update_callouts(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    columns = [col for col in campaign_row.index if col.lower().startswith("callout")]
+    callouts = [campaign_row[col] for col in columns if campaign_row[col]]
+    if len(callouts) == 0:
+        return
+
+    model = CampaignCallouts(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        callouts=callouts,
+    )
+
+    response = google_ads_create_update_assets(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        model=model,
+        endpoint="/add-callouts-to-campaign",
+        already_checked_clients_approval=True,
+    )
+
+    if not isinstance(response, str):
+        raise ValueError(response)
+
+
+def _update_language_targeting(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+    columns_prefix: str,
+    negative: bool = False,
+) -> None:
+    language_codes = _get_language_codes(campaign_row, columns_prefix)
+
+    if len(language_codes) == 0:
+        return
+
+    model = CampaignLanguageCriterion(
+        customer_id=customer_id,
+        campaign_id=campaign_id,
+        language_codes=language_codes,
+        negative=negative,
+    )
+
+    response = google_ads_create_update(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        ad=model,
+        endpoint="/update-campaign-language-criterion",
+        already_checked_clients_approval=True,
+        login_customer_id=login_customer_id,
+    )
+
+    if not isinstance(response, str):
+        raise ValueError(response)
+
+
+def _update_geo_targeting(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+    columns_prefix: str,
+    negative: bool = False,
+) -> None:
+    columns = [
+        col for col in campaign_row.index if col.lower().startswith(columns_prefix)
+    ]
+    location_names = [campaign_row[col] for col in columns if campaign_row[col]]
+    if len(location_names) == 0:
+        return
+
+    model = GeoTargetCriterion(
+        customer_id=customer_id,
+        campaign_id=campaign_id,
+        location_names=location_names,
+        location_ids=None,
+        target_type="Country",
+        negative=negative,
+        add_all_suggestions=True,
+    )
+
+    response = google_ads_create_update(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        ad=model,
+        endpoint="/create-geo-targeting-for-campaign",
+        already_checked_clients_approval=True,
+        login_customer_id=login_customer_id,
+    )
+    if not isinstance(response, str):
+        raise ValueError(response)
+
+
+def _check_if_both_include_and_exclude_language_values_exist(
+    campaign_row: pd.Series,
+    columns_prefixes: List[str],
+) -> None:
+    for columns_prefix in columns_prefixes:
+        language_columns = [
+            col for col in campaign_row.index if col.lower().startswith(columns_prefix)
+        ]
+        languages = {
+            str(campaign_row[col]).strip().lower()
+            for col in language_columns
+            if campaign_row[col]
+        }
+
+        if len(languages) == 0:
+            return
+
+    raise ValueError(
+        "Both Include and Exclude language columns with non-empty values exist. Please provide values only in one of the columns."
+    )
+
+
+def _update_campaign_with_additional_settings(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    for columns_prefix, negative in [
+        ("include location", False),
+        ("exclude location", True),
+    ]:
+        _update_geo_targeting(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=context,
+            columns_prefix=columns_prefix,
+            negative=negative,
+        )
+
+    # check if there are both include and exclude language columns with non-empty values
+    # if there are, raise an error
+    columns_prefixes = ["include language", "exclude language"]
+    _check_if_both_include_and_exclude_language_values_exist(
+        campaign_row=campaign_row,
+        columns_prefixes=columns_prefixes,
+    )
+
+    for columns_prefix, negative in zip(columns_prefixes, [False, True], strict=False):
+        _update_language_targeting(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=context,
+            columns_prefix=columns_prefix,
+            negative=negative,
+        )
+
+    _update_callouts(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
+
 
 def _setup_campaign(
     customer_id: str,
     login_customer_id: str,
-    campaign_name: str,
-    campaign_budget: str,
+    campaign_row: pd.Series,
     context: GoogleSheetsTeamContext,
     keywords_df: pd.DataFrame,
     ads_df: pd.DataFrame,
@@ -405,10 +643,10 @@ def _setup_campaign(
 ) -> Tuple[bool, Optional[str]]:
     campaign_id = None
     created_campaign_names_and_ids: Dict[str, Dict[str, Any]] = {}
+    campaign_name = campaign_row["Campaign Name"]
     try:
         response = _create_campaign(
-            campaign_name=campaign_name,
-            campaign_budget=campaign_budget,
+            campaign_row=campaign_row,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
             context=context,
@@ -422,6 +660,14 @@ def _setup_campaign(
                 "campaign_id": campaign_id,
                 "ad_groups": {},
             }
+
+        _update_campaign_with_additional_settings(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_id=campaign_id,
+            campaign_row=campaign_row,
+            context=context,
+        )
 
         all_campaign_keywords = keywords_df[
             (keywords_df["Campaign Name"] == campaign_name)
@@ -482,6 +728,7 @@ def _setup_campaign(
                     customer_id=customer_id,
                     login_customer_id=login_customer_id,
                     campaign_id=campaign_id,
+                    max_cpc=float(campaign_row["Default max. CPC"]),
                     ad_group_name=row["Ad Group Name"],
                     match_type=row["Match Type"],
                     ad_group_keywords_df=all_ad_group_keywords,
@@ -526,19 +773,20 @@ def _setup_campaigns(
     login_customer_id: str,
     context: GoogleSheetsTeamContext,
     skip_campaigns: List[str],
-    campaign_names_ad_budgets: pd.DataFrame,
+    campaigns_df: pd.DataFrame,
     keywords_df: pd.DataFrame,
     ads_df: pd.DataFrame,
     iostream: IOStream,
 ) -> ResourceCreationResponse:
     created_campaigns: List[str] = []
     failed_campaigns: Dict[str, str] = {}
-    for campaign_name, campaign_budget in campaign_names_ad_budgets.values:
+    for _, campaign_row in campaigns_df.iterrows():
+        campaign_name = campaign_row["Campaign Name"]
+
         success, error_message = _setup_campaign(
             customer_id=customer_id,
             login_customer_id=login_customer_id,
-            campaign_name=campaign_name,
-            campaign_budget=campaign_budget,
+            campaign_row=campaign_row,
             context=context,
             keywords_df=keywords_df,
             ads_df=ads_df,
@@ -564,7 +812,7 @@ def _setup_campaigns_with_retry(
     login_customer_id: str,
     context: GoogleSheetsTeamContext,
     skip_campaigns: List[str],
-    campaign_names_ad_budgets: pd.DataFrame,
+    campaigns_df: pd.DataFrame,
     keywords_df: pd.DataFrame,
     ads_df: pd.DataFrame,
     iostream: IOStream,
@@ -575,7 +823,7 @@ def _setup_campaigns_with_retry(
         login_customer_id=login_customer_id,
         context=context,
         skip_campaigns=skip_campaigns,
-        campaign_names_ad_budgets=campaign_names_ad_budgets,
+        campaigns_df=campaigns_df,
         keywords_df=keywords_df,
         ads_df=ads_df,
         iostream=iostream,
@@ -591,8 +839,8 @@ def _setup_campaigns_with_retry(
         iostream.print(
             colored(f"{i}. retry to create failed campaigns.", "yellow"), flush=True
         )
-        retry_campaign_names_ad_budgets = campaign_names_ad_budgets[
-            campaign_names_ad_budgets["Campaign Name"].isin(
+        retry_campaigns = campaigns_df[
+            campaigns_df["Campaign Name"].isin(
                 resource_creation_response.failed_campaigns.keys()
             )
         ]
@@ -601,7 +849,7 @@ def _setup_campaigns_with_retry(
             login_customer_id=login_customer_id,
             context=context,
             skip_campaigns=skip_campaigns,
-            campaign_names_ad_budgets=retry_campaign_names_ad_budgets,
+            campaigns_df=retry_campaigns,
             keywords_df=keywords_df,
             ads_df=ads_df,
             iostream=iostream,
@@ -627,20 +875,24 @@ def create_google_ads_resources(
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
     start_time = time.time()
-    ads_df, keywords_df = _validate_and_convert_to_df(
+    campaigns_df, ads_df, keywords_df = _validate_all_and_convert_to_df(
         google_ads_resources=google_ads_resources,
         context=context,
     )
+    campaigns_df = campaigns_df.map(lambda x: x.strip() if isinstance(x, str) else x)
     ads_df = ads_df.map(lambda x: x.strip() if isinstance(x, str) else x)
     keywords_df = keywords_df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
+    campaigns_df["Google Search Network"] = (
+        campaigns_df["Google Search Network"].str.upper().eq("TRUE")
+    )
+    campaigns_df["Search Network"] = (
+        campaigns_df["Search Network"].str.upper().eq("TRUE")
+    )
     keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
-    campaign_names_ad_budgets = ads_df[
-        ["Campaign Name", "Campaign Budget"]
-    ].drop_duplicates()
 
     skip_campaigns = _get_alredy_existing_campaigns(
-        ads_df,
+        campaigns_df,
         context.user_id,
         context.conv_id,
         google_ads_resources.customer_id,
@@ -656,16 +908,14 @@ def create_google_ads_resources(
     message = "Creating campaigns and resources, usually takes 90 seconds to setup one campaign."
     iostream.print(colored(message, "yellow"), flush=True)
 
-    campaign_names_ad_budgets = campaign_names_ad_budgets[
-        ~campaign_names_ad_budgets["Campaign Name"].isin(skip_campaigns)
-    ]
+    campaigns_df = campaigns_df[~campaigns_df["Campaign Name"].isin(skip_campaigns)]
 
     resource_creation_response = _setup_campaigns_with_retry(
         customer_id=google_ads_resources.customer_id,
         login_customer_id=google_ads_resources.login_customer_id,
         context=context,
         skip_campaigns=skip_campaigns,
-        campaign_names_ad_budgets=campaign_names_ad_budgets,
+        campaigns_df=campaigns_df,
         keywords_df=keywords_df,
         ads_df=ads_df,
         iostream=iostream,
