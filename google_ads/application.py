@@ -1765,6 +1765,10 @@ WHERE
             resource_names.append(asset["asset"]["resourceName"])
             callout_texts_added.append(asset["asset"]["calloutAsset"]["calloutText"])
 
+    if len(callout_texts_added) != len(model.callouts):
+        missing_callouts = set(model.callouts) - set(callout_texts_added)
+        raise ValueError(f"Callouts not found: {missing_callouts}")
+
     return resource_names
 
 
@@ -1773,14 +1777,13 @@ async def add_callouts_to_campaign(
     user_id: int,
     model: CampaignCallouts,
 ) -> str:
-    callout_resource_names = await _get_callout_resource_names(user_id, model)
-    if len(callout_resource_names) == 0:
-        return "No callouts found to add to the campaign."
-    client = await _get_client(
-        user_id=user_id, login_customer_id=model.login_customer_id
-    )
-
     try:
+        callout_resource_names = await _get_callout_resource_names(user_id, model)
+        if len(callout_resource_names) == 0:
+            return "No callouts found to add to the campaign."
+        client = await _get_client(
+            user_id=user_id, login_customer_id=model.login_customer_id
+        )
         _link_assets_to_campaign(
             client=client,
             customer_id=model.customer_id,

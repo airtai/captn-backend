@@ -1,4 +1,5 @@
 import unittest
+from typing import Any, Dict, List, Union
 from unittest.mock import MagicMock
 
 import pytest
@@ -389,8 +390,53 @@ class TestLanguages:
         assert str(exc.value) == "Invalid language codes: ['xyz']"
 
 
+@pytest.mark.parametrize(
+    ("return_value", "expected"),
+    [
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "calloutAsset": {
+                                "calloutText": "Callout 1",
+                            },
+                        }
+                    },
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_2",
+                            "calloutAsset": {
+                                "calloutText": "Callout 2",
+                            },
+                        }
+                    },
+                ]
+            },
+            ["resource_name_1", "resource_name_2"],
+        ),
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "calloutAsset": {
+                                "calloutText": "Callout 1",
+                            },
+                        }
+                    },
+                ]
+            },
+            ValueError,
+        ),
+    ],
+)
 @pytest.mark.asyncio
-async def test_get_callout_resource_names() -> None:
+async def test_get_callout_resource_names(
+    return_value: Dict[str, List[Any]], expected: Union[List[str], ValueError]
+) -> None:
     campaign_callouts = CampaignCallouts(
         customer_id="123",
         campaign_id="456",
@@ -400,28 +446,13 @@ async def test_get_callout_resource_names() -> None:
     with unittest.mock.patch(
         "google_ads.application.search",
     ) as mock_search:
-        mock_search.return_value = {
-            "123": [
-                {
-                    "asset": {
-                        "resourceName": "resource_name_1",
-                        "calloutAsset": {
-                            "calloutText": "Callout 1",
-                        },
-                    }
-                },
-                {
-                    "asset": {
-                        "resourceName": "resource_name_2",
-                        "calloutAsset": {
-                            "calloutText": "Callout 2",
-                        },
-                    }
-                },
-            ]
-        }
+        mock_search.return_value = return_value
 
-        response = await _get_callout_resource_names(
-            user_id=-1, model=campaign_callouts
-        )
-        assert response == ["resource_name_1", "resource_name_2"]
+        if isinstance(expected, list):
+            response = await _get_callout_resource_names(
+                user_id=-1, model=campaign_callouts
+            )
+            assert response == expected
+        else:
+            with pytest.raises(ValueError, match="Callouts not found: {'Callout 2'}"):
+                await _get_callout_resource_names(user_id=-1, model=campaign_callouts)
