@@ -102,7 +102,7 @@ agents = [
     "fastcore==1.6.7",
     "asyncer==0.0.7",
     "pydantic==2.8.2",
-    "tenacity==8.5.0",
+    "tenacity==9.0.0",
     "prometheus-client==0.20.0",
     "opentelemetry-distro==0.47b0",
     "opentelemetry-instrumentation-fastapi==0.47b0",
