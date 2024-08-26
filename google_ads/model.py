@@ -201,3 +201,10 @@ class CampaignCallouts(BaseModel):
         if error_message:
             raise ValueError(error_message)
         return callouts
+
+
+class CampaignSharedSet(BaseModel):
+    login_customer_id: Optional[str] = None
+    customer_id: str
+    campaign_id: str
+    shared_set_name: str
