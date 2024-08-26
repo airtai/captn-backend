@@ -90,7 +90,7 @@ benchmarking = [
 ]
 
 agents = [
-    "fastapi==0.111.1",
+    "fastapi==0.112.2",
     "APScheduler==3.10.4",
     "prisma==0.13.1",
     "google-ads==24.1.0",
