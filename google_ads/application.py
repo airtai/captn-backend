@@ -28,6 +28,7 @@ from .model import (
     CampaignCallouts,
     CampaignCriterion,
     CampaignLanguageCriterion,
+    CampaignSharedSet,
     CampaignSitelinks,
     Criterion,
     GeoTargetCriterion,
@@ -1795,4 +1796,70 @@ async def add_callouts_to_campaign(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+
+
+async def _get_shared_set_resource_name(
+    user_id: int,
+    model: CampaignSharedSet,
+) -> str:
+    query = f"""
+SELECT
+    shared_set.id,
+    shared_set.name
+FROM
+    shared_set
+WHERE
+    shared_set.name = "{model.shared_set_name}" AND
+    shared_set.type = "NEGATIVE_KEYWORDS" AND
+    shared_set.status != "REMOVED"
+"""  # nosec: [B608]
+    shared_set_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    if not shared_set_response[model.customer_id]:
+        raise ValueError(
+            f"Negative keywords shared set '{model.shared_set_name}' not found."
+        )
+
+    return shared_set_response[model.customer_id][0]["sharedSet"]["resourceName"]  # type: ignore[no-any-return]
+
+
+@router.post("/add-shared-set-to-campaign")
+async def add_shared_set_to_campaign(
+    user_id: int,
+    model: CampaignSharedSet,
+) -> str:
+    try:
+        shared_set_resource_name = await _get_shared_set_resource_name(
+            user_id=user_id, model=model
+        )
+
+        client = await _get_client(
+            user_id=user_id, login_customer_id=model.login_customer_id
+        )
+        campaign_service = client.get_service("CampaignService")
+        campaign_shared_set_service = client.get_service("CampaignSharedSetService")
+        campaign_set_operation = client.get_type("CampaignSharedSetOperation")
+        campaign_set = campaign_set_operation.create
+        campaign_set.campaign = campaign_service.campaign_path(
+            model.customer_id, model.campaign_id
+        )
+        campaign_set.shared_set = shared_set_resource_name
+
+        campaign_shared_set_resource_name = (
+            campaign_shared_set_service.mutate_campaign_shared_sets(
+                customer_id=model.customer_id, operations=[campaign_set_operation]
+            )
+        )
+
+        return f"Linked campaign shared set {campaign_shared_set_resource_name.results[0].resource_name}."
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
