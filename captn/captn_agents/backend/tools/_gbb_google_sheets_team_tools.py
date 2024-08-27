@@ -19,6 +19,7 @@ from google_ads.model import (
     CampaignCallouts,
     CampaignCriterion,
     CampaignLanguageCriterion,
+    CampaignSharedSet,
     GeoTargetCriterion,
     RemoveResource,
 )
@@ -271,6 +272,33 @@ def _create_negative_campaign_keywords(
             ),
             endpoint="/add-negative-keywords-to-campaign",
             login_customer_id=login_customer_id,
+            already_checked_clients_approval=True,
+        )
+
+
+def _add_negative_campaign_keywords_lists(
+    customer_id: str,
+    login_customer_id: Optional[str],
+    campaign_id: str,
+    keywords_df: pd.DataFrame,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    negative_campaign_keywords_lists = keywords_df[
+        (keywords_df["Level"] == "Campaign List") & (keywords_df["Negative"])
+    ]
+    for _, row in negative_campaign_keywords_lists.iterrows():
+        model = CampaignSharedSet(
+            login_customer_id=login_customer_id,
+            customer_id=customer_id,
+            campaign_id=campaign_id,
+            shared_set_name=row["Keyword"],
+        )
+        google_ads_post(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+            model=model,
+            endpoint="/add-shared-set-to-campaign",
             already_checked_clients_approval=True,
         )
 
@@ -672,6 +700,14 @@ def _setup_campaign(
         all_campaign_keywords = keywords_df[
             (keywords_df["Campaign Name"] == campaign_name)
         ]
+
+        _add_negative_campaign_keywords_lists(
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            campaign_id=campaign_id,
+            keywords_df=all_campaign_keywords,
+            context=context,
+        )
 
         _create_negative_campaign_keywords(
             customer_id=customer_id,
