@@ -12,6 +12,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
     ResourceCreationResponse,
+    _add_negative_campaign_keywords_lists,
     _check_if_both_include_and_exclude_language_values_exist,
     _check_mandatory_columns,
     _get_alredy_existing_campaigns,
@@ -814,3 +815,32 @@ class TestSetupCampaigns:
         mock_requests_post.assert_called_once()
         call = mock_requests_post.call_args_list[0]
         assert call[1]["json"]["callouts"] == ["Free cancellation", "Return tickets"]
+
+    def test_add_negative_campaign_keywords_lists(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_post: Iterator[Any],
+    ) -> None:
+        keywords_df = pd.DataFrame(
+            {
+                "Campaign Name": ["My Campaign", "My Campaign"],
+                "Ad Group Name": ["My Campaign Ad Group", "My Campaign Ad Group"],
+                "Match Type": ["Exact", "Exact"],
+                "Keyword": ["Svi autobusni polasci", "my-list"],
+                "Level": [None, "Campaign List"],
+                "Negative": [False, True],
+            }
+        )
+
+        campaign_id = "12345"
+        _add_negative_campaign_keywords_lists(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            keywords_df=keywords_df,
+            campaign_id=campaign_id,
+            context=self.context,
+        )
+
+        mock_requests_post.assert_called_once()
+        call = mock_requests_post.call_args_list[0]
+        assert call[1]["json"]["shared_set_name"] == "my-list"
