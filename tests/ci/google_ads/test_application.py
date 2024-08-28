@@ -569,7 +569,7 @@ async def test_get_sitelink_resource_names(
     model = ExistingCampaignSitelinks(
         customer_id="123",
         campaign_id="456",
-        site_link_ids=["1", "2"],
+        sitelink_ids=["1", "2"],
     )
 
     with unittest.mock.patch(

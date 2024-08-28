@@ -1725,7 +1725,7 @@ async def _get_sitelink_resource_names(
     user_id: int,
     model: ExistingCampaignSitelinks,
 ) -> List[str]:
-    site_link_ids = set(model.site_link_ids)
+    sitelink_ids = set(model.sitelink_ids)
     query = f"""
 SELECT
   asset.id,
@@ -1734,7 +1734,7 @@ FROM
   asset
 WHERE
   asset.type = 'SITELINK'
-  AND asset.id IN ({','.join(site_link_ids)})
+  AND asset.id IN ({','.join(sitelink_ids)})
 """  # nosec: [B608]
 
     sitelinks_response = await search(
@@ -1745,8 +1745,8 @@ WHERE
     )
 
     assets = sitelinks_response[model.customer_id]
-    if len(assets) != len(site_link_ids):
-        missing_sitelinks = site_link_ids - {asset["asset"]["id"] for asset in assets}
+    if len(assets) != len(sitelink_ids):
+        missing_sitelinks = sitelink_ids - {asset["asset"]["id"] for asset in assets}
         raise ValueError(f"Sitelinks with IDs {missing_sitelinks} not found.")
 
     return [asset["asset"]["resourceName"] for asset in assets]

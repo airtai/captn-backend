@@ -190,7 +190,7 @@ class ExistingCampaignSitelinks(BaseModel):
     customer_id: str
     login_customer_id: Optional[str] = None
     campaign_id: str
-    site_link_ids: List[str]
+    sitelink_ids: List[str]
 
 
 class CampaignCallouts(BaseModel):
