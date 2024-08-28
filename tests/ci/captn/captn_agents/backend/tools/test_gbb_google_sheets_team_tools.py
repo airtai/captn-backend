@@ -12,6 +12,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     GoogleAdsResources,
     GoogleSheetsTeamContext,
     ResourceCreationResponse,
+    _add_existing_sitelinks,
     _add_negative_campaign_keywords_lists,
     _check_if_both_include_and_exclude_language_values_exist,
     _check_mandatory_columns,
@@ -299,6 +300,7 @@ class TestSetupCampaigns:
 
         self.customer_id = "56-789"
         self.login_customer_id = "91-789"
+        self.campaign_id = "12345"
 
         self.context = GoogleSheetsTeamContext(
             user_id=self.user_id,
@@ -609,7 +611,7 @@ class TestSetupCampaigns:
         _update_geo_targeting(
             customer_id=self.customer_id,
             login_customer_id=self.login_customer_id,
-            campaign_id="12345",
+            campaign_id=self.campaign_id,
             campaign_row=campaign_row,
             context=self.context,
             columns_prefix=columns_prefix,
@@ -771,12 +773,10 @@ class TestSetupCampaigns:
         campaign_row: pd.Series,
         expected: Optional[List[str]],
     ) -> None:
-        campaign_id = "112345"
-
         _update_language_targeting(
             customer_id=self.customer_id,
             login_customer_id=self.login_customer_id,
-            campaign_id=campaign_id,
+            campaign_id=self.campaign_id,
             campaign_row=campaign_row,
             context=self.context,
             columns_prefix="include language",
@@ -807,7 +807,7 @@ class TestSetupCampaigns:
         _update_callouts(
             customer_id=self.customer_id,
             login_customer_id=self.login_customer_id,
-            campaign_id="12345",
+            campaign_id=self.campaign_id,
             campaign_row=campaign_row,
             context=self.context,
         )
@@ -832,15 +832,40 @@ class TestSetupCampaigns:
             }
         )
 
-        campaign_id = "12345"
         _add_negative_campaign_keywords_lists(
             customer_id=self.customer_id,
             login_customer_id=self.login_customer_id,
             keywords_df=keywords_df,
-            campaign_id=campaign_id,
+            campaign_id=self.campaign_id,
             context=self.context,
         )
 
         mock_requests_post.assert_called_once()
         call = mock_requests_post.call_args_list[0]
         assert call[1]["json"]["shared_set_name"] == "my-list"
+
+    def test_add_existing_sitelinks(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_post: Iterator[Any],
+    ) -> None:
+        campaign_row = pd.Series(
+            {
+                "Campaign Name": "My Campaign",
+                "Sitelink Asset ID 1": "12345",
+                "Sitelink Asset ID 2": "23456",
+                "Sitelink text 1": "Free cancellation",
+            }
+        )
+
+        _add_existing_sitelinks(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id=self.campaign_id,
+            campaign_row=campaign_row,
+            context=self.context,
+        )
+
+        mock_requests_post.assert_called_once()
+        call = mock_requests_post.call_args_list[0]
+        assert call[1]["json"]["sitelink_ids"] == ["12345", "23456"]

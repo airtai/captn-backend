@@ -20,6 +20,7 @@ from google_ads.model import (
     CampaignCriterion,
     CampaignLanguageCriterion,
     CampaignSharedSet,
+    ExistingCampaignSitelinks,
     GeoTargetCriterion,
     RemoveResource,
 )
@@ -611,6 +612,56 @@ def _check_if_both_include_and_exclude_language_values_exist(
     )
 
 
+def _add_existing_sitelinks(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    columns = [
+        col for col in campaign_row.index if col.lower().startswith("sitelink asset id")
+    ]
+    sitelink_ids = [campaign_row[col] for col in columns if campaign_row[col]]
+
+    if len(sitelink_ids) == 0:
+        return
+
+    model = ExistingCampaignSitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        sitelink_ids=sitelink_ids,
+    )
+
+    google_ads_post(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        model=model,
+        endpoint="/add-sitelinks-to-campaign",
+        already_checked_clients_approval=True,
+    )
+
+
+def _update_sitelinks(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    _add_existing_sitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
+
+    # TODO: Add support for creating new sitelinks
+
+
 def _update_campaign_with_additional_settings(
     customer_id: str,
     login_customer_id: str,
@@ -652,6 +703,14 @@ def _update_campaign_with_additional_settings(
         )
 
     _update_callouts(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
+
+    _update_sitelinks(
         customer_id=customer_id,
         login_customer_id=login_customer_id,
         campaign_id=campaign_id,
