@@ -29,9 +29,10 @@ from .model import (
     CampaignCriterion,
     CampaignLanguageCriterion,
     CampaignSharedSet,
-    CampaignSitelinks,
     Criterion,
+    ExistingCampaignSitelinks,
     GeoTargetCriterion,
+    NewCampaignSitelinks,
     RemoveResource,
 )
 
@@ -1637,7 +1638,7 @@ def _link_assets_to_campaign(
     )
 
 
-def _create_sitelink_operations(client: Any, model: CampaignSitelinks) -> List[Any]:
+def _create_sitelink_operations(client: Any, model: NewCampaignSitelinks) -> List[Any]:
     operations = []
     for site_link in model.site_links:
         operation = client.get_type("AssetOperation")
@@ -1663,9 +1664,9 @@ def _create_callout_operations(client: Any, model: CampaignCallouts) -> List[Any
 
 
 def _create_assets(
-    client: Any, model: Union[CampaignSitelinks, CampaignCallouts]
+    client: Any, model: Union[NewCampaignSitelinks, CampaignCallouts]
 ) -> List[str]:
-    if isinstance(model, CampaignSitelinks):
+    if isinstance(model, NewCampaignSitelinks):
         operations = _create_sitelink_operations(client, model)
     else:
         operations = _create_callout_operations(client, model)
@@ -1683,7 +1684,7 @@ def _create_assets(
 
 def _create_assets_helper(
     client: Any,
-    model: Union[CampaignSitelinks, CampaignCallouts],
+    model: Union[NewCampaignSitelinks, CampaignCallouts],
     field_type: Any,
 ) -> str:
     try:
@@ -1707,7 +1708,7 @@ def _create_assets_helper(
 @router.post("/create-sitelinks-for-campaign")
 async def create_sitelinks_for_campaign(
     user_id: int,
-    model: CampaignSitelinks,
+    model: NewCampaignSitelinks,
 ) -> str:
     client = await _get_client(
         user_id=user_id, login_customer_id=model.login_customer_id
@@ -1718,6 +1719,63 @@ async def create_sitelinks_for_campaign(
     )
 
     return result
+
+
+async def _get_sitelink_resource_names(
+    user_id: int,
+    model: ExistingCampaignSitelinks,
+) -> List[str]:
+    site_link_ids = set(model.site_link_ids)
+    query = f"""
+SELECT
+  asset.id,
+  asset.name
+FROM
+  asset
+WHERE
+  asset.type = 'SITELINK'
+  AND asset.id IN ({','.join(site_link_ids)})
+"""  # nosec: [B608]
+
+    sitelinks_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    assets = sitelinks_response[model.customer_id]
+    if len(assets) != len(site_link_ids):
+        missing_sitelinks = site_link_ids - {asset["asset"]["id"] for asset in assets}
+        raise ValueError(f"Sitelinks with IDs {missing_sitelinks} not found.")
+
+    return [asset["asset"]["resourceName"] for asset in assets]
+
+
+@router.post("/add-sitelinks-to-campaign")
+async def add_sitelinks_to_campaign(
+    user_id: int,
+    model: ExistingCampaignSitelinks,
+) -> str:
+    try:
+        client = await _get_client(
+            user_id=user_id, login_customer_id=model.login_customer_id
+        )
+        resource_names = await _get_sitelink_resource_names(user_id, model)
+        if len(resource_names) == 0:
+            return "No sitelinks found to add to the campaign."
+        _link_assets_to_campaign(
+            client=client,
+            customer_id=model.customer_id,
+            campaign_id=model.campaign_id,
+            resource_names=resource_names,
+            field_type=client.enums.AssetFieldTypeEnum.SITELINK,
+        )
+        return f"Linked following sitelinks to campaign '{model.campaign_id}': {resource_names}"
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post("/create-callouts-for-campaign")

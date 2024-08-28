@@ -10,6 +10,7 @@ from google_ads.application import (
     _check_if_customer_id_is_manager_or_exception_is_raised,
     _get_callout_resource_names,
     _get_shared_set_resource_name,
+    _get_sitelink_resource_names,
     _read_avaliable_languages,
     _set_fields_ad_copy,
     _set_headline_or_description,
@@ -20,6 +21,7 @@ from google_ads.model import (
     AdCopy,
     CampaignCallouts,
     CampaignSharedSet,
+    ExistingCampaignSitelinks,
     GeoTargetCriterion,
 )
 
@@ -515,3 +517,69 @@ async def test_get_shared_set_resource_name(
                 await _get_shared_set_resource_name(
                     user_id=-1, model=campaign_shared_set
                 )
+
+
+@pytest.mark.parametrize(
+    ("return_value", "expected"),
+    [
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "id": "1",
+                        }
+                    },
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_2",
+                            "id": "2",
+                        }
+                    },
+                ]
+            },
+            ["resource_name_1", "resource_name_2"],
+        ),
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "id": "1",
+                        }
+                    },
+                ]
+            },
+            ValueError,
+        ),
+        (
+            {
+                "123": [],
+            },
+            ValueError,
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_sitelink_resource_names(
+    return_value: Dict[str, List[Any]], expected: Union[List[str], ValueError]
+) -> None:
+    model = ExistingCampaignSitelinks(
+        customer_id="123",
+        campaign_id="456",
+        site_link_ids=["1", "2"],
+    )
+
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.return_value = return_value
+
+        if isinstance(expected, list):
+            response = await _get_sitelink_resource_names(user_id=-1, model=model)
+            assert response == expected
+        else:
+            with pytest.raises(ValueError, match="Sitelinks with IDs"):
+                await _get_sitelink_resource_names(user_id=-1, model=model)

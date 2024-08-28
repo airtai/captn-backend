@@ -179,11 +179,18 @@ class SiteLink(BaseModel):
         return values
 
 
-class CampaignSitelinks(BaseModel):
+class NewCampaignSitelinks(BaseModel):
     customer_id: str
     login_customer_id: Optional[str] = None
     campaign_id: str
     site_links: List[SiteLink]
+
+
+class ExistingCampaignSitelinks(BaseModel):
+    customer_id: str
+    login_customer_id: Optional[str] = None
+    campaign_id: str
+    site_link_ids: List[str]
 
 
 class CampaignCallouts(BaseModel):
