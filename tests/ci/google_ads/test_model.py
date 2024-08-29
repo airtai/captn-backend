@@ -108,7 +108,7 @@ class TestSiteLink:
                     description2=description2,
                 )
             assert (
-                "Either both description1 and description2 should be provided, or neither"
+                "Either both sitelink description1 and description2 should be provided, or neither"
                 in str(exc_info.value)
             )
         else:

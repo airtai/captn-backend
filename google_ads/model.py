@@ -173,17 +173,24 @@ class SiteLink(BaseModel):
 
         if (description1 is None) != (description2 is None):
             raise ValueError(
-                "Either both description1 and description2 should be provided, or neither."
+                "Either both sitelink description1 and description2 should be provided, or neither."
             )
 
         return values
 
 
-class CampaignSitelinks(BaseModel):
+class NewCampaignSitelinks(BaseModel):
     customer_id: str
     login_customer_id: Optional[str] = None
     campaign_id: str
     site_links: List[SiteLink]
+
+
+class ExistingCampaignSitelinks(BaseModel):
+    customer_id: str
+    login_customer_id: Optional[str] = None
+    campaign_id: str
+    sitelink_ids: List[str]
 
 
 class CampaignCallouts(BaseModel):

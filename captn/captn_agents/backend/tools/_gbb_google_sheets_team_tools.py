@@ -20,8 +20,11 @@ from google_ads.model import (
     CampaignCriterion,
     CampaignLanguageCriterion,
     CampaignSharedSet,
+    ExistingCampaignSitelinks,
     GeoTargetCriterion,
+    NewCampaignSitelinks,
     RemoveResource,
+    SiteLink,
 )
 
 from ....google_ads.client import (
@@ -221,15 +224,15 @@ def _create_campaign(
     login_customer_id: Optional[str],
     context: GoogleSheetsTeamContext,
 ) -> Union[Dict[str, Any], str]:
-    budget_amount_micros = int(campaign_row["Campaign Budget"]) * 1_000_000
+    budget_amount_micros = int(campaign_row["campaign budget"]) * 1_000_000
 
     campaign = Campaign(
         customer_id=customer_id,
-        name=campaign_row["Campaign Name"],
+        name=campaign_row["campaign name"],
         budget_amount_micros=budget_amount_micros,
         status="PAUSED",
-        network_settings_target_google_search=campaign_row["Google Search Network"],
-        network_settings_target_search_network=campaign_row["Search Network"],
+        network_settings_target_google_search=campaign_row["google search network"],
+        network_settings_target_search_network=campaign_row["search network"],
         network_settings_target_content_network=False,
         manual_cpc=True,
         budget_explicitly_shared=False,
@@ -255,7 +258,7 @@ def _create_negative_campaign_keywords(
     context: GoogleSheetsTeamContext,
 ) -> None:
     negative_campaign_keywords = keywords_df[
-        (keywords_df["Level"] == "Campaign") & (keywords_df["Negative"])
+        (keywords_df["level"] == "Campaign") & (keywords_df["negative"])
     ]
     for _, row in negative_campaign_keywords.iterrows():
         google_ads_create_update(
@@ -266,8 +269,8 @@ def _create_negative_campaign_keywords(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
                 status="ENABLED",
-                keyword_match_type=row["Match Type"].upper(),
-                keyword_text=row["Keyword"],
+                keyword_match_type=row["match type"].upper(),
+                keyword_text=row["keyword"],
                 negative=True,
             ),
             endpoint="/add-negative-keywords-to-campaign",
@@ -284,14 +287,14 @@ def _add_negative_campaign_keywords_lists(
     context: GoogleSheetsTeamContext,
 ) -> None:
     negative_campaign_keywords_lists = keywords_df[
-        (keywords_df["Level"] == "Campaign List") & (keywords_df["Negative"])
+        (keywords_df["level"] == "Campaign List") & (keywords_df["negative"])
     ]
     for _, row in negative_campaign_keywords_lists.iterrows():
         model = CampaignSharedSet(
             login_customer_id=login_customer_id,
             customer_id=customer_id,
             campaign_id=campaign_id,
-            shared_set_name=row["Keyword"],
+            shared_set_name=row["keyword"],
         )
         google_ads_post(
             user_id=context.user_id,
@@ -312,7 +315,7 @@ def _create_negative_ad_group_keywords(
     context: GoogleSheetsTeamContext,
 ) -> None:
     ad_group_negative_keywords = ad_group_keywords_df[
-        (ad_group_keywords_df["Negative"])
+        (ad_group_keywords_df["negative"])
     ]
     for _, row in ad_group_negative_keywords.iterrows():
         negative_keyword = AdGroupCriterion(
@@ -320,8 +323,8 @@ def _create_negative_ad_group_keywords(
             campaign_id=campaign_id,
             ad_group_id=ad_group_id,
             status="ENABLED",
-            keyword_text=row["Keyword"],
-            keyword_match_type=row["Match Type"].upper(),
+            keyword_text=row["keyword"],
+            keyword_match_type=row["match type"].upper(),
             negative=True,
         )
 
@@ -356,9 +359,9 @@ def _create_ad_group_with_ad_and_keywords_helper(
     )
 
     ad_group_positive_keywords = ad_group_keywords_df[
-        (~ad_group_keywords_df["Negative"])
+        (~ad_group_keywords_df["negative"])
     ]
-    positive_keywords_list = ad_group_positive_keywords["Keyword"].tolist()
+    positive_keywords_list = ad_group_positive_keywords["keyword"].tolist()
     ad_group_positive_keywords = []
     for keyword in positive_keywords_list:
         ad_group_positive_keywords.append(
@@ -406,7 +409,7 @@ def _get_alredy_existing_campaigns(
     customer_id: str,
     login_customer_id: str,
 ) -> List[str]:
-    distinct_campaign_names = df["Campaign Name"].unique().tolist()
+    distinct_campaign_names = df["campaign name"].unique().tolist()
     distinct_campaign_names_str = ", ".join(
         [f"'{name}'" for name in distinct_campaign_names]
     )
@@ -611,6 +614,113 @@ def _check_if_both_include_and_exclude_language_values_exist(
     )
 
 
+def _add_existing_sitelinks(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    columns = [
+        col for col in campaign_row.index if col.lower().startswith("sitelink asset id")
+    ]
+    sitelink_ids = [campaign_row[col] for col in columns if campaign_row[col]]
+
+    if len(sitelink_ids) == 0:
+        return
+
+    model = ExistingCampaignSitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        sitelink_ids=sitelink_ids,
+    )
+
+    google_ads_post(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        model=model,
+        endpoint="/add-sitelinks-to-campaign",
+        already_checked_clients_approval=True,
+    )
+
+
+def _add_new_sitelinks(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    columns = [
+        str(col)
+        for col in campaign_row.index
+        if col.lower().startswith("sitelink") and "text" in col.lower()
+    ]
+    site_links = []
+    for col in columns:
+        link_text = campaign_row[col]
+        final_url = campaign_row.get(col.replace("text", "final url"), None)
+        if link_text is None or final_url is None:
+            continue
+        site_links.append(
+            SiteLink(
+                link_text=link_text,
+                final_urls=[final_url],
+                description1=campaign_row.get(
+                    col.replace("text", "description 1"), None
+                ),
+                description2=campaign_row.get(
+                    col.replace("text", "description 2"), None
+                ),
+            )
+        )
+
+    if len(site_links) == 0:
+        return
+
+    model = NewCampaignSitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        site_links=site_links,
+    )
+
+    google_ads_post(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        model=model,
+        endpoint="/create-sitelinks-for-campaign",
+        already_checked_clients_approval=True,
+    )
+
+
+def _update_sitelinks(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    _add_existing_sitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
+
+    _add_new_sitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
+
+
 def _update_campaign_with_additional_settings(
     customer_id: str,
     login_customer_id: str,
@@ -659,6 +769,14 @@ def _update_campaign_with_additional_settings(
         context=context,
     )
 
+    _update_sitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
+
 
 def _setup_campaign(
     customer_id: str,
@@ -671,7 +789,7 @@ def _setup_campaign(
 ) -> Tuple[bool, Optional[str]]:
     campaign_id = None
     created_campaign_names_and_ids: Dict[str, Dict[str, Any]] = {}
-    campaign_name = campaign_row["Campaign Name"]
+    campaign_name = campaign_row["campaign name"]
     try:
         response = _create_campaign(
             campaign_row=campaign_row,
@@ -698,7 +816,7 @@ def _setup_campaign(
         )
 
         all_campaign_keywords = keywords_df[
-            (keywords_df["Campaign Name"] == campaign_name)
+            (keywords_df["campaign name"] == campaign_name)
         ]
 
         _add_negative_campaign_keywords_lists(
@@ -717,7 +835,7 @@ def _setup_campaign(
             context=context,
         )
 
-        for _, row in ads_df[ads_df["Campaign Name"] == campaign_name].iterrows():
+        for _, row in ads_df[ads_df["campaign name"] == campaign_name].iterrows():
             headlines = [
                 row[col] for col in row.index if col.lower().startswith("headline")
             ]
@@ -725,9 +843,9 @@ def _setup_campaign(
                 row[col] for col in row.index if col.lower().startswith("description")
             ]
 
-            path1 = row.get("Path 1", None)
-            path2 = row.get("Path 2", None)
-            final_url = row.get("Final URL")
+            path1 = row.get("path 1", None)
+            path2 = row.get("path 2", None)
+            final_url = row.get("final url")
 
             campaign = created_campaign_names_and_ids[campaign_name]
             ad_group_ad = AdGroupAdForCreation(
@@ -742,8 +860,8 @@ def _setup_campaign(
             )
 
             # If ad group already exists, create only ad group ad
-            if row["Ad Group Name"] in campaign["ad_groups"]:
-                ad_group_ad.ad_group_id = campaign["ad_groups"][row["Ad Group Name"]]
+            if row["ad group name"] in campaign["ad_groups"]:
+                ad_group_ad.ad_group_id = campaign["ad_groups"][row["ad group name"]]
                 response = google_ads_create_update(
                     user_id=context.user_id,
                     conv_id=context.conv_id,
@@ -758,20 +876,20 @@ def _setup_campaign(
             # Otherwise, create ad group, ad group ad, and keywords
             else:
                 all_ad_group_keywords = all_campaign_keywords[
-                    all_campaign_keywords["Ad Group Name"] == row["Ad Group Name"]
+                    all_campaign_keywords["ad group name"] == row["ad group name"]
                 ]
                 _create_ad_group_with_ad_and_keywords_helper(
                     customer_id=customer_id,
                     login_customer_id=login_customer_id,
                     campaign_id=campaign_id,
-                    max_cpc=float(campaign_row["Default max. CPC"]),
-                    ad_group_name=row["Ad Group Name"],
-                    match_type=row["Match Type"],
+                    max_cpc=float(campaign_row["default max. cpc"]),
+                    ad_group_name=row["ad group name"],
+                    match_type=row["match type"],
                     ad_group_keywords_df=all_ad_group_keywords,
                     ad_group_ad=ad_group_ad,
                     context=context,
                 )
-                campaign["ad_groups"][row["Ad Group Name"]] = ad_group_ad.ad_group_id
+                campaign["ad_groups"][row["ad group name"]] = ad_group_ad.ad_group_id
 
         message = f"[{datetime.now(ZAGREB_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')}] Created campaign: {campaign_name}"
         iostream.print(colored(message, "green"), flush=True)
@@ -817,7 +935,7 @@ def _setup_campaigns(
     created_campaigns: List[str] = []
     failed_campaigns: Dict[str, str] = {}
     for _, campaign_row in campaigns_df.iterrows():
-        campaign_name = campaign_row["Campaign Name"]
+        campaign_name = campaign_row["campaign name"]
 
         success, error_message = _setup_campaign(
             customer_id=customer_id,
@@ -876,7 +994,7 @@ def _setup_campaigns_with_retry(
             colored(f"{i + 1}. retry to create failed campaigns.", "yellow"), flush=True
         )
         retry_campaigns = campaigns_df[
-            campaigns_df["Campaign Name"].isin(
+            campaigns_df["campaign name"].isin(
                 resource_creation_response.failed_campaigns.keys()
             )
         ]
@@ -919,13 +1037,17 @@ def create_google_ads_resources(
     ads_df = ads_df.map(lambda x: x.strip() if isinstance(x, str) else x)
     keywords_df = keywords_df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
-    campaigns_df["Google Search Network"] = (
-        campaigns_df["Google Search Network"].str.upper().eq("TRUE")
+    campaigns_df.columns = campaigns_df.columns.str.lower()
+    ads_df.columns = ads_df.columns.str.lower()
+    keywords_df.columns = keywords_df.columns.str.lower()
+
+    campaigns_df["google search network"] = (
+        campaigns_df["google search network"].str.upper().eq("TRUE")
     )
-    campaigns_df["Search Network"] = (
-        campaigns_df["Search Network"].str.upper().eq("TRUE")
+    campaigns_df["search network"] = (
+        campaigns_df["search network"].str.upper().eq("TRUE")
     )
-    keywords_df["Negative"] = keywords_df["Negative"].str.upper().eq("TRUE")
+    keywords_df["negative"] = keywords_df["negative"].str.upper().eq("TRUE")
 
     skip_campaigns = _get_alredy_existing_campaigns(
         campaigns_df,
@@ -944,7 +1066,7 @@ def create_google_ads_resources(
     message = "Creating campaigns and resources, usually takes 90 seconds to setup one campaign."
     iostream.print(colored(message, "yellow"), flush=True)
 
-    campaigns_df = campaigns_df[~campaigns_df["Campaign Name"].isin(skip_campaigns)]
+    campaigns_df = campaigns_df[~campaigns_df["campaign name"].isin(skip_campaigns)]
 
     resource_creation_response = _setup_campaigns_with_retry(
         customer_id=google_ads_resources.customer_id,
