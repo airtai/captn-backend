@@ -219,7 +219,7 @@ Croatia | Ancona-Split | Search | Croatia | EN""",
         ):
             df = pd.DataFrame(
                 {
-                    "Campaign Name": [
+                    "campaign name": [
                         "abcd",
                         "netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
                         "Netherlands | Eindhoven-Amsterdam | Search | Worldwide | EN",
@@ -333,54 +333,54 @@ class TestSetupCampaigns:
     ) -> None:
         campaigns_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign"],
-                "Campaign Budget": ["10"],
-                "Search Network": [True],
-                "Google Search Network": [True],
-                "Default max. CPC": ["0.30"],
+                "campaign name": ["My Campaign"],
+                "campaign budget": ["10"],
+                "search network": [True],
+                "google search network": [True],
+                "default max. cpc": ["0.30"],
             }
         )
 
         ads_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign"],
-                "Campaign Budget": ["10"],
-                "Ad Group Name": ["My Campaign Ad Group"],
-                "Match Type": ["Exact"],
-                "Headline 1": [headline],
-                "Headline 2": ["Svi autobusni polasci"],
-                "Headline 3": ["Svi autobusni polasci"],
-                "Headline 4": ["Svi autobusni polasci"],
-                "Headline 5": ["Svi autobusni polasci"],
-                "Headline 6": ["Svi autobusni polasci"],
-                "Headline 7": ["Svi autobusni polasci"],
-                "Headline 8": ["Svi autobusni polasci"],
-                "Headline 9": ["Svi autobusni polasci"],
-                "Headline 10": ["Svi autobusni polasci"],
-                "Headline 11": ["Svi autobusni polasci"],
-                "Headline 12": ["Svi autobusni polasci"],
-                "Headline 13": ["Svi autobusni polasci"],
-                "Headline 14": ["Svi autobusni polasci"],
-                "Headline 15": ["Svi autobusni polasci"],
-                "Description Line 1": ["Svi autobusni polasci"],
-                "Description Line 2": ["Svi autobusni polasci"],
-                "Description Line 3": ["Svi autobusni polasci"],
-                "Description Line 4": ["Svi autobusni polasci"],
-                "Path 1": [None],
-                "Path 2": [None],
-                "Final URL": ["https://www.example.com"],
+                "campaign name": ["My Campaign"],
+                "campaign budget": ["10"],
+                "ad group name": ["My Campaign Ad Group"],
+                "match type": ["Exact"],
+                "headline 1": [headline],
+                "headline 2": ["Svi autobusni polasci"],
+                "headline 3": ["Svi autobusni polasci"],
+                "headline 4": ["Svi autobusni polasci"],
+                "headline 5": ["Svi autobusni polasci"],
+                "headline 6": ["Svi autobusni polasci"],
+                "headline 7": ["Svi autobusni polasci"],
+                "headline 8": ["Svi autobusni polasci"],
+                "headline 9": ["Svi autobusni polasci"],
+                "headline 10": ["Svi autobusni polasci"],
+                "headline 11": ["Svi autobusni polasci"],
+                "headline 12": ["Svi autobusni polasci"],
+                "headline 13": ["Svi autobusni polasci"],
+                "headline 14": ["Svi autobusni polasci"],
+                "headline 15": ["Svi autobusni polasci"],
+                "description line1": ["Svi autobusni polasci"],
+                "description line2": ["Svi autobusni polasci"],
+                "description line3": ["Svi autobusni polasci"],
+                "description line4": ["Svi autobusni polasci"],
+                "path 1": [None],
+                "path 2": [None],
+                "final url": ["https://www.example.com"],
             }
         )
 
         keywords_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign"],
-                "Campaign Budget": ["10"],
-                "Ad Group Name": ["My Campaign Ad Group"],
-                "Match Type": ["Exact"],
-                "Keyword": ["Svi autobusni polasci"],
-                "Level": [None],
-                "Negative": [False],
+                "campaign name": ["My Campaign"],
+                "campaign budget": ["10"],
+                "ad group name": ["My Campaign Ad Group"],
+                "match type": ["Exact"],
+                "keyword": ["Svi autobusni polasci"],
+                "level": [None],
+                "negative": [False],
             }
         )
 
@@ -432,6 +432,7 @@ class TestSetupCampaigns:
                 "Final URL": ["https://www.example.com", "https://www.example.com"],
             }
         )
+        ads_df.columns = ads_df.columns.str.lower()
         return ads_df
 
     @pytest.mark.parametrize(
@@ -474,23 +475,23 @@ class TestSetupCampaigns:
 
         keywords_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
-                "Campaign Budget": ["10", "10"],
-                "Ad Group Name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
-                "Match Type": ["Exact", "Exact"],
-                "Keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
-                "Level": [None, None],
-                "Negative": [False, False],
+                "campaign name": ["My Campaign 1", "My Campaign 2"],
+                "campaign budget": ["10", "10"],
+                "ad group name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
+                "match type": ["Exact", "Exact"],
+                "keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
+                "level": [None, None],
+                "negative": [False, False],
             }
         )
 
         campaigns_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
-                "Campaign Budget": ["10", "10"],
-                "Search Network": [True, True],
-                "Google Search Network": [True, True],
-                "Default max. CPC": ["0.30", "0.30"],
+                "campaign name": ["My Campaign 1", "My Campaign 2"],
+                "campaign budget": ["10", "10"],
+                "search network": [True, True],
+                "google search network": [True, True],
+                "default max. cpc": ["0.30", "0.30"],
             }
         )
 
@@ -532,22 +533,22 @@ class TestSetupCampaigns:
 
         keywords_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
-                "Ad Group Name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
-                "Match Type": ["Exact", "Exact"],
-                "Keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
-                "Level": [None, None],
-                "Negative": [False, False],
+                "campaign name": ["My Campaign 1", "My Campaign 2"],
+                "ad group name": ["My Campaign Ad Group 1", "My Campaign Ad Group 2"],
+                "match type": ["Exact", "Exact"],
+                "keyword": ["Svi autobusni polasci", "Svi autobusni polasci"],
+                "level": [None, None],
+                "negative": [False, False],
             }
         )
 
         campaigns_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign 1", "My Campaign 2"],
-                "Campaign Budget": ["10", "10"],
-                "Search Network": [True, True],
-                "Google Search Network": [True, True],
-                "Default max. CPC": ["0.30", "0.30"],
+                "campaign name": ["My Campaign 1", "My Campaign 2"],
+                "campaign budget": ["10", "10"],
+                "search network": [True, True],
+                "google search network": [True, True],
+                "default max. cpc": ["0.30", "0.30"],
             }
         )
 
@@ -599,13 +600,13 @@ class TestSetupCampaigns:
     ) -> None:
         campaign_row = pd.Series(
             {
-                "Campaign Name": "My Campaign",
-                "Include Location 1": "Croatia",
-                "Include Location 2": "Slovenia",
-                "Include Location 3": None,
-                "Exclude Location 1": "Montenegro",
-                "Exclude Location 2": None,
-                "Exclude Location 3": None,
+                "campaign name": "My Campaign",
+                "include location 1": "Croatia",
+                "include location 2": "Slovenia",
+                "include location 3": None,
+                "exclude location 1": "Montenegro",
+                "exclude location 2": None,
+                "exclude location 3": None,
             }
         )
 
@@ -631,9 +632,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Include Language 2": "Croatian",
-                        "Include Language 3": None,
+                        "include language 1": "English",
+                        "include language 2": "Croatian",
+                        "include language 3": None,
                     }
                 ),
                 ["en", "hr"],
@@ -641,9 +642,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Include Language 2": "Croatian",
-                        "Include Language 3": "German",
+                        "include language 1": "English",
+                        "include language 2": "Croatian",
+                        "include language 3": "German",
                     }
                 ),
                 ["en", "hr", "de"],
@@ -651,9 +652,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Include Language 2": "English",
-                        "Include Language 3": None,
+                        "include language 1": "English",
+                        "include language 2": "English",
+                        "include language 3": None,
                     }
                 ),
                 ["en"],
@@ -661,10 +662,10 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Include Language 2": "Croatian",
-                        "Include Language 3": "German",
-                        "Include Language 4": "Non valid language",
+                        "include language 1": "English",
+                        "include language 2": "Croatian",
+                        "include language 3": "German",
+                        "include language 4": "Non valid language",
                     }
                 ),
                 ValueError,
@@ -690,9 +691,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Include Language 2": "Croatian",
-                        "Include Language 3": None,
+                        "include language 1": "English",
+                        "include language 2": "Croatian",
+                        "include language 3": None,
                     }
                 ),
                 None,
@@ -700,9 +701,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Exclude Language 1": "English",
-                        "Exclude Language 2": "Croatian",
-                        "Exclude Language 3": "German",
+                        "exclude language 1": "English",
+                        "exclude language 2": "Croatian",
+                        "exclude language 3": "German",
                     }
                 ),
                 None,
@@ -710,8 +711,8 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Exclude Language 2": "Croatian",
+                        "include language 1": "English",
+                        "exclude language 2": "Croatian",
                     }
                 ),
                 ValueError,
@@ -739,9 +740,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Include Language 2": "Croatian",
-                        "Include Language 3": None,
+                        "include language 1": "English",
+                        "include language 2": "Croatian",
+                        "include language 3": None,
                     }
                 ),
                 ["en", "hr"],
@@ -749,9 +750,9 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": "English",
-                        "Include Language 2": "Croatian",
-                        "Include Language 3": "German",
+                        "include language 1": "English",
+                        "include language 2": "Croatian",
+                        "include language 3": "German",
                     }
                 ),
                 ["en", "hr", "de"],
@@ -759,8 +760,8 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Include Language 1": None,
-                        "Include Language 2": None,
+                        "include language 1": None,
+                        "include language 2": None,
                     }
                 ),
                 None,
@@ -824,12 +825,12 @@ class TestSetupCampaigns:
     ) -> None:
         keywords_df = pd.DataFrame(
             {
-                "Campaign Name": ["My Campaign", "My Campaign"],
-                "Ad Group Name": ["My Campaign Ad Group", "My Campaign Ad Group"],
-                "Match Type": ["Exact", "Exact"],
-                "Keyword": ["Svi autobusni polasci", "my-list"],
-                "Level": [None, "Campaign List"],
-                "Negative": [False, True],
+                "campaign name": ["My Campaign", "My Campaign"],
+                "ad group name": ["My Campaign Ad Group", "My Campaign Ad Group"],
+                "match type": ["Exact", "Exact"],
+                "keyword": ["Svi autobusni polasci", "my-list"],
+                "level": [None, "Campaign List"],
+                "negative": [False, True],
             }
         )
 
@@ -852,10 +853,10 @@ class TestSetupCampaigns:
     ) -> None:
         campaign_row = pd.Series(
             {
-                "Campaign Name": "My Campaign",
-                "Sitelink Asset ID 1": "12345",
-                "Sitelink Asset ID 2": "23456",
-                "Sitelink text 1": "Free cancellation",
+                "campaign name": "My Campaign",
+                "sitelink asset id 1": "12345",
+                "sitelink asset id 2": "23456",
+                "sitelink text 1": "Free cancellation",
             }
         )
 
@@ -877,15 +878,15 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Campaign Name": "My Campaign",
-                        "Sitelink 1 Text": "Free cancellation",
-                        "Sitelink 2 Text": "Return tickets",
-                        "Sitelink 1 Final URL": "https://www.example.com",
-                        "Sitelink 2 Final URL": "https://www.example2.com",
-                        "Sitelink 1 Description 1": "s1 d1",
-                        "Sitelink 1 Description 2": "s1 d2",
-                        "Sitelink 2 Description 1": None,
-                        "Sitelink 2 Description 2": None,
+                        "campaign name": "My Campaign",
+                        "sitelink 1 text": "Free cancellation",
+                        "sitelink 2 text": "Return tickets",
+                        "sitelink 1 final url": "https://www.example.com",
+                        "sitelink 2 final url": "https://www.example2.com",
+                        "sitelink 1 description 1": "s1 d1",
+                        "sitelink 1 description 2": "s1 d2",
+                        "sitelink 2 description 1": None,
+                        "sitelink 2 description 2": None,
                     }
                 ),
                 [
@@ -906,13 +907,13 @@ class TestSetupCampaigns:
             (
                 pd.Series(
                     {
-                        "Campaign Name": "My Campaign",
-                        "Sitelink 1 Text": "Free cancellation",
-                        "Sitelink 1 Final URL": "https://www.example.com",
-                        "Sitelink 1 Description 1": "s1 d1",
-                        "Sitelink 1 Description 2": "s1 d2",
-                        "Sitelink 2 Text": None,
-                        "Sitelink 2 Final URL": None,
+                        "campaign name": "My Campaign",
+                        "sitelink 1 text": "Free cancellation",
+                        "sitelink 1 final url": "https://www.example.com",
+                        "sitelink 1 description 1": "s1 d1",
+                        "sitelink 1 description 2": "s1 d2",
+                        "sitelink 2 text": None,
+                        "sitelink 2 final url": None,
                     }
                 ),
                 [
@@ -944,18 +945,4 @@ class TestSetupCampaigns:
         mock_requests_post.assert_called_once()
         call = mock_requests_post.call_args_list[0]
 
-        # site_links = [
-        #     {
-        #         "final_urls": ["https://www.example.com"],
-        #         "link_text": "Free cancellation",
-        #         "description1": "s1 d1",
-        #         "description2": "s1 d2",
-        #     },
-        #     {
-        #         "final_urls": ["https://www.example2.com"],
-        #         "link_text": "Return tickets",
-        #         "description1": None,
-        #         "description2": None,
-        #     },
-        # ]
         assert call[1]["json"]["site_links"] == expected
