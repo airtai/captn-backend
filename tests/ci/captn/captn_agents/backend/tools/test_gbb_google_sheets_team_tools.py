@@ -14,6 +14,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     ResourceCreationResponse,
     _add_existing_sitelinks,
     _add_negative_campaign_keywords_lists,
+    _add_new_sitelinks,
     _check_if_both_include_and_exclude_language_values_exist,
     _check_mandatory_columns,
     _get_alredy_existing_campaigns,
@@ -869,3 +870,92 @@ class TestSetupCampaigns:
         mock_requests_post.assert_called_once()
         call = mock_requests_post.call_args_list[0]
         assert call[1]["json"]["sitelink_ids"] == ["12345", "23456"]
+
+    @pytest.mark.parametrize(
+        ("campaign_row", "expected"),
+        [
+            (
+                pd.Series(
+                    {
+                        "Campaign Name": "My Campaign",
+                        "Sitelink 1 Text": "Free cancellation",
+                        "Sitelink 2 Text": "Return tickets",
+                        "Sitelink 1 Final URL": "https://www.example.com",
+                        "Sitelink 2 Final URL": "https://www.example2.com",
+                        "Sitelink 1 Description 1": "s1 d1",
+                        "Sitelink 1 Description 2": "s1 d2",
+                        "Sitelink 2 Description 1": None,
+                        "Sitelink 2 Description 2": None,
+                    }
+                ),
+                [
+                    {
+                        "final_urls": ["https://www.example.com"],
+                        "link_text": "Free cancellation",
+                        "description1": "s1 d1",
+                        "description2": "s1 d2",
+                    },
+                    {
+                        "final_urls": ["https://www.example2.com"],
+                        "link_text": "Return tickets",
+                        "description1": None,
+                        "description2": None,
+                    },
+                ],
+            ),
+            (
+                pd.Series(
+                    {
+                        "Campaign Name": "My Campaign",
+                        "Sitelink 1 Text": "Free cancellation",
+                        "Sitelink 1 Final URL": "https://www.example.com",
+                        "Sitelink 1 Description 1": "s1 d1",
+                        "Sitelink 1 Description 2": "s1 d2",
+                        "Sitelink 2 Text": None,
+                        "Sitelink 2 Final URL": None,
+                    }
+                ),
+                [
+                    {
+                        "final_urls": ["https://www.example.com"],
+                        "link_text": "Free cancellation",
+                        "description1": "s1 d1",
+                        "description2": "s1 d2",
+                    },
+                ],
+            ),
+        ],
+    )
+    def test_add_new_sitelinks(
+        self,
+        mock_get_login_url: Iterator[None],
+        mock_requests_post: Iterator[Any],
+        campaign_row: pd.Series,
+        expected: List[Dict[str, Union[str, List[str]]]],
+    ) -> None:
+        _add_new_sitelinks(
+            customer_id=self.customer_id,
+            login_customer_id=self.login_customer_id,
+            campaign_id=self.campaign_id,
+            campaign_row=campaign_row,
+            context=self.context,
+        )
+
+        mock_requests_post.assert_called_once()
+        call = mock_requests_post.call_args_list[0]
+
+        # site_links = [
+        #     {
+        #         "final_urls": ["https://www.example.com"],
+        #         "link_text": "Free cancellation",
+        #         "description1": "s1 d1",
+        #         "description2": "s1 d2",
+        #     },
+        #     {
+        #         "final_urls": ["https://www.example2.com"],
+        #         "link_text": "Return tickets",
+        #         "description1": None,
+        #         "description2": None,
+        #     },
+        # ]
+        assert call[1]["json"]["site_links"] == expected

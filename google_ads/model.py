@@ -173,7 +173,7 @@ class SiteLink(BaseModel):
 
         if (description1 is None) != (description2 is None):
             raise ValueError(
-                "Either both description1 and description2 should be provided, or neither."
+                "Either both sitelink description1 and description2 should be provided, or neither."
             )
 
         return values

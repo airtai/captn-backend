@@ -22,7 +22,9 @@ from google_ads.model import (
     CampaignSharedSet,
     ExistingCampaignSitelinks,
     GeoTargetCriterion,
+    NewCampaignSitelinks,
     RemoveResource,
+    SiteLink,
 )
 
 from ....google_ads.client import (
@@ -644,6 +646,57 @@ def _add_existing_sitelinks(
     )
 
 
+def _add_new_sitelinks(
+    customer_id: str,
+    login_customer_id: str,
+    campaign_id: str,
+    campaign_row: pd.Series,
+    context: GoogleSheetsTeamContext,
+) -> None:
+    columns = [
+        str(col)
+        for col in campaign_row.index
+        if col.lower().startswith("sitelink") and "text" in col.lower()
+    ]
+    site_links = []
+    for col in columns:
+        link_text = campaign_row[col]
+        final_url = campaign_row.get(col.replace("Text", "Final URL"), None)
+        if link_text is None or final_url is None:
+            continue
+        site_links.append(
+            SiteLink(
+                link_text=link_text,
+                final_urls=[final_url],
+                description1=campaign_row.get(
+                    col.replace("Text", "Description 1"), None
+                ),
+                description2=campaign_row.get(
+                    col.replace("Text", "Description 2"), None
+                ),
+            )
+        )
+
+    if len(site_links) == 0:
+        return
+
+    model = NewCampaignSitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        site_links=site_links,
+    )
+
+    google_ads_post(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+        model=model,
+        endpoint="/create-sitelinks-for-campaign",
+        already_checked_clients_approval=True,
+    )
+
+
 def _update_sitelinks(
     customer_id: str,
     login_customer_id: str,
@@ -659,7 +712,13 @@ def _update_sitelinks(
         context=context,
     )
 
-    # TODO: Add support for creating new sitelinks
+    _add_new_sitelinks(
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        campaign_id=campaign_id,
+        campaign_row=campaign_row,
+        context=context,
+    )
 
 
 def _update_campaign_with_additional_settings(
