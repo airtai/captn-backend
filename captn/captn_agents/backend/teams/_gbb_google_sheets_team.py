@@ -110,17 +110,18 @@ Here is the current customers brief/information we have gathered for you as a st
 - Do NOT use smart suggestions when forwarding the login url to the client!
 4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with new routes.
 - Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
+  - If you think you found the correct files, use one smart suggestion ["These are the correct files."].
 - Do NOT forget this step, because the client needs to confirm that you have found the correct files, otherwise you will be penalized!
 - ALWAYS add final sentence "If these are NOT the correct files, please paste the whole URL of the correct files."
-5. In the template spreadsheet, you must must check that 'Campaigns', 'ad Groups', 'Keywords' and 'Ads' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
+5. In the template spreadsheet, you must must check that 'Campaigns', 'Ad Groups', 'Keywords' and 'Ads' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
+- mandatory input parameters: user_id, spreadsheet_id
 6. In the spreadsheet with new routes, you must find the title of the sheet with new routes (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - If there are multiple sheets within the spreadsheet, ask the client to choose the correct sheet.
-7. Once you have all the necessary information, use 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
+7. If these files contain all mandatory sheets, proceed with 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
 - query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
-8. Once the endpoint is successful write the message to the client that the new sheet has been created in the same spreadsheet as the new routes sheet.
-- If you are informed that the new sheet contains 'Issues' column, you must inform the client that the 'Issues' column has been added to the new sheet and that the client should check it and try to resolve it manually.
-- Do NOT proceed with the next steps until the client confirms that has resolved the issues. Use only ONE smart suggestion 'I have resolved the issues' and do not offer to help with the issues because you are not experienced in that area.
-9. If the user verifies that everything is correct the team should do the following:
+8. Once the endpoint is successful write the message to the client that the new sheets have been created in the same spreadsheet as the new routes sheet.
+- If you are informed that the some new sheet contains 'Issues' column, you must inform the client that the 'Issues' column has been added to the new sheet and that the client should check it and try to resolve it manually.
+9. If the newly constructed sheets do NOT contain any Issues, the team should do the following:
 - List accessible customers by using the 'list_accessible_customers_with_account_types' function. (this should be done by the Google_ads_expert)
 - Ask the user choose the correct customer id (This should be done by the Account_manager)
 - If the chosen customer is a Manager Account, list sub-accounts by using the 'list_sub_accounts' function. (this should be done by the Google_ads_expert) and ask the user to choose the correct sub-account.
@@ -174,7 +175,8 @@ If you want to refresh google sheets token or change google sheets use 'get_logi
 4. Only Google_ads_expert has access to the following commands:
 - 'list_accessible_customers_with_account_types' (to list accessible Google Ads customers with account types)
 - 'list_sub_accounts' (to list sub-accounts of a Google Ads customer, use it if the client wants to use Manager Account)
-- 'create_google_ads_resources'
+- 'create_google_ads_resources':
+parameters 'campaigns_title', 'ads_title', 'keywords_title' MUST be the same as the ones that 'process_spreadsheet_process_spreadsheet_post' function returned.
 - 'change_google_ads_account_or_refresh_token' - to change Google Ads account or refresh token (This can't be used for Google Sheets account)
 """
 
@@ -184,4 +186,6 @@ If you want to refresh google sheets token or change google sheets use 'get_logi
 
     @classmethod
     def get_brief_template(cls) -> str:
-        return "We need id of Google spreadsheet template and id of the spreadsheet with new routes."
+        return (
+            "The client wants to create new campaigns using a Google Sheets template."
+        )

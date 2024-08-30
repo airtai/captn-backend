@@ -55,7 +55,7 @@ lint = [
     "types-Pygments",
     "types-docutils",
     "types-requests",
-    "mypy==1.11.1",
+    "mypy==1.11.2",
     "black==24.4.2",
     "isort>=5",
     "ruff==0.6.1",
@@ -84,7 +84,7 @@ testing = [
 ]
 
 benchmarking = [
-    "typer==0.12.3",
+    "typer==0.12.5",
     "filelock==3.15.4",
     "tabulate==0.9.0",
 ]
@@ -99,10 +99,10 @@ agents = [
     "python-dotenv==1.0.1",
     "pyautogen[websurfer,websockets,anthropic,together]==0.2.35",
     "pandas>=2.1",
-    "fastcore==1.6.7",
+    "fastcore==1.7.1",
     "asyncer==0.0.7",
     "pydantic==2.8.2",
-    "tenacity==8.5.0",
+    "tenacity==9.0.0",
     "prometheus-client==0.20.0",
     "opentelemetry-distro==0.47b0",
     "opentelemetry-instrumentation-fastapi==0.47b0",
@@ -110,7 +110,7 @@ agents = [
     "opentelemetry-exporter-otlp==1.26.0",
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
-    "fastagency@git+https://github.com/airtai/fastagency.git@main",
+    "fastagency[studio]@git+https://github.com/airtai/fastagency.git@main",
     "markdownify==0.13.1",
 ]
 

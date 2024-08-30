@@ -1,4 +1,5 @@
 import unittest
+from typing import Any, Dict, List, Union
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,13 +9,21 @@ from google_ads.application import (
     MAX_HEADLINES_OR_DESCRIPTIONS_ERROR_MSG,
     _check_if_customer_id_is_manager_or_exception_is_raised,
     _get_callout_resource_names,
+    _get_shared_set_resource_name,
+    _get_sitelink_resource_names,
     _read_avaliable_languages,
     _set_fields_ad_copy,
     _set_headline_or_description,
     create_geo_targeting_for_campaign,
     get_languages,
 )
-from google_ads.model import AdCopy, CampaignCallouts, GeoTargetCriterion
+from google_ads.model import (
+    AdCopy,
+    CampaignCallouts,
+    CampaignSharedSet,
+    ExistingCampaignSitelinks,
+    GeoTargetCriterion,
+)
 
 
 @pytest.mark.asyncio
@@ -389,8 +398,53 @@ class TestLanguages:
         assert str(exc.value) == "Invalid language codes: ['xyz']"
 
 
+@pytest.mark.parametrize(
+    ("return_value", "expected"),
+    [
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "calloutAsset": {
+                                "calloutText": "Callout 1",
+                            },
+                        }
+                    },
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_2",
+                            "calloutAsset": {
+                                "calloutText": "Callout 2",
+                            },
+                        }
+                    },
+                ]
+            },
+            ["resource_name_1", "resource_name_2"],
+        ),
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "calloutAsset": {
+                                "calloutText": "Callout 1",
+                            },
+                        }
+                    },
+                ]
+            },
+            ValueError,
+        ),
+    ],
+)
 @pytest.mark.asyncio
-async def test_get_callout_resource_names() -> None:
+async def test_get_callout_resource_names(
+    return_value: Dict[str, List[Any]], expected: Union[List[str], ValueError]
+) -> None:
     campaign_callouts = CampaignCallouts(
         customer_id="123",
         campaign_id="456",
@@ -400,28 +454,132 @@ async def test_get_callout_resource_names() -> None:
     with unittest.mock.patch(
         "google_ads.application.search",
     ) as mock_search:
-        mock_search.return_value = {
-            "123": [
-                {
-                    "asset": {
-                        "resourceName": "resource_name_1",
-                        "calloutAsset": {
-                            "calloutText": "Callout 1",
-                        },
-                    }
-                },
-                {
-                    "asset": {
-                        "resourceName": "resource_name_2",
-                        "calloutAsset": {
-                            "calloutText": "Callout 2",
-                        },
-                    }
-                },
-            ]
-        }
+        mock_search.return_value = return_value
 
-        response = await _get_callout_resource_names(
-            user_id=-1, model=campaign_callouts
-        )
-        assert response == ["resource_name_1", "resource_name_2"]
+        if isinstance(expected, list):
+            response = await _get_callout_resource_names(
+                user_id=-1, model=campaign_callouts
+            )
+            assert response == expected
+        else:
+            with pytest.raises(ValueError, match="Callouts not found: {'Callout 2'}"):
+                await _get_callout_resource_names(user_id=-1, model=campaign_callouts)
+
+
+@pytest.mark.parametrize(
+    ("return_value", "expected"),
+    [
+        (
+            {
+                "123": [
+                    {
+                        "sharedSet": {
+                            "resourceName": "resource_name_1",
+                        }
+                    }
+                ]
+            },
+            "resource_name_1",
+        ),
+        (
+            {
+                "123": [],
+            },
+            ValueError,
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_shared_set_resource_name(
+    return_value: Dict[str, List[Any]], expected: Union[str, ValueError]
+) -> None:
+    campaign_shared_set = CampaignSharedSet(
+        customer_id="123",
+        campaign_id="456",
+        shared_set_name="Shared Set 1",
+    )
+
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.return_value = return_value
+
+        if isinstance(expected, str):
+            response = await _get_shared_set_resource_name(
+                user_id=-1, model=campaign_shared_set
+            )
+            assert response == expected
+        else:
+            with pytest.raises(
+                ValueError,
+                match="Negative keywords shared set 'Shared Set 1' not found.",
+            ):
+                await _get_shared_set_resource_name(
+                    user_id=-1, model=campaign_shared_set
+                )
+
+
+@pytest.mark.parametrize(
+    ("return_value", "expected"),
+    [
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "id": "1",
+                        }
+                    },
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_2",
+                            "id": "2",
+                        }
+                    },
+                ]
+            },
+            ["resource_name_1", "resource_name_2"],
+        ),
+        (
+            {
+                "123": [
+                    {
+                        "asset": {
+                            "resourceName": "resource_name_1",
+                            "id": "1",
+                        }
+                    },
+                ]
+            },
+            ValueError,
+        ),
+        (
+            {
+                "123": [],
+            },
+            ValueError,
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_sitelink_resource_names(
+    return_value: Dict[str, List[Any]], expected: Union[List[str], ValueError]
+) -> None:
+    model = ExistingCampaignSitelinks(
+        customer_id="123",
+        campaign_id="456",
+        sitelink_ids=["1", "2"],
+    )
+
+    with unittest.mock.patch(
+        "google_ads.application.search",
+    ) as mock_search:
+        mock_search.return_value = return_value
+
+        if isinstance(expected, list):
+            response = await _get_sitelink_resource_names(user_id=-1, model=model)
+            assert response == expected
+        else:
+            with pytest.raises(ValueError, match="Sitelinks with IDs"):
+                await _get_sitelink_resource_names(user_id=-1, model=model)

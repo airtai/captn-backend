@@ -28,9 +28,11 @@ from .model import (
     CampaignCallouts,
     CampaignCriterion,
     CampaignLanguageCriterion,
-    CampaignSitelinks,
+    CampaignSharedSet,
     Criterion,
+    ExistingCampaignSitelinks,
     GeoTargetCriterion,
+    NewCampaignSitelinks,
     RemoveResource,
 )
 
@@ -1636,7 +1638,7 @@ def _link_assets_to_campaign(
     )
 
 
-def _create_sitelink_operations(client: Any, model: CampaignSitelinks) -> List[Any]:
+def _create_sitelink_operations(client: Any, model: NewCampaignSitelinks) -> List[Any]:
     operations = []
     for site_link in model.site_links:
         operation = client.get_type("AssetOperation")
@@ -1662,9 +1664,9 @@ def _create_callout_operations(client: Any, model: CampaignCallouts) -> List[Any
 
 
 def _create_assets(
-    client: Any, model: Union[CampaignSitelinks, CampaignCallouts]
+    client: Any, model: Union[NewCampaignSitelinks, CampaignCallouts]
 ) -> List[str]:
-    if isinstance(model, CampaignSitelinks):
+    if isinstance(model, NewCampaignSitelinks):
         operations = _create_sitelink_operations(client, model)
     else:
         operations = _create_callout_operations(client, model)
@@ -1682,7 +1684,7 @@ def _create_assets(
 
 def _create_assets_helper(
     client: Any,
-    model: Union[CampaignSitelinks, CampaignCallouts],
+    model: Union[NewCampaignSitelinks, CampaignCallouts],
     field_type: Any,
 ) -> str:
     try:
@@ -1706,7 +1708,7 @@ def _create_assets_helper(
 @router.post("/create-sitelinks-for-campaign")
 async def create_sitelinks_for_campaign(
     user_id: int,
-    model: CampaignSitelinks,
+    model: NewCampaignSitelinks,
 ) -> str:
     client = await _get_client(
         user_id=user_id, login_customer_id=model.login_customer_id
@@ -1717,6 +1719,63 @@ async def create_sitelinks_for_campaign(
     )
 
     return result
+
+
+async def _get_sitelink_resource_names(
+    user_id: int,
+    model: ExistingCampaignSitelinks,
+) -> List[str]:
+    sitelink_ids = set(model.sitelink_ids)
+    query = f"""
+SELECT
+  asset.id,
+  asset.name
+FROM
+  asset
+WHERE
+  asset.type = 'SITELINK'
+  AND asset.id IN ({','.join(sitelink_ids)})
+"""  # nosec: [B608]
+
+    sitelinks_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    assets = sitelinks_response[model.customer_id]
+    if len(assets) != len(sitelink_ids):
+        missing_sitelinks = sitelink_ids - {asset["asset"]["id"] for asset in assets}
+        raise ValueError(f"Sitelinks with IDs {missing_sitelinks} not found.")
+
+    return [asset["asset"]["resourceName"] for asset in assets]
+
+
+@router.post("/add-sitelinks-to-campaign")
+async def add_sitelinks_to_campaign(
+    user_id: int,
+    model: ExistingCampaignSitelinks,
+) -> str:
+    try:
+        client = await _get_client(
+            user_id=user_id, login_customer_id=model.login_customer_id
+        )
+        resource_names = await _get_sitelink_resource_names(user_id, model)
+        if len(resource_names) == 0:
+            return "No sitelinks found to add to the campaign."
+        _link_assets_to_campaign(
+            client=client,
+            customer_id=model.customer_id,
+            campaign_id=model.campaign_id,
+            resource_names=resource_names,
+            field_type=client.enums.AssetFieldTypeEnum.SITELINK,
+        )
+        return f"Linked following sitelinks to campaign '{model.campaign_id}': {resource_names}"
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post("/create-callouts-for-campaign")
@@ -1765,6 +1824,10 @@ WHERE
             resource_names.append(asset["asset"]["resourceName"])
             callout_texts_added.append(asset["asset"]["calloutAsset"]["calloutText"])
 
+    if len(callout_texts_added) != len(model.callouts):
+        missing_callouts = set(model.callouts) - set(callout_texts_added)
+        raise ValueError(f"Callouts not found: {missing_callouts}")
+
     return resource_names
 
 
@@ -1773,14 +1836,13 @@ async def add_callouts_to_campaign(
     user_id: int,
     model: CampaignCallouts,
 ) -> str:
-    callout_resource_names = await _get_callout_resource_names(user_id, model)
-    if len(callout_resource_names) == 0:
-        return "No callouts found to add to the campaign."
-    client = await _get_client(
-        user_id=user_id, login_customer_id=model.login_customer_id
-    )
-
     try:
+        callout_resource_names = await _get_callout_resource_names(user_id, model)
+        if len(callout_resource_names) == 0:
+            return "No callouts found to add to the campaign."
+        client = await _get_client(
+            user_id=user_id, login_customer_id=model.login_customer_id
+        )
         _link_assets_to_campaign(
             client=client,
             customer_id=model.customer_id,
@@ -1792,4 +1854,70 @@ async def add_callouts_to_campaign(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+
+
+async def _get_shared_set_resource_name(
+    user_id: int,
+    model: CampaignSharedSet,
+) -> str:
+    query = f"""
+SELECT
+    shared_set.id,
+    shared_set.name
+FROM
+    shared_set
+WHERE
+    shared_set.name = "{model.shared_set_name}" AND
+    shared_set.type = "NEGATIVE_KEYWORDS" AND
+    shared_set.status != "REMOVED"
+"""  # nosec: [B608]
+    shared_set_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    if not shared_set_response[model.customer_id]:
+        raise ValueError(
+            f"Negative keywords shared set '{model.shared_set_name}' not found."
+        )
+
+    return shared_set_response[model.customer_id][0]["sharedSet"]["resourceName"]  # type: ignore[no-any-return]
+
+
+@router.post("/add-shared-set-to-campaign")
+async def add_shared_set_to_campaign(
+    user_id: int,
+    model: CampaignSharedSet,
+) -> str:
+    try:
+        shared_set_resource_name = await _get_shared_set_resource_name(
+            user_id=user_id, model=model
+        )
+
+        client = await _get_client(
+            user_id=user_id, login_customer_id=model.login_customer_id
+        )
+        campaign_service = client.get_service("CampaignService")
+        campaign_shared_set_service = client.get_service("CampaignSharedSetService")
+        campaign_set_operation = client.get_type("CampaignSharedSetOperation")
+        campaign_set = campaign_set_operation.create
+        campaign_set.campaign = campaign_service.campaign_path(
+            model.customer_id, model.campaign_id
+        )
+        campaign_set.shared_set = shared_set_resource_name
+
+        campaign_shared_set_resource_name = (
+            campaign_shared_set_service.mutate_campaign_shared_sets(
+                customer_id=model.customer_id, operations=[campaign_set_operation]
+            )
+        )
+
+        return f"Linked campaign shared set {campaign_shared_set_resource_name.results[0].resource_name}."
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e

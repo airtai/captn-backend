@@ -349,7 +349,7 @@ def google_ads_create_update(
     return response_dict
 
 
-def google_ads_create_update_assets(
+def google_ads_post(
     user_id: int,
     conv_id: int,
     model: BaseModel,
