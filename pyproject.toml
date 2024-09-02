@@ -106,7 +106,7 @@ agents = [
     "prometheus-client==0.20.0",
     "opentelemetry-distro==0.47b0",
     "opentelemetry-instrumentation-fastapi==0.47b0",
-    "opentelemetry-instrumentation-logging==0.47b0",
+    "opentelemetry-instrumentation-logging==0.48b0",
     "opentelemetry-exporter-otlp==1.26.0",
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
