@@ -40,10 +40,10 @@ from ....google_ads.client import (
 )
 from ..toolboxes import Toolbox
 from ._campaign_creation_team_tools import (
-    AdGroupAdForCreation,
     AdGroupCriterionForCreation,
     AdGroupForCreation,
-    AdGroupWithAdAndKeywords,
+    GBBAdGroupAdForCreation,
+    GBBAdGroupWithAdAndKeywords,
     _create_ad_group_with_ad_and_keywords,
 )
 from ._functions import (
@@ -347,7 +347,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
     ad_group_name: str,
     match_type: str,
     ad_group_keywords_df: pd.DataFrame,
-    ad_group_ad: AdGroupAdForCreation,
+    ad_group_ad: GBBAdGroupAdForCreation,
     context: GoogleSheetsTeamContext,
 ) -> None:
     ad_group = AdGroupForCreation(
@@ -374,7 +374,7 @@ def _create_ad_group_with_ad_and_keywords_helper(
             )
         )
 
-    ad_group_with_ad_and_keywords = AdGroupWithAdAndKeywords(
+    ad_group_with_ad_and_keywords = GBBAdGroupWithAdAndKeywords(
         customer_id=customer_id,
         campaign_id=campaign_id,
         ad_group=ad_group,
@@ -837,10 +837,14 @@ def _setup_campaign(
 
         for _, row in ads_df[ads_df["campaign name"] == campaign_name].iterrows():
             headlines = [
-                row[col] for col in row.index if col.lower().startswith("headline")
+                row[col]
+                for col in row.index
+                if col.lower().startswith("headline") and row[col]
             ]
             descriptions = [
-                row[col] for col in row.index if col.lower().startswith("description")
+                row[col]
+                for col in row.index
+                if col.lower().startswith("description") and row[col]
             ]
 
             path1 = row.get("path 1", None)
@@ -848,7 +852,7 @@ def _setup_campaign(
             final_url = row.get("final url")
 
             campaign = created_campaign_names_and_ids[campaign_name]
-            ad_group_ad = AdGroupAdForCreation(
+            ad_group_ad = GBBAdGroupAdForCreation(
                 customer_id=customer_id,
                 campaign_id=campaign_id,
                 status="ENABLED",
