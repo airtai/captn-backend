@@ -112,6 +112,7 @@ agents = [
     "aiofiles==24.1.0",
     "fastagency[studio]@git+https://github.com/airtai/fastagency.git@main",
     "markdownify==0.13.1",
+    "python-multipart==0.0.9",
 ]
 
 dev = [
