@@ -12,6 +12,7 @@ from captn.captn_agents.backend.teams._campaign_creation_team import (
 from captn.captn_agents.backend.toolboxes.base import Toolbox
 from captn.captn_agents.backend.tools._campaign_creation_team_tools import (
     AdGroupAdForCreation,
+    GBBAdGroupAdForCreation,
     _remove_resources,
     create_campaign_creation_team_toolbox,
 )
@@ -309,3 +310,37 @@ class TestAdGroupAdForCreation:
                 final_url="https://www.example.com",
                 status="ENABLED",
             )
+
+
+class TestGBBModels:
+    @pytest.mark.parametrize(
+        ("headlines", "expected"),
+        [
+            (["H1", "H2", "H3", "H4"], None),
+            (["H1", "H2"], ValidationError),
+            (["H1", "H2", "H3", "H" * 31], ValueError),
+        ],
+    )
+    def test_gbb_ad_group_ad_for_creation(
+        self, headlines: List[str], expected: Optional[Exception]
+    ) -> None:
+        if expected is None:
+            ad_group_ad = GBBAdGroupAdForCreation(
+                customer_id="2222",
+                headlines=headlines,
+                descriptions=["D1", "D2", "D3", "D4"],
+                final_url="https://www.example.com",
+                status="ENABLED",
+            )
+            assert ad_group_ad.headlines == headlines
+
+        else:
+            with pytest.raises(expected) as e:
+                GBBAdGroupAdForCreation(
+                    customer_id="2222",
+                    headlines=headlines,
+                    descriptions=["D1", "D2", "D3", "D4"],
+                    final_url="https://www.example.com",
+                    status="ENABLED",
+                )
+            print(f"Exception: {e}")

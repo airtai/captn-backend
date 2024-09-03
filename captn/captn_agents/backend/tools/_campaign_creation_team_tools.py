@@ -100,6 +100,27 @@ class AdGroupAdForCreation(AdBase):
         )
 
 
+class GBBAdGroupAdForCreation(AdGroupAdForCreation):
+    headlines: Annotated[
+        List[
+            Annotated[
+                str,
+                "Maximum 30 characters. If keyword insertion is used, '{KeyWord' and '}' are NOT included in the 30 characters.",
+            ]
+        ],
+        Len(min_length=3, max_length=15),
+    ]
+    descriptions: Annotated[
+        List[
+            Annotated[
+                str,
+                "Maximum 90 characters. If keyword insertion is used, '{KeyWord' and '}' are NOT included in the 90 characters.",
+            ]
+        ],
+        Len(min_length=2, max_length=4),
+    ]
+
+
 class AdGroupCriterionForCreation(AdBase):
     ad_group_id: Optional[
         Annotated[str, Field(..., description="Always set this field to None")]
@@ -136,6 +157,12 @@ class AdGroupWithAdAndKeywords(BaseModel):
         AdGroupAdForCreation, "The ad for the ad group which will be created"
     ]
     keywords: Annotated[List[AdGroupCriterionForCreation], Len(min_length=1)]
+
+
+class GBBAdGroupWithAdAndKeywords(AdGroupWithAdAndKeywords):
+    ad_group_ad: Annotated[
+        GBBAdGroupAdForCreation, "The ad for the ad group which will be created"
+    ]
 
 
 def _create_ad_group(
