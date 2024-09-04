@@ -2,21 +2,6 @@ name: Test
 
 on:
     workflow_call:
-      secrets:
-        STAGING_AZURE_API_VERSION:
-        STAGING_AZURE_API_ENDPOINT:
-        STAGING_AZURE_API_ENDPOINT_GPT4O:
-        STAGING_AZURE_GPT4O_MODEL:
-        STAGING_AZURE_GPT4_MODEL:
-        STAGING_AZURE_GPT35_MODEL:
-        STAGING_AZURE_OPENAI_API_KEY:
-        STAGING_AZURE_OPENAI_API_KEY_GPT4O:
-
-env:
-    INFOBIP_API_KEY: "dummy_key" # pragma: allowlist secret
-    INFOBIP_BASE_URL: "dummy_url"
-    DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads" # pragma: allowlist secret
-    GOOGLE_SHEETS_OPENAPI_URL: ${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
 
 jobs:
     test:
