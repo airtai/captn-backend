@@ -33,6 +33,8 @@ jobs:
 
     test-without-llms:
       uses: ./.github/workflows/test.yml
+      with:
+        pytest-marks: "not openai"
       secrets: inherit  # pragma: allowlist secret
 
     test-with-llms:
