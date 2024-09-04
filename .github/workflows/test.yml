@@ -2,6 +2,43 @@ name: Test
 
 on:
     workflow_call:
+      inputs:
+        INFOBIP_API_KEY:
+          required: true
+          type: string
+        INFOBIP_BASE_URL:
+          required: true
+          type: string
+        DATABASE_URL:
+          required: true
+          type: string
+        GOOGLE_SHEETS_OPENAPI_URL:
+          required: true
+          type: string
+        AZURE_API_VERSION:
+          required: true
+          type: string
+        AZURE_API_ENDPOINT:
+          required: true
+          type: string
+        AZURE_API_ENDPOINT_GPT4O:
+          required: true
+          type: string
+        AZURE_GPT4O_MODEL:
+          required: true
+          type: string
+        AZURE_GPT4_MODEL:
+          required: true
+          type: string
+        AZURE_GPT35_MODEL:
+          required: true
+          type: string
+        AZURE_OPENAI_API_KEY:
+          required: true
+          type: string
+        AZURE_OPENAI_API_KEY_GPT4O:
+          required: true
+          type: string
 
 jobs:
     test:
@@ -22,6 +59,12 @@ jobs:
           options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       steps:
         - uses: actions/checkout@v4
+        - name: Map Inputs to Environment Variables
+          run: |
+            for var in $(env | grep ^INPUT_ | sed 's/^INPUT_//g'); do
+              export ${var}="${!var}"
+              echo "${var}=${!var}" >> $GITHUB_ENV
+            done
         - name: Set up Python
           uses: actions/setup-python@v5
           with:
