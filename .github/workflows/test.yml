@@ -2,43 +2,6 @@ name: Test
 
 on:
     workflow_call:
-      inputs:
-        INFOBIP_API_KEY:
-          required: true
-          type: string
-        INFOBIP_BASE_URL:
-          required: true
-          type: string
-        DATABASE_URL:
-          required: true
-          type: string
-        GOOGLE_SHEETS_OPENAPI_URL:
-          required: true
-          type: string
-        AZURE_API_VERSION:
-          required: true
-          type: string
-        AZURE_API_ENDPOINT:
-          required: true
-          type: string
-        AZURE_API_ENDPOINT_GPT4O:
-          required: true
-          type: string
-        AZURE_GPT4O_MODEL:
-          required: true
-          type: string
-        AZURE_GPT4_MODEL:
-          required: true
-          type: string
-        AZURE_GPT35_MODEL:
-          required: true
-          type: string
-        AZURE_OPENAI_API_KEY:
-          required: true
-          type: string
-        AZURE_OPENAI_API_KEY_GPT4O:
-          required: true
-          type: string
 
 jobs:
     test:
@@ -59,12 +22,45 @@ jobs:
           options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       steps:
         - uses: actions/checkout@v4
-        - name: Map Inputs to Environment Variables
-          run: |
-            for var in $(env | grep ^INPUT_ | sed 's/^INPUT_//g'); do
-              export ${var}="${!var}"
-              echo "${var}=${!var}" >> $GITHUB_ENV
-            done
+        - name: Set up environment variables
+          run: | # pragma: allowlist secret
+            # check if an environment var or secret is defined and set env var to its value
+            # vars
+            if [ -n "${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}" ]; then
+              echo "GOOGLE_SHEETS_OPENAPI_URL=${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}" >> $GITHUB_ENV
+            fi
+
+            # secrets
+            if [ -n "${{ secrets.STAGING_AZURE_API_VERSION }}" ]; then
+              echo "AZURE_API_VERSION=${{ secrets.STAGING_AZURE_API_VERSION }}" >> $GITHUB_ENV
+            fi
+            if [ -n "${{ secrets.STAGING_AZURE_API_ENDPOINT }}" ]; then
+              echo "AZURE_API_ENDPOINT=${{ secrets.STAGING_AZURE_API_ENDPOINT }}" >> $GITHUB_ENV
+            fi
+            if [ -n "${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}" ]; then
+              echo "AZURE_API_ENDPOINT_GPT4O=${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}" >> $GITHUB_ENV
+            fi
+            if [ -n "${{ secrets.STAGING_AZURE_GPT4O_MODEL }}" ]; then
+              echo "AZURE_GPT4O_MODEL=${{ secrets.STAGING_AZURE_GPT4O_MODEL }}" >> $GITHUB_ENV
+            fi
+            if [ -n "${{ secrets.STAGING_AZURE_GPT4_MODEL }}" ]; then
+              echo "AZURE_GPT4_MODEL=${{ secrets.STAGING_AZURE_GPT4_MODEL }}" >> $GITHUB_ENV
+            fi
+            if [ -n "${{ secrets.STAGING_AZURE_GPT35_MODEL }}" ]; then
+              echo "AZURE_GPT35_MODEL=${{ secrets.STAGING_AZURE_GPT35_MODEL }}" >> $GITHUB_ENV
+            fi
+            if [ -n "${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}" ]; then
+              echo "AZURE_OPENAI_API_KEY=${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}" >> $GITHUB_ENV
+            fi
+            if [ -n "${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}" ]; then
+              echo "AZURE_OPENAI_API_KEY_GPT4O=${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}" >> $GITHUB_ENV
+            fi
+
+            # additional envs
+            echo "INFOBIP_API_KEY=dummy_key" >> $GITHUB_ENV
+            echo "INFOBIP_BASE_URL=dummy_url" >> $GITHUB_ENV
+            echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/gads" >> $GITHUB_ENV
+
         - name: Set up Python
           uses: actions/setup-python@v5
           with:
