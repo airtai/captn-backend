@@ -2,14 +2,15 @@ name: Test
 
 on:
     workflow_call:
+        inputs:
+            pytest-marks:
+                description: 'Pytest marks to run'
+                required: true
+                default: 'not openai'
 
 jobs:
     test:
       runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          pytest-marks: ["not openai", "openai and (not brief_creation_team and not campaign_creation_team and not weekly_analysis_team and not get_info_from_the_web_page and not fastapi_openapi_team)", "brief_creation_team and openai", "campaign_creation_team and openai", "weekly_analysis_team", "get_info_from_the_web_page", "fastapi_openapi_team"]
-        fail-fast: false
       services:
         postgres:
           image: postgres:13
@@ -35,45 +36,6 @@ jobs:
         GOOGLE_SHEETS_OPENAPI_URL: ${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
       steps:
         - uses: actions/checkout@v4
-        # - name: Set up environment variables
-        #   run: | # pragma: allowlist secret
-        #     # check if an environment var or secret is defined and set env var to its value
-        #     # vars
-        #     if [ -n "${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}" ]; then
-        #       echo "GOOGLE_SHEETS_OPENAPI_URL=${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}" >> $GITHUB_ENV
-        #     fi
-
-        #     # secrets
-        #     if [ -n "${{ secrets.STAGING_AZURE_API_VERSION }}" ]; then
-        #       echo "AZURE_API_VERSION=${{ secrets.STAGING_AZURE_API_VERSION }}" >> $GITHUB_ENV
-        #     fi
-        #     if [ -n "${{ secrets.STAGING_AZURE_API_ENDPOINT }}" ]; then
-        #       echo "AZURE_API_ENDPOINT=${{ secrets.STAGING_AZURE_API_ENDPOINT }}" >> $GITHUB_ENV
-        #     fi
-        #     if [ -n "${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}" ]; then
-        #       echo "AZURE_API_ENDPOINT_GPT4O=${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}" >> $GITHUB_ENV
-        #     fi
-        #     if [ -n "${{ secrets.STAGING_AZURE_GPT4O_MODEL }}" ]; then
-        #       echo "AZURE_GPT4O_MODEL=${{ secrets.STAGING_AZURE_GPT4O_MODEL }}" >> $GITHUB_ENV
-        #     fi
-        #     if [ -n "${{ secrets.STAGING_AZURE_GPT4_MODEL }}" ]; then
-        #       echo "AZURE_GPT4_MODEL=${{ secrets.STAGING_AZURE_GPT4_MODEL }}" >> $GITHUB_ENV
-        #     fi
-        #     if [ -n "${{ secrets.STAGING_AZURE_GPT35_MODEL }}" ]; then
-        #       echo "AZURE_GPT35_MODEL=${{ secrets.STAGING_AZURE_GPT35_MODEL }}" >> $GITHUB_ENV
-        #     fi
-        #     if [ -n "${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}" ]; then
-        #       echo "AZURE_OPENAI_API_KEY=${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}" >> $GITHUB_ENV
-        #     fi
-        #     if [ -n "${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}" ]; then
-        #       echo "AZURE_OPENAI_API_KEY_GPT4O=${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}" >> $GITHUB_ENV
-        #     fi
-
-        #     # additional envs
-        #     echo "INFOBIP_API_KEY=dummy_key" >> $GITHUB_ENV
-        #     echo "INFOBIP_BASE_URL=dummy_url" >> $GITHUB_ENV
-        #     echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/gads" >> $GITHUB_ENV
-
         - name: Set up Python
           uses: actions/setup-python@v5
           with:
@@ -87,5 +49,4 @@ jobs:
         - name: Create client secrets file
           run: echo '{"web":{"client_id":"dummy.apps.googleusercontent.com","project_id":"dummy-id","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"dummy-secret","redirect_uris":["http://localhost:9000/login/callback"]}}' > client_secret.json
         - name: Test
-          # run: bash scripts/test.sh "${{ matrix.pytest-marks }}"
-          run: pytest tests/ci/ -m "${{ matrix.pytest-marks }}"
+          run: pytest tests/ci/ -m "${{ inputs.pytest-marks }}"

@@ -31,9 +31,21 @@ jobs:
               shell: bash
               run: semgrep scan --config auto --error
 
-    test:
+    test-without-llms:
       uses: ./.github/workflows/test.yml
       secrets: inherit  # pragma: allowlist secret
+
+    test-with-llms:
+      strategy:
+        matrix:
+          pytest-marks: ["openai and (not brief_creation_team and not campaign_creation_team and not weekly_analysis_team and not get_info_from_the_web_page and not fastapi_openapi_team)", "brief_creation_team and openai", "campaign_creation_team and openai", "weekly_analysis_team", "get_info_from_the_web_page", "fastapi_openapi_team"]
+        fail-fast: false
+      uses: ./.github/workflows/test.yml
+      with:
+        pytest-marks: ${{ matrix.pytest-marks }}
+      secrets: inherit  # pragma: allowlist secret
+      needs:
+        - test-without-llms
 
     docker_build_push:
         runs-on: ubuntu-22.04
