@@ -1,0 +1,52 @@
+name: Test
+
+on:
+    workflow_call:
+        inputs:
+            pytest-marks:
+                description: 'Pytest marks to run'
+                required: true
+                type: string
+
+jobs:
+    test:
+      runs-on: ubuntu-latest
+      services:
+        postgres:
+          image: postgres:13
+          env:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres # pragma: allowlist secret
+            POSTGRES_DB: gads
+          ports:
+            - 5432:5432
+          options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      env:
+        INFOBIP_API_KEY: "dummy_key" # pragma: allowlist secret
+        INFOBIP_BASE_URL: "dummy_url"
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads" # pragma: allowlist secret
+        AZURE_API_VERSION: ${{ secrets.STAGING_AZURE_API_VERSION }}
+        AZURE_API_ENDPOINT: ${{ secrets.STAGING_AZURE_API_ENDPOINT }}
+        AZURE_API_ENDPOINT_GPT4O: ${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}
+        AZURE_GPT4O_MODEL: ${{ secrets.STAGING_AZURE_GPT4O_MODEL }}
+        AZURE_GPT4_MODEL: ${{ secrets.STAGING_AZURE_GPT4_MODEL }}
+        AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
+        AZURE_OPENAI_API_KEY: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}
+        AZURE_OPENAI_API_KEY_GPT4O: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}
+        GOOGLE_SHEETS_OPENAPI_URL: ${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
+      steps:
+        - uses: actions/checkout@v4
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: "3.11"
+            cache: "pip"
+            cache-dependency-path: pyproject.toml
+        - name: Install Dependencies
+          run: pip install -e ".[dev]"
+        - name: Prisma generate
+          run: prisma generate
+        - name: Create client secrets file
+          run: echo '{"web":{"client_id":"dummy.apps.googleusercontent.com","project_id":"dummy-id","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"dummy-secret","redirect_uris":["http://localhost:9000/login/callback"]}}' > client_secret.json
+        - name: Test
+          run: pytest tests/ci/ -m "${{ inputs.pytest-marks }}"

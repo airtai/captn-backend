@@ -110,7 +110,7 @@ agents = [
     "opentelemetry-exporter-otlp==1.27.0",
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
-    "fastagency[studio]@git+https://github.com/airtai/fastagency.git@main",
+    "fastagency[studio,openapi]@git+https://github.com/airtai/fastagency.git@main",
     "markdownify==0.13.1",
     "python-multipart==0.0.9",
 ]
