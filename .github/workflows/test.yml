@@ -6,19 +6,6 @@ on:
 jobs:
     test:
       runs-on: ubuntu-latest
-      env:
-        INFOBIP_API_KEY: "dummy_key" # pragma: allowlist secret
-        INFOBIP_BASE_URL: "dummy_url"
-        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads" # pragma: allowlist secret
-        AZURE_API_VERSION: ${{ secrets.STAGING_AZURE_API_VERSION }}
-        AZURE_API_ENDPOINT: ${{ secrets.STAGING_AZURE_API_ENDPOINT }}
-        AZURE_API_ENDPOINT_GPT4O: ${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}
-        AZURE_GPT4O_MODEL: ${{ secrets.STAGING_AZURE_GPT4O_MODEL }}
-        AZURE_GPT4_MODEL: ${{ secrets.STAGING_AZURE_GPT4_MODEL }}
-        AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
-        AZURE_OPENAI_API_KEY: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}
-        AZURE_OPENAI_API_KEY_GPT4O: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}
-        GOOGLE_SHEETS_OPENAPI_URL: ${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
       strategy:
         matrix:
           pytest-marks: ["not openai", "openai and (not brief_creation_team and not campaign_creation_team and not weekly_analysis_team and not get_info_from_the_web_page and not fastapi_openapi_team)", "brief_creation_team and openai", "campaign_creation_team and openai", "weekly_analysis_team", "get_info_from_the_web_page", "fastapi_openapi_team"]
@@ -33,6 +20,19 @@ jobs:
           ports:
             - 5432:5432
           options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      env:
+        INFOBIP_API_KEY: "dummy_key" # pragma: allowlist secret
+        INFOBIP_BASE_URL: "dummy_url"
+        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads" # pragma: allowlist secret
+        AZURE_API_VERSION: ${{ secrets.STAGING_AZURE_API_VERSION }}
+        AZURE_API_ENDPOINT: ${{ secrets.STAGING_AZURE_API_ENDPOINT }}
+        AZURE_API_ENDPOINT_GPT4O: ${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}
+        AZURE_GPT4O_MODEL: ${{ secrets.STAGING_AZURE_GPT4O_MODEL }}
+        AZURE_GPT4_MODEL: ${{ secrets.STAGING_AZURE_GPT4_MODEL }}
+        AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
+        AZURE_OPENAI_API_KEY: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}
+        AZURE_OPENAI_API_KEY_GPT4O: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}
+        GOOGLE_SHEETS_OPENAPI_URL: ${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
       steps:
         - uses: actions/checkout@v4
         - name: Set up Python
