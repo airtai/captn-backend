@@ -38,8 +38,8 @@ jobs:
       secrets: inherit  # pragma: allowlist secret
 
     test-with-llms:
-    # gh-readonly-queue
-      if: ${{ !startsWith(github.ref_name, 'update') }}
+      #  Don't run this job for the readonly queue branches
+      if: ${{ !startsWith(github.ref_name, 'gh-readonly-queue') }}
       strategy:
         matrix:
           pytest-marks: ["openai and (not brief_creation_team and not campaign_creation_team and not weekly_analysis_team and not get_info_from_the_web_page and not fastapi_openapi_team)", "brief_creation_team and openai", "campaign_creation_team and openai", "weekly_analysis_team", "get_info_from_the_web_page", "fastapi_openapi_team"]
