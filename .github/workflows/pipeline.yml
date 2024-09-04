@@ -1,5 +1,9 @@
 name: Pipeline
-on: [push, workflow_dispatch]
+on:
+    push:
+      branches-ignore:
+        - dev
+    workflow_dispatch:
 
 env:
     REGISTRY: ghcr.io
