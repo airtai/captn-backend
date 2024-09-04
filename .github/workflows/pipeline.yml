@@ -85,7 +85,8 @@ jobs:
       if: github.event.pull_request.draft == false
 
       needs:
-        - test
+        - test-without-llms
+        - test-with-llms
         - static_analysis
         - docker_build_push
 
