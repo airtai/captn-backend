@@ -6,7 +6,7 @@ on:
             pytest-marks:
                 description: 'Pytest marks to run'
                 required: true
-                default: 'not openai'
+                type: string
 
 jobs:
     test:
