@@ -817,23 +817,55 @@ def _create_ad_group_ad_set_attr(
     # Set a pinning to always choose this asset for HEADLINE_1. Pinning is
     # optional; if no pinning is set, then headlines and descriptions will be
     # rotated and the ones that perform best will be used more often.
+    NUM_HEADLINES_1 = 3
+    NUM_HEADLINES_2 = 3
+    TOTAL_HEADLINES_1_2 = NUM_HEADLINES_1 + NUM_HEADLINES_2
+    num_headlines = len(model_dict["headlines"])
+    if num_headlines < NUM_HEADLINES_1:
+        raise ValueError(f"Number of headlines must be at least {NUM_HEADLINES_1}.")
 
-    # Headline 1
-    served_asset_enum = client.enums.ServedAssetFieldTypeEnum.HEADLINE_1
-    pinned_headline = _create_ad_text_asset(
-        client, model_dict["headlines"][0], served_asset_enum
-    )
-
-    # Headlines 2-15
-    headlines = [pinned_headline]
-    headlines += [
-        _create_ad_text_asset(client, headline)
-        for headline in model_dict["headlines"][1:]
+    # Pin as first headlines
+    headlines = [
+        _create_ad_text_asset(
+            client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_1
+        )
+        for headline in model_dict["headlines"][0:NUM_HEADLINES_1]
     ]
+
+    if num_headlines >= NUM_HEADLINES_1 and num_headlines <= TOTAL_HEADLINES_1_2:
+        # Pin as second headlines
+        headlines += [
+            _create_ad_text_asset(
+                client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_2
+            )
+            for headline in model_dict["headlines"][NUM_HEADLINES_1:]
+        ]
+    else:
+        # Pin as second headlines
+        headlines += [
+            _create_ad_text_asset(
+                client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_2
+            )
+            for headline in model_dict["headlines"][NUM_HEADLINES_1:TOTAL_HEADLINES_1_2]
+        ]
+        # Don't pin the rest
+        headlines += [
+            _create_ad_text_asset(client, headline)
+            for headline in model_dict["headlines"][TOTAL_HEADLINES_1_2:]
+        ]
+
     operation_create.ad.responsive_search_ad.headlines.extend(headlines)
 
+    # pin first description
     descriptions = [
-        _create_ad_text_asset(client, desc) for desc in model_dict["descriptions"]
+        _create_ad_text_asset(
+            client,
+            model_dict["descriptions"][0],
+            client.enums.ServedAssetFieldTypeEnum.DESCRIPTION_1,
+        )
+    ]
+    descriptions += [
+        _create_ad_text_asset(client, desc) for desc in model_dict["descriptions"][1:]
     ]
 
     operation_create.ad.responsive_search_ad.descriptions.extend(descriptions)
