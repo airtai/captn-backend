@@ -31,51 +31,25 @@ jobs:
               shell: bash
               run: semgrep scan --config auto --error
 
-    test:
-      runs-on: ubuntu-latest
+    test-without-llms:
+      uses: ./.github/workflows/test.yml
+      with:
+        pytest-marks: "not openai"
+      secrets: inherit  # pragma: allowlist secret
+
+    test-with-llms:
+      #  Don't run this job for the readonly queue branches
+      if: ${{ !startsWith(github.ref_name, 'gh-readonly-queue') }}
       strategy:
         matrix:
-          pytest-marks: ["not openai", "openai and (not brief_creation_team and not campaign_creation_team and not weekly_analysis_team and not get_info_from_the_web_page and not fastapi_openapi_team)", "brief_creation_team and openai", "campaign_creation_team and openai", "weekly_analysis_team", "get_info_from_the_web_page", "fastapi_openapi_team"]
+          pytest-marks: ["openai and (not brief_creation_team and not campaign_creation_team and not weekly_analysis_team and not get_info_from_the_web_page and not fastapi_openapi_team)", "brief_creation_team and openai", "campaign_creation_team and openai", "weekly_analysis_team", "get_info_from_the_web_page", "fastapi_openapi_team"]
         fail-fast: false
-      services:
-        postgres:
-          image: postgres:13
-          env:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: gads
-          ports:
-            - 5432:5432
-          options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      env:
-        INFOBIP_API_KEY: "dummy_key"
-        INFOBIP_BASE_URL: "dummy_url"
-        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/gads"
-        AZURE_API_VERSION: ${{ secrets.STAGING_AZURE_API_VERSION }}
-        AZURE_API_ENDPOINT: ${{ secrets.STAGING_AZURE_API_ENDPOINT }}
-        AZURE_API_ENDPOINT_GPT4O: ${{ secrets.STAGING_AZURE_API_ENDPOINT_GPT4O }}
-        AZURE_GPT4O_MODEL: ${{ secrets.STAGING_AZURE_GPT4O_MODEL }}
-        AZURE_GPT4_MODEL: ${{ secrets.STAGING_AZURE_GPT4_MODEL }}
-        AZURE_GPT35_MODEL: ${{ secrets.STAGING_AZURE_GPT35_MODEL }}
-        AZURE_OPENAI_API_KEY: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY }}
-        AZURE_OPENAI_API_KEY_GPT4O: ${{ secrets.STAGING_AZURE_OPENAI_API_KEY_GPT4O }}
-        GOOGLE_SHEETS_OPENAPI_URL: ${{ vars.STAGING_GOOGLE_SHEETS_OPENAPI_URL }}
-      steps:
-        - uses: actions/checkout@v4
-        - name: Set up Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: "3.11"
-            cache: "pip"
-            cache-dependency-path: pyproject.toml
-        - name: Install Dependencies
-          run: pip install -e ".[dev]"
-        - name: Prisma generate
-          run: prisma generate
-        - name: Create client secrets file
-          run: echo '{"web":{"client_id":"dummy.apps.googleusercontent.com","project_id":"dummy-id","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"dummy-secret","redirect_uris":["http://localhost:9000/login/callback"]}}' > client_secret.json
-        - name: Test
-          run: pytest tests/ci/ -m "${{ matrix.pytest-marks }}"
+      uses: ./.github/workflows/test.yml
+      with:
+        pytest-marks: ${{ matrix.pytest-marks }}
+      secrets: inherit  # pragma: allowlist secret
+      needs:
+        - test-without-llms
 
     docker_build_push:
         runs-on: ubuntu-22.04
@@ -115,7 +89,7 @@ jobs:
       if: github.event.pull_request.draft == false
 
       needs:
-        - test
+        - test-without-llms
         - static_analysis
         - docker_build_push
 
@@ -132,7 +106,9 @@ jobs:
           defaults:
               run:
                   shell: bash
-          needs: [check]
+          needs:
+            - check
+            - test-with-llms
           if: github.ref_name == 'main' || github.ref_name == 'dev'
           env:
               GITHUB_USERNAME: ${{ github.actor }}
