@@ -3,7 +3,7 @@ from types import MethodType
 from typing import Any, Callable, Dict, Optional
 
 from autogen.agentchat import ConversableAgent
-from fastagency.openapi.client import Client
+from fastagency.api.openapi.client import OpenAPI
 
 _org_register_for_execution: Optional[Callable[..., None]] = None
 
@@ -23,16 +23,16 @@ def _preprocess_decorator(
 
 
 def get_patch_register_for_execution(
-    client: Client, kwargs_to_patch: Dict[str, Any]
+    client: OpenAPI, kwargs_to_patch: Dict[str, Any]
 ) -> Callable[..., None]:
     def _patch_register_for_execution() -> None:
         global _org_register_for_execution
 
         if _org_register_for_execution is None:
-            _org_register_for_execution = Client.register_for_execution
+            _org_register_for_execution = OpenAPI.register_for_execution
 
         def register_for_execution(
-            self: Client,
+            self: OpenAPI,
             agent: ConversableAgent,
         ) -> None:
             global _org_register_for_execution
