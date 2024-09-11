@@ -23,14 +23,14 @@ class TestWeatherTeam:
             conv_id=456,
         )
         agent_number_of_functions_dict = {
-            "weather_forecaster": 1,
+            "weather_forecaster": 2,
             "news_reporter": 1,
             "user_proxy": 0,
         }
 
         helper_test_init(
             team=weather_team,
-            number_of_registered_executions=2,
+            number_of_registered_executions=3,
             agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=WeatherTeam,
         )
