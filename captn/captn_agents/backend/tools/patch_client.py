@@ -29,7 +29,7 @@ def get_patch_register_for_execution(
         global _org_register_for_execution
 
         if _org_register_for_execution is None:
-            _org_register_for_execution = OpenAPI.register_for_execution
+            _org_register_for_execution = OpenAPI._register_for_execution
 
         def register_for_execution(
             self: OpenAPI,
@@ -47,6 +47,6 @@ def get_patch_register_for_execution(
             _org_register_for_execution(self, agent)
 
         # mock register_for_execution on the instance level
-        client.register_for_execution = MethodType(register_for_execution, client)
+        client._register_for_execution = MethodType(register_for_execution, client)
 
     return _patch_register_for_execution

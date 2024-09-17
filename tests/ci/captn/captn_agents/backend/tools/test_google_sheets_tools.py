@@ -32,8 +32,8 @@ class TestGoogleSheets:
             "user_id": 2525,
         }
         get_patch_register_for_execution(client, kwargs_to_patch)()
-        client.register_for_llm(assistant)
-        client.register_for_execution(user_proxy)
+        client._register_for_llm(assistant)
+        client._register_for_execution(user_proxy)
 
         user_proxy.initiate_chat(
             assistant,

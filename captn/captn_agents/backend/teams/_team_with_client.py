@@ -87,9 +87,9 @@ class TeamWithClient(Team):
             if agent.name in self.roles_with_client:
                 if agent.llm_config["tools"] is None:
                     agent.llm_config.pop("tools")
-                self.client.register_for_llm(agent)
+                self.client._register_for_llm(agent)
 
-        self.client.register_for_execution(self.user_proxy)
+        self.client._register_for_execution(self.user_proxy)
 
     def _add_tools(self) -> None:
         kwargs = {
