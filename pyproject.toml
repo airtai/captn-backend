@@ -90,7 +90,6 @@ benchmarking = [
 ]
 
 agents = [
-    "fastapi==0.114.2",
     "APScheduler==3.10.4",
     "prisma==0.13.1",
     "google-ads==25.0.0",
@@ -100,7 +99,6 @@ agents = [
     "pyautogen[websurfer,websockets,anthropic,together]==0.2.35",
     "pandas>=2.1",
     "fastcore==1.7.4",
-    "asyncer==0.0.8",
     "pydantic==2.8.2",
     "tenacity==9.0.0",
     "prometheus-client==0.20.0",
@@ -110,9 +108,10 @@ agents = [
     "opentelemetry-exporter-otlp==1.27.0",
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
-    "fastagency[studio,openapi]@git+https://github.com/airtai/fastagency.git@main",
+    "fastagency[studio,openapi]==0.1.0",
     "markdownify==0.13.1",
     "python-multipart==0.0.9",
+    "flaml==2.2.0",
 ]
 
 dev = [
