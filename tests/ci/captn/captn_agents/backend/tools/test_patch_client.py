@@ -36,8 +36,8 @@ class TestPatchClient:
 
         user_proxy = autogen.UserProxyAgent(name="user_proxy", human_input_mode="NEVER")
 
-        client.register_for_llm(assistant)
-        client.register_for_execution(user_proxy)
+        client._register_for_llm(assistant)
+        client._register_for_execution(user_proxy)
 
         user_proxy.initiate_chat(
             assistant,

@@ -74,8 +74,8 @@ class TestClient:
         agent = AssistantAgent(name="agent", llm_config=self.llm_config)
         user_proxy = UserProxyAgent(name="user_proxy", code_execution_config=False)
 
-        self.client.register_for_execution(user_proxy)
-        self.client.register_for_llm(agent)
+        self.client._register_for_execution(user_proxy)
+        self.client._register_for_llm(agent)
 
         llm_config = agent.llm_config
         name_desc_dict = {
