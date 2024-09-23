@@ -110,7 +110,7 @@ agents = [
     "aiofiles==24.1.0",
     "fastagency[studio,openapi]==0.1.0",
     "markdownify==0.13.1",
-    "python-multipart==0.0.9",
+    "python-multipart==0.0.10",
     "flaml==2.2.0",
 ]
 
