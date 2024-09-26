@@ -215,3 +215,9 @@ class CampaignSharedSet(BaseModel):
     customer_id: str
     campaign_id: str
     shared_set_name: str
+
+
+class PageFeedItems(BaseModel):
+    login_customer_id: Optional[str] = None
+    customer_id: str
+    asset_set_resource_name: str
