@@ -33,6 +33,7 @@ from .model import (
     ExistingCampaignSitelinks,
     GeoTargetCriterion,
     NewCampaignSitelinks,
+    PageFeedItems,
     RemoveResource,
 )
 
@@ -1953,3 +1954,91 @@ async def add_shared_set_to_campaign(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
+
+
+def _add_assets_to_asset_set(
+    client: Any,
+    customer_id: str,
+    asset_resource_names: List[str],
+    asset_set_resource_name: str,
+) -> str:
+    """Adds assets to an asset set by creating an asset set asset link.
+
+    Args:
+        client: an initialized GoogleAdsClient instance.
+        customer_id: a client customer ID.
+        asset_resource_names: a list of asset resource names.
+        asset_set_resource_name: a resource name for an asset set.
+    """
+    operations = []
+    for resource_name in asset_resource_names:
+        # Creates an asset set asset operation and adds it to the list of
+        # operations.
+        operation = client.get_type("AssetSetAssetOperation")
+        asset_set_asset = operation.create
+        asset_set_asset.asset = resource_name
+        asset_set_asset.asset_set = asset_set_resource_name
+        operations.append(operation)
+
+    # Issues a mutate request to add the asset set assets and prints its
+    # information.
+    asset_set_asset_service = client.get_service("AssetSetAssetService")
+    response = asset_set_asset_service.mutate_asset_set_assets(
+        customer_id=customer_id, operations=operations
+    )
+
+    print(f"Added {len(response.results)} asset set assets:")
+
+    return_text = ""
+    for result in response.results:
+        return_text += f"Created an asset set asset link with resource name '{result.resource_name}'\n"
+    return return_text
+
+
+@router.post("/add-item-to-page-feed")
+async def add_items_to_page_feed(
+    user_id: int,
+    model: PageFeedItems,
+) -> str:
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    urls = [
+        "http://www.example.com/discounts/rental-cars",
+        "http://www.example.com/discounts/hotel-deals",
+        "http://www.example.com/discounts/flight-deals",
+    ]
+    operations = []
+
+    # Creates one asset per URL.
+    for url in urls:
+        # Creates an asset operation and adds it to the list of operations.
+        operation = client.get_type("AssetOperation")
+        asset = operation.create
+        page_feed_asset = asset.page_feed_asset
+        page_feed_asset.page_url = url
+        # Recommended: adds labels to the asset. These labels can be used later
+        # in ad group targeting to restrict the set of pages that can serve.
+        page_feed_asset.labels.append("TODO label")
+        operations.append(operation)
+
+    # Issues a mutate request to add the assets and prints its information.
+    asset_service = client.get_service("AssetService")
+    response = asset_service.mutate_assets(
+        customer_id=model.customer_id, operations=operations
+    )
+
+    resource_names = []
+    return_text = ""
+    for result in response.results:
+        resource_name = result.resource_name
+        return_text += f"Created an asset with resource name: '{resource_name}'\n"
+        resource_names.append(resource_name)
+
+    return _add_assets_to_asset_set(
+        client=client,
+        customer_id=model.customer_id,
+        asset_resource_names=resource_names,
+        asset_set_resource_name=model.asset_set_resource_name,
+    )
