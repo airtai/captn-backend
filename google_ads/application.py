@@ -378,6 +378,8 @@ SELECT
     customer_client.id
 FROM
     customer_client
+WHERE
+    customer_client.status = 'ENABLED'
 """
 
     search_results = {}
