@@ -221,3 +221,4 @@ class PageFeedItems(BaseModel):
     login_customer_id: Optional[str] = None
     customer_id: str
     asset_set_resource_name: str
+    urls_and_labels: Dict[str, Optional[str]]

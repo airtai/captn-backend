@@ -1987,15 +1987,13 @@ def _add_assets_to_asset_set(
         customer_id=customer_id, operations=operations
     )
 
-    print(f"Added {len(response.results)} asset set assets:")
-
     return_text = ""
     for result in response.results:
         return_text += f"Created an asset set asset link with resource name '{result.resource_name}'\n"
     return return_text
 
 
-@router.post("/add-item-to-page-feed")
+@router.post("/add-items-to-page-feed")
 async def add_items_to_page_feed(
     user_id: int,
     model: PageFeedItems,
@@ -2003,16 +2001,10 @@ async def add_items_to_page_feed(
     client = await _get_client(
         user_id=user_id, login_customer_id=model.login_customer_id
     )
-
-    urls = [
-        "http://www.example.com/discounts/rental-cars",
-        "http://www.example.com/discounts/hotel-deals",
-        "http://www.example.com/discounts/flight-deals",
-    ]
     operations = []
 
     # Creates one asset per URL.
-    for url in urls:
+    for url, label in model.urls_and_labels.items():
         # Creates an asset operation and adds it to the list of operations.
         operation = client.get_type("AssetOperation")
         asset = operation.create
@@ -2020,7 +2012,8 @@ async def add_items_to_page_feed(
         page_feed_asset.page_url = url
         # Recommended: adds labels to the asset. These labels can be used later
         # in ad group targeting to restrict the set of pages that can serve.
-        page_feed_asset.labels.append("TODO label")
+        if label:
+            page_feed_asset.labels.append(label)
         operations.append(operation)
 
     # Issues a mutate request to add the assets and prints its information.
