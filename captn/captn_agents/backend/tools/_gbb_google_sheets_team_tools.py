@@ -30,7 +30,7 @@ from google_ads.model import (
 from ....google_ads.client import (
     execute_query,
     google_ads_create_update,
-    google_ads_post,
+    google_ads_post_or_get,
 )
 from ....google_ads.client import (
     list_accessible_customers_with_account_types as list_accessible_customers_with_account_types_client,
@@ -296,7 +296,7 @@ def _add_negative_campaign_keywords_lists(
             campaign_id=campaign_id,
             shared_set_name=row["keyword"],
         )
-        google_ads_post(
+        google_ads_post_or_get(
             user_id=context.user_id,
             conv_id=context.conv_id,
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -505,7 +505,7 @@ def _update_callouts(
         callouts=callouts,
     )
 
-    response = google_ads_post(
+    response = google_ads_post_or_get(
         user_id=context.user_id,
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -636,7 +636,7 @@ def _add_existing_sitelinks(
         sitelink_ids=sitelink_ids,
     )
 
-    google_ads_post(
+    google_ads_post_or_get(
         user_id=context.user_id,
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -687,7 +687,7 @@ def _add_new_sitelinks(
         site_links=site_links,
     )
 
-    google_ads_post(
+    google_ads_post_or_get(
         user_id=context.user_id,
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,

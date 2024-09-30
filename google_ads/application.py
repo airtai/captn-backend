@@ -2037,3 +2037,42 @@ async def add_items_to_page_feed(
         asset_resource_names=resource_names,
         asset_set_resource_name=model.asset_set_resource_name,
     )
+
+
+@router.get("/list-page-feed-items")
+async def list_page_feed_items(
+    user_id: int,
+    model: PageFeedItems,
+) -> Dict[str, Any]:
+    # client = await _get_client(
+    #     user_id=user_id, login_customer_id=model.login_customer_id
+    # )
+    query = f"""
+SELECT
+#   asset_set_asset.asset,
+#   asset_set_asset.asset_set,
+  asset.id,
+  asset.name,
+  asset.type,
+  asset.page_feed_asset.page_url
+FROM
+  asset_set_asset
+WHERE
+  asset.type = 'PAGE_FEED'
+  AND asset_set_asset.asset_set = '{model.asset_set_resource_name}'
+  AND asset_set_asset.status != 'REMOVED'
+#   AND asset.page_feed_asset.page_url IN ({", ".join([f'"{url}"' for url in model.urls_and_labels.keys()])})
+"""  # nosec: [B608]
+
+    page_feed_assets_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    # page_urls = []
+    # for asset in page_feed_assets_response[model.customer_id]:
+    #     page_urls.append(asset["asset"]["pageFeedAsset"]["pageUrl"])
+
+    return page_feed_assets_response
