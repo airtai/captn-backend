@@ -21,6 +21,7 @@ from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 from .model import (
     AdBase,
     AdCopy,
+    AddPageFeedItems,
     AdGroup,
     AdGroupAd,
     AdGroupCriterion,
@@ -33,6 +34,7 @@ from .model import (
     ExistingCampaignSitelinks,
     GeoTargetCriterion,
     NewCampaignSitelinks,
+    PageFeedItems,
     RemoveResource,
 )
 
@@ -930,6 +932,12 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "service_path_update_delete": "campaign_criterion_path",
         "setattr_create_func": _keywords_setattr,
         "setattr_update_func": _set_fields,
+    },
+    "asset_set_asset": {
+        "service": "AssetSetAssetService",
+        "operation": "AssetSetAssetOperation",
+        "mutate": "mutate_asset_set_assets",
+        "service_path_update_delete": "asset_set_asset_path",
     },
 }
 
@@ -1955,3 +1963,122 @@ async def add_shared_set_to_campaign(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
+
+
+def _add_assets_to_asset_set(
+    client: Any,
+    customer_id: str,
+    asset_resource_names: List[str],
+    asset_set_resource_name: str,
+) -> str:
+    """Adds assets to an asset set by creating an asset set asset link.
+
+    Args:
+        client: an initialized GoogleAdsClient instance.
+        customer_id: a client customer ID.
+        asset_resource_names: a list of asset resource names.
+        asset_set_resource_name: a resource name for an asset set.
+    """
+    operations = []
+    for resource_name in asset_resource_names:
+        # Creates an asset set asset operation and adds it to the list of
+        # operations.
+        operation = client.get_type("AssetSetAssetOperation")
+        asset_set_asset = operation.create
+        asset_set_asset.asset = resource_name
+        asset_set_asset.asset_set = asset_set_resource_name
+        operations.append(operation)
+
+    # Issues a mutate request to add the asset set assets and prints its
+    # information.
+    asset_set_asset_service = client.get_service("AssetSetAssetService")
+    response = asset_set_asset_service.mutate_asset_set_assets(
+        customer_id=customer_id, operations=operations
+    )
+
+    return_text = ""
+    for result in response.results:
+        return_text += f"Created an asset set asset link with resource name '{result.resource_name}'\n"
+    return return_text
+
+
+@router.post("/add-items-to-page-feed")
+async def add_items_to_page_feed(
+    user_id: int,
+    model: AddPageFeedItems,
+) -> str:
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+    operations = []
+
+    # Creates one asset per URL.
+    for url, label in model.urls_and_labels.items():
+        # Creates an asset operation and adds it to the list of operations.
+        operation = client.get_type("AssetOperation")
+        asset = operation.create
+        page_feed_asset = asset.page_feed_asset
+        page_feed_asset.page_url = url
+        # Recommended: adds labels to the asset. These labels can be used later
+        # in ad group targeting to restrict the set of pages that can serve.
+        if label:
+            page_feed_asset.labels.append(label)
+        operations.append(operation)
+
+    # Issues a mutate request to add the assets and prints its information.
+    asset_service = client.get_service("AssetService")
+    response = asset_service.mutate_assets(
+        customer_id=model.customer_id, operations=operations
+    )
+
+    resource_names = []
+    return_text = ""
+    for result in response.results:
+        resource_name = result.resource_name
+        return_text += f"Created an asset with resource name: '{resource_name}'\n"
+        resource_names.append(resource_name)
+
+    return _add_assets_to_asset_set(
+        client=client,
+        customer_id=model.customer_id,
+        asset_resource_names=resource_names,
+        asset_set_resource_name=model.asset_set_resource_name,
+    )
+
+
+@router.get("/list-page-feed-items")
+async def list_page_feed_items(
+    user_id: int,
+    model: PageFeedItems,
+) -> Dict[str, Any]:
+    # client = await _get_client(
+    #     user_id=user_id, login_customer_id=model.login_customer_id
+    # )
+    query = f"""
+SELECT
+#   asset_set_asset.asset,
+#   asset_set_asset.asset_set,
+  asset.id,
+  asset.name,
+  asset.type,
+  asset.page_feed_asset.page_url
+FROM
+  asset_set_asset
+WHERE
+  asset.type = 'PAGE_FEED'
+  AND asset_set_asset.asset_set = '{model.asset_set_resource_name}'
+  AND asset_set_asset.status != 'REMOVED'
+"""  # nosec: [B608]
+
+    page_feed_assets_response = await search(
+        user_id=user_id,
+        customer_ids=[model.customer_id],
+        query=query,
+        login_customer_id=model.login_customer_id,
+    )
+
+    # page_urls = []
+    # for asset in page_feed_assets_response[model.customer_id]:
+    #     page_urls.append(asset["asset"]["pageFeedAsset"]["pageUrl"])
+
+    return page_feed_assets_response
