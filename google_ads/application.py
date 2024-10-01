@@ -21,6 +21,7 @@ from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 from .model import (
     AdBase,
     AdCopy,
+    AddPageFeedItems,
     AdGroup,
     AdGroupAd,
     AdGroupCriterion,
@@ -931,6 +932,12 @@ GOOGLE_ADS_RESOURCE_DICT: Dict[str, Dict[str, Any]] = {
         "service_path_update_delete": "campaign_criterion_path",
         "setattr_create_func": _keywords_setattr,
         "setattr_update_func": _set_fields,
+    },
+    "asset_set_asset": {
+        "service": "AssetSetAssetService",
+        "operation": "AssetSetAssetOperation",
+        "mutate": "mutate_asset_set_assets",
+        "service_path_update_delete": "asset_set_asset_path",
     },
 }
 
@@ -1998,7 +2005,7 @@ def _add_assets_to_asset_set(
 @router.post("/add-items-to-page-feed")
 async def add_items_to_page_feed(
     user_id: int,
-    model: PageFeedItems,
+    model: AddPageFeedItems,
 ) -> str:
     client = await _get_client(
         user_id=user_id, login_customer_id=model.login_customer_id
@@ -2061,7 +2068,6 @@ WHERE
   asset.type = 'PAGE_FEED'
   AND asset_set_asset.asset_set = '{model.asset_set_resource_name}'
   AND asset_set_asset.status != 'REMOVED'
-#   AND asset.page_feed_asset.page_url IN ({", ".join([f'"{url}"' for url in model.urls_and_labels.keys()])})
 """  # nosec: [B608]
 
     page_feed_assets_response = await search(
