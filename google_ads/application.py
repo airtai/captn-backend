@@ -166,7 +166,7 @@ async def login_callback(
         "grant_type": "authorization_code",
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient() as client:  # nosec [B113]
         response = await client.post(
             oauth2_settings["tokenUrl"], data=token_request_data
         )
@@ -174,7 +174,7 @@ async def login_callback(
     if response.status_code == 200:
         token_data = response.json()
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient() as client:  # nosec [B113]
         userinfo_response = await client.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
             headers={"Authorization": f"Bearer {token_data['access_token']}"},
@@ -378,6 +378,8 @@ SELECT
     customer_client.id
 FROM
     customer_client
+WHERE
+    customer_client.status = 'ENABLED'
 """
 
     search_results = {}
