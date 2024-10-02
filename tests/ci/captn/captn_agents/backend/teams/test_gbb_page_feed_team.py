@@ -1,7 +1,12 @@
+from tempfile import TemporaryDirectory
 from typing import Any, Iterator
 
 import pytest
+from autogen.cache import Cache
 
+from captn.captn_agents.backend.benchmarking.helpers import (
+    get_client_response_for_the_team_conv,
+)
 from captn.captn_agents.backend.teams import (
     GBBPageFeedTeam,
     Team,
@@ -42,3 +47,62 @@ class TestGBBPageFeedTeam:
             agent_number_of_functions_dict=agent_number_of_functions_dict,
             team_class=GBBPageFeedTeam,
         )
+
+    @pytest.mark.skip(reason="Not implemented")
+    @pytest.mark.flaky
+    @pytest.mark.openai
+    @pytest.mark.fastapi_openapi_team
+    def test_page_feed_real_fastapi_team_end2end(
+        self,
+        mock_get_conv_uuid: Iterator[Any],
+        # mock_get_login_url: Iterator[Any],
+        # mock_requests_get: Iterator[Any],
+        # mock_requests_post: Iterator[Any],
+        # mock_execute_query_f: Iterator[Any],
+    ) -> None:
+        user_id = 13
+        openapi_url = "https://google-sheets.tools.staging.fastagency.ai/openapi.json"
+
+        with mock_get_conv_uuid:
+            team = GBBPageFeedTeam(
+                task="Do your job.",
+                user_id=user_id,
+                conv_id=456,
+                openapi_url=openapi_url,
+            )
+
+        expected_messages = [
+            "Sheet with the name 'Captn - Campaigns",
+            "Sheet with the name 'Captn - Ads",
+            "Sheet with the name 'Captn - Keywords",
+            "Created campaigns:",
+        ]
+        with TemporaryDirectory() as cache_dir:
+            with Cache.disk(cache_path_root=cache_dir) as cache:
+                team.initiate_chat(cache=cache)
+
+                while True:
+                    messages = team.get_messages()
+                    for message in messages:
+                        if "tool_responses" in message:
+                            expected_messages_copy = expected_messages.copy()
+                            for expected_message in expected_messages_copy:
+                                if expected_message in message["content"]:
+                                    expected_messages.remove(expected_message)
+
+                        if len(expected_messages) == 0:
+                            break
+                    if len(expected_messages) == 0:
+                        break
+
+                    num_messages = len(messages)
+                    if num_messages < team.max_round:
+                        customers_response = get_client_response_for_the_team_conv(
+                            user_id=user_id,
+                            conv_id=456,
+                            message=team.get_last_message(),
+                            cache=cache,
+                            client_system_message="Just accept everything. If asked which account to use, use customer with id 3333",
+                        )
+                        team.toolbox._context.waiting_for_client_response = False
+                        team.continue_chat(message=customers_response)

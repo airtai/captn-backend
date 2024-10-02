@@ -56,18 +56,17 @@ Here is the current customers brief/information we have gathered for you as a st
 - If you receive a login url, forward it to the client by using the 'reply_to_client' function.
 - Do NOT use smart suggestions when forwarding the login url to the client!
 4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with page feeds.
+- page feed spreadsheet usually starts with "Permalinks_Stations_Table"
 - Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
   - If you think you found the correct files, use one smart suggestion ["These are the correct files."].
 - Do NOT forget this step, because the client needs to confirm that you have found the correct files, otherwise you will be penalized!
 - ALWAYS add final sentence "If these are NOT the correct files, please paste the whole URL of the correct files."
-5. In the template spreadsheet, you must must check that 'Campaigns', 'Ad Groups', 'Keywords' and 'Ads' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
+5. In the template spreadsheet, you must must check that 'Accounts' and 'Page Feeds' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - mandatory input parameters: user_id, spreadsheet_id
 6. In the spreadsheet with page feeds, you must find the title of the sheet with page feeds (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - If there are multiple sheets within the spreadsheet, ask the client to choose the correct sheet.
-
-
-
-9. If the newly constructed sheets do NOT contain any Issues, the team should do the following:
+7. Once you have the correct sheet title, you must validate the data in the page feed sheet by using 'validate_page_feed_data' function.
+8. If the data is correct, you must update the page feeds in Google Ads by using 'update_page_feeds' function.
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
 
@@ -96,17 +95,12 @@ params: (resource_details: str, function_name: str, modification_function_parame
 ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'. If you forget this parameter, you will be penalized!
 'modification_function_parameters' should be a dictionary with the following keys:
 {{
-    "login_customer_id":
-    "customer_id":
-    "spreadsheet_id":
-    "campaigns_title":
-    "ads_title":
-    "keywords_title":
+    "customer_ids_to_update":
 }}
 
 'resource_details' should use human readable names and add id-s in the brackets.
 
-function_name: 'create_google_ads_resources'
+function_name: 'update_page_feeds'
 
 
 3. Only Google_sheets_expert has access to Google Sheets API and can read and edit Google Sheets.
@@ -114,10 +108,10 @@ function_name: 'create_google_ads_resources'
 If you want to refresh google sheets token or change google sheets use 'get_login_url_login_get' with 'force_new_login' parameter set to True.
 
 4. Only Google_ads_expert has access to the following commands:
-- 'list_accessible_customers_with_account_types' (to list accessible Google Ads customers with account types)
-- 'list_sub_accounts' (to list sub-accounts of a Google Ads customer, use it if the client wants to use Manager Account)
-- 'create_google_ads_resources':
-parameters 'campaigns_title', 'ads_title', 'keywords_title' MUST be the same as the ones that 'process_spreadsheet_process_spreadsheet_post' function returned.
+- 'validate_page_feed_data':
+parameters: template_spreadsheet_id, page_feed_spreadsheet_id, page_feed_sheet_title
+- 'update_page_feeds':
+parameters: customer_ids_to_update
 - 'change_google_ads_account_or_refresh_token' - to change Google Ads account or refresh token (This can't be used for Google Sheets account)
 """
 

@@ -31,13 +31,29 @@ def validate_page_feed_data(
     ],
     context: GoogleSheetsTeamContext,
 ) -> str:
-    account_data_dict = get_sheet_data(
+    account_templ_data = get_sheet_data(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=template_spreadsheet_id,
         title="Accounts",
     )
-    print(account_data_dict)
+    print(account_templ_data)
+
+    page_feeds_template_data = get_sheet_data(
+        user_id=context.user_id,
+        base_url=context.google_sheets_api_url,
+        spreadsheet_id=template_spreadsheet_id,
+        title="Page Feeds",
+    )
+    print(page_feeds_template_data)
+
+    page_feed_data = get_sheet_data(
+        user_id=context.user_id,
+        base_url=context.google_sheets_api_url,
+        spreadsheet_id=page_feed_spreadsheet_id,
+        title=page_feed_sheet_title,
+    )
+    print(page_feed_data)
     return "Data has been retrieved from Google Sheets. Continue with the process."
 
 
