@@ -1125,6 +1125,11 @@ def list_sub_accounts(
     )
 
 
+CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION = (
+    "Change Google Ads account or refresh access token"
+)
+
+
 def create_google_sheets_team_toolbox(
     user_id: int,
     conv_id: int,
@@ -1155,11 +1160,8 @@ def create_google_sheets_team_toolbox(
         create_google_ads_resources
     )
 
-    change_google_ads_account_description = (
-        "Change Google Ads account or refresh access token"
-    )
     toolbox.add_function(
-        description=change_google_ads_account_description,
+        description=CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION,
         name="change_google_ads_account_or_refresh_token",
     )(change_google_account)
 
