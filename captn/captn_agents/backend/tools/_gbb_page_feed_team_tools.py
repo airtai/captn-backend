@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Annotated, Any, Dict, List
 
 from ..toolboxes import Toolbox
 from ._functions import (
@@ -18,6 +18,15 @@ from ._gbb_google_sheets_team_tools import (
 from ._google_ads_team_tools import (
     change_google_account,
 )
+
+UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
+
+
+def update_page_feeds(
+    customer_ids_to_update: Annotated[List[str], "List of customer ids to update"],
+    context: GoogleSheetsTeamContext,
+) -> str:
+    return "All page feeds have been updated."
 
 
 def create_page_feed_team_toolbox(
@@ -46,9 +55,7 @@ def create_page_feed_team_toolbox(
         list_accessible_customers_with_account_types
     )
     toolbox.add_function(LIST_SUB_ACCOUNTS_DESCRIPTION)(list_sub_accounts)
-    # toolbox.add_function(CREATE_GOOGLE_ADS_RESOURCES_DESCRIPTION)(
-    #     create_google_ads_resources
-    # )
+    toolbox.add_function(UPDATE_PAGE_FEED_DESCRIPTION)(update_page_feeds)
 
     toolbox.add_function(
         description=CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION,

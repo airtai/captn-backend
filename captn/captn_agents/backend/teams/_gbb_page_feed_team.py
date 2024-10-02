@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from ..toolboxes import Toolbox
 from ..tools._gbb_page_feed_team_tools import create_page_feed_team_toolbox
-from ._gbb_google_sheets_team import GBBGoogleSheetsTeam
+from ._gbb_google_sheets_team import GOOGLE_SHEETS_OPENAPI_URL, GBBGoogleSheetsTeam
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
 
 
@@ -23,7 +23,7 @@ class GBBPageFeedTeam(GBBGoogleSheetsTeam):
         create_toolbox_func: Callable[
             [int, int, Dict[str, Any]], Toolbox
         ] = create_page_feed_team_toolbox,
-        # openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
+        openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
     ):
         super().__init__(
             task=task,
@@ -35,7 +35,7 @@ class GBBPageFeedTeam(GBBGoogleSheetsTeam):
             temperature=temperature,
             config_list=config_list,
             create_toolbox_func=create_toolbox_func,
-            # openapi_url=openapi_url,
+            openapi_url=openapi_url,
         )
 
     @property
