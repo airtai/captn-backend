@@ -19,7 +19,6 @@ class GBBPageFeedTeam(GBBGoogleSheetsTeam):
         seed: int = 42,
         temperature: float = 0.2,
         config_list: Optional[List[Dict[str, str]]] = None,
-        # TODO: change toolbox_func
         create_toolbox_func: Callable[
             [int, int, Dict[str, Any]], Toolbox
         ] = create_page_feed_team_toolbox,
@@ -56,25 +55,19 @@ Here is the current customers brief/information we have gathered for you as a st
 - Use user_id=-1 and conv_uuid="abc" (The correct values will be injected by the system).
 - If you receive a login url, forward it to the client by using the 'reply_to_client' function.
 - Do NOT use smart suggestions when forwarding the login url to the client!
-4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with new routes.
+4. Once you have the file names, you must determine the id of the Google spreadsheet template and the id of the spreadsheet with page feeds.
 - Use reply_to_client command to check if you found the correct files by providing the file names. Do NOT mention all the files, only the ones that are relevant.
   - If you think you found the correct files, use one smart suggestion ["These are the correct files."].
 - Do NOT forget this step, because the client needs to confirm that you have found the correct files, otherwise you will be penalized!
 - ALWAYS add final sentence "If these are NOT the correct files, please paste the whole URL of the correct files."
 5. In the template spreadsheet, you must must check that 'Campaigns', 'Ad Groups', 'Keywords' and 'Ads' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - mandatory input parameters: user_id, spreadsheet_id
-6. In the spreadsheet with new routes, you must find the title of the sheet with new routes (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
+6. In the spreadsheet with page feeds, you must find the title of the sheet with page feeds (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - If there are multiple sheets within the spreadsheet, ask the client to choose the correct sheet.
-7. If these files contain all mandatory sheets, proceed with 'process_spreadsheet_process_spreadsheet_post' endpoint to process the spreadsheet.
-- query parameters: user_id, template_spreadsheet_id, new_campaign_spreadsheet_id, new_campaign_sheet_title
-8. Once the endpoint is successful write the message to the client that the new sheets have been created in the same spreadsheet as the new routes sheet.
-- If you are informed that the some new sheet contains 'Issues' column, you must inform the client that the 'Issues' column has been added to the new sheet and that the client should check it and try to resolve it manually.
+
+
+
 9. If the newly constructed sheets do NOT contain any Issues, the team should do the following:
-- List accessible customers by using the 'list_accessible_customers_with_account_types' function. (this should be done by the Google_ads_expert)
-- Ask the user choose the correct customer id (This should be done by the Account_manager)
-- If the chosen customer is a Manager Account, list sub-accounts by using the 'list_sub_accounts' function. (this should be done by the Google_ads_expert) and ask the user to choose the correct sub-account.
-- Once the user chooses the correct customer id use 'ask_client_for_permission' function to ask the client for permission to make the changes.
-- Once the user has given permission to make the changes, create Google Ads resources by using the 'create_google_ads_resources' function. (this should be done by the Google_ads_expert)
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
 
@@ -85,7 +78,7 @@ OFTEN MISTAKES:
 
 ADDITIONAL NOTES:
 - ALWAYS use hyperlinks to the Google Sheets UI when referring it to the client.
-e.g. "Are these the correct files?\n\n1. ROUTES: [new-routes](https://docs.google.com/spreadsheets/d/insert_correct_sheet_id) \n\n2. TEMPLATES: [template](https://docs.google.com/spreadsheets/d/insert_correct_sheet_id)"
+e.g. "Are these the correct files?\n\n1. PAGE FEEDS: [new-routes](https://docs.google.com/spreadsheets/d/insert_correct_sheet_id) \n\n2. TEMPLATES: [template](https://docs.google.com/spreadsheets/d/insert_correct_sheet_id)"
 - ALWAYS use names of the sheets and google ads customer account names when referring them to the client. You can add id-s in the brackets.
 """
 

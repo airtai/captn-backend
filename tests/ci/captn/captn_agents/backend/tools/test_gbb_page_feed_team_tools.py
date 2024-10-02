@@ -46,14 +46,13 @@ class TestPageFeedTeamTools:
         self.toolbox.add_to_agent(agent, user_proxy)
         llm_config = agent.llm_config
 
-        check_llm_config_total_tools(llm_config, 6)
+        check_llm_config_total_tools(llm_config, 5)
         check_llm_config_descriptions(
             llm_config,
             {
                 "reply_to_client": r"Respond to the client \(answer to his task or question for additional information\)",
                 "ask_client_for_permission": "Ask the client for permission to make the changes.",
-                "list_accessible_customers_with_account_types": "List accessible customers with account types",
-                "list_sub_accounts": "Use this function to list sub accounts of a Google Ads manager account",
+                "validate_page_feed_data": "Validate page feed data",
                 "update_page_feeds": "Update Google Ads Page Feeds",
                 "change_google_ads_account_or_refresh_token": "Change Google Ads account or refresh access token",
             },

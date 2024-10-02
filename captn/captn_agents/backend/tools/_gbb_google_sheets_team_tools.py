@@ -92,7 +92,7 @@ class GoogleSheetValues(BaseModel):
     )
 
 
-def _get_sheet_data(
+def get_sheet_data(
     base_url: str, user_id: int, spreadsheet_id: str, title: str
 ) -> Dict[str, List[List[Any]]]:
     params: Dict[str, Union[int, str]] = {
@@ -158,7 +158,7 @@ def _validat_and_convert_to_df(
     title: str,
     mandatory_columns: List[str],
 ) -> Tuple[pd.DataFrame, str]:
-    data_dict = _get_sheet_data(
+    data_dict = get_sheet_data(
         base_url=base_url,
         user_id=user_id,
         spreadsheet_id=spreadsheet_id,

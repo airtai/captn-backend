@@ -9,15 +9,37 @@ from ._functions import (
 )
 from ._gbb_google_sheets_team_tools import (
     CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION,
-    LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION,
-    LIST_SUB_ACCOUNTS_DESCRIPTION,
+    # LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION,
+    # LIST_SUB_ACCOUNTS_DESCRIPTION,
     GoogleSheetsTeamContext,
-    list_accessible_customers_with_account_types,
-    list_sub_accounts,
+    # list_accessible_customers_with_account_types,
+    # list_sub_accounts,
+    get_sheet_data,
 )
 from ._google_ads_team_tools import (
     change_google_account,
 )
+
+VALIDATE_PAGE_FEED_DATA_DESCRIPTION = "Validate page feed data."
+
+
+def validate_page_feed_data(
+    template_spreadsheet_id: Annotated[str, "Template spreadsheet id"],
+    page_feed_spreadsheet_id: Annotated[str, "Page feed spreadsheet id"],
+    page_feed_sheet_title: Annotated[
+        str, "Page feed sheet title (within the page feed spreadsheet)"
+    ],
+    context: GoogleSheetsTeamContext,
+) -> str:
+    account_data_dict = get_sheet_data(
+        user_id=context.user_id,
+        base_url=context.google_sheets_api_url,
+        spreadsheet_id=template_spreadsheet_id,
+        title="Accounts",
+    )
+    print(account_data_dict)
+    return "Data has been retrieved from Google Sheets. Continue with the process."
+
 
 UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
 
@@ -51,10 +73,11 @@ def create_page_feed_team_toolbox(
     toolbox.add_function(
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)
-    toolbox.add_function(LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION)(
-        list_accessible_customers_with_account_types
-    )
-    toolbox.add_function(LIST_SUB_ACCOUNTS_DESCRIPTION)(list_sub_accounts)
+    # toolbox.add_function(LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION)(
+    #     list_accessible_customers_with_account_types
+    # )
+    # toolbox.add_function(LIST_SUB_ACCOUNTS_DESCRIPTION)(list_sub_accounts)
+    toolbox.add_function(VALIDATE_PAGE_FEED_DATA_DESCRIPTION)(validate_page_feed_data)
     toolbox.add_function(UPDATE_PAGE_FEED_DESCRIPTION)(update_page_feeds)
 
     toolbox.add_function(

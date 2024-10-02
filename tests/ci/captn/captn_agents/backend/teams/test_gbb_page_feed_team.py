@@ -27,8 +27,8 @@ class TestGBBPageFeedTeam:
             )
         agent_number_of_functions_dict = {
             "google_sheets_expert": 8,
-            "account_manager": 6,
-            "google_ads_expert": 6,
+            "account_manager": 5,
+            "google_ads_expert": 5,
             "user_proxy": 0,
         }
 
