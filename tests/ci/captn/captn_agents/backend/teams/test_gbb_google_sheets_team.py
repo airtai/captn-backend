@@ -17,107 +17,109 @@ from captn.captn_agents.backend.teams import (
 from .helpers import helper_test_init
 
 
+@contextmanager
+def mock_list_accessible_customers_f() -> Iterator[Tuple[Any, Any, Any]]:
+    ret_value1 = {
+        "2222": [
+            {
+                "customerClient": {
+                    "resourceName": "customers/2222/customerClients/2222",
+                    "manager": True,
+                    "descriptiveName": "Manager Account 1",
+                    "id": "2222",
+                }
+            }
+        ],
+        "1111": [
+            {
+                "customerClient": {
+                    "resourceName": "customers/1111/customerClients/1111",
+                    "manager": False,
+                    "descriptiveName": "airt technologies d.o.o.",
+                    "id": "1111",
+                }
+            }
+        ],
+        "3333": [
+            {
+                "customerClient": {
+                    "resourceName": "customers/3333/customerClients/3333",
+                    "manager": True,
+                    "descriptiveName": "My First Manager Account",
+                    "id": "3333",
+                }
+            }
+        ],
+    }
+
+    ret_value2 = {
+        "3333": [
+            {
+                "customerClient": {
+                    "resourceName": "customers/3333/customerClients/1111",
+                    "manager": False,
+                    "descriptiveName": "airt technologies d.o.o.",
+                    "currencyCode": "EUR",
+                    "id": "1111",
+                }
+            }
+        ]
+    }
+
+    ret_value3 = {
+        "1111": [
+            {
+                "customerClient": {
+                    "resourceName": "customers/1111/customerClients/1111",
+                    "manager": False,
+                    "descriptiveName": "airt technologies d.o.o.",
+                    "currencyCode": "EUR",
+                    "id": "1111",
+                }
+            }
+        ]
+    }
+
+    with (
+        patch(
+            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.list_accessible_customers_with_account_types_client",
+            return_value=ret_value1,
+        ) as mock_list_accessible_customers_with_account_types_client,
+        patch(
+            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.list_sub_accounts_client",
+            return_value=ret_value2,
+        ) as mock_list_sub_accounts_client,
+        patch(
+            "captn.captn_agents.backend.tools._functions.list_sub_accounts",
+            return_value=ret_value3,
+        ) as mock_list_sub_accounts2,
+        patch(
+            "captn.captn_agents.backend.tools._functions.BENCHMARKING",
+            True,
+        ),
+    ):
+        yield (
+            mock_list_accessible_customers_with_account_types_client,
+            mock_list_sub_accounts_client,
+            mock_list_sub_accounts2,
+        )
+
+
+@pytest.fixture
+def mock_execute_query_f() -> Iterator[Any]:
+    with patch(
+        "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
+        return_value="{'1111': []}",
+    ) as mock_execute_query:
+        yield mock_execute_query
+
+
 class TestGBBGoogleSheetsTeam:
     @pytest.fixture(autouse=True)
     def setup(self, google_sheets_fastapi_openapi_url: str) -> Iterator[None]:
         self.google_sheets_fastapi_openapi_url = google_sheets_fastapi_openapi_url
         Team._teams.clear()
         yield
-
-    @pytest.fixture
-    def mock_execute_query_f(self) -> Iterator[Any]:
-        with patch(
-            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.execute_query",
-            return_value="{'1111': []}",
-        ) as mock_execute_query:
-            yield mock_execute_query
-
-    @contextmanager
-    def mock_list_accessible_customers_f(self) -> Iterator[Tuple[Any, Any, Any]]:
-        ret_value1 = {
-            "2222": [
-                {
-                    "customerClient": {
-                        "resourceName": "customers/2222/customerClients/2222",
-                        "manager": True,
-                        "descriptiveName": "Manager Account 1",
-                        "id": "2222",
-                    }
-                }
-            ],
-            "1111": [
-                {
-                    "customerClient": {
-                        "resourceName": "customers/1111/customerClients/1111",
-                        "manager": False,
-                        "descriptiveName": "airt technologies d.o.o.",
-                        "id": "1111",
-                    }
-                }
-            ],
-            "3333": [
-                {
-                    "customerClient": {
-                        "resourceName": "customers/3333/customerClients/3333",
-                        "manager": True,
-                        "descriptiveName": "My First Manager Account",
-                        "id": "3333",
-                    }
-                }
-            ],
-        }
-
-        ret_value2 = {
-            "3333": [
-                {
-                    "customerClient": {
-                        "resourceName": "customers/3333/customerClients/1111",
-                        "manager": False,
-                        "descriptiveName": "airt technologies d.o.o.",
-                        "currencyCode": "EUR",
-                        "id": "1111",
-                    }
-                }
-            ]
-        }
-
-        ret_value3 = {
-            "1111": [
-                {
-                    "customerClient": {
-                        "resourceName": "customers/1111/customerClients/1111",
-                        "manager": False,
-                        "descriptiveName": "airt technologies d.o.o.",
-                        "currencyCode": "EUR",
-                        "id": "1111",
-                    }
-                }
-            ]
-        }
-
-        with (
-            patch(
-                "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.list_accessible_customers_with_account_types_client",
-                return_value=ret_value1,
-            ) as mock_list_accessible_customers_with_account_types_client,
-            patch(
-                "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.list_sub_accounts_client",
-                return_value=ret_value2,
-            ) as mock_list_sub_accounts_client,
-            patch(
-                "captn.captn_agents.backend.tools._functions.list_sub_accounts",
-                return_value=ret_value3,
-            ) as mock_list_sub_accounts2,
-            patch(
-                "captn.captn_agents.backend.tools._functions.BENCHMARKING",
-                True,
-            ),
-        ):
-            yield (
-                mock_list_accessible_customers_with_account_types_client,
-                mock_list_sub_accounts_client,
-                mock_list_sub_accounts2,
-            )
 
     def test_init(self, mock_get_conv_uuid: Iterator[Any]) -> None:
         with mock_get_conv_uuid:
@@ -161,7 +163,7 @@ class TestGBBGoogleSheetsTeam:
             mock_requests_get,
             mock_requests_post,
             mock_execute_query_f,
-            self.mock_list_accessible_customers_f() as (
+            mock_list_accessible_customers_f() as (
                 mock_list_accessible_customers_with_account_types_client,
                 mock_list_sub_accounts_client,
                 mock_list_sub_accounts2,

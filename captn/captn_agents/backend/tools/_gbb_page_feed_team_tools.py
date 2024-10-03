@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, Optional
 
 import pandas as pd
 
@@ -154,7 +154,8 @@ UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
 
 
 def update_page_feeds(
-    customer_ids_to_update: Annotated[List[str], "List of customer ids to update"],
+    customer_id: Annotated[str, "Customer Id to update"],
+    login_customer_id: Annotated[str, "Login Customer Id (Manager Account)"],
     context: PageFeedTeamContext,
 ) -> str:
     if context.page_feeds_and_accounts_templ_df is None:

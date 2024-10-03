@@ -101,7 +101,8 @@ params: (resource_details: str, function_name: str, modification_function_parame
 ALL parameters are mandatory, do NOT forget to include 'modification_function_parameters'. If you forget this parameter, you will be penalized!
 'modification_function_parameters' should be a dictionary with the following keys:
 {{
-    "customer_ids_to_update":
+    "customer_id":
+    "login_customer_id":
 }}
 
 'resource_details' should use human readable names and add id-s in the brackets.
@@ -117,7 +118,7 @@ If you want to refresh google sheets token or change google sheets use 'get_logi
 - 'validate_page_feed_data':
 parameters: template_spreadsheet_id, page_feed_spreadsheet_id, page_feed_sheet_title
 - 'update_page_feeds':
-parameters: customer_ids_to_update
+parameters: customer_id, login_customer_id
 - 'change_google_ads_account_or_refresh_token' - to change Google Ads account or refresh token (This can't be used for Google Sheets account)
 """
 
