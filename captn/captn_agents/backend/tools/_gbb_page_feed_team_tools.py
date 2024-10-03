@@ -1,4 +1,5 @@
-from typing import Annotated, Any, Dict, List
+from dataclasses import dataclass
+from typing import Annotated, Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -75,13 +76,19 @@ def _get_relevant_page_feeds_and_accounts(
     return filtered_page_feeds_and_accounts_templ_df
 
 
+@dataclass
+class PageFeedTeamContext(GoogleSheetsTeamContext):
+    page_feeds_and_accounts_templ_df: Optional[pd.DataFrame] = None
+    page_feeds_df: Optional[pd.DataFrame] = None
+
+
 def validate_page_feed_data(
     template_spreadsheet_id: Annotated[str, "Template spreadsheet id"],
     page_feed_spreadsheet_id: Annotated[str, "Page feed spreadsheet id"],
     page_feed_sheet_title: Annotated[
         str, "Page feed sheet title (within the page feed spreadsheet)"
     ],
-    context: GoogleSheetsTeamContext,
+    context: PageFeedTeamContext,
 ) -> str:
     account_templ_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
@@ -121,6 +128,9 @@ def validate_page_feed_data(
         page_feeds_and_accounts_templ_df, page_feeds_df
     )
 
+    if page_feeds_and_accounts_templ_df.empty:
+        return "Page Feeds Templates don't have any matching Custom Labels with the newly provided Page Feeds data."
+
     avaliable_customers = page_feeds_and_accounts_templ_df[
         ["Customer Id", "Name Account"]
     ].drop_duplicates()
@@ -139,7 +149,7 @@ UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
 
 def update_page_feeds(
     customer_ids_to_update: Annotated[List[str], "List of customer ids to update"],
-    context: GoogleSheetsTeamContext,
+    context: PageFeedTeamContext,
 ) -> str:
     return "All page feeds have been updated."
 
@@ -151,7 +161,7 @@ def create_page_feed_team_toolbox(
 ) -> Toolbox:
     toolbox = Toolbox()
 
-    context = GoogleSheetsTeamContext(
+    context = PageFeedTeamContext(
         user_id=user_id,
         conv_id=conv_id,
         recommended_modifications_and_answer_list=kwargs[

@@ -6,10 +6,9 @@ import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
 
 from captn.captn_agents.backend.config import Config
-from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
-    GoogleSheetsTeamContext,
-)
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
+    PageFeedTeamContext,
+    _get_relevant_page_feeds_and_accounts,
     _get_sheet_data_and_return_df,
     create_page_feed_team_toolbox,
     validate_page_feed_data,
@@ -35,7 +34,7 @@ class TestPageFeedTeamTools:
             user_id=self.user_id, conv_id=self.conv_id, kwargs=kwargs
         )
 
-        self.context = GoogleSheetsTeamContext(
+        self.context = PageFeedTeamContext(
             user_id=self.user_id,
             conv_id=self.conv_id,
             toolbox=self.toolbox,
@@ -89,6 +88,74 @@ class TestPageFeedTeamTools:
             )
 
             pd.testing.assert_frame_equal(df, expected_df)
+
+    @pytest.mark.parametrize(
+        "page_feeds_and_accounts_templ_df, expected_df",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "Customer Id": ["abc123"],
+                        "Custom Label 1": ["StS; hr; Croatia"],
+                        "Custom Label 2": ["StS; en; Croatia"],
+                    }
+                ),
+                pd.DataFrame(
+                    {
+                        "Customer Id": ["abc123"],
+                        "Custom Label 1": ["StS; hr; Croatia"],
+                        "Custom Label 2": ["StS; en; Croatia"],
+                    },
+                ),
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "Customer Id": ["abc123", "def456"],
+                        "Custom Label 1": ["StS; hr; Croatia", "StS; de; Croatia"],
+                        "Custom Label 2": ["StS; en; Croatia", ""],
+                    }
+                ),
+                pd.DataFrame(
+                    {
+                        "Customer Id": ["abc123", "def456"],
+                        "Custom Label 1": ["StS; hr; Croatia", "StS; de; Croatia"],
+                        "Custom Label 2": ["StS; en; Croatia", ""],
+                    }
+                ),
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "Customer Id": ["abc123", "def456", "ghi789"],
+                        "Custom Label 1": [
+                            "None existent",
+                            "None existent",
+                            "None existent",
+                        ],
+                        "Custom Label 2": ["None existent", "None existent", ""],
+                    }
+                ),
+                pd.DataFrame(columns=[]),
+            ),
+        ],
+    )
+    def test_get_relevant_page_feeds_and_accounts(
+        self, page_feeds_and_accounts_templ_df: pd.DataFrame, expected_df: pd.DataFrame
+    ) -> None:
+        page_feeds_df = pd.DataFrame(
+            {
+                "Custom Label": ["StS; hr; Croatia", "StS; de; Croatia"],
+            }
+        )
+        return_df = _get_relevant_page_feeds_and_accounts(
+            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
+            page_feeds_df=page_feeds_df,
+        )
+        if not expected_df.empty:
+            pd.testing.assert_frame_equal(return_df, expected_df)
+        else:
+            assert return_df.empty
 
     def test_validate_page_feed_data(self) -> None:
         side_effect_get_sheet_data = [
