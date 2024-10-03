@@ -1,5 +1,7 @@
 from typing import Annotated, Any, Dict, List
 
+import pandas as pd
+
 from ..toolboxes import Toolbox
 from ._functions import (
     REPLY_TO_CLIENT_DESCRIPTION,
@@ -12,6 +14,7 @@ from ._gbb_google_sheets_team_tools import (
     # LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION,
     # LIST_SUB_ACCOUNTS_DESCRIPTION,
     GoogleSheetsTeamContext,
+    GoogleSheetValues,
     # list_accessible_customers_with_account_types,
     # list_sub_accounts,
     get_sheet_data,
@@ -23,6 +26,55 @@ from ._google_ads_team_tools import (
 VALIDATE_PAGE_FEED_DATA_DESCRIPTION = "Validate page feed data."
 
 
+def _get_sheet_data_and_return_df(
+    user_id: int,
+    base_url: str,
+    spreadsheet_id: str,
+    title: str,
+) -> pd.DataFrame:
+    data = get_sheet_data(
+        user_id=user_id,
+        base_url=base_url,
+        spreadsheet_id=spreadsheet_id,
+        title=title,
+    )
+    values = GoogleSheetValues(**data)
+    return pd.DataFrame(
+        values.values[1:],
+        columns=values.values[0],
+    )
+
+
+def _get_relevant_page_feeds_and_accounts(
+    page_feeds_and_accounts_templ_df: pd.DataFrame,
+    page_feeds_df: pd.DataFrame,
+) -> pd.DataFrame:
+    custom_labels = page_feeds_df["Custom Label"].unique()
+
+    filtered_page_feeds_and_accounts_templ_df = pd.DataFrame(
+        columns=page_feeds_and_accounts_templ_df.columns
+    )
+    # Get all columns that start with "Custom Label"
+    custom_label_columns = [
+        col
+        for col in page_feeds_and_accounts_templ_df.columns
+        if col.startswith("Custom Label")
+    ]
+
+    # Keep only rows that have at least one custom label in the custom_label_columns
+    for row in page_feeds_and_accounts_templ_df.iterrows():
+        row_custom_labels = row[1][custom_label_columns].values
+        if any(
+            row_custom_label in custom_labels for row_custom_label in row_custom_labels
+        ):
+            filtered_page_feeds_and_accounts_templ_df = pd.concat(
+                [filtered_page_feeds_and_accounts_templ_df, row[1].to_frame().T],
+                ignore_index=True,
+            )
+
+    return filtered_page_feeds_and_accounts_templ_df
+
+
 def validate_page_feed_data(
     template_spreadsheet_id: Annotated[str, "Template spreadsheet id"],
     page_feed_spreadsheet_id: Annotated[str, "Page feed spreadsheet id"],
@@ -31,30 +83,55 @@ def validate_page_feed_data(
     ],
     context: GoogleSheetsTeamContext,
 ) -> str:
-    account_templ_data = get_sheet_data(
+    account_templ_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=template_spreadsheet_id,
         title="Accounts",
     )
-    print(account_templ_data)
+    for col in ["Manager Customer Id", "Customer Id"]:
+        account_templ_df[col] = account_templ_df[col].str.replace("-", "")
 
-    page_feeds_template_data = get_sheet_data(
+    page_feeds_template_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=template_spreadsheet_id,
         title="Page Feeds",
     )
-    print(page_feeds_template_data)
+    page_feeds_template_df["Customer Id"] = page_feeds_template_df[
+        "Customer Id"
+    ].str.replace("-", "")
+    # For columns 'Name' rename to 'Page Feed Name' or 'Account Name'
+    page_feeds_and_accounts_templ_df = pd.merge(
+        page_feeds_template_df,
+        account_templ_df,
+        on="Customer Id",
+        how="left",
+        suffixes=(" Page Feed", " Account"),
+    )
 
-    page_feed_data = get_sheet_data(
+    page_feeds_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=page_feed_spreadsheet_id,
         title=page_feed_sheet_title,
     )
-    print(page_feed_data)
-    return "Data has been retrieved from Google Sheets. Continue with the process."
+
+    page_feeds_and_accounts_templ_df = _get_relevant_page_feeds_and_accounts(
+        page_feeds_and_accounts_templ_df, page_feeds_df
+    )
+
+    avaliable_customers = page_feeds_and_accounts_templ_df[
+        ["Customer Id", "Name Account"]
+    ].drop_duplicates()
+    avaliable_customers_dict = avaliable_customers.set_index("Customer Id")[
+        "Name Account"
+    ].to_dict()
+
+    return f"""Data has been retrieved from Google Sheets.
+Continue the process with the following customers:
+{avaliable_customers_dict}
+"""
 
 
 UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
