@@ -279,4 +279,7 @@ class TestPageFeedTeamTools:
                 context=self.context,
             )
 
-            assert "{'7119828439': 'airt technologies d.o.o.'}" in return_value
+            assert (
+                "{'7119828439': {'Login Customer Id': '7587037554', 'Name Account': 'airt technologies d.o.o.'}"
+                in return_value
+            )

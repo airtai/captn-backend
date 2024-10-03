@@ -131,12 +131,18 @@ def validate_page_feed_data(
     if page_feeds_and_accounts_templ_df.empty:
         return "Page Feeds Templates don't have any matching Custom Labels with the newly provided Page Feeds data."
 
+    context.page_feeds_and_accounts_templ_df = page_feeds_and_accounts_templ_df
+    context.page_feeds_df = page_feeds_df
     avaliable_customers = page_feeds_and_accounts_templ_df[
-        ["Customer Id", "Name Account"]
+        ["Manager Customer Id", "Customer Id", "Name Account"]
     ].drop_duplicates()
-    avaliable_customers_dict = avaliable_customers.set_index("Customer Id")[
-        "Name Account"
-    ].to_dict()
+    avaliable_customers.rename(
+        columns={"Manager Customer Id": "Login Customer Id"}, inplace=True
+    )
+
+    avaliable_customers_dict = avaliable_customers.set_index("Customer Id").to_dict(
+        orient="index"
+    )
 
     return f"""Data has been retrieved from Google Sheets.
 Continue the process with the following customers:
@@ -151,6 +157,8 @@ def update_page_feeds(
     customer_ids_to_update: Annotated[List[str], "List of customer ids to update"],
     context: PageFeedTeamContext,
 ) -> str:
+    if context.page_feeds_and_accounts_templ_df is None:
+        return f"Please validate the page feed data first by running the '{validate_page_feed_data.__name__}' function."
     return "All page feeds have been updated."
 
 

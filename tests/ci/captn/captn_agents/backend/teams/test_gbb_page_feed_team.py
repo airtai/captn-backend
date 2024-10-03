@@ -48,7 +48,6 @@ class TestGBBPageFeedTeam:
             team_class=GBBPageFeedTeam,
         )
 
-    @pytest.mark.skip(reason="Not implemented")
     @pytest.mark.flaky
     @pytest.mark.openai
     @pytest.mark.fastapi_openapi_team
@@ -72,10 +71,7 @@ class TestGBBPageFeedTeam:
             )
 
         expected_messages = [
-            "Sheet with the name 'Captn - Campaigns",
-            "Sheet with the name 'Captn - Ads",
-            "Sheet with the name 'Captn - Keywords",
-            "Created campaigns:",
+            "All page feeds have been updated.",
         ]
         with TemporaryDirectory() as cache_dir:
             with Cache.disk(cache_path_root=cache_dir) as cache:
