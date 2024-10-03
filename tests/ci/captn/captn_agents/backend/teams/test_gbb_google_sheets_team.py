@@ -1,20 +1,15 @@
 from contextlib import contextmanager
-from tempfile import TemporaryDirectory
 from typing import Any, Iterator, Tuple
 from unittest.mock import patch
 
 import pytest
-from autogen.cache import Cache
 
-from captn.captn_agents.backend.benchmarking.helpers import (
-    get_client_response_for_the_team_conv,
-)
 from captn.captn_agents.backend.teams import (
     GBBGoogleSheetsTeam,
     Team,
 )
 
-from .helpers import helper_test_init
+from .helpers import helper_test_init, start_converstaion
 
 
 @contextmanager
@@ -182,35 +177,11 @@ class TestGBBGoogleSheetsTeam:
                 "Sheet with the name 'Captn - Keywords",
                 "Created campaigns:",
             ]
-            with TemporaryDirectory() as cache_dir:
-                with Cache.disk(cache_path_root=cache_dir) as cache:
-                    google_sheets_team.initiate_chat(cache=cache)
-
-                    while True:
-                        messages = google_sheets_team.get_messages()
-                        for message in messages:
-                            if "tool_responses" in message:
-                                expected_messages_copy = expected_messages.copy()
-                                for expected_message in expected_messages_copy:
-                                    if expected_message in message["content"]:
-                                        expected_messages.remove(expected_message)
-
-                            if len(expected_messages) == 0:
-                                break
-                        if len(expected_messages) == 0:
-                            break
-
-                        num_messages = len(messages)
-                        if num_messages < google_sheets_team.max_round:
-                            customers_response = get_client_response_for_the_team_conv(
-                                user_id=user_id,
-                                conv_id=456,
-                                message=google_sheets_team.get_last_message(),
-                                cache=cache,
-                                client_system_message="Just accept everything. If asked which account to use, use customer with id 3333",
-                            )
-                            google_sheets_team.toolbox._context.waiting_for_client_response = False
-                            google_sheets_team.continue_chat(message=customers_response)
+            start_converstaion(
+                user_id=user_id,
+                google_sheets_team=google_sheets_team,
+                expected_messages=expected_messages,
+            )
 
         assert (
             len(expected_messages) == 0
