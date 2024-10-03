@@ -30,6 +30,7 @@ class TeamWithClient(Team):
         recommended_modifications_and_answer_list: Optional[
             List[Tuple[Dict[str, Any], Optional[str]]]
         ] = None,
+        client_functions: Optional[Tuple[str, ...]] = None,
     ):
         if recommended_modifications_and_answer_list is None:
             recommended_modifications_and_answer_list = []
@@ -61,6 +62,7 @@ class TeamWithClient(Team):
         # google_sheets_api_url is openapi_url without the /openapi.json
         self.google_sheets_api_url = openapi_url.rsplit("/", 1)[0]
         self.kwargs_to_patch = kwargs_to_patch
+        self.client_functions = client_functions
 
         self._create_members()
 
@@ -87,9 +89,11 @@ class TeamWithClient(Team):
             if agent.name in self.roles_with_client:
                 if agent.llm_config["tools"] is None:
                     agent.llm_config.pop("tools")
-                self.client._register_for_llm(agent)
+                self.client._register_for_llm(agent, functions=self.client_functions)
 
-        self.client._register_for_execution(self.user_proxy)
+        self.client._register_for_execution(
+            self.user_proxy, functions=self.client_functions
+        )
 
     def _add_tools(self) -> None:
         kwargs = {

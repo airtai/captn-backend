@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ..toolboxes import Toolbox
 from ..tools._gbb_page_feed_team_tools import create_page_feed_team_toolbox
@@ -23,6 +23,11 @@ class GBBPageFeedTeam(GBBGoogleSheetsTeam):
             [int, int, Dict[str, Any]], Toolbox
         ] = create_page_feed_team_toolbox,
         openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
+        client_functions: Optional[Tuple[str, ...]] = (
+            "get_all_file_names_get_all_file_names_get",
+            "get_all_sheet_titles_get_all_sheet_titles_get",
+            "get_login_url_login_get",
+        ),
     ):
         super().__init__(
             task=task,
@@ -35,6 +40,7 @@ class GBBPageFeedTeam(GBBGoogleSheetsTeam):
             config_list=config_list,
             create_toolbox_func=create_toolbox_func,
             openapi_url=openapi_url,
+            client_functions=client_functions,
         )
 
     @property
