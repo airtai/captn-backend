@@ -109,6 +109,7 @@ agents = [
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
     "fastapi==0.114.2",
+    "asyncer==0.0.8",
     "fastagency[openapi]==0.2.1",
     "markdownify==0.13.1",
     "python-multipart==0.0.12",
