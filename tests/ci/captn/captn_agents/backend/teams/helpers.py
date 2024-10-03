@@ -56,15 +56,13 @@ def helper_test_init(
         assert success is not None
 
 
-def start_converstaion(
-    user_id: int, google_sheets_team: Team, expected_messages: List[str]
-) -> None:
+def start_converstaion(user_id: int, team: Team, expected_messages: List[str]) -> None:
     with TemporaryDirectory() as cache_dir:
         with Cache.disk(cache_path_root=cache_dir) as cache:
-            google_sheets_team.initiate_chat(cache=cache)
+            team.initiate_chat(cache=cache)
 
             while True:
-                messages = google_sheets_team.get_messages()
+                messages = team.get_messages()
                 for message in messages:
                     if "tool_responses" in message:
                         expected_messages_copy = expected_messages.copy()
@@ -78,15 +76,13 @@ def start_converstaion(
                     break
 
                 num_messages = len(messages)
-                if num_messages < google_sheets_team.max_round:
+                if num_messages < team.max_round:
                     customers_response = get_client_response_for_the_team_conv(
                         user_id=user_id,
                         conv_id=456,
-                        message=google_sheets_team.get_last_message(),
+                        message=team.get_last_message(),
                         cache=cache,
                         client_system_message="Just accept everything. If asked which account to use, use customer with id 3333",
                     )
-                    google_sheets_team.toolbox._context.waiting_for_client_response = (
-                        False
-                    )
-                    google_sheets_team.continue_chat(message=customers_response)
+                    team.toolbox._context.waiting_for_client_response = False
+                    team.continue_chat(message=customers_response)

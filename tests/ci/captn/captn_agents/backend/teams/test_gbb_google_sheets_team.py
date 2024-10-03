@@ -179,7 +179,7 @@ class TestGBBGoogleSheetsTeam:
             ]
             start_converstaion(
                 user_id=user_id,
-                google_sheets_team=google_sheets_team,
+                team=google_sheets_team,
                 expected_messages=expected_messages,
             )
 
