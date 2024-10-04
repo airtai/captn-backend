@@ -1,7 +1,12 @@
-from typing import Dict, Type
+from tempfile import TemporaryDirectory
+from typing import Dict, List, Type
 
 from autogen.agentchat import UserProxyAgent
+from autogen.cache import Cache
 
+from captn.captn_agents.backend.benchmarking.helpers import (
+    get_client_response_for_the_team_conv,
+)
 from captn.captn_agents.backend.teams import Team
 
 
@@ -49,3 +54,35 @@ def helper_test_init(
         user_id, conv_id = team.name.split("_")[-2:]
         success = Team.pop_team(user_id=int(user_id), conv_id=int(conv_id))
         assert success is not None
+
+
+def start_converstaion(user_id: int, team: Team, expected_messages: List[str]) -> None:
+    with TemporaryDirectory() as cache_dir:
+        with Cache.disk(cache_path_root=cache_dir) as cache:
+            team.initiate_chat(cache=cache)
+
+            while True:
+                messages = team.get_messages()
+                for message in messages:
+                    if "tool_responses" in message:
+                        expected_messages_copy = expected_messages.copy()
+                        for expected_message in expected_messages_copy:
+                            if expected_message in message["content"]:
+                                expected_messages.remove(expected_message)
+
+                    if len(expected_messages) == 0:
+                        break
+                if len(expected_messages) == 0:
+                    break
+
+                num_messages = len(messages)
+                if num_messages < team.max_round:
+                    customers_response = get_client_response_for_the_team_conv(
+                        user_id=user_id,
+                        conv_id=456,
+                        message=team.get_last_message(),
+                        cache=cache,
+                        client_system_message="Just accept everything. If asked which account to use, use customer with id 3333",
+                    )
+                    team.toolbox._context.waiting_for_client_response = False
+                    team.continue_chat(message=customers_response)

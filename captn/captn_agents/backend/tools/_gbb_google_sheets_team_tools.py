@@ -30,7 +30,7 @@ from google_ads.model import (
 from ....google_ads.client import (
     execute_query,
     google_ads_create_update,
-    google_ads_post,
+    google_ads_post_or_get,
 )
 from ....google_ads.client import (
     list_accessible_customers_with_account_types as list_accessible_customers_with_account_types_client,
@@ -92,7 +92,7 @@ class GoogleSheetValues(BaseModel):
     )
 
 
-def _get_sheet_data(
+def get_sheet_data(
     base_url: str, user_id: int, spreadsheet_id: str, title: str
 ) -> Dict[str, List[List[Any]]]:
     params: Dict[str, Union[int, str]] = {
@@ -158,7 +158,7 @@ def _validat_and_convert_to_df(
     title: str,
     mandatory_columns: List[str],
 ) -> Tuple[pd.DataFrame, str]:
-    data_dict = _get_sheet_data(
+    data_dict = get_sheet_data(
         base_url=base_url,
         user_id=user_id,
         spreadsheet_id=spreadsheet_id,
@@ -296,7 +296,7 @@ def _add_negative_campaign_keywords_lists(
             campaign_id=campaign_id,
             shared_set_name=row["keyword"],
         )
-        google_ads_post(
+        google_ads_post_or_get(
             user_id=context.user_id,
             conv_id=context.conv_id,
             recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -505,7 +505,7 @@ def _update_callouts(
         callouts=callouts,
     )
 
-    response = google_ads_post(
+    response = google_ads_post_or_get(
         user_id=context.user_id,
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -636,7 +636,7 @@ def _add_existing_sitelinks(
         sitelink_ids=sitelink_ids,
     )
 
-    google_ads_post(
+    google_ads_post_or_get(
         user_id=context.user_id,
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -687,7 +687,7 @@ def _add_new_sitelinks(
         site_links=site_links,
     )
 
-    google_ads_post(
+    google_ads_post_or_get(
         user_id=context.user_id,
         conv_id=context.conv_id,
         recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
@@ -1125,6 +1125,11 @@ def list_sub_accounts(
     )
 
 
+CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION = (
+    "Change Google Ads account or refresh access token"
+)
+
+
 def create_google_sheets_team_toolbox(
     user_id: int,
     conv_id: int,
@@ -1155,11 +1160,8 @@ def create_google_sheets_team_toolbox(
         create_google_ads_resources
     )
 
-    change_google_ads_account_description = (
-        "Change Google Ads account or refresh access token"
-    )
     toolbox.add_function(
-        description=change_google_ads_account_description,
+        description=CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION,
         name="change_google_ads_account_or_refresh_token",
     )(change_google_account)
 

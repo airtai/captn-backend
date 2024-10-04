@@ -162,8 +162,8 @@ class TestWebSurfer:
             # "https://websitedemos.net/electronic-store-04",
             # "https://websitedemos.net/organic-shop-02/",
             # "https://www.disneystore.eu",
-            "https://www.hamleys.com/",
-            # "www.bbc.com/news",
+            # "https://www.hamleys.com/",
+            "www.bbc.com/news",
             # "https://www.konzum.hr/",
         ],
     )

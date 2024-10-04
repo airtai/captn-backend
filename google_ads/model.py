@@ -146,6 +146,7 @@ class RemoveResource(BaseModel):
         "ad",
         "ad_group_criterion",
         "campaign_criterion",
+        "asset_set_asset",
     ]
 
 
@@ -215,3 +216,13 @@ class CampaignSharedSet(BaseModel):
     customer_id: str
     campaign_id: str
     shared_set_name: str
+
+
+class PageFeedItems(BaseModel):
+    login_customer_id: Optional[str] = None
+    customer_id: str
+    asset_set_resource_name: str
+
+
+class AddPageFeedItems(PageFeedItems):
+    urls_and_labels: Dict[str, Optional[str]]

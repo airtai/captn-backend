@@ -52,7 +52,7 @@ def mock_requests_post() -> Iterator[Any]:
 @pytest.fixture()
 def mock_get_sheet_data() -> Iterator[Any]:
     with unittest.mock.patch(
-        "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
+        "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.get_sheet_data",
         side_effect=[
             campaigns_values,
             ads_values,

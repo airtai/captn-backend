@@ -1,6 +1,6 @@
 import functools
 from types import MethodType
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
 from autogen.agentchat import ConversableAgent
 from fastagency.api.openapi.client import OpenAPI
@@ -34,6 +34,7 @@ def get_patch_register_for_execution(
         def register_for_execution(
             self: OpenAPI,
             agent: ConversableAgent,
+            functions: Iterable[str | Mapping[str, Mapping[str, str]]] | None = None,
         ) -> None:
             global _org_register_for_execution
 
@@ -44,7 +45,7 @@ def get_patch_register_for_execution(
 
             self.registered_funcs = patched_regiered_funcs
 
-            _org_register_for_execution(self, agent)
+            _org_register_for_execution(self, agent, functions)
 
         # mock register_for_execution on the instance level
         client._register_for_execution = MethodType(register_for_execution, client)

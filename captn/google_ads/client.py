@@ -1,6 +1,6 @@
 import json
 from os import environ
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from pydantic import BaseModel
 from requests import get as requests_get
@@ -351,7 +351,7 @@ def google_ads_create_update(
     return response_dict
 
 
-def google_ads_post(
+def google_ads_post_or_get(
     user_id: int,
     conv_id: int,
     model: BaseModel,
@@ -360,6 +360,7 @@ def google_ads_post(
     ],
     endpoint: str,
     already_checked_clients_approval: bool = False,
+    requests_method: Literal["get", "post"] = "post",
 ) -> Union[Dict[str, Any], str]:
     login_url_response = _check_for_approval_and_get_login_url(
         user_id=user_id,
@@ -377,7 +378,8 @@ def google_ads_post(
 
     body = model.model_dump()
 
-    response = requests_post(
+    requests_methods = {"get": requests_get, "post": requests_post}
+    response = requests_methods[requests_method](  # type: ignore[operator]
         f"{BASE_URL}{endpoint}", json=body, params=params, timeout=60
     )
 
