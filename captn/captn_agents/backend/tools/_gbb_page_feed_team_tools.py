@@ -1,8 +1,10 @@
+import json
 from dataclasses import dataclass
 from typing import Annotated, Any, Dict, Optional
 
 import pandas as pd
 
+from ....google_ads.client import execute_query
 from ..toolboxes import Toolbox
 from ._functions import (
     REPLY_TO_CLIENT_DESCRIPTION,
@@ -149,6 +151,50 @@ Continue the process with the following customers:
 UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
 
 
+def _get_page_feed_asset_sets(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+) -> Dict[str, Dict[str, str]]:
+    page_feed_asset_sets: Dict[str, Dict[str, str]] = {}
+    query = """SELECT
+asset_set.id,
+asset_set.name,
+asset_set.resource_name
+FROM campaign_asset_set
+WHERE
+campaign.advertising_channel_type = 'PERFORMANCE_MAX'
+AND asset_set.type = 'PAGE_FEED'
+AND asset_set.status = 'ENABLED'
+AND campaign_asset_set.status = 'ENABLED'
+AND campaign.status != 'REMOVED'
+"""
+    response = execute_query(
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        login_customer_id=login_customer_id,
+        query=query,
+    )
+    if isinstance(response, dict):
+        raise ValueError(response)
+
+    response_json = json.loads(response.replace("'", '"'))
+
+    if customer_id not in response_json:
+        return page_feed_asset_sets
+
+    for row in response_json[customer_id]:
+        asset_set = row["assetSet"]
+        page_feed_asset_sets[asset_set["name"]] = {
+            "id": asset_set["id"],
+            "resourceName": asset_set["resourceName"],
+        }
+
+    return page_feed_asset_sets
+
+
 def update_page_feeds(
     customer_id: Annotated[str, "Customer Id to update"],
     login_customer_id: Annotated[str, "Login Customer Id (Manager Account)"],
@@ -156,6 +202,13 @@ def update_page_feeds(
 ) -> str:
     if context.page_feeds_and_accounts_templ_df is None:
         return f"Please validate the page feed data first by running the '{validate_page_feed_data.__name__}' function."
+
+    _get_page_feed_asset_sets(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+    )
     return "All page feeds have been updated."
 
 

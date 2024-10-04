@@ -8,6 +8,7 @@ from autogen.agentchat import AssistantAgent, UserProxyAgent
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     PageFeedTeamContext,
+    _get_page_feed_asset_sets,
     _get_relevant_page_feeds_and_accounts,
     _get_sheet_data_and_return_df,
     create_page_feed_team_toolbox,
@@ -283,3 +284,39 @@ class TestPageFeedTeamTools:
                 "{'7119828439': {'Login Customer Id': '7587037554', 'Name Account': 'airt technologies d.o.o.'}"
                 in return_value
             )
+
+    def test_get_page_feed_asset_sets(self) -> None:
+        customer_id = "1111"
+
+        response_json = {
+            customer_id: [
+                {
+                    "assetSet": {
+                        "resourceName": f"customers/{customer_id}/assetSets/8783430659",
+                        "name": "fastagency-reference",
+                        "id": "8783430659",
+                    },
+                },
+                {
+                    "assetSet": {
+                        "resourceName": f"customers/{customer_id}/assetSets/8841207092",
+                        "name": "fastagency-tutorial",
+                        "id": "8841207092",
+                    },
+                },
+            ]
+        }
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
+            return_value=str(response_json),
+        ):
+            page_feed_asset_sets = _get_page_feed_asset_sets(
+                user_id=1,
+                conv_id=2,
+                customer_id=customer_id,
+                login_customer_id=customer_id,
+            )
+
+            print(f"page_feed_asset_sets: {page_feed_asset_sets}")
+            assert len(page_feed_asset_sets) == 2
