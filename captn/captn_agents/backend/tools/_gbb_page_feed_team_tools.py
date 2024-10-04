@@ -203,12 +203,15 @@ def update_page_feeds(
     if context.page_feeds_and_accounts_templ_df is None:
         return f"Please validate the page feed data first by running the '{validate_page_feed_data.__name__}' function."
 
-    _get_page_feed_asset_sets(
+    page_feed_asset_sets = _get_page_feed_asset_sets(
         user_id=context.user_id,
         conv_id=context.conv_id,
         customer_id=customer_id,
         login_customer_id=login_customer_id,
     )
+    if len(page_feed_asset_sets) == 0:
+        return f"No page feeds found for customer id {customer_id}."
+    print(page_feed_asset_sets)
     return "All page feeds have been updated."
 
 

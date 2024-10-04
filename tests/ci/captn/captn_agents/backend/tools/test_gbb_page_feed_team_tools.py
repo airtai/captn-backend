@@ -1,5 +1,5 @@
 import unittest
-from typing import Iterator
+from typing import Any, Iterator
 
 import pandas as pd
 import pytest
@@ -16,6 +16,35 @@ from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
 )
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
+
+
+@pytest.fixture()
+def mock_execute_query_f(request: pytest.FixtureRequest) -> Iterator[Any]:
+    customer_id = request.param
+    response_json = {
+        customer_id: [
+            {
+                "assetSet": {
+                    "resourceName": f"customers/{customer_id}/assetSets/8783430659",
+                    "name": "fastagency-reference",
+                    "id": "8783430659",
+                },
+            },
+            {
+                "assetSet": {
+                    "resourceName": f"customers/{customer_id}/assetSets/8841207092",
+                    "name": "fastagency-tutorial",
+                    "id": "8841207092",
+                },
+            },
+        ]
+    }
+
+    with unittest.mock.patch(
+        "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
+        return_value=str(response_json),
+    ) as mock_execute_query:
+        yield mock_execute_query
 
 
 class TestPageFeedTeamTools:
@@ -285,32 +314,12 @@ class TestPageFeedTeamTools:
                 in return_value
             )
 
-    def test_get_page_feed_asset_sets(self) -> None:
+    @pytest.mark.parametrize("mock_execute_query_f", ["1111"], indirect=True)
+    def test_get_page_feed_asset_sets(
+        self, mock_execute_query_f: Iterator[Any]
+    ) -> None:
         customer_id = "1111"
-
-        response_json = {
-            customer_id: [
-                {
-                    "assetSet": {
-                        "resourceName": f"customers/{customer_id}/assetSets/8783430659",
-                        "name": "fastagency-reference",
-                        "id": "8783430659",
-                    },
-                },
-                {
-                    "assetSet": {
-                        "resourceName": f"customers/{customer_id}/assetSets/8841207092",
-                        "name": "fastagency-tutorial",
-                        "id": "8841207092",
-                    },
-                },
-            ]
-        }
-
-        with unittest.mock.patch(
-            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
-            return_value=str(response_json),
-        ):
+        with mock_execute_query_f:
             page_feed_asset_sets = _get_page_feed_asset_sets(
                 user_id=1,
                 conv_id=2,
@@ -318,5 +327,4 @@ class TestPageFeedTeamTools:
                 login_customer_id=customer_id,
             )
 
-            print(f"page_feed_asset_sets: {page_feed_asset_sets}")
             assert len(page_feed_asset_sets) == 2

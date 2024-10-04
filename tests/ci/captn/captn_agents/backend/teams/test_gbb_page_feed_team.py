@@ -47,9 +47,11 @@ class TestGBBPageFeedTeam:
     @pytest.mark.flaky
     @pytest.mark.openai
     @pytest.mark.fastapi_openapi_team
+    @pytest.mark.parametrize("mock_execute_query_f", ["1111"], indirect=True)
     def test_page_feed_real_fastapi_team_end2end(
         self,
         mock_get_conv_uuid: Iterator[Any],
+        mock_execute_query_f: Iterator[Any],
         # mock_get_login_url: Iterator[Any],
         # mock_requests_get: Iterator[Any],
         # mock_requests_post: Iterator[Any],
@@ -70,7 +72,7 @@ class TestGBBPageFeedTeam:
             "All page feeds have been updated.",
         ]
 
-        with mock_list_accessible_customers_f():
+        with mock_execute_query_f, mock_list_accessible_customers_f():
             start_converstaion(
                 user_id=user_id, team=team, expected_messages=expected_messages
             )
