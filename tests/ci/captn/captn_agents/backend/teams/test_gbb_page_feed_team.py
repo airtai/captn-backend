@@ -7,6 +7,7 @@ from captn.captn_agents.backend.teams import (
     Team,
 )
 
+from ..tools.test_gbb_page_feed_team_tools import mock_execute_query_f  # noqa: F401
 from .helpers import helper_test_init, start_converstaion
 from .test_gbb_google_sheets_team import mock_list_accessible_customers_f
 
@@ -51,11 +52,10 @@ class TestGBBPageFeedTeam:
     def test_page_feed_real_fastapi_team_end2end(
         self,
         mock_get_conv_uuid: Iterator[Any],
-        mock_execute_query_f: Iterator[Any],
+        mock_execute_query_f: Iterator[Any],  # noqa: F811
         # mock_get_login_url: Iterator[Any],
         # mock_requests_get: Iterator[Any],
         # mock_requests_post: Iterator[Any],
-        # mock_execute_query_f: Iterator[Any],
     ) -> None:
         user_id = 13
         openapi_url = "https://google-sheets.tools.staging.fastagency.ai/openapi.json"

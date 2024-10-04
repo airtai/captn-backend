@@ -11,6 +11,7 @@ from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     _get_page_feed_asset_sets,
     _get_relevant_page_feeds_and_accounts,
     _get_sheet_data_and_return_df,
+    _sync_page_feed_asset_set,
     create_page_feed_team_toolbox,
     validate_page_feed_data,
 )
@@ -328,3 +329,48 @@ class TestPageFeedTeamTools:
             )
 
             assert len(page_feed_asset_sets) == 2
+
+    def test_sync_page_feed_asset_set(self) -> None:
+        customer_id = "1111"
+        page_feeds_and_accounts_templ_df = pd.DataFrame(
+            {
+                "Customer Id": [customer_id],
+                "Name Page Feed": ["fastagency-reference"],
+                "Custom Label 1": ["StS; hr; Croatia"],
+                "Custom Label 2": ["StS; en; Croatia"],
+            }
+        )
+
+        page_feeds_df = pd.DataFrame(
+            {
+                "Page URL": [
+                    "https://getbybus.com/en/bus-zagreb-to-split",
+                    "https://getbybus.com/hr/bus-zagreb-to-split",
+                    "https://getbybus.com/it/bus-zagreb-to-split",
+                ],
+                "Custom Label": [
+                    "StS; en; Croatia",
+                    "StS; hr; Croatia",
+                    "StS; it; Croatia",
+                ],
+            }
+        )
+
+        page_feed_asset_set_name = "fastagency-reference"
+        page_feed_asset_set = {
+            "resourceName": f"customers/{customer_id}/assetSets/8783430659",
+            "id": "8783430659",
+        }
+
+        _sync_page_feed_asset_set(
+            user_id=-1,
+            conv_id=-1,
+            customer_id=customer_id,
+            login_customer_id=customer_id,
+            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
+            page_feeds_df=page_feeds_df,
+            page_feed_asset_set_name=page_feed_asset_set_name,
+            page_feed_asset_set=page_feed_asset_set,
+        )
+
+        raise AssertionError("Test not implemented")

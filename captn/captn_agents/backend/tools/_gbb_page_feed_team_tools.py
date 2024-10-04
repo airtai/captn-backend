@@ -195,6 +195,70 @@ AND campaign.status != 'REMOVED'
     return page_feed_asset_sets
 
 
+def _sync_page_feed_asset_set(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+    page_feeds_and_accounts_templ_df: pd.DataFrame,
+    page_feeds_df: pd.DataFrame,
+    page_feed_asset_set_name: str,
+    page_feed_asset_set: Dict[str, str],
+) -> str:
+    page_feed_rows = page_feeds_and_accounts_templ_df[
+        page_feeds_and_accounts_templ_df["Name Page Feed"] == page_feed_asset_set_name
+    ]
+    if page_feed_rows.empty:
+        return f"Page feed '{page_feed_asset_set_name}' not found in the page feed template data.\n"
+
+    elif page_feed_rows["Customer Id"].nunique() > 1:
+        return f"Page feed template has multiple values for the same page feed '{page_feed_asset_set_name}'!\n"
+
+    page_feed_template_row = page_feed_rows.iloc[0]
+    custom_labels_values = [
+        page_feed_template_row[col]
+        for col in page_feed_rows.columns
+        if col.startswith("Custom Label")
+    ]
+    page_feed_rows = page_feeds_df[
+        page_feeds_df["Custom Label"].isin(custom_labels_values)
+    ]
+
+    if page_feed_rows.empty:
+        return f"No page feed data found for page feed '{page_feed_asset_set_name}'\n"
+
+    page_feed_url_and_label_df = page_feed_rows[["Page URL", "Custom Label"]]
+    print(f"{page_feed_url_and_label_df=}")
+
+    return "TODO"
+
+
+def _sync_page_feed_asset_sets(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+    page_feeds_and_accounts_templ_df: pd.DataFrame,
+    page_feeds_df: pd.DataFrame,
+    page_feed_asset_sets: Dict[str, Dict[str, str]],
+) -> str:
+    return_value = ""
+    for page_feed_asset_set_name, page_feed_asset_set in page_feed_asset_sets.items():
+        return_value += _sync_page_feed_asset_set(
+            user_id=user_id,
+            conv_id=conv_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
+            page_feeds_df=page_feeds_df,
+            page_feed_asset_set_name=page_feed_asset_set_name,
+            page_feed_asset_set=page_feed_asset_set,
+        )
+
+    return "All page feeds have been updated."
+    # return return_value
+
+
 def update_page_feeds(
     customer_id: Annotated[str, "Customer Id to update"],
     login_customer_id: Annotated[str, "Login Customer Id (Manager Account)"],
@@ -211,8 +275,16 @@ def update_page_feeds(
     )
     if len(page_feed_asset_sets) == 0:
         return f"No page feeds found for customer id {customer_id}."
-    print(page_feed_asset_sets)
-    return "All page feeds have been updated."
+
+    return _sync_page_feed_asset_sets(
+        user_id=context.user_id,
+        conv_id=context.conv_id,
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        page_feeds_and_accounts_templ_df=context.page_feeds_and_accounts_templ_df,
+        page_feeds_df=context.page_feeds_df,
+        page_feed_asset_sets=page_feed_asset_sets,
+    )
 
 
 def create_page_feed_team_toolbox(
