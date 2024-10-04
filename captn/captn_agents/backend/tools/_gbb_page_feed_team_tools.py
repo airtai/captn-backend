@@ -12,12 +12,8 @@ from ._functions import (
 )
 from ._gbb_google_sheets_team_tools import (
     CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION,
-    # LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION,
-    # LIST_SUB_ACCOUNTS_DESCRIPTION,
     GoogleSheetsTeamContext,
     GoogleSheetValues,
-    # list_accessible_customers_with_account_types,
-    # list_sub_accounts,
     get_sheet_data,
 )
 from ._google_ads_team_tools import (
@@ -185,10 +181,6 @@ def create_page_feed_team_toolbox(
     toolbox.add_function(
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)
-    # toolbox.add_function(LIST_ACCESSIBLE_CUSTOMERS_WITH_ACCOUNT_TYPES_DESCRIPTION)(
-    #     list_accessible_customers_with_account_types
-    # )
-    # toolbox.add_function(LIST_SUB_ACCOUNTS_DESCRIPTION)(list_sub_accounts)
     toolbox.add_function(VALIDATE_PAGE_FEED_DATA_DESCRIPTION)(validate_page_feed_data)
     toolbox.add_function(UPDATE_PAGE_FEED_DESCRIPTION)(update_page_feeds)
 
