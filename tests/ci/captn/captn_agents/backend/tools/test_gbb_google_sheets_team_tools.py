@@ -169,7 +169,7 @@ class TestCreateGoogleAdsResources:
             ]
         }
         with unittest.mock.patch(
-            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools._get_sheet_data",
+            "captn.captn_agents.backend.tools._gbb_google_sheets_team_tools.get_sheet_data",
             side_effect=[
                 campaigns_values,
                 ads_values,

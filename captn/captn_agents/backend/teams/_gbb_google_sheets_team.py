@@ -1,5 +1,5 @@
 from os import environ
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from ....google_ads.client import get_conv_uuid
 from ..toolboxes import Toolbox
@@ -66,6 +66,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
             [int, int, Dict[str, Any]], Toolbox
         ] = create_google_sheets_team_toolbox,
         openapi_url: str = GOOGLE_SHEETS_OPENAPI_URL,
+        client_functions: Optional[Tuple[str, ...]] = None,
     ):
         roles: List[Dict[str, Any]] = self._default_roles
         conv_uuid = get_conv_uuid(conv_id=conv_id)
@@ -88,6 +89,7 @@ Never introduce yourself when writing messages. E.g. do not write 'As a ...'""",
             seed=seed,
             temperature=temperature,
             config_list=config_list,
+            client_functions=client_functions,
         )
 
     @property
