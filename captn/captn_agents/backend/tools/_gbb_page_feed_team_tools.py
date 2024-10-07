@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 import pandas as pd
 
@@ -195,6 +195,51 @@ AND campaign.status != 'REMOVED'
     return page_feed_asset_sets
 
 
+def _get_page_feed_items(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+    asset_set_resource_name: str,
+) -> List[str]:
+    query = f"""
+SELECT
+  asset.id,
+  asset.name,
+  asset.type,
+  asset.page_feed_asset.page_url
+FROM
+  asset_set_asset
+WHERE
+  asset.type = 'PAGE_FEED'
+  AND asset_set_asset.asset_set = '{asset_set_resource_name}'
+  AND asset_set_asset.status != 'REMOVED'
+"""  # nosec: [B608]
+
+    response = execute_query(
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        login_customer_id=login_customer_id,
+        query=query,
+    )
+
+    if isinstance(response, dict):
+        raise ValueError(response)
+
+    response_json = json.loads(response.replace("'", '"'))
+
+    page_urls = []
+    for asset in response_json[customer_id]:
+        url = asset["asset"]["pageFeedAsset"]["pageUrl"].strip()
+        # repmove trailing slash
+        if url.endswith("/"):
+            url = url[:-1]
+        page_urls.append(url)
+
+    return page_urls
+
+
 def _sync_page_feed_asset_set(
     user_id: int,
     conv_id: int,
@@ -229,6 +274,14 @@ def _sync_page_feed_asset_set(
 
     page_feed_url_and_label_df = page_feed_rows[["Page URL", "Custom Label"]]
     print(f"{page_feed_url_and_label_df=}")
+
+    # gads_page_feed_urls = _get_page_feed_items(
+    #     user_id=user_id,
+    #     conv_id=conv_id,
+    #     customer_id=customer_id,
+    #     login_customer_id=login_customer_id,
+    #     asset_set_resource_name=page_feed_asset_set["resourceName"],
+    # )
 
     return "TODO"
 

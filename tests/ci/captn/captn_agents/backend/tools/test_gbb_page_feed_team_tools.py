@@ -9,6 +9,7 @@ from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     PageFeedTeamContext,
     _get_page_feed_asset_sets,
+    _get_page_feed_items,
     _get_relevant_page_feeds_and_accounts,
     _get_sheet_data_and_return_df,
     _sync_page_feed_asset_set,
@@ -373,4 +374,57 @@ class TestPageFeedTeamTools:
             page_feed_asset_set=page_feed_asset_set,
         )
 
-        raise AssertionError("Test not implemented")
+    def test_get_page_feed_items(self) -> None:
+        expected_page_urls = [
+            "https://fastagency.ai/latest/api/fastagency/FunctionCallExecution",
+            "https://fastagency.ai/latest/api/fastagency/FastAgency",
+        ]
+        customer_id = "7119828439"
+
+        request_json = {
+            customer_id: [
+                {
+                    "asset": {
+                        "resourceName": f"customers/{customer_id}/assets/173111006498",
+                        "type": "PAGE_FEED",
+                        "id": "173111006498",
+                        "pageFeedAsset": {
+                            "pageUrl": expected_page_urls[0] + "/",
+                        },
+                    },
+                    "assetSetAsset": {
+                        "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173111006498"
+                    },
+                },
+                {
+                    "asset": {
+                        "resourceName": f"customers/{customer_id}/assets/173146074136",
+                        "type": "PAGE_FEED",
+                        "id": "173146074136",
+                        "pageFeedAsset": {
+                            "pageUrl": expected_page_urls[1] + "/",
+                        },
+                    },
+                    "assetSetAsset": {
+                        "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173146074136"
+                    },
+                },
+            ]
+        }
+        mock_execute_query_return_value = str(request_json)
+
+        asset_set_resource_name = f"customers/{customer_id}/assetSets/8783430659"
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
+            return_value=mock_execute_query_return_value,
+        ):
+            page_urls = _get_page_feed_items(
+                user_id=1,
+                conv_id=-1,
+                customer_id=customer_id,
+                login_customer_id=customer_id,
+                asset_set_resource_name=asset_set_resource_name,
+            )
+
+        assert page_urls == expected_page_urls
