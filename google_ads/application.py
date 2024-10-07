@@ -2011,35 +2011,40 @@ async def add_items_to_page_feed(
     )
     operations = []
 
-    # Creates one asset per URL.
-    for url, label in model.urls_and_labels.items():
-        # Creates an asset operation and adds it to the list of operations.
-        operation = client.get_type("AssetOperation")
-        asset = operation.create
-        page_feed_asset = asset.page_feed_asset
-        page_feed_asset.page_url = url
-        # Recommended: adds labels to the asset. These labels can be used later
-        # in ad group targeting to restrict the set of pages that can serve.
-        if label:
-            page_feed_asset.labels.append(label)
-        operations.append(operation)
+    try:
+        # Creates one asset per URL.
+        for url, label in model.urls_and_labels.items():
+            # Creates an asset operation and adds it to the list of operations.
+            operation = client.get_type("AssetOperation")
+            asset = operation.create
+            page_feed_asset = asset.page_feed_asset
+            page_feed_asset.page_url = url
+            # Recommended: adds labels to the asset. These labels can be used later
+            # in ad group targeting to restrict the set of pages that can serve.
+            if label:
+                page_feed_asset.labels.append(label)
+            operations.append(operation)
 
-    # Issues a mutate request to add the assets and prints its information.
-    asset_service = client.get_service("AssetService")
-    response = asset_service.mutate_assets(
-        customer_id=model.customer_id, operations=operations
-    )
+        # Issues a mutate request to add the assets and prints its information.
+        asset_service = client.get_service("AssetService")
+        response = asset_service.mutate_assets(
+            customer_id=model.customer_id, operations=operations
+        )
 
-    resource_names = []
-    return_text = ""
-    for result in response.results:
-        resource_name = result.resource_name
-        return_text += f"Created an asset with resource name: '{resource_name}'\n"
-        resource_names.append(resource_name)
+        resource_names = []
+        return_text = ""
+        for result in response.results:
+            resource_name = result.resource_name
+            return_text += f"Created an asset with resource name: '{resource_name}'\n"
+            resource_names.append(resource_name)
 
-    return _add_assets_to_asset_set(
-        client=client,
-        customer_id=model.customer_id,
-        asset_resource_names=resource_names,
-        asset_set_resource_name=model.asset_set_resource_name,
-    )
+        return _add_assets_to_asset_set(
+            client=client,
+            customer_id=model.customer_id,
+            asset_resource_names=resource_names,
+            asset_set_resource_name=model.asset_set_resource_name,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
