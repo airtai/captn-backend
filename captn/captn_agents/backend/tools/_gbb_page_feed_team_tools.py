@@ -4,9 +4,13 @@ from typing import Annotated, Any, Dict, Optional
 
 import pandas as pd
 
-from google_ads.model import AddPageFeedItems
+from google_ads.model import AddPageFeedItems, RemoveResource
 
-from ....google_ads.client import execute_query, google_ads_post_or_get
+from ....google_ads.client import (
+    execute_query,
+    google_ads_create_update,
+    google_ads_post_or_get,
+)
 from ..toolboxes import Toolbox
 from ._functions import (
     REPLY_TO_CLIENT_DESCRIPTION,
@@ -317,7 +321,7 @@ def _sync_page_feed_asset_set(
         url_and_labels = missing_page_urls.set_index("Page URL")[
             "Custom Label"
         ].to_dict()
-        model = AddPageFeedItems(
+        add_model = AddPageFeedItems(
             login_customer_id=login_customer_id,
             customer_id=customer_id,
             asset_set_resource_name=page_feed_asset_set["resourceName"],
@@ -326,7 +330,7 @@ def _sync_page_feed_asset_set(
         response = google_ads_post_or_get(
             user_id=user_id,
             conv_id=conv_id,
-            model=model,
+            model=add_model,
             recommended_modifications_and_answer_list=[],
             already_checked_clients_approval=True,
             endpoint="/add-items-to-page-feed",
@@ -339,11 +343,26 @@ def _sync_page_feed_asset_set(
         # Remove extra page urls
         for row in extra_page_urls.iterrows():
             id = row[1]["Id"]
-            page_url = row[1]["Page URL"]
-            custom_label = row[1]["Custom Label"]
-            print(
-                f"Removing {id} page url '{page_url}' with custom label '{custom_label}' from page feed '{page_feed_asset_set}'"
+            remove_model = RemoveResource(
+                customer_id=customer_id,
+                parent_id=page_feed_asset_set["id"],
+                resource_id=id,
+                resource_type="asset_set_asset",
             )
+
+            response = google_ads_create_update(
+                user_id=user_id,
+                conv_id=conv_id,
+                recommended_modifications_and_answer_list=[],
+                already_checked_clients_approval=True,
+                ad=remove_model,
+                login_customer_id=customer_id,
+                endpoint="/remove-google-ads-resource",
+            )
+            if isinstance(response, dict):
+                return_value += f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}\n"
+            else:
+                return_value += response
 
     return return_value
 

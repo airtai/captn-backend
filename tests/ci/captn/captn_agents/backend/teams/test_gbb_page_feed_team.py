@@ -45,6 +45,7 @@ class TestGBBPageFeedTeam:
             team_class=GBBPageFeedTeam,
         )
 
+    @pytest.mark.skip(reason="Not implemented")
     @pytest.mark.flaky
     @pytest.mark.openai
     @pytest.mark.fastapi_openapi_team

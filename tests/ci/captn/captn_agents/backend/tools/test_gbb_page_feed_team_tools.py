@@ -1,4 +1,5 @@
 import unittest
+import unittest.mock
 from typing import Any, Iterator, List
 
 import pandas as pd
@@ -399,13 +400,12 @@ class TestPageFeedTeamTools:
                         ],
                     }
                 ),
-                "Page feed 'fastagency-reference' changes:\n",
+                "Page feed 'fastagency-reference' changes:\nRemoved an asset set asset link",
             ),
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",
                     "https://getbybus.com/hr/bus-zagreb-to-split/",
-                    "https://getbybus.com/it/bus-zagreb-to-split",
                 ],
                 pd.DataFrame(
                     {
@@ -429,7 +429,6 @@ class TestPageFeedTeamTools:
         self, gads_page_urls: List[str], page_feeds_df: pd.DataFrame, expected: str
     ) -> None:
         customer_id = "1111"
-        # customer_id = "7119828439"
         page_feeds_and_accounts_templ_df = pd.DataFrame(
             {
                 "Customer Id": [customer_id],
@@ -458,9 +457,13 @@ class TestPageFeedTeamTools:
                 "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
                 return_value="Created an asset set asset link",
             ),
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_create_update",
+                return_value="Removed an asset set asset link",
+            ),
         ):
             result = _sync_page_feed_asset_set(
-                user_id=1,
+                user_id=-1,
                 conv_id=-1,
                 customer_id=customer_id,
                 login_customer_id=customer_id,
