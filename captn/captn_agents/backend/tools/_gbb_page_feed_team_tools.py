@@ -230,8 +230,9 @@ WHERE
 
     response_json = json.loads(response.replace("'", '"'))
 
-    page_urls_and_labels_df = pd.DataFrame(columns=["Page URL", "Custom Label"])
+    page_urls_and_labels_df = pd.DataFrame(columns=["Id", "Page URL", "Custom Label"])
     for asset in response_json[customer_id]:
+        id = asset["asset"]["id"]
         url = asset["asset"]["pageFeedAsset"]["pageUrl"].strip()
 
         if "labels" in asset["asset"]["pageFeedAsset"]:
@@ -242,7 +243,7 @@ WHERE
         page_urls_and_labels_df = pd.concat(
             [
                 page_urls_and_labels_df,
-                pd.DataFrame([{"Page URL": url, "Custom Label": labels}]),
+                pd.DataFrame([{"Id": id, "Page URL": url, "Custom Label": labels}]),
             ],
             ignore_index=True,
         )
@@ -308,6 +309,26 @@ def _sync_page_feed_asset_set(
 
     if missing_page_urls.empty and extra_page_urls.empty:
         return "No changes needed for page feed 'fastagency-reference'\n"
+
+    if not missing_page_urls.empty:
+        # Add missing page urls
+        for row in missing_page_urls.iterrows():
+            page_url = row[1]["Page URL"]
+            custom_label = row[1]["Custom Label"]
+            print(
+                f"Adding page url '{page_url}' with custom label '{custom_label}' to page feed '{page_feed_asset_set_name}'"
+            )
+
+    if not extra_page_urls.empty:
+        # Remove extra page urls
+        for row in extra_page_urls.iterrows():
+            id = row[1]["Id"]
+            page_url = row[1]["Page URL"]
+            custom_label = row[1]["Custom Label"]
+            print(
+                f"Removing {id} page url '{page_url}' with custom label '{custom_label}' from page feed '{page_feed_asset_set}'"
+            )
+
     return "TODO"
 
 

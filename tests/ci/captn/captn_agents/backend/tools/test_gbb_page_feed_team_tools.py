@@ -21,36 +21,25 @@ from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
 def _get_mock_execute_query_return_value(customer_id: str, page_urls: List[str]) -> str:
-    request_json = {
-        customer_id: [
-            {
-                "asset": {
-                    "resourceName": f"customers/{customer_id}/assets/173111006498",
-                    "type": "PAGE_FEED",
-                    "id": "173111006498",
-                    "pageFeedAsset": {
-                        "pageUrl": page_urls[0],
-                    },
-                },
-                "assetSetAsset": {
-                    "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173111006498"
+    request_json = {customer_id: []}
+    for i in range(len(page_urls)):
+        asset_id = f"17311100649{i}"
+        asset = {
+            "asset": {
+                "resourceName": f"customers/{customer_id}/assets/{asset_id}",
+                "type": "PAGE_FEED",
+                "id": asset_id,
+                "pageFeedAsset": {
+                    "pageUrl": page_urls[i],
                 },
             },
-            {
-                "asset": {
-                    "resourceName": f"customers/{customer_id}/assets/173146074136",
-                    "type": "PAGE_FEED",
-                    "id": "173146074136",
-                    "pageFeedAsset": {
-                        "pageUrl": page_urls[1],
-                    },
-                },
-                "assetSetAsset": {
-                    "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173146074136"
-                },
+            "assetSetAsset": {
+                "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~{asset_id}"
             },
-        ]
-    }
+        }
+
+        request_json[customer_id].append(asset)
+
     mock_execute_query_return_value = str(request_json)
     return mock_execute_query_return_value
 
@@ -376,6 +365,14 @@ class TestPageFeedTeamTools:
                 ],
                 "No changes needed for page feed 'fastagency-reference'\n",
             ),
+            (
+                [
+                    "https://getbybus.com/en/bus-zagreb-to-split",
+                    "https://getbybus.com/hr/bus-zagreb-to-split/",
+                    "https://getbybus.com/it/bus-zagreb-to-split",
+                ],
+                "TODO",
+            ),
         ],
     )
     def test_sync_page_feed_asset_set(
@@ -462,6 +459,7 @@ class TestPageFeedTeamTools:
                 asset_set_resource_name=asset_set_resource_name,
             )
 
+        page_urls_and_labels_df = page_urls_and_labels_df.drop(columns=["Id"])
         assert page_urls_and_labels_df.sort_values("Page URL").equals(
             expected_page_urls_and_labels_df.sort_values("Page URL")
         )
