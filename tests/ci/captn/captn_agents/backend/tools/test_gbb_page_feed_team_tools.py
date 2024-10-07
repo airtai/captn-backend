@@ -1,5 +1,5 @@
 import unittest
-from typing import Any, Iterator
+from typing import Any, Iterator, List
 
 import pandas as pd
 import pytest
@@ -18,6 +18,41 @@ from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
 )
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
+
+
+def _get_mock_execute_query_return_value(customer_id: str, page_urls: List[str]) -> str:
+    request_json = {
+        customer_id: [
+            {
+                "asset": {
+                    "resourceName": f"customers/{customer_id}/assets/173111006498",
+                    "type": "PAGE_FEED",
+                    "id": "173111006498",
+                    "pageFeedAsset": {
+                        "pageUrl": page_urls[0] + "/",
+                    },
+                },
+                "assetSetAsset": {
+                    "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173111006498"
+                },
+            },
+            {
+                "asset": {
+                    "resourceName": f"customers/{customer_id}/assets/173146074136",
+                    "type": "PAGE_FEED",
+                    "id": "173146074136",
+                    "pageFeedAsset": {
+                        "pageUrl": page_urls[1] + "/",
+                    },
+                },
+                "assetSetAsset": {
+                    "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173146074136"
+                },
+            },
+        ]
+    }
+    mock_execute_query_return_value = str(request_json)
+    return mock_execute_query_return_value
 
 
 @pytest.fixture()
@@ -331,7 +366,21 @@ class TestPageFeedTeamTools:
 
             assert len(page_feed_asset_sets) == 2
 
-    def test_sync_page_feed_asset_set(self) -> None:
+    @pytest.mark.parametrize(
+        ("page_urls", "expected"),
+        [
+            (
+                [
+                    "https://getbybus.com/en/bus-zagreb-to-split",
+                    "https://getbybus.com/hr/bus-zagreb-to-split",
+                ],
+                "No changes needed for page feed 'fastagency-reference'\n",
+            ),
+        ],
+    )
+    def test_sync_page_feed_asset_set(
+        self, page_urls: List[str], expected: str
+    ) -> None:
         customer_id = "1111"
         page_feeds_and_accounts_templ_df = pd.DataFrame(
             {
@@ -346,7 +395,7 @@ class TestPageFeedTeamTools:
             {
                 "Page URL": [
                     "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split",
+                    "https://getbybus.com/hr/bus-zagreb-to-split/",
                     "https://getbybus.com/it/bus-zagreb-to-split",
                 ],
                 "Custom Label": [
@@ -363,56 +412,36 @@ class TestPageFeedTeamTools:
             "id": "8783430659",
         }
 
-        _sync_page_feed_asset_set(
-            user_id=-1,
-            conv_id=-1,
-            customer_id=customer_id,
-            login_customer_id=customer_id,
-            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
-            page_feeds_df=page_feeds_df,
-            page_feed_asset_set_name=page_feed_asset_set_name,
-            page_feed_asset_set=page_feed_asset_set,
+        mock_execute_query_return_value = _get_mock_execute_query_return_value(
+            customer_id, page_urls
         )
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
+            side_effect=[mock_execute_query_return_value],
+        ):
+            result = _sync_page_feed_asset_set(
+                user_id=-1,
+                conv_id=-1,
+                customer_id=customer_id,
+                login_customer_id=customer_id,
+                page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
+                page_feeds_df=page_feeds_df,
+                page_feed_asset_set_name=page_feed_asset_set_name,
+                page_feed_asset_set=page_feed_asset_set,
+            )
+            assert result == expected
 
     def test_get_page_feed_items(self) -> None:
         expected_page_urls = [
             "https://fastagency.ai/latest/api/fastagency/FunctionCallExecution",
             "https://fastagency.ai/latest/api/fastagency/FastAgency",
         ]
-        customer_id = "7119828439"
+        customer_id = "1111"
 
-        request_json = {
-            customer_id: [
-                {
-                    "asset": {
-                        "resourceName": f"customers/{customer_id}/assets/173111006498",
-                        "type": "PAGE_FEED",
-                        "id": "173111006498",
-                        "pageFeedAsset": {
-                            "pageUrl": expected_page_urls[0] + "/",
-                        },
-                    },
-                    "assetSetAsset": {
-                        "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173111006498"
-                    },
-                },
-                {
-                    "asset": {
-                        "resourceName": f"customers/{customer_id}/assets/173146074136",
-                        "type": "PAGE_FEED",
-                        "id": "173146074136",
-                        "pageFeedAsset": {
-                            "pageUrl": expected_page_urls[1] + "/",
-                        },
-                    },
-                    "assetSetAsset": {
-                        "resourceName": f"customers/{customer_id}/assetSetAssets/8783430659~173146074136"
-                    },
-                },
-            ]
-        }
-        mock_execute_query_return_value = str(request_json)
-
+        mock_execute_query_return_value = _get_mock_execute_query_return_value(
+            customer_id, expected_page_urls
+        )
         asset_set_resource_name = f"customers/{customer_id}/assetSets/8783430659"
 
         with unittest.mock.patch(
@@ -420,7 +449,7 @@ class TestPageFeedTeamTools:
             return_value=mock_execute_query_return_value,
         ):
             page_urls = _get_page_feed_items(
-                user_id=1,
+                user_id=-1,
                 conv_id=-1,
                 customer_id=customer_id,
                 login_customer_id=customer_id,

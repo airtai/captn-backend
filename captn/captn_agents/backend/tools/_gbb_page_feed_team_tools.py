@@ -275,13 +275,29 @@ def _sync_page_feed_asset_set(
     page_feed_url_and_label_df = page_feed_rows[["Page URL", "Custom Label"]]
     print(f"{page_feed_url_and_label_df=}")
 
-    # gads_page_feed_urls = _get_page_feed_items(
-    #     user_id=user_id,
-    #     conv_id=conv_id,
-    #     customer_id=customer_id,
-    #     login_customer_id=login_customer_id,
-    #     asset_set_resource_name=page_feed_asset_set["resourceName"],
-    # )
+    gads_page_feed_urls = _get_page_feed_items(
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_id=customer_id,
+        login_customer_id=login_customer_id,
+        asset_set_resource_name=page_feed_asset_set["resourceName"],
+    )
+
+    # compare unique Page URLs with GADS
+    # if not in GADS, add
+    # if in GADS but not in Page URL, remove
+
+    page_feed_urls_df = page_feed_url_and_label_df["Page URL"].unique()
+    page_feed_urls = [
+        url[:-1] if url.endswith("/") else url for url in page_feed_urls_df
+    ]
+
+    missing_page_feed_urls = list(set(page_feed_urls) - set(gads_page_feed_urls))
+    extra_page_feed_urls = list(set(gads_page_feed_urls) - set(page_feed_urls))
+    if not missing_page_feed_urls and not extra_page_feed_urls:
+        return f"No changes needed for page feed '{page_feed_asset_set_name}'\n"
+
+    print(f"{gads_page_feed_urls=}")
 
     return "TODO"
 
