@@ -29,7 +29,7 @@ def _get_mock_execute_query_return_value(customer_id: str, page_urls: List[str])
                     "type": "PAGE_FEED",
                     "id": "173111006498",
                     "pageFeedAsset": {
-                        "pageUrl": page_urls[0] + "/",
+                        "pageUrl": page_urls[0],
                     },
                 },
                 "assetSetAsset": {
@@ -42,7 +42,7 @@ def _get_mock_execute_query_return_value(customer_id: str, page_urls: List[str])
                     "type": "PAGE_FEED",
                     "id": "173146074136",
                     "pageFeedAsset": {
-                        "pageUrl": page_urls[1] + "/",
+                        "pageUrl": page_urls[1],
                     },
                 },
                 "assetSetAsset": {
@@ -437,6 +437,12 @@ class TestPageFeedTeamTools:
             "https://fastagency.ai/latest/api/fastagency/FunctionCallExecution",
             "https://fastagency.ai/latest/api/fastagency/FastAgency",
         ]
+        expected_page_urls_and_labels_df = pd.DataFrame(
+            {
+                "Page URL": expected_page_urls,
+                "Custom Label": [None, None],
+            }
+        )
         customer_id = "1111"
 
         mock_execute_query_return_value = _get_mock_execute_query_return_value(
@@ -448,7 +454,7 @@ class TestPageFeedTeamTools:
             "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
             return_value=mock_execute_query_return_value,
         ):
-            page_urls = _get_page_feed_items(
+            page_urls_and_labels_df = _get_page_feed_items(
                 user_id=-1,
                 conv_id=-1,
                 customer_id=customer_id,
@@ -456,4 +462,6 @@ class TestPageFeedTeamTools:
                 asset_set_resource_name=asset_set_resource_name,
             )
 
-        assert page_urls == expected_page_urls
+        assert page_urls_and_labels_df.sort_values("Page URL").equals(
+            expected_page_urls_and_labels_df.sort_values("Page URL")
+        )

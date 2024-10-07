@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, Optional
 
 import pandas as pd
 
@@ -201,13 +201,14 @@ def _get_page_feed_items(
     customer_id: str,
     login_customer_id: str,
     asset_set_resource_name: str,
-) -> List[str]:
+) -> pd.DataFrame:
     query = f"""
 SELECT
   asset.id,
   asset.name,
   asset.type,
-  asset.page_feed_asset.page_url
+  asset.page_feed_asset.page_url,
+  asset.page_feed_asset.labels
 FROM
   asset_set_asset
 WHERE
@@ -229,15 +230,24 @@ WHERE
 
     response_json = json.loads(response.replace("'", '"'))
 
-    page_urls = []
+    page_urls_and_labels_df = pd.DataFrame(columns=["Page URL", "Custom Label"])
     for asset in response_json[customer_id]:
         url = asset["asset"]["pageFeedAsset"]["pageUrl"].strip()
-        # repmove trailing slash
-        if url.endswith("/"):
-            url = url[:-1]
-        page_urls.append(url)
 
-    return page_urls
+        if "labels" in asset["asset"]["pageFeedAsset"]:
+            labels_list = asset["asset"]["pageFeedAsset"]["labels"]
+            labels = "; ".join(labels_list)
+        else:
+            labels = None
+        page_urls_and_labels_df = pd.concat(
+            [
+                page_urls_and_labels_df,
+                pd.DataFrame([{"Page URL": url, "Custom Label": labels}]),
+            ],
+            ignore_index=True,
+        )
+
+    return page_urls_and_labels_df
 
 
 def _sync_page_feed_asset_set(
@@ -273,9 +283,8 @@ def _sync_page_feed_asset_set(
         return f"No page feed data found for page feed '{page_feed_asset_set_name}'\n"
 
     page_feed_url_and_label_df = page_feed_rows[["Page URL", "Custom Label"]]
-    print(f"{page_feed_url_and_label_df=}")
 
-    gads_page_feed_urls = _get_page_feed_items(
+    gads_page_urls_and_labels_df = _get_page_feed_items(
         user_id=user_id,
         conv_id=conv_id,
         customer_id=customer_id,
@@ -283,22 +292,22 @@ def _sync_page_feed_asset_set(
         asset_set_resource_name=page_feed_asset_set["resourceName"],
     )
 
-    # compare unique Page URLs with GADS
-    # if not in GADS, add
-    # if in GADS but not in Page URL, remove
+    for df in [page_feed_url_and_label_df, gads_page_urls_and_labels_df]:
+        df["Page URL"] = df["Page URL"].str.rstrip("/")
 
-    page_feed_urls_df = page_feed_url_and_label_df["Page URL"].unique()
-    page_feed_urls = [
-        url[:-1] if url.endswith("/") else url for url in page_feed_urls_df
+    missing_page_urls = page_feed_url_and_label_df[
+        ~page_feed_url_and_label_df["Page URL"].isin(
+            gads_page_urls_and_labels_df["Page URL"]
+        )
+    ]
+    extra_page_urls = gads_page_urls_and_labels_df[
+        ~gads_page_urls_and_labels_df["Page URL"].isin(
+            page_feed_url_and_label_df["Page URL"]
+        )
     ]
 
-    missing_page_feed_urls = list(set(page_feed_urls) - set(gads_page_feed_urls))
-    extra_page_feed_urls = list(set(gads_page_feed_urls) - set(page_feed_urls))
-    if not missing_page_feed_urls and not extra_page_feed_urls:
-        return f"No changes needed for page feed '{page_feed_asset_set_name}'\n"
-
-    print(f"{gads_page_feed_urls=}")
-
+    if missing_page_urls.empty and extra_page_urls.empty:
+        return "No changes needed for page feed 'fastagency-reference'\n"
     return "TODO"
 
 
