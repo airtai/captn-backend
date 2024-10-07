@@ -4,7 +4,9 @@ from typing import Annotated, Any, Dict, Optional
 
 import pandas as pd
 
-from ....google_ads.client import execute_query
+from google_ads.model import AddPageFeedItems
+
+from ....google_ads.client import execute_query, google_ads_post_or_get
 from ..toolboxes import Toolbox
 from ._functions import (
     REPLY_TO_CLIENT_DESCRIPTION,
@@ -310,14 +312,28 @@ def _sync_page_feed_asset_set(
     if missing_page_urls.empty and extra_page_urls.empty:
         return "No changes needed for page feed 'fastagency-reference'\n"
 
+    return_value = f"Page feed '{page_feed_asset_set_name}' changes:\n"
     if not missing_page_urls.empty:
-        # Add missing page urls
-        for row in missing_page_urls.iterrows():
-            page_url = row[1]["Page URL"]
-            custom_label = row[1]["Custom Label"]
-            print(
-                f"Adding page url '{page_url}' with custom label '{custom_label}' to page feed '{page_feed_asset_set_name}'"
-            )
+        url_and_labels = missing_page_urls.set_index("Page URL")[
+            "Custom Label"
+        ].to_dict()
+        model = AddPageFeedItems(
+            login_customer_id=login_customer_id,
+            customer_id=customer_id,
+            asset_set_resource_name=page_feed_asset_set["resourceName"],
+            urls_and_labels=url_and_labels,
+        )
+        response = google_ads_post_or_get(
+            user_id=user_id,
+            conv_id=conv_id,
+            model=model,
+            recommended_modifications_and_answer_list=[],
+            already_checked_clients_approval=True,
+            endpoint="/add-items-to-page-feed",
+        )
+        if isinstance(response, dict):
+            raise ValueError(response)
+        return_value += response
 
     if not extra_page_urls.empty:
         # Remove extra page urls
@@ -329,7 +345,7 @@ def _sync_page_feed_asset_set(
                 f"Removing {id} page url '{page_url}' with custom label '{custom_label}' from page feed '{page_feed_asset_set}'"
             )
 
-    return "TODO"
+    return return_value
 
 
 def _sync_page_feed_asset_sets(
