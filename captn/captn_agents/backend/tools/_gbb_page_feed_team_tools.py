@@ -321,6 +321,13 @@ def _sync_page_feed_asset_set(
         url_and_labels = missing_page_urls.set_index("Page URL")[
             "Custom Label"
         ].to_dict()
+        for key, value in url_and_labels.items():
+            if value:
+                url_and_labels[key] = [
+                    label.strip() for label in value.split(";") if label.strip()
+                ]
+            else:
+                url_and_labels[key] = None
         add_model = AddPageFeedItems(
             login_customer_id=login_customer_id,
             customer_id=customer_id,

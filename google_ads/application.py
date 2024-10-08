@@ -2013,7 +2013,7 @@ async def add_items_to_page_feed(
 
     try:
         # Creates one asset per URL.
-        for url, label in model.urls_and_labels.items():
+        for url, labels in model.urls_and_labels.items():
             # Creates an asset operation and adds it to the list of operations.
             operation = client.get_type("AssetOperation")
             asset = operation.create
@@ -2021,8 +2021,8 @@ async def add_items_to_page_feed(
             page_feed_asset.page_url = url
             # Recommended: adds labels to the asset. These labels can be used later
             # in ad group targeting to restrict the set of pages that can serve.
-            if label:
-                page_feed_asset.labels.append(label)
+            if labels:
+                page_feed_asset.labels.extend(labels)
             operations.append(operation)
 
         # Issues a mutate request to add the assets and prints its information.

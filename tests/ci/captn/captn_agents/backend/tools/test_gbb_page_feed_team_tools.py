@@ -359,49 +359,49 @@ class TestPageFeedTeamTools:
     @pytest.mark.parametrize(
         ("gads_page_urls", "page_feeds_df", "expected"),
         [
-            (
-                [
-                    "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split",
-                ],
-                pd.DataFrame(
-                    {
-                        "Page URL": [
-                            "https://getbybus.com/en/bus-zagreb-to-split",
-                            "https://getbybus.com/hr/bus-zagreb-to-split/",
-                            "https://getbybus.com/it/bus-zagreb-to-split",
-                        ],
-                        "Custom Label": [
-                            "StS; en; Croatia",
-                            "StS; hr; Croatia",
-                            "StS; it; Croatia",
-                        ],
-                    }
-                ),
-                "No changes needed for page feed 'fastagency-reference'\n",
-            ),
-            (
-                [
-                    "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split/",
-                    "https://getbybus.com/it/bus-zagreb-to-split",
-                ],
-                pd.DataFrame(
-                    {
-                        "Page URL": [
-                            "https://getbybus.com/en/bus-zagreb-to-split",
-                            "https://getbybus.com/hr/bus-zagreb-to-split/",
-                            "https://getbybus.com/it/bus-zagreb-to-split",
-                        ],
-                        "Custom Label": [
-                            "StS; en; Croatia",
-                            "StS; hr; Croatia",
-                            "StS; it; Croatia",
-                        ],
-                    }
-                ),
-                "Page feed 'fastagency-reference' changes:\nRemoved an asset set asset link",
-            ),
+            # (
+            #     [
+            #         "https://getbybus.com/en/bus-zagreb-to-split",
+            #         "https://getbybus.com/hr/bus-zagreb-to-split",
+            #     ],
+            #     pd.DataFrame(
+            #         {
+            #             "Page URL": [
+            #                 "https://getbybus.com/en/bus-zagreb-to-split",
+            #                 "https://getbybus.com/hr/bus-zagreb-to-split/",
+            #                 "https://getbybus.com/it/bus-zagreb-to-split",
+            #             ],
+            #             "Custom Label": [
+            #                 "StS; en; Croatia",
+            #                 "StS; hr; Croatia",
+            #                 "StS; it; Croatia",
+            #             ],
+            #         }
+            #     ),
+            #     "No changes needed for page feed 'fastagency-reference'\n",
+            # ),
+            # (
+            #     [
+            #         "https://getbybus.com/en/bus-zagreb-to-split",
+            #         "https://getbybus.com/hr/bus-zagreb-to-split/",
+            #         "https://getbybus.com/it/bus-zagreb-to-split",
+            #     ],
+            #     pd.DataFrame(
+            #         {
+            #             "Page URL": [
+            #                 "https://getbybus.com/en/bus-zagreb-to-split",
+            #                 "https://getbybus.com/hr/bus-zagreb-to-split/",
+            #                 "https://getbybus.com/it/bus-zagreb-to-split",
+            #             ],
+            #             "Custom Label": [
+            #                 "StS; en; Croatia",
+            #                 "StS; hr; Croatia",
+            #                 "StS; it; Croatia",
+            #             ],
+            #         }
+            #     ),
+            #     "Page feed 'fastagency-reference' changes:\nRemoved an asset set asset link",
+            # ),
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",

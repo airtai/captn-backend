@@ -225,4 +225,4 @@ class PageFeedItems(BaseModel):
 
 
 class AddPageFeedItems(PageFeedItems):
-    urls_and_labels: Dict[str, Optional[str]]
+    urls_and_labels: Dict[str, Optional[List[str]]]
