@@ -34,7 +34,6 @@ from .model import (
     ExistingCampaignSitelinks,
     GeoTargetCriterion,
     NewCampaignSitelinks,
-    PageFeedItems,
     RemoveResource,
 )
 
@@ -2012,73 +2011,40 @@ async def add_items_to_page_feed(
     )
     operations = []
 
-    # Creates one asset per URL.
-    for url, label in model.urls_and_labels.items():
-        # Creates an asset operation and adds it to the list of operations.
-        operation = client.get_type("AssetOperation")
-        asset = operation.create
-        page_feed_asset = asset.page_feed_asset
-        page_feed_asset.page_url = url
-        # Recommended: adds labels to the asset. These labels can be used later
-        # in ad group targeting to restrict the set of pages that can serve.
-        if label:
-            page_feed_asset.labels.append(label)
-        operations.append(operation)
+    try:
+        # Creates one asset per URL.
+        for url, labels in model.urls_and_labels.items():
+            # Creates an asset operation and adds it to the list of operations.
+            operation = client.get_type("AssetOperation")
+            asset = operation.create
+            page_feed_asset = asset.page_feed_asset
+            page_feed_asset.page_url = url
+            # Recommended: adds labels to the asset. These labels can be used later
+            # in ad group targeting to restrict the set of pages that can serve.
+            if labels:
+                page_feed_asset.labels.extend(labels)
+            operations.append(operation)
 
-    # Issues a mutate request to add the assets and prints its information.
-    asset_service = client.get_service("AssetService")
-    response = asset_service.mutate_assets(
-        customer_id=model.customer_id, operations=operations
-    )
+        # Issues a mutate request to add the assets and prints its information.
+        asset_service = client.get_service("AssetService")
+        response = asset_service.mutate_assets(
+            customer_id=model.customer_id, operations=operations
+        )
 
-    resource_names = []
-    return_text = ""
-    for result in response.results:
-        resource_name = result.resource_name
-        return_text += f"Created an asset with resource name: '{resource_name}'\n"
-        resource_names.append(resource_name)
+        resource_names = []
+        return_text = ""
+        for result in response.results:
+            resource_name = result.resource_name
+            return_text += f"Created an asset with resource name: '{resource_name}'\n"
+            resource_names.append(resource_name)
 
-    return _add_assets_to_asset_set(
-        client=client,
-        customer_id=model.customer_id,
-        asset_resource_names=resource_names,
-        asset_set_resource_name=model.asset_set_resource_name,
-    )
-
-
-@router.get("/list-page-feed-items")
-async def list_page_feed_items(
-    user_id: int,
-    model: PageFeedItems,
-) -> Dict[str, Any]:
-    # client = await _get_client(
-    #     user_id=user_id, login_customer_id=model.login_customer_id
-    # )
-    query = f"""
-SELECT
-#   asset_set_asset.asset,
-#   asset_set_asset.asset_set,
-  asset.id,
-  asset.name,
-  asset.type,
-  asset.page_feed_asset.page_url
-FROM
-  asset_set_asset
-WHERE
-  asset.type = 'PAGE_FEED'
-  AND asset_set_asset.asset_set = '{model.asset_set_resource_name}'
-  AND asset_set_asset.status != 'REMOVED'
-"""  # nosec: [B608]
-
-    page_feed_assets_response = await search(
-        user_id=user_id,
-        customer_ids=[model.customer_id],
-        query=query,
-        login_customer_id=model.login_customer_id,
-    )
-
-    # page_urls = []
-    # for asset in page_feed_assets_response[model.customer_id]:
-    #     page_urls.append(asset["asset"]["pageFeedAsset"]["pageUrl"])
-
-    return page_feed_assets_response
+        return _add_assets_to_asset_set(
+            client=client,
+            customer_id=model.customer_id,
+            asset_resource_names=resource_names,
+            asset_set_resource_name=model.asset_set_resource_name,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e

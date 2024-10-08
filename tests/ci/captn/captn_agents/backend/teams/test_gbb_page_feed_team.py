@@ -1,3 +1,4 @@
+import unittest
 from typing import Any, Iterator
 
 import pytest
@@ -7,6 +8,10 @@ from captn.captn_agents.backend.teams import (
     Team,
 )
 
+from ..tools.test_gbb_page_feed_team_tools import (
+    _get_asset_sets_execute_query_return_value,
+    _get_assets_execute_query_return_value,
+)
 from .helpers import helper_test_init, start_converstaion
 from .test_gbb_google_sheets_team import mock_list_accessible_customers_f
 
@@ -50,10 +55,6 @@ class TestGBBPageFeedTeam:
     def test_page_feed_real_fastapi_team_end2end(
         self,
         mock_get_conv_uuid: Iterator[Any],
-        # mock_get_login_url: Iterator[Any],
-        # mock_requests_get: Iterator[Any],
-        # mock_requests_post: Iterator[Any],
-        # mock_execute_query_f: Iterator[Any],
     ) -> None:
         user_id = 13
         openapi_url = "https://google-sheets.tools.staging.fastagency.ai/openapi.json"
@@ -67,10 +68,42 @@ class TestGBBPageFeedTeam:
             )
 
         expected_messages = [
-            "All page feeds have been updated.",
+            "Page feed 'fastagency-reference' changes:",
+            "Page feed 'fastagency-tutorial' changes:",
+            "Created an asset set asset link",
+            "Removed an asset set asset link",
         ]
 
-        with mock_list_accessible_customers_f():
+        customer_id = "1111"
+        page_urls = [
+            "https://fastagency.ai/latest/api/fastagency/FunctionCallExecution",
+            "https://fastagency.ai/latest/api/fastagency/FastAgency",
+        ]
+        execuse_query_side_effect = [
+            _get_asset_sets_execute_query_return_value(customer_id),
+            _get_assets_execute_query_return_value(
+                customer_id=customer_id, page_urls=page_urls
+            ),
+            _get_assets_execute_query_return_value(
+                customer_id=customer_id, page_urls=[]
+            ),
+        ]
+
+        with (
+            mock_list_accessible_customers_f(),
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
+                side_effect=execuse_query_side_effect,
+            ),
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
+                return_value="Created an asset set asset link",
+            ),
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_create_update",
+                return_value="Removed an asset set asset link",
+            ),
+        ):
             start_converstaion(
                 user_id=user_id, team=team, expected_messages=expected_messages
             )
