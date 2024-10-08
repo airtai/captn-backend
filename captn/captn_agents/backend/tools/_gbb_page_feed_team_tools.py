@@ -257,6 +257,77 @@ WHERE
     return page_urls_and_labels_df
 
 
+def _add_missing_page_urls(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+    page_feed_asset_set: Dict[str, str],
+    missing_page_urls: pd.DataFrame,
+) -> str:
+    url_and_labels = missing_page_urls.set_index("Page URL")["Custom Label"].to_dict()
+    for key, value in url_and_labels.items():
+        if value:
+            url_and_labels[key] = [
+                label.strip() for label in value.split(";") if label.strip()
+            ]
+        else:
+            url_and_labels[key] = None
+    add_model = AddPageFeedItems(
+        login_customer_id=login_customer_id,
+        customer_id=customer_id,
+        asset_set_resource_name=page_feed_asset_set["resourceName"],
+        urls_and_labels=url_and_labels,
+    )
+    response = google_ads_post_or_get(
+        user_id=user_id,
+        conv_id=conv_id,
+        model=add_model,
+        recommended_modifications_and_answer_list=[],
+        already_checked_clients_approval=True,
+        endpoint="/add-items-to-page-feed",
+    )
+    if isinstance(response, dict):
+        raise ValueError(response)
+    return response
+
+
+def _remove_extra_page_urls(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+    page_feed_asset_set: Dict[str, str],
+    extra_page_urls: pd.DataFrame,
+) -> str:
+    return_value = ""
+    for row in extra_page_urls.iterrows():
+        id = row[1]["Id"]
+        remove_model = RemoveResource(
+            customer_id=customer_id,
+            parent_id=page_feed_asset_set["id"],
+            resource_id=id,
+            resource_type="asset_set_asset",
+        )
+
+        response = google_ads_create_update(
+            user_id=user_id,
+            conv_id=conv_id,
+            recommended_modifications_and_answer_list=[],
+            already_checked_clients_approval=True,
+            ad=remove_model,
+            login_customer_id=login_customer_id,
+            endpoint="/remove-google-ads-resource",
+        )
+        if isinstance(response, dict):
+            return_value += (
+                f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}\n"
+            )
+        else:
+            return_value += response
+    return return_value
+
+
 def _sync_page_feed_asset_set(
     user_id: int,
     conv_id: int,
@@ -318,58 +389,24 @@ def _sync_page_feed_asset_set(
 
     return_value = f"Page feed '{page_feed_asset_set_name}' changes:\n"
     if not missing_page_urls.empty:
-        url_and_labels = missing_page_urls.set_index("Page URL")[
-            "Custom Label"
-        ].to_dict()
-        for key, value in url_and_labels.items():
-            if value:
-                url_and_labels[key] = [
-                    label.strip() for label in value.split(";") if label.strip()
-                ]
-            else:
-                url_and_labels[key] = None
-        add_model = AddPageFeedItems(
-            login_customer_id=login_customer_id,
-            customer_id=customer_id,
-            asset_set_resource_name=page_feed_asset_set["resourceName"],
-            urls_and_labels=url_and_labels,
-        )
-        response = google_ads_post_or_get(
+        return_value += _add_missing_page_urls(
             user_id=user_id,
             conv_id=conv_id,
-            model=add_model,
-            recommended_modifications_and_answer_list=[],
-            already_checked_clients_approval=True,
-            endpoint="/add-items-to-page-feed",
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            page_feed_asset_set=page_feed_asset_set,
+            missing_page_urls=missing_page_urls,
         )
-        if isinstance(response, dict):
-            raise ValueError(response)
-        return_value += response
 
     if not extra_page_urls.empty:
-        # Remove extra page urls
-        for row in extra_page_urls.iterrows():
-            id = row[1]["Id"]
-            remove_model = RemoveResource(
-                customer_id=customer_id,
-                parent_id=page_feed_asset_set["id"],
-                resource_id=id,
-                resource_type="asset_set_asset",
-            )
-
-            response = google_ads_create_update(
-                user_id=user_id,
-                conv_id=conv_id,
-                recommended_modifications_and_answer_list=[],
-                already_checked_clients_approval=True,
-                ad=remove_model,
-                login_customer_id=customer_id,
-                endpoint="/remove-google-ads-resource",
-            )
-            if isinstance(response, dict):
-                return_value += f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}\n"
-            else:
-                return_value += response
+        return_value += _remove_extra_page_urls(
+            user_id=user_id,
+            conv_id=conv_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            page_feed_asset_set=page_feed_asset_set,
+            extra_page_urls=extra_page_urls,
+        )
 
     return return_value
 
