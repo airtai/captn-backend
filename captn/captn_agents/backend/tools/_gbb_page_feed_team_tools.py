@@ -1,4 +1,5 @@
 import json
+import traceback
 from dataclasses import dataclass
 from typing import Annotated, Any, Dict, Optional
 
@@ -402,7 +403,7 @@ def _sync_page_feed_asset_set(
         return msg
 
     return_value = f"Page feed '{page_feed_asset_set_name}' changes:\n"
-    iostream.print(colored(return_value, "green"), flush=True)
+    iostream.print(colored(return_value.strip(), "green"), flush=True)
     if not missing_page_urls.empty:
         msg = _add_missing_page_urls(
             user_id=user_id,
@@ -464,24 +465,29 @@ def update_page_feeds(
     if context.page_feeds_and_accounts_templ_df is None:
         return f"Please validate the page feed data first by running the '{validate_page_feed_data.__name__}' function."
 
-    page_feed_asset_sets = _get_page_feed_asset_sets(
-        user_id=context.user_id,
-        conv_id=context.conv_id,
-        customer_id=customer_id,
-        login_customer_id=login_customer_id,
-    )
-    if len(page_feed_asset_sets) == 0:
-        return f"No page feeds found for customer id {customer_id}."
+    try:
+        page_feed_asset_sets = _get_page_feed_asset_sets(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+        )
+        if len(page_feed_asset_sets) == 0:
+            return f"No page feeds found for customer id {customer_id}."
 
-    return _sync_page_feed_asset_sets(
-        user_id=context.user_id,
-        conv_id=context.conv_id,
-        customer_id=customer_id,
-        login_customer_id=login_customer_id,
-        page_feeds_and_accounts_templ_df=context.page_feeds_and_accounts_templ_df,
-        page_feeds_df=context.page_feeds_df,
-        page_feed_asset_sets=page_feed_asset_sets,
-    )
+        return _sync_page_feed_asset_sets(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            page_feeds_and_accounts_templ_df=context.page_feeds_and_accounts_templ_df,
+            page_feeds_df=context.page_feeds_df,
+            page_feed_asset_sets=page_feed_asset_sets,
+        )
+    except Exception as e:
+        traceback.print_stack()
+        traceback.print_exc()
+        raise e
 
 
 def create_page_feed_team_toolbox(

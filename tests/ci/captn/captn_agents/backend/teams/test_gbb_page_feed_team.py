@@ -68,7 +68,10 @@ class TestGBBPageFeedTeam:
             )
 
         expected_messages = [
-            "All page feeds have been updated.",
+            "Page feed 'fastagency-reference' changes:",
+            "Page feed 'fastagency-tutorial' changes:",
+            "Created an asset set asset link",
+            "Removed an asset set asset link",
         ]
 
         customer_id = "1111"

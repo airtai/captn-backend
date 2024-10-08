@@ -49,7 +49,7 @@ def _get_assets_execute_query_return_value(
 
 
 def _get_asset_sets_execute_query_return_value(customer_id: str) -> str:
-    return {
+    response_json = {
         customer_id: [
             {
                 "assetSet": {
@@ -67,15 +67,16 @@ def _get_asset_sets_execute_query_return_value(customer_id: str) -> str:
             },
         ]
     }
+    return str(response_json)
 
 
 @pytest.fixture()
 def mock_execute_query_f(request: pytest.FixtureRequest) -> Iterator[Any]:
-    response_json = _get_asset_sets_execute_query_return_value(request.param)
+    response_str = _get_asset_sets_execute_query_return_value(request.param)
 
     with unittest.mock.patch(
         "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
-        return_value=str(response_json),
+        return_value=response_str,
     ) as mock_execute_query:
         yield mock_execute_query
 
