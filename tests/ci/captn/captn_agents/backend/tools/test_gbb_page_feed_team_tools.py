@@ -5,6 +5,7 @@ from typing import Any, Iterator, List
 import pandas as pd
 import pytest
 from autogen.agentchat import AssistantAgent, UserProxyAgent
+from autogen.io.base import IOStream
 
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
@@ -471,6 +472,7 @@ class TestPageFeedTeamTools:
                 page_feeds_df=page_feeds_df,
                 page_feed_asset_set_name=page_feed_asset_set_name,
                 page_feed_asset_set=page_feed_asset_set,
+                iostream=IOStream.get_default(),
             )
             assert result == expected
 

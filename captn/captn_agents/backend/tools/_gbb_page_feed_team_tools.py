@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from typing import Annotated, Any, Dict, Optional
 
 import pandas as pd
+from autogen.formatting_utils import colored
+from autogen.io.base import IOStream
 
 from google_ads.model import AddPageFeedItems, RemoveResource
 
@@ -299,6 +301,7 @@ def _remove_extra_page_urls(
     login_customer_id: str,
     page_feed_asset_set: Dict[str, str],
     extra_page_urls: pd.DataFrame,
+    iostream: IOStream,
 ) -> str:
     return_value = ""
     for row in extra_page_urls.iterrows():
@@ -320,11 +323,13 @@ def _remove_extra_page_urls(
             endpoint="/remove-google-ads-resource",
         )
         if isinstance(response, dict):
-            return_value += (
-                f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}\n"
-            )
+            msg = f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n"
+            return_value += msg
+            iostream.print(colored(msg + str(response), "red"), flush=True)
         else:
-            return_value += response
+            iostream.print(colored(response, "green"), flush=True)
+
+        return_value += str(response)
     return return_value
 
 
@@ -337,15 +342,20 @@ def _sync_page_feed_asset_set(
     page_feeds_df: pd.DataFrame,
     page_feed_asset_set_name: str,
     page_feed_asset_set: Dict[str, str],
+    iostream: IOStream,
 ) -> str:
     page_feed_rows = page_feeds_and_accounts_templ_df[
         page_feeds_and_accounts_templ_df["Name Page Feed"] == page_feed_asset_set_name
     ]
     if page_feed_rows.empty:
-        return f"Page feed '{page_feed_asset_set_name}' not found in the page feed template data.\n"
+        msg = f"Page feed '{page_feed_asset_set_name}' not found in the page feed template data.\n"
+        iostream.print(colored(msg, "red"), flush=True)
+        return msg
 
     elif page_feed_rows["Customer Id"].nunique() > 1:
-        return f"Page feed template has multiple values for the same page feed '{page_feed_asset_set_name}'!\n"
+        msg = f"Page feed template has multiple values for the same page feed '{page_feed_asset_set_name}'!\n"
+        iostream.print(colored(msg, "red"), flush=True)
+        return msg
 
     page_feed_template_row = page_feed_rows.iloc[0]
     custom_labels_values = [
@@ -358,7 +368,9 @@ def _sync_page_feed_asset_set(
     ]
 
     if page_feed_rows.empty:
-        return f"No page feed data found for page feed '{page_feed_asset_set_name}'\n"
+        msg = f"No page feed data found for page feed '{page_feed_asset_set_name}'\n"
+        iostream.print(colored(msg, "yellow"), flush=True)
+        return msg
 
     page_feed_url_and_label_df = page_feed_rows[["Page URL", "Custom Label"]]
 
@@ -385,11 +397,14 @@ def _sync_page_feed_asset_set(
     ]
 
     if missing_page_urls.empty and extra_page_urls.empty:
-        return "No changes needed for page feed 'fastagency-reference'\n"
+        msg = f"No changes needed for page feed '{page_feed_asset_set_name}'\n"
+        iostream.print(colored(msg, "green"), flush=True)
+        return msg
 
     return_value = f"Page feed '{page_feed_asset_set_name}' changes:\n"
+    iostream.print(colored(return_value, "green"), flush=True)
     if not missing_page_urls.empty:
-        return_value += _add_missing_page_urls(
+        msg = _add_missing_page_urls(
             user_id=user_id,
             conv_id=conv_id,
             customer_id=customer_id,
@@ -397,6 +412,8 @@ def _sync_page_feed_asset_set(
             page_feed_asset_set=page_feed_asset_set,
             missing_page_urls=missing_page_urls,
         )
+        iostream.print(colored(msg, "green"), flush=True)
+        return_value += msg
 
     if not extra_page_urls.empty:
         return_value += _remove_extra_page_urls(
@@ -406,6 +423,7 @@ def _sync_page_feed_asset_set(
             login_customer_id=login_customer_id,
             page_feed_asset_set=page_feed_asset_set,
             extra_page_urls=extra_page_urls,
+            iostream=iostream,
         )
 
     return return_value
@@ -420,6 +438,7 @@ def _sync_page_feed_asset_sets(
     page_feeds_df: pd.DataFrame,
     page_feed_asset_sets: Dict[str, Dict[str, str]],
 ) -> str:
+    iostream = IOStream.get_default()
     return_value = ""
     for page_feed_asset_set_name, page_feed_asset_set in page_feed_asset_sets.items():
         return_value += _sync_page_feed_asset_set(
@@ -431,10 +450,10 @@ def _sync_page_feed_asset_sets(
             page_feeds_df=page_feeds_df,
             page_feed_asset_set_name=page_feed_asset_set_name,
             page_feed_asset_set=page_feed_asset_set,
+            iostream=iostream,
         )
 
-    return "All page feeds have been updated."
-    # return return_value
+    return return_value
 
 
 def update_page_feeds(
