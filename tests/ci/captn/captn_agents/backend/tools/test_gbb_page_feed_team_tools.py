@@ -22,7 +22,9 @@ from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
 
 
-def _get_mock_execute_query_return_value(customer_id: str, page_urls: List[str]) -> str:
+def _get_assets_execute_query_return_value(
+    customer_id: str, page_urls: List[str]
+) -> str:
     request_json = {customer_id: []}
     for i in range(len(page_urls)):
         asset_id = f"17311100649{i}"
@@ -46,10 +48,8 @@ def _get_mock_execute_query_return_value(customer_id: str, page_urls: List[str])
     return mock_execute_query_return_value
 
 
-@pytest.fixture()
-def mock_execute_query_f(request: pytest.FixtureRequest) -> Iterator[Any]:
-    customer_id = request.param
-    response_json = {
+def _get_asset_sets_execute_query_return_value(customer_id: str) -> str:
+    return {
         customer_id: [
             {
                 "assetSet": {
@@ -67,6 +67,11 @@ def mock_execute_query_f(request: pytest.FixtureRequest) -> Iterator[Any]:
             },
         ]
     }
+
+
+@pytest.fixture()
+def mock_execute_query_f(request: pytest.FixtureRequest) -> Iterator[Any]:
+    response_json = _get_asset_sets_execute_query_return_value(request.param)
 
     with unittest.mock.patch(
         "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
@@ -445,7 +450,7 @@ class TestPageFeedTeamTools:
             "id": "8783430659",
         }
 
-        mock_execute_query_return_value = _get_mock_execute_query_return_value(
+        mock_execute_query_return_value = _get_assets_execute_query_return_value(
             customer_id, gads_page_urls
         )
 
@@ -489,7 +494,7 @@ class TestPageFeedTeamTools:
         )
         customer_id = "1111"
 
-        mock_execute_query_return_value = _get_mock_execute_query_return_value(
+        mock_execute_query_return_value = _get_assets_execute_query_return_value(
             customer_id, expected_page_urls
         )
         asset_set_resource_name = f"customers/{customer_id}/assetSets/8783430659"
