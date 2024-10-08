@@ -26,6 +26,7 @@ from ._gbb_google_sheets_team_tools import (
     GoogleSheetsTeamContext,
     GoogleSheetValues,
     get_sheet_data,
+    get_time,
 )
 from ._google_ads_team_tools import (
     change_google_account,
@@ -326,9 +327,11 @@ def _remove_extra_page_urls(
         if isinstance(response, dict):
             msg = f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n"
             return_value += msg
-            iostream.print(colored(msg + str(response), "red"), flush=True)
+            iostream.print(
+                colored(f"[{get_time()}] " + msg + str(response), "red"), flush=True
+            )
         else:
-            iostream.print(colored(response, "green"), flush=True)
+            iostream.print(colored(f"[{get_time()}] " + response, "green"), flush=True)
 
         return_value += str(response)
     return return_value
@@ -350,12 +353,12 @@ def _sync_page_feed_asset_set(
     ]
     if page_feed_rows.empty:
         msg = f"Page feed '{page_feed_asset_set_name}' not found in the page feed template data.\n"
-        iostream.print(colored(msg, "red"), flush=True)
+        iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
         return msg
 
     elif page_feed_rows["Customer Id"].nunique() > 1:
         msg = f"Page feed template has multiple values for the same page feed '{page_feed_asset_set_name}'!\n"
-        iostream.print(colored(msg, "red"), flush=True)
+        iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
         return msg
 
     page_feed_template_row = page_feed_rows.iloc[0]
@@ -370,7 +373,7 @@ def _sync_page_feed_asset_set(
 
     if page_feed_rows.empty:
         msg = f"No page feed data found for page feed '{page_feed_asset_set_name}'\n"
-        iostream.print(colored(msg, "yellow"), flush=True)
+        iostream.print(colored(f"[{get_time()}] " + msg, "yellow"), flush=True)
         return msg
 
     page_feed_url_and_label_df = page_feed_rows[["Page URL", "Custom Label"]]
@@ -399,11 +402,13 @@ def _sync_page_feed_asset_set(
 
     if missing_page_urls.empty and extra_page_urls.empty:
         msg = f"No changes needed for page feed '{page_feed_asset_set_name}'\n"
-        iostream.print(colored(msg, "green"), flush=True)
+        iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
         return msg
 
     return_value = f"Page feed '{page_feed_asset_set_name}' changes:\n"
-    iostream.print(colored(return_value.strip(), "green"), flush=True)
+    iostream.print(
+        colored(f"[{get_time()}] " + return_value.strip(), "green"), flush=True
+    )
     if not missing_page_urls.empty:
         msg = _add_missing_page_urls(
             user_id=user_id,
@@ -413,7 +418,7 @@ def _sync_page_feed_asset_set(
             page_feed_asset_set=page_feed_asset_set,
             missing_page_urls=missing_page_urls,
         )
-        iostream.print(colored(msg, "green"), flush=True)
+        iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
         return_value += msg
 
     if not extra_page_urls.empty:

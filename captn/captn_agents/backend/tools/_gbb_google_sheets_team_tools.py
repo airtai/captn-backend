@@ -778,6 +778,10 @@ def _update_campaign_with_additional_settings(
     )
 
 
+def get_time() -> str:
+    return datetime.now(ZAGREB_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+
+
 def _setup_campaign(
     customer_id: str,
     login_customer_id: str,
@@ -895,13 +899,15 @@ def _setup_campaign(
                 )
                 campaign["ad_groups"][row["ad group name"]] = ad_group_ad.ad_group_id
 
-        message = f"[{datetime.now(ZAGREB_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')}] Created campaign: {campaign_name}"
+        message = f"[{get_time()}] Created campaign: {campaign_name}"
         iostream.print(colored(message, "green"), flush=True)
         return True, None
 
     except Exception as e:
         error_msg = str(e)
-        message = f"[{datetime.now(ZAGREB_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')}] Failed to create campaign: {campaign_name}: {error_msg}"
+        message = (
+            f"[{get_time()}] Failed to create campaign: {campaign_name}: {error_msg}"
+        )
         iostream.print(colored(message, "red"), flush=True)
 
         try:
