@@ -16,7 +16,7 @@ from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     _get_sheet_data_and_return_df,
     _sync_page_feed_asset_set,
     create_page_feed_team_toolbox,
-    validate_page_feed_data,
+    get_and_validate_page_feed_data,
 )
 
 from .helpers import check_llm_config_descriptions, check_llm_config_total_tools
@@ -119,7 +119,7 @@ class TestPageFeedTeamTools:
             {
                 "reply_to_client": r"Respond to the client \(answer to his task or question for additional information\)",
                 "ask_client_for_permission": "Ask the client for permission to make the changes.",
-                "validate_page_feed_data": "Validate page feed data",
+                "get_and_validate_page_feed_data": "Get and validate page feed data",
                 "update_page_feeds": "Update Google Ads Page Feeds",
                 "change_google_ads_account_or_refresh_token": "Change Google Ads account or refresh access token",
             },
@@ -221,7 +221,7 @@ class TestPageFeedTeamTools:
         else:
             assert return_df.empty
 
-    def test_validate_page_feed_data(self) -> None:
+    def test_get_and_validate_page_feed_data(self) -> None:
         side_effect_get_sheet_data = [
             {
                 "values": [
@@ -336,7 +336,7 @@ class TestPageFeedTeamTools:
             "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.get_sheet_data",
             side_effect=side_effect_get_sheet_data,
         ):
-            return_value = validate_page_feed_data(
+            return_value = get_and_validate_page_feed_data(
                 template_spreadsheet_id="abc123",
                 page_feed_spreadsheet_id="def456",
                 page_feed_sheet_title="Sheet1",

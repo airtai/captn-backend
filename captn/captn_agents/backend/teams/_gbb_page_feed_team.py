@@ -72,8 +72,10 @@ Here is the current customers brief/information we have gathered for you as a st
 - mandatory input parameters: user_id, spreadsheet_id
 6. In the spreadsheet with page feeds, you must find the title of the sheet with page feeds (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - If there are multiple sheets within the spreadsheet, ask the client to choose the correct sheet.
-7. Once you have the correct sheet title, you must validate the data in the page feed sheet by using 'validate_page_feed_data' function.
+7. Once you have the correct sheet title, you must validate the data in the page feed sheet by using 'get_and_validate_page_feed_data' function.
 8. If the data is correct, you must update the page feeds in Google Ads by using 'update_page_feeds' function.
+9. Before EACH update_page_feeds call also repeat the get_and_validate_page_feed_data call to ensure the data is still correct.
+- If the user asks you to repeat the process, it might be because the data has changed, so ALWAYS validate the data before updating.
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
 
@@ -116,7 +118,7 @@ function_name: 'update_page_feeds'
 If you want to refresh google sheets token or change google sheets use 'get_login_url_login_get' with 'force_new_login' parameter set to True.
 
 4. Only Google_ads_expert has access to the following commands:
-- 'validate_page_feed_data':
+- 'get_and_validate_page_feed_data':
 parameters: template_spreadsheet_id, page_feed_spreadsheet_id, page_feed_sheet_title
 - 'update_page_feeds':
 parameters: customer_id, login_customer_id
