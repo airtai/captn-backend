@@ -4,9 +4,10 @@ from ..toolboxes import Toolbox
 from ..tools._gbb_page_feed_team_tools import create_page_feed_team_toolbox
 from ._gbb_google_sheets_team import GOOGLE_SHEETS_OPENAPI_URL, GBBGoogleSheetsTeam
 from ._shared_prompts import REPLY_TO_CLIENT_COMMAND
+from ._team import Team
 
 
-# @Team.register_team("gbb_page_feed_team")
+@Team.register_team("gbb_page_feed_team")
 class GBBPageFeedTeam(GBBGoogleSheetsTeam):
     def __init__(
         self,
@@ -124,7 +125,7 @@ parameters: customer_id, login_customer_id
 
     @classmethod
     def get_capabilities(cls) -> str:
-        return "Able update Google Ads Page Feeds."
+        return "Able to update Google Ads Page Feeds."
 
     @classmethod
     def get_brief_template(cls) -> str:
