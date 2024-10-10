@@ -7,11 +7,11 @@ import pandas as pd
 from autogen.formatting_utils import colored
 from autogen.io.base import IOStream
 
-from google_ads.model import AddPageFeedItems, RemoveResource
+from google_ads.model import AddPageFeedItems  # , RemoveResource
 
 from ....google_ads.client import (
     execute_query,
-    google_ads_create_update,
+    google_ads_create_update,  # noqa
     google_ads_post_or_get,
 )
 from ..toolboxes import Toolbox
@@ -295,7 +295,8 @@ def _add_missing_page_urls(
     )
     if isinstance(response, dict):
         raise ValueError(response)
-    return response
+    urls_to_string = "\n".join(url_and_labels.keys())
+    return f"Added page feed items:\n{urls_to_string}"
 
 
 def _remove_extra_page_urls(
@@ -307,35 +308,39 @@ def _remove_extra_page_urls(
     extra_page_urls: pd.DataFrame,
     iostream: IOStream,
 ) -> str:
-    return_value = ""
+    return_value = "The following page feed items should be removed by you manually:\n"
+    iostream.print(colored(f"[{get_time()}] " + return_value, "green"), flush=True)
     for row in extra_page_urls.iterrows():
         id = row[1]["Id"]
-        remove_model = RemoveResource(
-            customer_id=customer_id,
-            parent_id=page_feed_asset_set["id"],
-            resource_id=id,
-            resource_type="asset_set_asset",
-        )
+        # remove_model = RemoveResource(
+        #     customer_id=customer_id,
+        #     parent_id=page_feed_asset_set["id"],
+        #     resource_id=id,
+        #     resource_type="asset_set_asset",
+        # )
 
-        response = google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=[],
-            already_checked_clients_approval=True,
-            ad=remove_model,
-            login_customer_id=login_customer_id,
-            endpoint="/remove-google-ads-resource",
-        )
+        # response = google_ads_create_update(
+        #     user_id=user_id,
+        #     conv_id=conv_id,
+        #     recommended_modifications_and_answer_list=[],
+        #     already_checked_clients_approval=True,
+        #     ad=remove_model,
+        #     login_customer_id=login_customer_id,
+        #     endpoint="/remove-google-ads-resource",
+        # )
+
+        response = "REMOVE THIS LINE ONCE THE ABOVE CODE IS UNCOMMENTED"
         if isinstance(response, dict):
             msg = f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n"
-            return_value += msg
+            return_value += msg + str(response)
             iostream.print(
                 colored(f"[{get_time()}] " + msg + str(response), "red"), flush=True
             )
         else:
-            iostream.print(colored(f"[{get_time()}] " + response, "green"), flush=True)
+            msg = f"- {row[1]['Page URL']}"
+            return_value += msg + "\n"
+            iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
 
-        return_value += str(response)
     return return_value
 
 
