@@ -432,7 +432,7 @@ The following page feed items should be removed by you manually:
                 ),
                 """Page feed 'fastagency-reference' changes:
 Added page feed items:
-https://getbybus.com/hr/bus-zagreb-to-karlovac""",
+https://getbybus.com/hr/bus-zagreb-to-karlovac\n""",
             ),
         ],
     )

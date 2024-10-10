@@ -76,6 +76,8 @@ Here is the current customers brief/information we have gathered for you as a st
 8. If the data is correct, you must update the page feeds in Google Ads by using 'update_page_feeds' function.
 9. Before EACH update_page_feeds call also repeat the get_and_validate_page_feed_data call to ensure the data is still correct.
 - If the user asks you to repeat the process, it might be because the data has changed, so ALWAYS validate the data before updating.
+10. Once you have updated the page feeds, you must inform the client which page feeds have been updated and you must list ALL the changes which the client needs to do manually.
+- Do not write few changes and "etc." or "[Additional URLs]". You MUST list ALL the changes (both complete and the ones that need to be done manually).
 
 ALL ENDPOINT PARAMETERS ARE MANDATORY (even if the documentation says they are optional).
 

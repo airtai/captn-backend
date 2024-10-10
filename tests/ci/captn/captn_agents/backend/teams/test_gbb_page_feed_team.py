@@ -70,8 +70,8 @@ class TestGBBPageFeedTeam:
         expected_messages = [
             "Page feed 'fastagency-reference' changes:",
             "Page feed 'fastagency-tutorial' changes:",
-            "Created an asset set asset link",
-            "Removed an asset set asset link",
+            "Added page feed items:",
+            "The following page feed items should be removed by you manually:",
         ]
 
         customer_id = "1111"

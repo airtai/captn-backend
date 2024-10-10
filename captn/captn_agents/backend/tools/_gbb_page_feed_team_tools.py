@@ -296,7 +296,7 @@ def _add_missing_page_urls(
     if isinstance(response, dict):
         raise ValueError(response)
     urls_to_string = "\n".join(url_and_labels.keys())
-    return f"Added page feed items:\n{urls_to_string}"
+    return f"Added page feed items:\n{urls_to_string}\n"
 
 
 def _remove_extra_page_urls(
@@ -359,8 +359,8 @@ def _sync_page_feed_asset_set(
         page_feeds_and_accounts_templ_df["Name Page Feed"] == page_feed_asset_set_name
     ]
     if page_feed_rows.empty:
-        msg = f"Page feed '{page_feed_asset_set_name}' not found in the page feed template data.\n"
-        iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
+        msg = f"Skipping page feed '{page_feed_asset_set_name}' (not found in the page feed template).\n"
+        iostream.print(colored(f"[{get_time()}] " + msg, "yellow"), flush=True)
         return msg
 
     elif page_feed_rows["Customer Id"].nunique() > 1:
@@ -475,7 +475,7 @@ def update_page_feeds(
     context: PageFeedTeamContext,
 ) -> str:
     if context.page_feeds_and_accounts_templ_df is None:
-        return f"Please validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
+        return f"Please (re)validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
 
     try:
         page_feed_asset_sets = _get_page_feed_asset_sets(
@@ -500,6 +500,9 @@ def update_page_feeds(
         traceback.print_stack()
         traceback.print_exc()
         raise e
+    finally:
+        context.page_feeds_and_accounts_templ_df = None
+        context.page_feeds_df = None
 
 
 def create_page_feed_team_toolbox(
