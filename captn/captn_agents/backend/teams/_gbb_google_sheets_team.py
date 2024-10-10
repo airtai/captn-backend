@@ -184,10 +184,8 @@ parameters 'campaigns_title', 'ads_title', 'keywords_title' MUST be the same as 
 
     @classmethod
     def get_capabilities(cls) -> str:
-        return "Able to read and edit Google Sheets."
+        return "Able to read Google Sheets and create NEW Google Ads campaigns."
 
     @classmethod
     def get_brief_template(cls) -> str:
-        return (
-            "The client wants to create new campaigns using a Google Sheets template."
-        )
+        return "The client wants to create new Google Ads campaigns from the Google Sheets template."

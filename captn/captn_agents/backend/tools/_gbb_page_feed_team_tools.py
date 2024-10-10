@@ -32,7 +32,9 @@ from ._google_ads_team_tools import (
     change_google_account,
 )
 
-VALIDATE_PAGE_FEED_DATA_DESCRIPTION = "Validate page feed data."
+GET_AND_VALIDATE_PAGE_FEED_DATA_DESCRIPTION = """Get and validate page feed data.
+Use this function before EACH update_page_feeds call to validate the page feed data.
+It is mandatory because the data can change between calls. So it is important to validate the data before each update."""
 
 
 def _get_sheet_data_and_return_df(
@@ -90,7 +92,7 @@ class PageFeedTeamContext(GoogleSheetsTeamContext):
     page_feeds_df: Optional[pd.DataFrame] = None
 
 
-def validate_page_feed_data(
+def get_and_validate_page_feed_data(
     template_spreadsheet_id: Annotated[str, "Template spreadsheet id"],
     page_feed_spreadsheet_id: Annotated[str, "Page feed spreadsheet id"],
     page_feed_sheet_title: Annotated[
@@ -468,7 +470,7 @@ def update_page_feeds(
     context: PageFeedTeamContext,
 ) -> str:
     if context.page_feeds_and_accounts_templ_df is None:
-        return f"Please validate the page feed data first by running the '{validate_page_feed_data.__name__}' function."
+        return f"Please validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
 
     try:
         page_feed_asset_sets = _get_page_feed_asset_sets(
@@ -517,7 +519,9 @@ def create_page_feed_team_toolbox(
     toolbox.add_function(
         description=ask_client_for_permission_description,
     )(ask_client_for_permission)
-    toolbox.add_function(VALIDATE_PAGE_FEED_DATA_DESCRIPTION)(validate_page_feed_data)
+    toolbox.add_function(GET_AND_VALIDATE_PAGE_FEED_DATA_DESCRIPTION)(
+        get_and_validate_page_feed_data
+    )
     toolbox.add_function(UPDATE_PAGE_FEED_DESCRIPTION)(update_page_feeds)
 
     toolbox.add_function(
