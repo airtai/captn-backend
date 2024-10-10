@@ -16,7 +16,6 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     _add_negative_campaign_keywords_lists,
     _add_new_sitelinks,
     _check_if_both_include_and_exclude_language_values_exist,
-    _check_mandatory_columns,
     _get_alredy_existing_campaigns,
     _get_language_codes,
     _setup_campaign,
@@ -25,6 +24,7 @@ from captn.captn_agents.backend.tools._gbb_google_sheets_team_tools import (
     _update_callouts,
     _update_geo_targeting,
     _update_language_targeting,
+    check_mandatory_columns,
     create_google_ads_resources,
     create_google_sheets_team_toolbox,
 )
@@ -143,7 +143,7 @@ class TestCreateGoogleAdsResources:
                 "Negative": ["abcd"],
             }
         )
-        result = _check_mandatory_columns(
+        result = check_mandatory_columns(
             df=df,
             mandatory_columns=mandatory_columns,
             table_title="table_title",

@@ -25,6 +25,7 @@ from ._gbb_google_sheets_team_tools import (
     CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION,
     GoogleSheetsTeamContext,
     GoogleSheetValues,
+    check_mandatory_columns,
     get_sheet_data,
     get_time,
 )
@@ -92,6 +93,25 @@ class PageFeedTeamContext(GoogleSheetsTeamContext):
     page_feeds_df: Optional[pd.DataFrame] = None
 
 
+ACCOUNTS_TITLE = "Accounts"
+ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS = [
+    "Customer Id",
+    "Name",
+    "Manager Customer Id",
+]
+
+PAGE_FEEDS_TEMPLATE_TITLE = "Page Feeds"
+PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS = [
+    "Customer Id",
+    "Name",
+]
+
+PAGE_FEEDS_MANDATORY_COLUMNS = [
+    "Page URL",
+    "Custom Label",
+]
+
+
 def get_and_validate_page_feed_data(
     template_spreadsheet_id: Annotated[str, "Template spreadsheet id"],
     page_feed_spreadsheet_id: Annotated[str, "Page feed spreadsheet id"],
@@ -104,17 +124,41 @@ def get_and_validate_page_feed_data(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=template_spreadsheet_id,
-        title="Accounts",
+        title=ACCOUNTS_TITLE,
     )
-    for col in ["Manager Customer Id", "Customer Id"]:
-        account_templ_df[col] = account_templ_df[col].str.replace("-", "")
-
     page_feeds_template_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=template_spreadsheet_id,
-        title="Page Feeds",
+        title=PAGE_FEEDS_TEMPLATE_TITLE,
     )
+    page_feeds_df = _get_sheet_data_and_return_df(
+        user_id=context.user_id,
+        base_url=context.google_sheets_api_url,
+        spreadsheet_id=page_feed_spreadsheet_id,
+        title=page_feed_sheet_title,
+    )
+
+    error_msg = ""
+    for df, mandatory_columns, table_title in [
+        (account_templ_df, ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS, ACCOUNTS_TITLE),
+        (
+            page_feeds_template_df,
+            PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS,
+            PAGE_FEEDS_TEMPLATE_TITLE,
+        ),
+        (page_feeds_df, PAGE_FEEDS_MANDATORY_COLUMNS, page_feed_sheet_title),
+    ]:
+        error_msg += check_mandatory_columns(
+            df=df, mandatory_columns=mandatory_columns, table_title=table_title
+        )
+
+    if error_msg:
+        return error_msg
+
+    for col in ["Manager Customer Id", "Customer Id"]:
+        account_templ_df[col] = account_templ_df[col].str.replace("-", "")
+
     page_feeds_template_df["Customer Id"] = page_feeds_template_df[
         "Customer Id"
     ].str.replace("-", "")
@@ -125,13 +169,6 @@ def get_and_validate_page_feed_data(
         on="Customer Id",
         how="left",
         suffixes=(" Page Feed", " Account"),
-    )
-
-    page_feeds_df = _get_sheet_data_and_return_df(
-        user_id=context.user_id,
-        base_url=context.google_sheets_api_url,
-        spreadsheet_id=page_feed_spreadsheet_id,
-        title=page_feed_sheet_title,
     )
 
     page_feeds_and_accounts_templ_df = _get_relevant_page_feeds_and_accounts(
@@ -394,7 +431,7 @@ def _sync_page_feed_asset_set(
     )
 
     for df in [page_feed_url_and_label_df, gads_page_urls_and_labels_df]:
-        df["Page URL"] = df["Page URL"].str.rstrip("/")
+        df.loc[:, "Page URL"] = df["Page URL"].str.rstrip("/")
 
     missing_page_urls = page_feed_url_and_label_df[
         ~page_feed_url_and_label_df["Page URL"].isin(

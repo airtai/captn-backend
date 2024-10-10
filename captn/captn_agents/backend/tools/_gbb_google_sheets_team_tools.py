@@ -142,7 +142,7 @@ ADS_MANDATORY_COLUMNS = [
 ]
 
 
-def _check_mandatory_columns(
+def check_mandatory_columns(
     df: pd.DataFrame, mandatory_columns: List[str], table_title: str
 ) -> str:
     missing_columns = [col for col in mandatory_columns if col not in df.columns]
@@ -169,7 +169,7 @@ def _validat_and_convert_to_df(
         values.values[1:],
         columns=values.values[0],
     )
-    mandatory_columns_error_msg = _check_mandatory_columns(df, mandatory_columns, title)
+    mandatory_columns_error_msg = check_mandatory_columns(df, mandatory_columns, title)
     return df, mandatory_columns_error_msg
 
 
