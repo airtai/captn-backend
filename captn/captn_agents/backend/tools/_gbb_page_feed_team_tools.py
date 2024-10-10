@@ -7,11 +7,11 @@ import pandas as pd
 from autogen.formatting_utils import colored
 from autogen.io.base import IOStream
 
-from google_ads.model import AddPageFeedItems, RemoveResource
+from google_ads.model import AddPageFeedItems  # , RemoveResource
 
 from ....google_ads.client import (
     execute_query,
-    google_ads_create_update,
+    google_ads_create_update,  # noqa
     google_ads_post_or_get,
 )
 from ..toolboxes import Toolbox
@@ -25,6 +25,7 @@ from ._gbb_google_sheets_team_tools import (
     CHANGE_GOOGLE_ADS_ACCOUNT_DESCRIPTION,
     GoogleSheetsTeamContext,
     GoogleSheetValues,
+    check_mandatory_columns,
     get_sheet_data,
     get_time,
 )
@@ -92,6 +93,25 @@ class PageFeedTeamContext(GoogleSheetsTeamContext):
     page_feeds_df: Optional[pd.DataFrame] = None
 
 
+ACCOUNTS_TITLE = "Accounts"
+ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS = [
+    "Customer Id",
+    "Name",
+    "Manager Customer Id",
+]
+
+PAGE_FEEDS_TEMPLATE_TITLE = "Page Feeds"
+PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS = [
+    "Customer Id",
+    "Name",
+]
+
+PAGE_FEEDS_MANDATORY_COLUMNS = [
+    "Page URL",
+    "Custom Label",
+]
+
+
 def get_and_validate_page_feed_data(
     template_spreadsheet_id: Annotated[str, "Template spreadsheet id"],
     page_feed_spreadsheet_id: Annotated[str, "Page feed spreadsheet id"],
@@ -104,17 +124,41 @@ def get_and_validate_page_feed_data(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=template_spreadsheet_id,
-        title="Accounts",
+        title=ACCOUNTS_TITLE,
     )
-    for col in ["Manager Customer Id", "Customer Id"]:
-        account_templ_df[col] = account_templ_df[col].str.replace("-", "")
-
     page_feeds_template_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
         spreadsheet_id=template_spreadsheet_id,
-        title="Page Feeds",
+        title=PAGE_FEEDS_TEMPLATE_TITLE,
     )
+    page_feeds_df = _get_sheet_data_and_return_df(
+        user_id=context.user_id,
+        base_url=context.google_sheets_api_url,
+        spreadsheet_id=page_feed_spreadsheet_id,
+        title=page_feed_sheet_title,
+    )
+
+    error_msg = ""
+    for df, mandatory_columns, table_title in [
+        (account_templ_df, ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS, ACCOUNTS_TITLE),
+        (
+            page_feeds_template_df,
+            PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS,
+            PAGE_FEEDS_TEMPLATE_TITLE,
+        ),
+        (page_feeds_df, PAGE_FEEDS_MANDATORY_COLUMNS, page_feed_sheet_title),
+    ]:
+        error_msg += check_mandatory_columns(
+            df=df, mandatory_columns=mandatory_columns, table_title=table_title
+        )
+
+    if error_msg:
+        return error_msg
+
+    for col in ["Manager Customer Id", "Customer Id"]:
+        account_templ_df[col] = account_templ_df[col].str.replace("-", "")
+
     page_feeds_template_df["Customer Id"] = page_feeds_template_df[
         "Customer Id"
     ].str.replace("-", "")
@@ -125,13 +169,6 @@ def get_and_validate_page_feed_data(
         on="Customer Id",
         how="left",
         suffixes=(" Page Feed", " Account"),
-    )
-
-    page_feeds_df = _get_sheet_data_and_return_df(
-        user_id=context.user_id,
-        base_url=context.google_sheets_api_url,
-        spreadsheet_id=page_feed_spreadsheet_id,
-        title=page_feed_sheet_title,
     )
 
     page_feeds_and_accounts_templ_df = _get_relevant_page_feeds_and_accounts(
@@ -295,7 +332,8 @@ def _add_missing_page_urls(
     )
     if isinstance(response, dict):
         raise ValueError(response)
-    return response
+    urls_to_string = "\n".join(url_and_labels.keys())
+    return f"Added page feed items:\n{urls_to_string}\n"
 
 
 def _remove_extra_page_urls(
@@ -307,35 +345,39 @@ def _remove_extra_page_urls(
     extra_page_urls: pd.DataFrame,
     iostream: IOStream,
 ) -> str:
-    return_value = ""
+    return_value = "The following page feed items should be removed by you manually:\n"
+    iostream.print(colored(f"[{get_time()}] " + return_value, "green"), flush=True)
     for row in extra_page_urls.iterrows():
         id = row[1]["Id"]
-        remove_model = RemoveResource(
-            customer_id=customer_id,
-            parent_id=page_feed_asset_set["id"],
-            resource_id=id,
-            resource_type="asset_set_asset",
-        )
+        # remove_model = RemoveResource(
+        #     customer_id=customer_id,
+        #     parent_id=page_feed_asset_set["id"],
+        #     resource_id=id,
+        #     resource_type="asset_set_asset",
+        # )
 
-        response = google_ads_create_update(
-            user_id=user_id,
-            conv_id=conv_id,
-            recommended_modifications_and_answer_list=[],
-            already_checked_clients_approval=True,
-            ad=remove_model,
-            login_customer_id=login_customer_id,
-            endpoint="/remove-google-ads-resource",
-        )
+        # response = google_ads_create_update(
+        #     user_id=user_id,
+        #     conv_id=conv_id,
+        #     recommended_modifications_and_answer_list=[],
+        #     already_checked_clients_approval=True,
+        #     ad=remove_model,
+        #     login_customer_id=login_customer_id,
+        #     endpoint="/remove-google-ads-resource",
+        # )
+
+        response = "REMOVE THIS LINE ONCE THE ABOVE CODE IS UNCOMMENTED"
         if isinstance(response, dict):
             msg = f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n"
-            return_value += msg
+            return_value += msg + str(response)
             iostream.print(
                 colored(f"[{get_time()}] " + msg + str(response), "red"), flush=True
             )
         else:
-            iostream.print(colored(f"[{get_time()}] " + response, "green"), flush=True)
+            msg = f"- {row[1]['Page URL']}"
+            return_value += msg + "\n"
+            iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
 
-        return_value += str(response)
     return return_value
 
 
@@ -354,8 +396,8 @@ def _sync_page_feed_asset_set(
         page_feeds_and_accounts_templ_df["Name Page Feed"] == page_feed_asset_set_name
     ]
     if page_feed_rows.empty:
-        msg = f"Page feed '{page_feed_asset_set_name}' not found in the page feed template data.\n"
-        iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
+        msg = f"Skipping page feed '{page_feed_asset_set_name}' (not found in the page feed template).\n"
+        iostream.print(colored(f"[{get_time()}] " + msg, "yellow"), flush=True)
         return msg
 
     elif page_feed_rows["Customer Id"].nunique() > 1:
@@ -389,7 +431,7 @@ def _sync_page_feed_asset_set(
     )
 
     for df in [page_feed_url_and_label_df, gads_page_urls_and_labels_df]:
-        df["Page URL"] = df["Page URL"].str.rstrip("/")
+        df.loc[:, "Page URL"] = df["Page URL"].str.rstrip("/")
 
     missing_page_urls = page_feed_url_and_label_df[
         ~page_feed_url_and_label_df["Page URL"].isin(
@@ -470,7 +512,7 @@ def update_page_feeds(
     context: PageFeedTeamContext,
 ) -> str:
     if context.page_feeds_and_accounts_templ_df is None:
-        return f"Please validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
+        return f"Please (re)validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
 
     try:
         page_feed_asset_sets = _get_page_feed_asset_sets(
@@ -495,6 +537,9 @@ def update_page_feeds(
         traceback.print_stack()
         traceback.print_exc()
         raise e
+    finally:
+        context.page_feeds_and_accounts_templ_df = None
+        context.page_feeds_df = None
 
 
 def create_page_feed_team_toolbox(

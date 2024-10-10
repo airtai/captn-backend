@@ -407,7 +407,9 @@ class TestPageFeedTeamTools:
                         ],
                     }
                 ),
-                "Page feed 'fastagency-reference' changes:\nRemoved an asset set asset link",
+                """Page feed 'fastagency-reference' changes:
+The following page feed items should be removed by you manually:
+- https://getbybus.com/it/bus-zagreb-to-split\n""",
             ),
             (
                 [
@@ -428,7 +430,9 @@ class TestPageFeedTeamTools:
                         ],
                     }
                 ),
-                "Page feed 'fastagency-reference' changes:\nCreated an asset set asset link",
+                """Page feed 'fastagency-reference' changes:
+Added page feed items:
+https://getbybus.com/hr/bus-zagreb-to-karlovac\n""",
             ),
         ],
     )
