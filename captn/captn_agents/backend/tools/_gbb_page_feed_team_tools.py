@@ -11,6 +11,7 @@ from google_ads.model import AddPageFeedItems  # , RemoveResource
 
 from ....google_ads.client import (
     execute_query,
+    google_ads_api_call,
     google_ads_create_update,  # noqa
     google_ads_post_or_get,
 )
@@ -322,14 +323,21 @@ def _add_missing_page_urls(
         asset_set_resource_name=page_feed_asset_set["resourceName"],
         urls_and_labels=url_and_labels,
     )
-    response = google_ads_post_or_get(
-        user_id=user_id,
-        conv_id=conv_id,
-        model=add_model,
-        recommended_modifications_and_answer_list=[],
-        already_checked_clients_approval=True,
-        endpoint="/add-items-to-page-feed",
-    )
+
+    try:
+        response = google_ads_api_call(
+            function=google_ads_post_or_get,  # type: ignore[arg-type]
+            kwargs={
+                "user_id": user_id,
+                "conv_id": conv_id,
+                "model": add_model,
+                "recommended_modifications_and_answer_list": [],
+                "already_checked_clients_approval": True,
+                "endpoint": "/add-items-to-page-feed",
+            },
+        )
+    except Exception as e:
+        return f"Failed to add page feed items:\n{url_and_labels}\n\n{str(e)}\n\n"
     if isinstance(response, dict):
         raise ValueError(response)
     urls_to_string = "\n".join(url_and_labels.keys())
@@ -355,16 +363,21 @@ def _remove_extra_page_urls(
         #     resource_id=id,
         #     resource_type="asset_set_asset",
         # )
-
-        # response = google_ads_create_update(
-        #     user_id=user_id,
-        #     conv_id=conv_id,
-        #     recommended_modifications_and_answer_list=[],
-        #     already_checked_clients_approval=True,
-        #     ad=remove_model,
-        #     login_customer_id=login_customer_id,
-        #     endpoint="/remove-google-ads-resource",
-        # )
+        # try:
+        #     response = google_ads_api_call(
+        #         function=google_ads_create_update,  # type: ignore[arg-type]
+        #         kwargs={
+        #             "user_id": user_id,
+        #             "conv_id": conv_id,
+        #             "recommended_modifications_and_answer_list": [],
+        #             "already_checked_clients_approval": True,
+        #             "ad": remove_model,
+        #             "login_customer_id": login_customer_id,
+        #             "endpoint": "/remove-google-ads-resource",
+        #         },
+        #     )
+        # except Exception as e:
+        #     return f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n{str(e)}\n\n"
 
         response = "REMOVE THIS LINE ONCE THE ABOVE CODE IS UNCOMMENTED"
         if isinstance(response, dict):
