@@ -10,6 +10,7 @@ from autogen.io.base import IOStream
 from google_ads.model import AddPageFeedItems  # , RemoveResource
 
 from ....google_ads.client import (
+    check_for_client_approval,
     execute_query,
     google_ads_api_call,
     google_ads_create_update,  # noqa
@@ -532,6 +533,16 @@ def update_page_feeds(
     login_customer_id: Annotated[str, "Login Customer Id (Manager Account)"],
     context: PageFeedTeamContext,
 ) -> str:
+    error_msg = check_for_client_approval(
+        modification_function_parameters={
+            "customer_id": customer_id,
+            "login_customer_id": login_customer_id,
+        },
+        recommended_modifications_and_answer_list=context.recommended_modifications_and_answer_list,
+    )
+    if error_msg:
+        raise ValueError(error_msg)
+
     if context.page_feeds_and_accounts_templ_df is None:
         return f"Please (re)validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
 
