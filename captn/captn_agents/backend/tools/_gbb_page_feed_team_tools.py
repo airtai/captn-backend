@@ -333,7 +333,7 @@ def _add_missing_page_urls(
     if isinstance(response, dict):
         raise ValueError(response)
     urls_to_string = "\n".join(url_and_labels.keys())
-    return f"Added page feed items:\n{urls_to_string}\n"
+    return f"Added page feed items:\n{urls_to_string}\n\n"
 
 
 def _remove_extra_page_urls(
@@ -369,7 +369,7 @@ def _remove_extra_page_urls(
         response = "REMOVE THIS LINE ONCE THE ABOVE CODE IS UNCOMMENTED"
         if isinstance(response, dict):
             msg = f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n"
-            return_value += msg + str(response)
+            return_value += msg + str(response) + "\n\n"
             iostream.print(
                 colored(f"[{get_time()}] " + msg + str(response), "red"), flush=True
             )
@@ -378,6 +378,7 @@ def _remove_extra_page_urls(
             return_value += msg + "\n"
             iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
 
+    return_value += "\n"
     return return_value
 
 
@@ -396,12 +397,12 @@ def _sync_page_feed_asset_set(
         page_feeds_and_accounts_templ_df["Name Page Feed"] == page_feed_asset_set_name
     ]
     if page_feed_rows.empty:
-        msg = f"Skipping page feed '{page_feed_asset_set_name}' (not found in the page feed template).\n"
+        msg = f"Skipping page feed '**{page_feed_asset_set_name}**' (not found in the page feed template).\n\n"
         iostream.print(colored(f"[{get_time()}] " + msg, "yellow"), flush=True)
         return msg
 
     elif page_feed_rows["Customer Id"].nunique() > 1:
-        msg = f"Page feed template has multiple values for the same page feed '{page_feed_asset_set_name}'!\n"
+        msg = f"Page feed template has multiple values for the same page feed '**{page_feed_asset_set_name}**'!\n\n"
         iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
         return msg
 
@@ -416,7 +417,7 @@ def _sync_page_feed_asset_set(
     ]
 
     if page_feed_rows.empty:
-        msg = f"No page feed data found for page feed '{page_feed_asset_set_name}'\n"
+        msg = f"No page feed data found for page feed '**{page_feed_asset_set_name}**'\n\n"
         iostream.print(colored(f"[{get_time()}] " + msg, "yellow"), flush=True)
         return msg
 
@@ -445,11 +446,11 @@ def _sync_page_feed_asset_set(
     ]
 
     if missing_page_urls.empty and extra_page_urls.empty:
-        msg = f"No changes needed for page feed '{page_feed_asset_set_name}'\n"
+        msg = f"No changes needed for page feed '**{page_feed_asset_set_name}**'\n\n"
         iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
         return msg
 
-    return_value = f"Page feed '{page_feed_asset_set_name}' changes:\n"
+    return_value = f"Page feed '**{page_feed_asset_set_name}**' changes:\n"
     iostream.print(
         colored(f"[{get_time()}] " + return_value.strip(), "green"), flush=True
     )
@@ -487,6 +488,7 @@ def _sync_page_feed_asset_sets(
     page_feeds_and_accounts_templ_df: pd.DataFrame,
     page_feeds_df: pd.DataFrame,
     page_feed_asset_sets: Dict[str, Dict[str, str]],
+    context: PageFeedTeamContext,
 ) -> str:
     iostream = IOStream.get_default()
     return_value = ""
@@ -502,6 +504,12 @@ def _sync_page_feed_asset_sets(
             page_feed_asset_set=page_feed_asset_set,
             iostream=iostream,
         )
+
+    return_value = reply_to_client(
+        message=return_value,
+        completed=False,
+        context=context,
+    )
 
     return return_value
 
@@ -532,6 +540,7 @@ def update_page_feeds(
             page_feeds_and_accounts_templ_df=context.page_feeds_and_accounts_templ_df,
             page_feeds_df=context.page_feeds_df,
             page_feed_asset_sets=page_feed_asset_sets,
+            context=context,
         )
     except Exception as e:
         traceback.print_stack()

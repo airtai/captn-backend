@@ -385,7 +385,7 @@ class TestPageFeedTeamTools:
                         ],
                     }
                 ),
-                "No changes needed for page feed 'fastagency-reference'\n",
+                "No changes needed for page feed '**fastagency-reference**'\n\n",
             ),
             (
                 [
@@ -407,9 +407,9 @@ class TestPageFeedTeamTools:
                         ],
                     }
                 ),
-                """Page feed 'fastagency-reference' changes:
+                """Page feed '**fastagency-reference**' changes:
 The following page feed items should be removed by you manually:
-- https://getbybus.com/it/bus-zagreb-to-split\n""",
+- https://getbybus.com/it/bus-zagreb-to-split\n\n""",
             ),
             (
                 [
@@ -430,9 +430,9 @@ The following page feed items should be removed by you manually:
                         ],
                     }
                 ),
-                """Page feed 'fastagency-reference' changes:
+                """Page feed '**fastagency-reference**' changes:
 Added page feed items:
-https://getbybus.com/hr/bus-zagreb-to-karlovac\n""",
+https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
             ),
         ],
     )
