@@ -108,7 +108,7 @@ agents = [
     "opentelemetry-exporter-otlp==1.27.0",
     "openpyxl==3.1.5",
     "aiofiles==24.1.0",
-    "fastapi==0.114.2",
+    "fastapi==0.115.2",
     "asyncer==0.0.8",
     "fastagency[openapi]==0.2.1",
     "markdownify==0.13.1",
