@@ -68,8 +68,8 @@ class TestGBBPageFeedTeam:
             )
 
         expected_messages = [
-            "Page feed 'fastagency-reference' changes:",
-            "Page feed 'fastagency-tutorial' changes:",
+            "Page feed '**fastagency-reference**' changes:",
+            "Page feed '**fastagency-tutorial**' changes:",
             "Added page feed items:",
             "The following page feed items should be removed by you manually:",
         ]

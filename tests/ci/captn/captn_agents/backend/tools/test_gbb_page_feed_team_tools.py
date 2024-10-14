@@ -10,6 +10,7 @@ from autogen.io.base import IOStream
 from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     PageFeedTeamContext,
+    _add_missing_page_urls,
     _get_page_feed_asset_sets,
     _get_page_feed_items,
     _get_relevant_page_feeds_and_accounts,
@@ -385,7 +386,7 @@ class TestPageFeedTeamTools:
                         ],
                     }
                 ),
-                "No changes needed for page feed 'fastagency-reference'\n",
+                "No changes needed for page feed '**fastagency-reference**'\n\n",
             ),
             (
                 [
@@ -407,9 +408,9 @@ class TestPageFeedTeamTools:
                         ],
                     }
                 ),
-                """Page feed 'fastagency-reference' changes:
+                """Page feed '**fastagency-reference**' changes:
 The following page feed items should be removed by you manually:
-- https://getbybus.com/it/bus-zagreb-to-split\n""",
+- https://getbybus.com/it/bus-zagreb-to-split\n\n""",
             ),
             (
                 [
@@ -430,9 +431,9 @@ The following page feed items should be removed by you manually:
                         ],
                     }
                 ),
-                """Page feed 'fastagency-reference' changes:
+                """Page feed '**fastagency-reference**' changes:
 Added page feed items:
-https://getbybus.com/hr/bus-zagreb-to-karlovac\n""",
+https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
             ),
         ],
     )
@@ -520,3 +521,39 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n""",
         assert page_urls_and_labels_df.sort_values("Page URL").equals(
             expected_page_urls_and_labels_df.sort_values("Page URL")
         )
+
+    def test_add_missing_page_urls(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
+        ) as mock_google_ads_post_or_get:
+            mock_google_ads_post_or_get.side_effect = [
+                ValueError("Error1"),
+                ValueError("Error2"),
+                "Created an asset set asset link",
+            ]
+
+            result = _add_missing_page_urls(
+                user_id=-1,
+                conv_id=-1,
+                customer_id="1111",
+                login_customer_id="1111",
+                page_feed_asset_set={
+                    "resourceName": "customers/1111/assetSets/8783430659",
+                    "id": "8783430659",
+                },
+                missing_page_urls=pd.DataFrame(
+                    {
+                        "Page URL": [
+                            "https://fastagency.ai/latest/api/fastagency/FunctionCallExecution",
+                            "https://fastagency.ai/latest/api/fastagency/FastAgency",
+                        ],
+                        "Custom Label": [None, None],
+                    }
+                ),
+            )
+            expected = """Added page feed items:
+https://fastagency.ai/latest/api/fastagency/FunctionCallExecution
+https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
+            assert result == expected, result
+
+            assert mock_google_ads_post_or_get.call_count == 3
