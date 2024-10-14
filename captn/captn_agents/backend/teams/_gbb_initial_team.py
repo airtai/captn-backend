@@ -60,7 +60,7 @@ Depending on the clients needs, choose the appropriate team.
 If you fail to choose the appropriate team, you will be penalized!
 
 3. Here is a list of teams you can choose from after you determine which one is the most appropriate for the task:
-{self.construct_team_names_and_descriptions_message(use_only_team_names={"gbb_google_sheets_team"})}
+{self.construct_team_names_and_descriptions_message(use_only_team_names={"gbb_google_sheets_team", "gbb_page_feed_team"})}
 
 Guidelines SUMMARY:
 - Write a detailed step-by-step plan

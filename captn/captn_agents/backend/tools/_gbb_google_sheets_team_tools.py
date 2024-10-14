@@ -142,7 +142,7 @@ ADS_MANDATORY_COLUMNS = [
 ]
 
 
-def _check_mandatory_columns(
+def check_mandatory_columns(
     df: pd.DataFrame, mandatory_columns: List[str], table_title: str
 ) -> str:
     missing_columns = [col for col in mandatory_columns if col not in df.columns]
@@ -169,7 +169,7 @@ def _validat_and_convert_to_df(
         values.values[1:],
         columns=values.values[0],
     )
-    mandatory_columns_error_msg = _check_mandatory_columns(df, mandatory_columns, title)
+    mandatory_columns_error_msg = check_mandatory_columns(df, mandatory_columns, title)
     return df, mandatory_columns_error_msg
 
 
@@ -778,6 +778,10 @@ def _update_campaign_with_additional_settings(
     )
 
 
+def get_time() -> str:
+    return datetime.now(ZAGREB_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+
+
 def _setup_campaign(
     customer_id: str,
     login_customer_id: str,
@@ -895,13 +899,15 @@ def _setup_campaign(
                 )
                 campaign["ad_groups"][row["ad group name"]] = ad_group_ad.ad_group_id
 
-        message = f"[{datetime.now(ZAGREB_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')}] Created campaign: {campaign_name}"
+        message = f"[{get_time()}] Created campaign: {campaign_name}"
         iostream.print(colored(message, "green"), flush=True)
         return True, None
 
     except Exception as e:
         error_msg = str(e)
-        message = f"[{datetime.now(ZAGREB_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')}] Failed to create campaign: {campaign_name}: {error_msg}"
+        message = (
+            f"[{get_time()}] Failed to create campaign: {campaign_name}: {error_msg}"
+        )
         iostream.print(colored(message, "red"), flush=True)
 
         try:

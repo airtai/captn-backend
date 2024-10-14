@@ -1,10 +1,11 @@
 import json
 from os import environ
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 from pydantic import BaseModel
 from requests import get as requests_get
 from requests import post as requests_post
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 BASE_URL = environ.get("CAPTN_BACKEND_URL", "http://localhost:9000")
 ALREADY_AUTHENTICATED = "User is already authenticated"
@@ -388,3 +389,11 @@ def google_ads_post_or_get(
 
     response_dict: Union[Dict[str, Any], str] = response.json()
     return response_dict
+
+
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=4, max=15))
+def google_ads_api_call(
+    function: Callable[[Any], Union[Dict[str, Any], str]],
+    **kwargs: Any,
+) -> Union[Dict[str, Any], str]:
+    return function(**kwargs)  # type: ignore[call-arg]
