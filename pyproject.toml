@@ -56,7 +56,7 @@ lint = [
     "types-docutils",
     "types-requests",
     "mypy==1.11.2",
-    "black==24.8.0",
+    "black==24.10.0",
     "isort>=5",
     "ruff==0.6.9",
     "pyupgrade-directories",
