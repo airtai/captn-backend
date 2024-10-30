@@ -11,7 +11,7 @@ from asyncer import asyncify
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
 from google.ads.googleads.client import GoogleAdsClient
-from google.ads.googleads.v17.common.types.criteria import LanguageInfo
+from google.ads.googleads.v18.common.types.criteria import LanguageInfo
 from google.api_core import protobuf_helpers
 from google.auth.exceptions import RefreshError
 from google.protobuf import json_format
