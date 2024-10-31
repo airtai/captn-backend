@@ -796,6 +796,48 @@ def _create_ad_text_asset(client: Any, text: str, pinned_field: str = None) -> A
     return ad_text_asset
 
 
+def _prepare_headlines(model_dict: Dict[str, Any], client: Any) -> List[Any]:
+    pin1 = model_dict["pin1"] if ("pin1" in model_dict and model_dict["pin1"]) else 3
+    pin2 = model_dict["pin2"] if ("pin2" in model_dict and model_dict["pin2"]) else 3
+
+    total_headlines_1_2 = int(pin1) + int(pin2)
+    num_headlines = len(model_dict["headlines"])
+    if num_headlines < pin1:
+        raise ValueError(f"Number of headlines must be at least {pin1}.")
+
+    # Pin as first headlines
+    headlines = [
+        _create_ad_text_asset(
+            client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_1
+        )
+        for headline in model_dict["headlines"][0:pin1]
+    ]
+
+    if num_headlines >= pin1 and num_headlines <= total_headlines_1_2:
+        # Pin as second headlines
+        headlines += [
+            _create_ad_text_asset(
+                client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_2
+            )
+            for headline in model_dict["headlines"][pin1:]
+        ]
+    else:
+        # Pin as second headlines
+        headlines += [
+            _create_ad_text_asset(
+                client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_2
+            )
+            for headline in model_dict["headlines"][pin1:total_headlines_1_2]
+        ]
+        # Don't pin the rest
+        headlines += [
+            _create_ad_text_asset(client, headline)
+            for headline in model_dict["headlines"][total_headlines_1_2:]
+        ]
+
+    return headlines
+
+
 def _create_ad_group_ad_set_attr(
     model_dict: Dict[str, Any], operation_create: Any, client: Any
 ) -> None:
@@ -820,43 +862,7 @@ def _create_ad_group_ad_set_attr(
     # Set a pinning to always choose this asset for HEADLINE_1. Pinning is
     # optional; if no pinning is set, then headlines and descriptions will be
     # rotated and the ones that perform best will be used more often.
-    NUM_HEADLINES_1 = 3
-    NUM_HEADLINES_2 = 3
-    TOTAL_HEADLINES_1_2 = NUM_HEADLINES_1 + NUM_HEADLINES_2
-    num_headlines = len(model_dict["headlines"])
-    if num_headlines < NUM_HEADLINES_1:
-        raise ValueError(f"Number of headlines must be at least {NUM_HEADLINES_1}.")
-
-    # Pin as first headlines
-    headlines = [
-        _create_ad_text_asset(
-            client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_1
-        )
-        for headline in model_dict["headlines"][0:NUM_HEADLINES_1]
-    ]
-
-    if num_headlines >= NUM_HEADLINES_1 and num_headlines <= TOTAL_HEADLINES_1_2:
-        # Pin as second headlines
-        headlines += [
-            _create_ad_text_asset(
-                client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_2
-            )
-            for headline in model_dict["headlines"][NUM_HEADLINES_1:]
-        ]
-    else:
-        # Pin as second headlines
-        headlines += [
-            _create_ad_text_asset(
-                client, headline, client.enums.ServedAssetFieldTypeEnum.HEADLINE_2
-            )
-            for headline in model_dict["headlines"][NUM_HEADLINES_1:TOTAL_HEADLINES_1_2]
-        ]
-        # Don't pin the rest
-        headlines += [
-            _create_ad_text_asset(client, headline)
-            for headline in model_dict["headlines"][TOTAL_HEADLINES_1_2:]
-        ]
-
+    headlines = _prepare_headlines(model_dict, client)
     operation_create.ad.responsive_search_ad.headlines.extend(headlines)
 
     # pin first description

@@ -853,6 +853,8 @@ def _setup_campaign(
 
             path1 = row.get("path 1", None)
             path2 = row.get("path 2", None)
+            pin1 = int(row.get("pin 1", 3))
+            pin2 = int(row.get("pin 2", 3))
             final_url = row.get("final url")
 
             campaign = created_campaign_names_and_ids[campaign_name]
@@ -865,6 +867,8 @@ def _setup_campaign(
                 path1=path1,
                 path2=path2,
                 final_url=final_url,
+                pin1=pin1,
+                pin2=pin2,
             )
 
             # If ad group already exists, create only ad group ad
