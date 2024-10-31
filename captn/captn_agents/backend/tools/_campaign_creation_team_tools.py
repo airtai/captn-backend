@@ -119,6 +119,16 @@ class GBBAdGroupAdForCreation(AdGroupAdForCreation):
         ],
         Len(min_length=2, max_length=4),
     ]
+    pin1: Optional[
+        Annotated[
+            int, Field(..., description="Number of pinned headlines with 1. position")
+        ]
+    ] = 3
+    pin2: Optional[
+        Annotated[
+            int, Field(..., description="Number of pinned headlines with 2. position")
+        ]
+    ] = 3
 
 
 class AdGroupCriterionForCreation(AdBase):

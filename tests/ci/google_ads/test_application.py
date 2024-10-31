@@ -11,6 +11,7 @@ from google_ads.application import (
     _get_callout_resource_names,
     _get_shared_set_resource_name,
     _get_sitelink_resource_names,
+    _prepare_headlines,
     _read_avaliable_languages,
     _set_fields_ad_copy,
     _set_headline_or_description,
@@ -583,3 +584,44 @@ async def test_get_sitelink_resource_names(
         else:
             with pytest.raises(ValueError, match="Sitelinks with IDs"):
                 await _get_sitelink_resource_names(user_id=-1, model=model)
+
+
+def test_prepare_headlines() -> None:
+    model_dict = {
+        "headlines": ["h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8"],
+        "pin1": 2,
+        "pin2": 4,
+    }
+
+    # Mock client and its enums
+    client = MagicMock()
+    client.enums.ServedAssetFieldTypeEnum.HEADLINE_1 = 1
+    client.enums.ServedAssetFieldTypeEnum.HEADLINE_2 = 2
+
+    # Mocked return values based on the type of headline
+    def mock_create_ad_text_asset(client, headline, pin_type=None):
+        if pin_type == client.enums.ServedAssetFieldTypeEnum.HEADLINE_1:
+            return f"{headline}_HEADLINE_1"
+        elif pin_type == client.enums.ServedAssetFieldTypeEnum.HEADLINE_2:
+            return f"{headline}_HEADLINE_2"
+        return headline
+
+    with unittest.mock.patch(
+        "google_ads.application._create_ad_text_asset",
+        side_effect=mock_create_ad_text_asset,
+    ):
+        result = _prepare_headlines(model_dict, client)
+        expected_result = [
+            "h1_HEADLINE_1",
+            "h2_HEADLINE_1",
+            "h3_HEADLINE_2",
+            "h4_HEADLINE_2",
+            "h5_HEADLINE_2",
+            "h6_HEADLINE_2",
+            "h7",  # Not pinned
+            "h8",  # Not pinned
+        ]
+
+        assert (
+            result == expected_result
+        ), f"Expected {expected_result}, but got {result}"
