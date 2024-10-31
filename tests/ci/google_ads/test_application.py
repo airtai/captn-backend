@@ -586,13 +586,46 @@ async def test_get_sitelink_resource_names(
                 await _get_sitelink_resource_names(user_id=-1, model=model)
 
 
-def test_prepare_headlines() -> None:
-    model_dict = {
-        "headlines": ["h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8"],
-        "pin1": 2,
-        "pin2": 4,
-    }
-
+@pytest.mark.parametrize(
+    ("model_dict", "expected_result"),
+    [
+        (
+            {
+                "headlines": ["h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8"],
+                "pin1": 2,
+                "pin2": 4,
+            },
+            [
+                "h1_HEADLINE_1",
+                "h2_HEADLINE_1",
+                "h3_HEADLINE_2",
+                "h4_HEADLINE_2",
+                "h5_HEADLINE_2",
+                "h6_HEADLINE_2",
+                "h7",  # Not pinned
+                "h8",  # Not pinned
+            ],
+        ),
+        (
+            {
+                "headlines": ["h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8"],
+            },
+            [
+                "h1_HEADLINE_1",
+                "h2_HEADLINE_1",
+                "h3_HEADLINE_1",
+                "h4_HEADLINE_2",
+                "h5_HEADLINE_2",
+                "h6_HEADLINE_2",
+                "h7",  # Not pinned
+                "h8",  # Not pinned
+            ],
+        ),
+    ],
+)
+def test_prepare_headlines(
+    model_dict: Dict[str, Any], expected_result: List[str]
+) -> None:
     # Mock client and its enums
     client = MagicMock()
     client.enums.ServedAssetFieldTypeEnum.HEADLINE_1 = 1
@@ -611,17 +644,6 @@ def test_prepare_headlines() -> None:
         side_effect=mock_create_ad_text_asset,
     ):
         result = _prepare_headlines(model_dict, client)
-        expected_result = [
-            "h1_HEADLINE_1",
-            "h2_HEADLINE_1",
-            "h3_HEADLINE_2",
-            "h4_HEADLINE_2",
-            "h5_HEADLINE_2",
-            "h6_HEADLINE_2",
-            "h7",  # Not pinned
-            "h8",  # Not pinned
-        ]
-
         assert (
             result == expected_result
         ), f"Expected {expected_result}, but got {result}"
