@@ -61,6 +61,8 @@ class AdGroupAd(AdGroup):
     descriptions: Optional[List[str]] = Field(Query(default=None), max_length=4)
     path1: Optional[str] = None
     path2: Optional[str] = None
+    pin1: Optional[int] = None
+    pin2: Optional[int] = None
 
     @classmethod
     def validate_field(
