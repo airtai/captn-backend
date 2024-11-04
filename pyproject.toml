@@ -71,7 +71,7 @@ test-core = [
     "pytest==8.3.3",
     "pytest-asyncio>=0.23.6",
     "dirty-equals==0.8.0",
-    "pyarrow==17.0.0",
+    "pyarrow==18.0.0",
     "pytest-retry==1.6.3",
     "pytest-repeat==0.9.3",
 ]
