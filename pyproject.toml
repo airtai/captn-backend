@@ -113,7 +113,7 @@ agents = [
     "fastagency[openapi]==0.3.2",
     "markdownify==0.13.1",
     "python-multipart==0.0.12",
-    "flaml==2.2.0",
+    "flaml==2.3.2",
 ]
 
 dev = [
