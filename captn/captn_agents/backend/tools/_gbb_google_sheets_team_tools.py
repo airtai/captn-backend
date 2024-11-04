@@ -411,7 +411,7 @@ def _get_alredy_existing_campaigns(
 ) -> List[str]:
     distinct_campaign_names = df["campaign name"].unique().tolist()
     distinct_campaign_names_str = ", ".join(
-        [f"'{name}'" for name in distinct_campaign_names]
+        [f'"{name}"' for name in distinct_campaign_names]
     )
 
     query = f"""SELECT campaign.id, campaign.name
