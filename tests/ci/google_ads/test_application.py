@@ -13,6 +13,7 @@ from google_ads.application import (
     _get_sitelink_resource_names,
     _prepare_headlines,
     _read_avaliable_languages,
+    _remove_disallowed_characters_from_path,
     _set_fields_ad_copy,
     _set_headline_or_description,
     create_geo_targeting_for_campaign,
@@ -647,3 +648,8 @@ def test_prepare_headlines(
         assert (
             result == expected_result
         ), f"Expected {expected_result}, but got {result}"
+
+
+def test_remove_disallowed_characters_from_path() -> None:
+    result = _remove_disallowed_characters_from_path(path="A.B,C{:D,]")
+    assert result == "ABCD", result
