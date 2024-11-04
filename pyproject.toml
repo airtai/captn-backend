@@ -112,7 +112,7 @@ agents = [
     "asyncer==0.0.8",
     "fastagency[openapi]==0.3.2",
     "markdownify==0.13.1",
-    "python-multipart==0.0.12",
+    "python-multipart==0.0.17",
     "flaml==2.2.0",
 ]
 
