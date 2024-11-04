@@ -58,7 +58,7 @@ lint = [
     "mypy==1.11.2",
     "black==24.10.0",
     "isort>=5",
-    "ruff==0.6.9",
+    "ruff==0.7.2",
     "pyupgrade-directories",
     "bandit==1.7.10",
     "semgrep==1.78.0",
@@ -71,7 +71,7 @@ test-core = [
     "pytest==8.3.3",
     "pytest-asyncio>=0.23.6",
     "dirty-equals==0.8.0",
-    "pyarrow==17.0.0",
+    "pyarrow==18.0.0",
     "pytest-retry==1.6.3",
     "pytest-repeat==0.9.3",
 ]
@@ -98,7 +98,7 @@ agents = [
     "python-dotenv==1.0.1",
     "autogen[websurfer,websockets,anthropic,together]==0.3.1",
     "pandas>=2.1",
-    "fastcore==1.7.11",
+    "fastcore==1.7.19",
     "pydantic==2.9.2",
     "tenacity==9.0.0",
     "prometheus-client==0.21.0",
@@ -112,7 +112,7 @@ agents = [
     "asyncer==0.0.8",
     "fastagency[openapi]==0.3.2",
     "markdownify==0.13.1",
-    "python-multipart==0.0.12",
+    "python-multipart==0.0.17",
     "flaml==2.2.0",
 ]
 
