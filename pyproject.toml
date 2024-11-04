@@ -98,7 +98,7 @@ agents = [
     "python-dotenv==1.0.1",
     "autogen[websurfer,websockets,anthropic,together]==0.3.1",
     "pandas>=2.1",
-    "fastcore==1.7.11",
+    "fastcore==1.7.19",
     "pydantic==2.9.2",
     "tenacity==9.0.0",
     "prometheus-client==0.21.0",
