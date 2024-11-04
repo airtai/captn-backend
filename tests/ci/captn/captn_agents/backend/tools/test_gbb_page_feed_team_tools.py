@@ -11,6 +11,7 @@ from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     PageFeedTeamContext,
     _add_missing_page_urls,
+    _get_asset_sets_and_labels_pairs,
     _get_page_feed_asset_sets,
     _get_page_feed_items,
     _get_relevant_page_feeds_and_accounts,
@@ -521,6 +522,64 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
         assert page_urls_and_labels_df.sort_values("Page URL").equals(
             expected_page_urls_and_labels_df.sort_values("Page URL")
         )
+
+    def test_get_asset_sets_and_labels_pairs(self) -> None:
+        mock_execute_query_return_value = {
+            "123": [
+                {
+                    "asset": {
+                        "resourceName": "customers/123/assets/176480765357",
+                        "pageFeedAsset": {"labels": ["StS", "hr", "Croatia"]},
+                    },
+                    "assetSet": {
+                        "resourceName": "customers/123/assetSets/8783430659",
+                        "id": "8783430659",
+                    },
+                    "assetSetAsset": {
+                        "resourceName": "customers/123/assetSetAssets/8783430659~176480765357"
+                    },
+                },
+                {
+                    "asset": {
+                        "resourceName": "customers/123/assets/176508971560",
+                        "pageFeedAsset": {"labels": ["StS", "hr", "Croatia"]},
+                    },
+                    "assetSet": {
+                        "resourceName": "customers/123/assetSets/8841207092",
+                        "id": "8841207092",
+                    },
+                    "assetSetAsset": {
+                        "resourceName": "customers/123/assetSetAssets/8841207092~176508971560"
+                    },
+                },
+                {
+                    "asset": {
+                        "resourceName": "customers/123/assets/181414563774",
+                        "pageFeedAsset": {"labels": ["Sts", "hr", "Slo"]},
+                    },
+                    "assetSet": {
+                        "resourceName": "customers/123/assetSets/8841207092",
+                        "id": "8841207092",
+                    },
+                    "assetSetAsset": {
+                        "resourceName": "customers/123/assetSetAssets/8841207092~181414563774"
+                    },
+                },
+            ]
+        }
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
+            return_value=str(mock_execute_query_return_value),
+        ):
+            response = _get_asset_sets_and_labels_pairs(
+                -1,
+                -1,
+                "123",
+                "123",
+            )
+            expected = {"customers/123/assetSets/8783430659": "StS; hr; Croatia"}
+            assert response == expected, response
 
     def test_add_missing_page_urls(self) -> None:
         with unittest.mock.patch(

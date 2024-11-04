@@ -302,6 +302,68 @@ WHERE
     return page_urls_and_labels_df
 
 
+def _get_asset_sets_and_labels_pairs(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+) -> pd.DataFrame:
+    query = """SELECT
+  asset_set.id,
+  asset.page_feed_asset.labels
+FROM
+  asset_set_asset
+WHERE
+  asset.type = 'PAGE_FEED'
+  AND asset_set_asset.status != 'REMOVED'
+"""  # nosec: [B608]
+
+    response = execute_query(
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        login_customer_id=login_customer_id,
+        query=query,
+    )
+
+    if isinstance(response, dict):
+        raise ValueError(response)
+
+    response_json = json.loads(response.replace("'", '"'))
+
+    asset_sets_and_labels_pairs = {}
+
+    for entry in response_json[customer_id]:
+        asset_set_id = entry["assetSet"]["id"]
+        labels_list = entry["asset"]["pageFeedAsset"]["labels"]
+        labels = "; ".join(labels_list)
+
+        # Initialize the asset set if not already present
+        if asset_set_id not in asset_sets_and_labels_pairs:
+            asset_sets_and_labels_pairs[asset_set_id] = {
+                "resourceName": entry["assetSet"]["resourceName"],
+                "labels": labels,
+                "valid": True,  # Flag to indicate validity of the asset set
+            }
+        else:
+            # Check if the asset set is still valid
+            if (
+                asset_sets_and_labels_pairs[asset_set_id]["valid"]
+                and asset_sets_and_labels_pairs[asset_set_id]["labels"] != labels
+            ):
+                asset_sets_and_labels_pairs[asset_set_id]["valid"] = (
+                    False  # Mark as invalid
+                )
+
+    valid_asset_sets_and_labels_pairs = {
+        asset_set["resourceName"]: asset_set["labels"]
+        for asset_set in asset_sets_and_labels_pairs.values()
+        if asset_set["valid"]
+    }
+
+    return valid_asset_sets_and_labels_pairs
+
+
 def _add_missing_page_urls(
     user_id: int,
     conv_id: int,
