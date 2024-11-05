@@ -1,4 +1,5 @@
 import json
+import re
 import urllib.parse
 import uuid
 from os import environ
@@ -499,17 +500,28 @@ def _set_headline_or_description(
     getattr(operation_update.responsive_search_ad, update_field).extend(updated_fields)
 
 
+# Define disallowed characters based on Google Ads restrictions
+DISALLOWED_CHARS = r"[.,:;!@#$%^&*()+=<>?/|{}[\]~]"
+
+
+def _remove_disallowed_characters_from_path(path: str) -> str:
+    # Use regex to remove all disallowed characters in one go
+    cleaned_path = re.sub(DISALLOWED_CHARS, "", path)
+    return cleaned_path
+
+
 def _update_ad_copy_display_path(
     operation_create_update_responsive_search_ad: Any,
     path1: Optional[str],
     path2: Optional[str],
 ) -> None:
-    print(f"{path1=}, {path2=}")
     if path1 is not None:
+        path1 = _remove_disallowed_characters_from_path(path1)
         operation_create_update_responsive_search_ad.path1 = (
             path1 if path1 != "" else " "
         )
     if path2 is not None:
+        path2 = _remove_disallowed_characters_from_path(path2)
         if path2 == "":
             operation_create_update_responsive_search_ad.path2 = " "
             return
