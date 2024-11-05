@@ -353,7 +353,6 @@ class TestPageFeedTeamTools:
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split",
                 ],
                 pd.DataFrame(
                     {
@@ -374,8 +373,7 @@ class TestPageFeedTeamTools:
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split/",
-                    "https://getbybus.com/it/bus-zagreb-to-split",
+                    "https://getbybus.com/en/bus-zagreb-to-karlovac",
                 ],
                 pd.DataFrame(
                     {
@@ -393,30 +391,29 @@ class TestPageFeedTeamTools:
                 ),
                 """Page feed '**fastagency-reference**' changes:
 The following page feed items should be removed by you manually:
-- https://getbybus.com/it/bus-zagreb-to-split\n\n""",
+- https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             ),
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split/",
                 ],
                 pd.DataFrame(
                     {
                         "Page URL": [
                             "https://getbybus.com/en/bus-zagreb-to-split",
                             "https://getbybus.com/hr/bus-zagreb-to-split/",
-                            "https://getbybus.com/hr/bus-zagreb-to-karlovac",
+                            "https://getbybus.com/en/bus-zagreb-to-karlovac",
                         ],
                         "Custom Label": [
                             "StS; en; Croatia",
                             "StS; hr; Croatia",
-                            "StS; hr; Croatia",
+                            "StS; en; Croatia",
                         ],
                     }
                 ),
                 """Page feed '**fastagency-reference**' changes:
 Added page feed items:
-https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
+https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             ),
         ],
     )
@@ -424,19 +421,11 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
         self, gads_page_urls: List[str], page_feeds_df: pd.DataFrame, expected: str
     ) -> None:
         customer_id = "1111"
-        page_feeds_and_accounts_templ_df = pd.DataFrame(
-            {
-                "Customer Id": [customer_id],
-                "Name Page Feed": ["fastagency-reference"],
-                "Custom Label 1": ["StS; hr; Croatia"],
-                "Custom Label 2": ["StS; en; Croatia"],
-            }
-        )
-
         page_feed_asset_set_name = "fastagency-reference"
         page_feed_asset_set = {
             "resourceName": f"customers/{customer_id}/assetSets/8783430659",
             "id": "8783430659",
+            "labels": "StS; en; Croatia",
         }
 
         mock_execute_query_return_value = _get_assets_execute_query_return_value(
@@ -462,7 +451,6 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
                 conv_id=-1,
                 customer_id=customer_id,
                 login_customer_id=customer_id,
-                page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
                 page_feeds_df=page_feeds_df,
                 page_feed_asset_set_name=page_feed_asset_set_name,
                 page_feed_asset_set=page_feed_asset_set,

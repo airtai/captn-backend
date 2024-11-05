@@ -428,34 +428,13 @@ def _sync_page_feed_asset_set(
     conv_id: int,
     customer_id: str,
     login_customer_id: str,
-    page_feeds_and_accounts_templ_df: pd.DataFrame,
     page_feeds_df: pd.DataFrame,
     page_feed_asset_set_name: str,
     page_feed_asset_set: Dict[str, str],
     iostream: IOStream,
 ) -> str:
-    page_feed_rows = page_feeds_and_accounts_templ_df[
-        page_feeds_and_accounts_templ_df["Name Page Feed"] == page_feed_asset_set_name
-    ]
-    if page_feed_rows.empty:
-        msg = f"Skipping page feed '**{page_feed_asset_set_name}**' (not found in the page feed template).\n\n"
-        iostream.print(colored(f"[{get_time()}] " + msg, "yellow"), flush=True)
-        return msg
-
-    elif page_feed_rows["Customer Id"].nunique() > 1:
-        msg = f"Page feed template has multiple values for the same page feed '**{page_feed_asset_set_name}**'!\n\n"
-        iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
-        return msg
-
-    page_feed_template_row = page_feed_rows.iloc[0]
-    custom_labels_values = [
-        page_feed_template_row[col]
-        for col in page_feed_rows.columns
-        if col.startswith("Custom Label")
-    ]
-    page_feed_rows = page_feeds_df[
-        page_feeds_df["Custom Label"].isin(custom_labels_values)
-    ]
+    labels = page_feed_asset_set["labels"]
+    page_feed_rows = page_feeds_df[page_feeds_df["Custom Label"] == labels]
 
     if page_feed_rows.empty:
         msg = f"No page feed data found for page feed '**{page_feed_asset_set_name}**'\n\n"
@@ -526,7 +505,6 @@ def _sync_page_feed_asset_sets(
     conv_id: int,
     customer_id: str,
     login_customer_id: str,
-    page_feeds_and_accounts_templ_df: pd.DataFrame,
     page_feeds_df: pd.DataFrame,
     page_feed_asset_sets_and_labels: Dict[str, Dict[str, str]],
     context: PageFeedTeamContext,
@@ -542,7 +520,6 @@ def _sync_page_feed_asset_sets(
             conv_id=conv_id,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
-            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
             page_feeds_df=page_feeds_df,
             page_feed_asset_set_name=page_feed_asset_set_name,
             page_feed_asset_set=page_feed_asset_set,
@@ -583,14 +560,14 @@ def update_page_feeds(
             customer_id=customer_id,
             login_customer_id=login_customer_id,
         )
+        # TODO: Before calling the sync function
+        # create missing page_feed_asset_sets and add them to page_feed_asset_sets_and_labels
 
         return _sync_page_feed_asset_sets(
             user_id=context.user_id,
             conv_id=context.conv_id,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
-            # TODO: this is incorrec !!!!
-            page_feeds_and_accounts_templ_df=context.accounts_templ_df,
             page_feeds_df=context.page_feeds_df,
             page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
             context=context,
