@@ -1,7 +1,7 @@
 import json
 import traceback
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional, Tuple
 
 import pandas as pd
 from autogen.formatting_utils import colored
@@ -33,6 +33,7 @@ from ._gbb_google_sheets_team_tools import (
 )
 from ._google_ads_team_tools import (
     change_google_account,
+    get_resource_id_from_response,
 )
 
 GET_AND_VALIDATE_PAGE_FEED_DATA_DESCRIPTION = """Get and validate page feed data.
@@ -500,6 +501,59 @@ def _sync_page_feed_asset_set(
     return return_value
 
 
+def _create_missing_page_feed_asset_sets(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+    page_feeds_df: pd.DataFrame,
+    page_feed_asset_sets_and_labels: Dict[str, Dict[str, str]],
+    iostream: IOStream,
+) -> Tuple[Dict[str, Dict[str, str]], str]:
+    return_value = ""
+    new_page_feed_asset_sets_and_labels: Dict[str, Dict[str, str]] = {}
+
+    unique_labels = set(page_feeds_df["Custom Label"].unique())
+    existing_labels = {
+        asset_set["labels"] for asset_set in page_feed_asset_sets_and_labels.values()
+    }
+    missing_labels = unique_labels - existing_labels
+    print(f"Labels missing in asset sets: {missing_labels}")
+
+    # If there are missing labels, create new entries for them
+    for label in missing_labels:
+        page_feed_name = f"TODO - {label}"
+        # model = AddPageFeed(
+        #     login_customer_id=login_customer_id,
+        #     customer_id=customer_id,
+        #     name=name,
+        # )
+        try:
+            # response = google_ads_post_or_get(
+            #     user_id=1,
+            #     conv_id=1,
+            #     recommended_modifications_and_answer_list=[],
+            #     already_checked_clients_approval=True,
+            #     model=model,
+            #     endpoint="/create-page-feed-asset-set",
+            # )
+            response = f"Created customers/{customer_id}/assetSets/9057033327."
+            resource_id = get_resource_id_from_response(response)
+            new_page_feed_asset_sets_and_labels[page_feed_name] = {
+                "id": resource_id,
+                "resourceName": f"customers/{customer_id}/assetSets/{resource_id}",
+            }
+            msg = f"Created Page Feed: {page_feed_name}"
+            iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
+        except Exception as e:
+            msg = f"Failed to create page feed:\n{page_feed_name}\n\n{str(e)}\n\n"
+            iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
+
+        return_value += msg
+
+    return (new_page_feed_asset_sets_and_labels, return_value)
+
+
 def _sync_page_feed_asset_sets(
     user_id: int,
     conv_id: int,
@@ -510,7 +564,19 @@ def _sync_page_feed_asset_sets(
     context: PageFeedTeamContext,
 ) -> str:
     iostream = IOStream.get_default()
-    return_value = ""
+    new_page_feed_asset_sets_and_labels, return_value = (
+        _create_missing_page_feed_asset_sets(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            page_feeds_df=context.page_feeds_df,
+            page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
+            iostream=iostream,
+        )
+    )
+    page_feed_asset_sets_and_labels.update(new_page_feed_asset_sets_and_labels)
+
     for (
         page_feed_asset_set_name,
         page_feed_asset_set,
@@ -560,8 +626,6 @@ def update_page_feeds(
             customer_id=customer_id,
             login_customer_id=login_customer_id,
         )
-        # TODO: Before calling the sync function
-        # create missing page_feed_asset_sets and add them to page_feed_asset_sets_and_labels
 
         return _sync_page_feed_asset_sets(
             user_id=context.user_id,

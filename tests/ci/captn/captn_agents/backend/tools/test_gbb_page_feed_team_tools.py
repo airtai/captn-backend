@@ -11,6 +11,7 @@ from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     PageFeedTeamContext,
     _add_missing_page_urls,
+    _create_missing_page_feed_asset_sets,
     _get_asset_sets_and_labels_pairs,
     _get_page_feed_asset_sets,
     _get_page_feed_items,
@@ -595,3 +596,33 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             assert result == expected, result
 
             assert mock_google_ads_post_or_get.call_count == 3
+
+    def test_create_missing_page_feed_asset_sets(self) -> None:
+        page_feeds_df = pd.DataFrame(
+            {
+                "Custom Label": [
+                    "StS; hr; Croatia",
+                    "StS; de; Croatia",
+                    "StS; de; Croatia",
+                    "StS; fr; Croatia",
+                ],
+            }
+        )
+
+        page_feed_asset_sets_and_labels = {
+            "fastagency-reference": {
+                "id": "8783430659",
+                "resourceName": "customers/7119828439/assetSets/8783430659",
+                "labels": "StS; hr; Croatia",
+            }
+        }
+
+        _create_missing_page_feed_asset_sets(
+            user_id=-1,
+            conv_id=-1,
+            customer_id="1111",
+            login_customer_id="2222",
+            page_feeds_df=page_feeds_df,
+            page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
+            iostream=IOStream.get_default(),
+        )
