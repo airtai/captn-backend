@@ -269,9 +269,10 @@ def _get_asset_sets_and_labels_pairs(
     conv_id: int,
     customer_id: str,
     login_customer_id: str,
-) -> Dict[str, str]:
+) -> Dict[str, Dict[str, str]]:
     query = """SELECT
   asset_set.id,
+  asset_set.name,
   asset.page_feed_asset.labels
 FROM
   asset_set_asset
@@ -296,13 +297,14 @@ WHERE
     asset_sets_and_labels_pairs = {}
 
     for entry in response_json[customer_id]:
-        asset_set_id = entry["assetSet"]["id"]
+        asset_set_name = entry["assetSet"]["name"]
         labels_list = entry["asset"]["pageFeedAsset"]["labels"]
         labels = "; ".join(labels_list)
 
         # Initialize the asset set if not already present
-        if asset_set_id not in asset_sets_and_labels_pairs:
-            asset_sets_and_labels_pairs[asset_set_id] = {
+        if asset_set_name not in asset_sets_and_labels_pairs:
+            asset_sets_and_labels_pairs[asset_set_name] = {
+                "id": entry["assetSet"]["id"],
                 "resourceName": entry["assetSet"]["resourceName"],
                 "labels": labels,
                 "valid": True,  # Flag to indicate validity of the asset set
@@ -310,17 +312,18 @@ WHERE
         else:
             # Check if the asset set is still valid
             if (
-                asset_sets_and_labels_pairs[asset_set_id]["valid"]
-                and asset_sets_and_labels_pairs[asset_set_id]["labels"] != labels
+                asset_sets_and_labels_pairs[asset_set_name]["valid"]
+                and asset_sets_and_labels_pairs[asset_set_name]["labels"] != labels
             ):
-                asset_sets_and_labels_pairs[asset_set_id]["valid"] = (
+                asset_sets_and_labels_pairs[asset_set_name]["valid"] = (
                     False  # Mark as invalid
                 )
 
+    # Filter out invalid asset sets from the dictionary
     valid_asset_sets_and_labels_pairs = {
-        asset_set["resourceName"]: asset_set["labels"]
-        for asset_set in asset_sets_and_labels_pairs.values()
-        if asset_set["valid"]
+        name: {key: value for key, value in data.items() if key != "valid"}
+        for name, data in asset_sets_and_labels_pairs.items()
+        if data["valid"]
     }
 
     return valid_asset_sets_and_labels_pairs
@@ -525,12 +528,15 @@ def _sync_page_feed_asset_sets(
     login_customer_id: str,
     page_feeds_and_accounts_templ_df: pd.DataFrame,
     page_feeds_df: pd.DataFrame,
-    page_feed_asset_sets: Dict[str, Dict[str, str]],
+    page_feed_asset_sets_and_labels: Dict[str, Dict[str, str]],
     context: PageFeedTeamContext,
 ) -> str:
     iostream = IOStream.get_default()
     return_value = ""
-    for page_feed_asset_set_name, page_feed_asset_set in page_feed_asset_sets.items():
+    for (
+        page_feed_asset_set_name,
+        page_feed_asset_set,
+    ) in page_feed_asset_sets_and_labels.items():
         return_value += _sync_page_feed_asset_set(
             user_id=user_id,
             conv_id=conv_id,
@@ -571,14 +577,12 @@ def update_page_feeds(
         return f"Please (re)validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
 
     try:
-        page_feed_asset_sets = _get_page_feed_asset_sets(
+        page_feed_asset_sets_and_labels = _get_asset_sets_and_labels_pairs(
             user_id=context.user_id,
             conv_id=context.conv_id,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
         )
-        if len(page_feed_asset_sets) == 0:
-            return f"No page feeds found for customer id {customer_id}."
 
         return _sync_page_feed_asset_sets(
             user_id=context.user_id,
@@ -588,7 +592,7 @@ def update_page_feeds(
             # TODO: this is incorrec !!!!
             page_feeds_and_accounts_templ_df=context.accounts_templ_df,
             page_feeds_df=context.page_feeds_df,
-            page_feed_asset_sets=page_feed_asset_sets,
+            page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
             context=context,
         )
     except Exception as e:

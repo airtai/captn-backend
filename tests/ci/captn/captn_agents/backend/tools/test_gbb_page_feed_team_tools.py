@@ -515,6 +515,7 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
                     },
                     "assetSet": {
                         "resourceName": "customers/123/assetSets/8783430659",
+                        "name": "fastagency-reference",
                         "id": "8783430659",
                     },
                     "assetSetAsset": {
@@ -528,6 +529,7 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
                     },
                     "assetSet": {
                         "resourceName": "customers/123/assetSets/8841207092",
+                        "name": "fastagency-tutorial",
                         "id": "8841207092",
                     },
                     "assetSetAsset": {
@@ -541,6 +543,7 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
                     },
                     "assetSet": {
                         "resourceName": "customers/123/assetSets/8841207092",
+                        "name": "fastagency-tutorial",
                         "id": "8841207092",
                     },
                     "assetSetAsset": {
@@ -560,7 +563,13 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
                 "123",
                 "123",
             )
-            expected = {"customers/123/assetSets/8783430659": "StS; hr; Croatia"}
+            expected = {
+                "fastagency-reference": {
+                    "id": "8783430659",
+                    "resourceName": "customers/123/assetSets/8783430659",
+                    "labels": "StS; hr; Croatia",
+                }
+            }
             assert response == expected, response
 
     def test_add_missing_page_urls(self) -> None:
