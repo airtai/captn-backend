@@ -91,7 +91,7 @@ def _get_relevant_page_feeds_and_accounts(
 
 @dataclass
 class PageFeedTeamContext(GoogleSheetsTeamContext):
-    page_feeds_and_accounts_templ_df: Optional[pd.DataFrame] = None
+    accounts_templ_df: Optional[pd.DataFrame] = None
     page_feeds_df: Optional[pd.DataFrame] = None
 
 
@@ -100,12 +100,6 @@ ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS = [
     "Customer Id",
     "Name",
     "Manager Customer Id",
-]
-
-PAGE_FEEDS_TEMPLATE_TITLE = "Page Feeds"
-PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS = [
-    "Customer Id",
-    "Name",
 ]
 
 PAGE_FEEDS_MANDATORY_COLUMNS = [
@@ -128,12 +122,6 @@ def get_and_validate_page_feed_data(
         spreadsheet_id=template_spreadsheet_id,
         title=ACCOUNTS_TITLE,
     )
-    page_feeds_template_df = _get_sheet_data_and_return_df(
-        user_id=context.user_id,
-        base_url=context.google_sheets_api_url,
-        spreadsheet_id=template_spreadsheet_id,
-        title=PAGE_FEEDS_TEMPLATE_TITLE,
-    )
     page_feeds_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
@@ -144,11 +132,6 @@ def get_and_validate_page_feed_data(
     error_msg = ""
     for df, mandatory_columns, table_title in [
         (account_templ_df, ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS, ACCOUNTS_TITLE),
-        (
-            page_feeds_template_df,
-            PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS,
-            PAGE_FEEDS_TEMPLATE_TITLE,
-        ),
         (page_feeds_df, PAGE_FEEDS_MANDATORY_COLUMNS, page_feed_sheet_title),
     ]:
         error_msg += check_mandatory_columns(
@@ -161,30 +144,9 @@ def get_and_validate_page_feed_data(
     for col in ["Manager Customer Id", "Customer Id"]:
         account_templ_df[col] = account_templ_df[col].str.replace("-", "")
 
-    page_feeds_template_df["Customer Id"] = page_feeds_template_df[
-        "Customer Id"
-    ].str.replace("-", "")
-    # For columns 'Name' rename to 'Page Feed Name' or 'Account Name'
-    page_feeds_and_accounts_templ_df = pd.merge(
-        page_feeds_template_df,
-        account_templ_df,
-        on="Customer Id",
-        how="left",
-        suffixes=(" Page Feed", " Account"),
-    )
-
-    page_feeds_and_accounts_templ_df = _get_relevant_page_feeds_and_accounts(
-        page_feeds_and_accounts_templ_df, page_feeds_df
-    )
-
-    if page_feeds_and_accounts_templ_df.empty:
-        return "Page Feeds Templates don't have any matching Custom Labels with the newly provided Page Feeds data."
-
-    context.page_feeds_and_accounts_templ_df = page_feeds_and_accounts_templ_df
+    context.accounts_templ_df = account_templ_df
     context.page_feeds_df = page_feeds_df
-    avaliable_customers = page_feeds_and_accounts_templ_df[
-        ["Manager Customer Id", "Customer Id", "Name Account"]
-    ].drop_duplicates()
+    avaliable_customers = account_templ_df.drop_duplicates()
     avaliable_customers.rename(
         columns={"Manager Customer Id": "Login Customer Id"}, inplace=True
     )
@@ -307,7 +269,7 @@ def _get_asset_sets_and_labels_pairs(
     conv_id: int,
     customer_id: str,
     login_customer_id: str,
-) -> pd.DataFrame:
+) -> Dict[str, str]:
     query = """SELECT
   asset_set.id,
   asset.page_feed_asset.labels
@@ -605,7 +567,7 @@ def update_page_feeds(
     if error_msg:
         raise ValueError(error_msg)
 
-    if context.page_feeds_and_accounts_templ_df is None:
+    if context.accounts_templ_df is None:
         return f"Please (re)validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
 
     try:
@@ -623,7 +585,8 @@ def update_page_feeds(
             conv_id=context.conv_id,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
-            page_feeds_and_accounts_templ_df=context.page_feeds_and_accounts_templ_df,
+            # TODO: this is incorrec !!!!
+            page_feeds_and_accounts_templ_df=context.accounts_templ_df,
             page_feeds_df=context.page_feeds_df,
             page_feed_asset_sets=page_feed_asset_sets,
             context=context,
@@ -633,7 +596,7 @@ def update_page_feeds(
         traceback.print_exc()
         raise e
     finally:
-        context.page_feeds_and_accounts_templ_df = None
+        context.accounts_templ_df = None
         context.page_feeds_df = None
 
 

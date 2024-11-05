@@ -234,24 +234,6 @@ class TestPageFeedTeamTools:
             },
             {
                 "values": [
-                    ["Customer Id", "Name", "Custom Label 1", "Custom Label 2"],
-                    [
-                        "711-982-8439",
-                        "fastagency-reference",
-                        "StS; hr; Croatia",
-                        "StS; en; Croatia",
-                    ],
-                    [
-                        "711-982-8439",
-                        "fastagency-reference-de",
-                        "StS; de; Croatia",
-                        "",
-                    ],
-                ],
-                "issues_present": False,
-            },
-            {
-                "values": [
                     [
                         "Created Date",
                         "Language",
@@ -346,7 +328,7 @@ class TestPageFeedTeamTools:
             )
 
             assert (
-                "{'7119828439': {'Login Customer Id': '7587037554', 'Name Account': 'airt technologies d.o.o.'}"
+                "{'7119828439': {'Login Customer Id': '7587037554', 'Name': 'airt technologies d.o.o.'}"
                 in return_value
             )
 
