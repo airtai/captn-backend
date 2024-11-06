@@ -391,6 +391,7 @@ class TestPageFeedTeamTools:
                     }
                 ),
                 """Page feed '**fastagency-reference**' changes:
+
 The following page feed items should be removed by you manually:
 - https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             ),
@@ -413,6 +414,7 @@ The following page feed items should be removed by you manually:
                     }
                 ),
                 """Page feed '**fastagency-reference**' changes:
+
 Added page feed items:
 https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             ),
@@ -649,7 +651,9 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
                 },
             }
             expected_return_value = """Created Page Feed: GBF | Croatia | PtP | Page Feed | de
+
 Created Page Feed: GBF | Croatia | PtP | Page Feed | fr
+
 """
 
             assert mock_google_ads_post_or_get.call_count == 2

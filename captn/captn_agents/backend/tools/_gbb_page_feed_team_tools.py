@@ -280,6 +280,7 @@ FROM
 WHERE
   asset.type = 'PAGE_FEED'
   AND asset_set_asset.status != 'REMOVED'
+  AND asset_set.status != 'REMOVED'
 """  # nosec: [B608]
 
     response = execute_query(
@@ -469,7 +470,7 @@ def _sync_page_feed_asset_set(
         iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
         return msg
 
-    return_value = f"Page feed '**{page_feed_asset_set_name}**' changes:\n"
+    return_value = f"Page feed '**{page_feed_asset_set_name}**' changes:\n\n"
     iostream.print(
         colored(f"[{get_time()}] " + return_value.strip(), "green"), flush=True
     )
@@ -558,7 +559,7 @@ def _create_missing_page_feed_asset_sets(
                 "resourceName": f"customers/{customer_id}/assetSets/{resource_id}",
                 "labels": label,
             }
-            msg = f"Created Page Feed: {page_feed_name}\n"
+            msg = f"Created Page Feed: {page_feed_name}\n\n"
             iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
         except Exception as e:
             msg = f"Failed to create page feed:\n{page_feed_name}\n\n{str(e)}\n\n"
