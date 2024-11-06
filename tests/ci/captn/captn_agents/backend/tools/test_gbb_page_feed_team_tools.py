@@ -639,10 +639,12 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             expected_asset_sets = {
                 "GBF | Croatia | PtP | Page Feed | de": {
                     "id": "91",
+                    "labels": "PtP; de; Croatia",
                     "resourceName": "customers/1111/assetSets/91",
                 },
                 "GBF | Croatia | PtP | Page Feed | fr": {
                     "id": "92",
+                    "labels": "PtP; fr; Croatia",
                     "resourceName": "customers/1111/assetSets/92",
                 },
             }

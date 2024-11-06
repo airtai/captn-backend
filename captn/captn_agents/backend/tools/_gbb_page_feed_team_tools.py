@@ -356,14 +356,12 @@ def _add_missing_page_urls(
     try:
         response = google_ads_api_call(
             function=google_ads_post_or_get,  # type: ignore[arg-type]
-            kwargs={
-                "user_id": user_id,
-                "conv_id": conv_id,
-                "model": add_model,
-                "recommended_modifications_and_answer_list": [],
-                "already_checked_clients_approval": True,
-                "endpoint": "/add-items-to-page-feed",
-            },
+            user_id=user_id,
+            conv_id=conv_id,
+            model=add_model,
+            recommended_modifications_and_answer_list=[],
+            already_checked_clients_approval=True,
+            endpoint="/add-items-to-page-feed",
         )
     except Exception as e:
         return f"Failed to add page feed items:\n{url_and_labels}\n\n{str(e)}\n\n"
@@ -453,7 +451,7 @@ def _sync_page_feed_asset_set(
     )
 
     for df in [page_feed_url_and_label_df, gads_page_urls_and_labels_df]:
-        df.loc[:, "Page URL"] = df["Page URL"].str.rstrip("/")
+        df.loc[:, "Page URL"] = df["Page URL"].fillna("").astype(str).str.rstrip("/")
 
     missing_page_urls = page_feed_url_and_label_df[
         ~page_feed_url_and_label_df["Page URL"].isin(
@@ -558,6 +556,7 @@ def _create_missing_page_feed_asset_sets(
             new_page_feed_asset_sets_and_labels[page_feed_name] = {
                 "id": resource_id,
                 "resourceName": f"customers/{customer_id}/assetSets/{resource_id}",
+                "labels": label,
             }
             msg = f"Created Page Feed: {page_feed_name}\n"
             iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)

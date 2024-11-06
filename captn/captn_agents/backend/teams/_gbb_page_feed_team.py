@@ -68,7 +68,7 @@ Here is the current customers brief/information we have gathered for you as a st
   - If you think you found the correct files, use one smart suggestion ["These are the correct files."].
 - Do NOT forget this step, because the client needs to confirm that you have found the correct files, otherwise you will be penalized!
 - ALWAYS add final sentence "If these are NOT the correct files, please paste the whole URL of the correct files."
-5. In the template spreadsheet, you must must check that 'Accounts' and 'Page Feeds' titles exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
+5. In the template spreadsheet, you must must check that 'Accounts' title exist (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - mandatory input parameters: user_id, spreadsheet_id
 6. In the spreadsheet with page feeds, you must find the title of the sheet with page feeds (by using 'get_all_sheet_titles_get_all_sheet_titles_get').
 - If there are multiple sheets within the spreadsheet, ask the client to choose the correct sheet.
