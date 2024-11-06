@@ -601,10 +601,10 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
         page_feeds_df = pd.DataFrame(
             {
                 "Custom Label": [
-                    "StS; hr; Croatia",
-                    "StS; de; Croatia",
-                    "StS; de; Croatia",
-                    "StS; fr; Croatia",
+                    "PtP; hr; Croatia",
+                    "PtP; de; Croatia",
+                    "PtP; de; Croatia",
+                    "PtP; fr; Croatia",
                 ],
             }
         )
@@ -613,16 +613,45 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             "fastagency-reference": {
                 "id": "8783430659",
                 "resourceName": "customers/7119828439/assetSets/8783430659",
-                "labels": "StS; hr; Croatia",
+                "labels": "PtP; hr; Croatia",
             }
         }
 
-        _create_missing_page_feed_asset_sets(
-            user_id=-1,
-            conv_id=-1,
-            customer_id="1111",
-            login_customer_id="2222",
-            page_feeds_df=page_feeds_df,
-            page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
-            iostream=IOStream.get_default(),
-        )
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
+            side_effect=[
+                "Created customers/1111/assetSets/91.",
+                "Created customers/1111/assetSets/92.",
+            ],
+        ) as mock_google_ads_post_or_get:
+            new_page_feed_asset_sets_and_labels, return_value = (
+                _create_missing_page_feed_asset_sets(
+                    user_id=-1,
+                    conv_id=-1,
+                    customer_id="1111",
+                    login_customer_id="2222",
+                    page_feeds_df=page_feeds_df,
+                    page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
+                    iostream=IOStream.get_default(),
+                )
+            )
+
+            expected_asset_sets = {
+                "GBF | Croatia | PtP | Page Feed | de": {
+                    "id": "91",
+                    "resourceName": "customers/1111/assetSets/91",
+                },
+                "GBF | Croatia | PtP | Page Feed | fr": {
+                    "id": "92",
+                    "resourceName": "customers/1111/assetSets/92",
+                },
+            }
+            expected_return_value = """Created Page Feed: GBF | Croatia | PtP | Page Feed | de
+Created Page Feed: GBF | Croatia | PtP | Page Feed | fr
+"""
+
+            assert mock_google_ads_post_or_get.call_count == 2
+            assert (
+                new_page_feed_asset_sets_and_labels == expected_asset_sets
+            ), new_page_feed_asset_sets_and_labels
+            assert return_value == expected_return_value, return_value

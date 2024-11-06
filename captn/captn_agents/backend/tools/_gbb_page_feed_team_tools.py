@@ -7,7 +7,7 @@ import pandas as pd
 from autogen.formatting_utils import colored
 from autogen.io.base import IOStream
 
-from google_ads.model import AddPageFeedItems  # , RemoveResource
+from google_ads.model import AddPageFeed, AddPageFeedItems  # , RemoveResource
 
 from ....google_ads.client import (
     check_for_client_approval,
@@ -501,6 +501,14 @@ def _sync_page_feed_asset_set(
     return return_value
 
 
+NUMBER_OF_LABELS = 3
+CATEGOGORY_MAPPING = {
+    "sts": "GBB",
+    "ptp": "GBF",
+    # Add other
+}
+
+
 def _create_missing_page_feed_asset_sets(
     user_id: int,
     conv_id: int,
@@ -517,33 +525,41 @@ def _create_missing_page_feed_asset_sets(
     existing_labels = {
         asset_set["labels"] for asset_set in page_feed_asset_sets_and_labels.values()
     }
-    missing_labels = unique_labels - existing_labels
-    print(f"Labels missing in asset sets: {missing_labels}")
+    missing_labels = sorted(unique_labels - existing_labels)
 
     # If there are missing labels, create new entries for them
     for label in missing_labels:
-        page_feed_name = f"TODO - {label}"
-        # model = AddPageFeed(
-        #     login_customer_id=login_customer_id,
-        #     customer_id=customer_id,
-        #     name=name,
-        # )
+        labels = str(label).split(";")
+        if len(labels) != NUMBER_OF_LABELS:
+            msg = f"Skipping label: '{label}'\n\n"
+            iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
+            continue
+
+        # Label example: Ptp; Indonesia; en
+        category = CATEGOGORY_MAPPING.get(labels[0].strip().lower(), "GBB")
+        page_feed_name = f"{category} | {labels[2].strip()} | {labels[0].strip()} | Page Feed | {labels[1].strip()}"
+        model = AddPageFeed(
+            login_customer_id=login_customer_id,
+            customer_id=customer_id,
+            name=page_feed_name,
+        )
         try:
-            # response = google_ads_post_or_get(
-            #     user_id=1,
-            #     conv_id=1,
-            #     recommended_modifications_and_answer_list=[],
-            #     already_checked_clients_approval=True,
-            #     model=model,
-            #     endpoint="/create-page-feed-asset-set",
-            # )
-            response = f"Created customers/{customer_id}/assetSets/9057033327."
+            response = google_ads_post_or_get(
+                user_id=1,
+                conv_id=1,
+                recommended_modifications_and_answer_list=[],
+                already_checked_clients_approval=True,
+                model=model,
+                endpoint="/create-page-feed-asset-set",
+            )
+            if isinstance(response, dict):
+                raise ValueError(response)
             resource_id = get_resource_id_from_response(response)
             new_page_feed_asset_sets_and_labels[page_feed_name] = {
                 "id": resource_id,
                 "resourceName": f"customers/{customer_id}/assetSets/{resource_id}",
             }
-            msg = f"Created Page Feed: {page_feed_name}"
+            msg = f"Created Page Feed: {page_feed_name}\n"
             iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
         except Exception as e:
             msg = f"Failed to create page feed:\n{page_feed_name}\n\n{str(e)}\n\n"
