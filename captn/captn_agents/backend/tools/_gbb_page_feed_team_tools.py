@@ -545,8 +545,8 @@ def _create_missing_page_feed_asset_sets(
         )
         try:
             response = google_ads_post_or_get(
-                user_id=1,
-                conv_id=1,
+                user_id=user_id,
+                conv_id=conv_id,
                 recommended_modifications_and_answer_list=[],
                 already_checked_clients_approval=True,
                 model=model,
