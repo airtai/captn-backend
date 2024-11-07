@@ -394,15 +394,13 @@ def _remove_extra_page_urls(
         # try:
         #     response = google_ads_api_call(
         #         function=google_ads_create_update,  # type: ignore[arg-type]
-        #         kwargs={
-        #             "user_id": user_id,
-        #             "conv_id": conv_id,
-        #             "recommended_modifications_and_answer_list": [],
-        #             "already_checked_clients_approval": True,
-        #             "ad": remove_model,
-        #             "login_customer_id": login_customer_id,
-        #             "endpoint": "/remove-google-ads-resource",
-        #         },
+        #         user_id=user_id,
+        #         conv_id=conv_id,
+        #         recommended_modifications_and_answer_list=[],
+        #         already_checked_clients_approval=True,
+        #         ad=remove_model,
+        #         login_customer_id=login_customer_id,
+        #         endpoint="/remove-google-ads-resource",
         #     )
         # except Exception as e:
         #     return f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n{str(e)}\n\n"
