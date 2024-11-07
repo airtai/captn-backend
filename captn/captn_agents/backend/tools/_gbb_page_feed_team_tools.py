@@ -1,7 +1,7 @@
 import json
 import traceback
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, Optional, Tuple
+from typing import Annotated, Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from autogen.formatting_utils import colored
@@ -331,6 +331,15 @@ WHERE
     return valid_asset_sets_and_labels_pairs
 
 
+def _get_url_and_label_chunks(
+    url_and_labels: Dict[str, List[str] | None],
+) -> List[Dict[str, List[str] | None]]:
+    return [
+        dict(list(url_and_labels.items())[i : i + 199])
+        for i in range(0, len(url_and_labels), 199)
+    ]
+
+
 def _add_missing_page_urls(
     user_id: int,
     conv_id: int,
@@ -347,29 +356,40 @@ def _add_missing_page_urls(
             ]
         else:
             url_and_labels[key] = None
-    add_model = AddPageFeedItems(
-        login_customer_id=login_customer_id,
-        customer_id=customer_id,
-        asset_set_resource_name=page_feed_asset_set["resourceName"],
-        urls_and_labels=url_and_labels,
-    )
 
-    try:
-        response = google_ads_api_call(
-            function=google_ads_post_or_get,  # type: ignore[arg-type]
-            user_id=user_id,
-            conv_id=conv_id,
-            model=add_model,
-            recommended_modifications_and_answer_list=[],
-            already_checked_clients_approval=True,
-            endpoint="/add-items-to-page-feed",
+    # We can create max 200 items in 1 API call
+    url_and_label_chunks = _get_url_and_label_chunks(url_and_labels)
+    response_msg = ""
+
+    for url_and_label_chunk in url_and_label_chunks:
+        add_model = AddPageFeedItems(
+            login_customer_id=login_customer_id,
+            customer_id=customer_id,
+            asset_set_resource_name=page_feed_asset_set["resourceName"],
+            urls_and_labels=url_and_label_chunk,
         )
-    except Exception as e:
-        return f"Failed to add page feed items:\n{url_and_labels}\n\n{str(e)}\n\n"
-    if isinstance(response, dict):
-        raise ValueError(response)
-    urls_to_string = "\n".join(url_and_labels.keys())
-    return f"Added page feed items:\n{urls_to_string}\n\n"
+
+        try:
+            response = google_ads_api_call(
+                function=google_ads_post_or_get,  # type: ignore[arg-type]
+                user_id=user_id,
+                conv_id=conv_id,
+                model=add_model,
+                recommended_modifications_and_answer_list=[],
+                already_checked_clients_approval=True,
+                endpoint="/add-items-to-page-feed",
+            )
+        except Exception as e:
+            response_msg += (
+                f"Failed to add page feed items:\n{url_and_label_chunk}\n\n{str(e)}\n\n"
+            )
+            continue
+        if isinstance(response, dict):
+            response_msg += f"Failed to add page feed items:\n{url_and_label_chunk}\n\n{str(response)}\n\n"
+            continue
+        urls_to_string = "\n".join(url_and_label_chunk.keys())
+        response_msg += f"Added page feed items:\n{urls_to_string}\n\n"
+    return response_msg
 
 
 def _remove_extra_page_urls(

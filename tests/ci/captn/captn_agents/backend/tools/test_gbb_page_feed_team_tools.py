@@ -17,6 +17,7 @@ from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     _get_page_feed_items,
     _get_relevant_page_feeds_and_accounts,
     _get_sheet_data_and_return_df,
+    _get_url_and_label_chunks,
     _sync_page_feed_asset_set,
     create_page_feed_team_toolbox,
     get_and_validate_page_feed_data,
@@ -563,6 +564,17 @@ https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             }
             assert response == expected, response
 
+    def test_get_url_and_label_chunks(self) -> None:
+        url_and_labels = {f"url-{i}": None for i in range(1000)}
+        url_and_label_chunks = _get_url_and_label_chunks(url_and_labels)
+        assert len(url_and_label_chunks) == 6
+        expected_lenghts = [199, 199, 199, 199, 199, 5]
+
+        for url_and_label, expected_lenght in zip(
+            url_and_label_chunks, expected_lenghts, strict=False
+        ):
+            assert len(url_and_label) == expected_lenght
+
     def test_add_missing_page_urls(self) -> None:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
@@ -598,6 +610,29 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             assert result == expected, result
 
             assert mock_google_ads_post_or_get.call_count == 3
+
+    def test_add_missing_page_urls_chunks(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
+            return_value="Created",
+        ) as mock_google_ads_post_or_get:
+            _add_missing_page_urls(
+                user_id=-1,
+                conv_id=-1,
+                customer_id="1111",
+                login_customer_id="1111",
+                page_feed_asset_set={
+                    "resourceName": "customers/1111/assetSets/8783430659",
+                    "id": "8783430659",
+                },
+                missing_page_urls=pd.DataFrame(
+                    {
+                        "Page URL": [f"https://fastagency.ai/{i}" for i in range(1000)],
+                        "Custom Label": [None] * 1000,
+                    }
+                ),
+            )
+            assert mock_google_ads_post_or_get.call_count == 6
 
     def test_create_missing_page_feed_asset_sets(self) -> None:
         page_feeds_df = pd.DataFrame(
