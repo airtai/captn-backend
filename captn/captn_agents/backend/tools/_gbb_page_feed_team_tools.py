@@ -480,7 +480,7 @@ def _create_missing_page_feed_asset_sets(
 
         # Label example: Ptp; Indonesia; en
         category = CATEGOGORY_MAPPING.get(labels[0].strip().lower(), "GBB")
-        page_feed_name = f"{category} | {labels[2].strip()} | {labels[0].strip()} | Page Feed | {labels[1].strip()} | {get_time()}"
+        page_feed_name = f"{category} | {labels[1].strip()} | {labels[0].strip()} | Page Feed | {labels[2].strip()} | {get_time()}"
         model = AddPageFeed(
             login_customer_id=login_customer_id,
             customer_id=customer_id,

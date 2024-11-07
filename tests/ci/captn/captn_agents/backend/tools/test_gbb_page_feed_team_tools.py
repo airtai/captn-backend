@@ -563,10 +563,10 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
         page_feeds_df = pd.DataFrame(
             {
                 "Custom Label": [
-                    "PtP; hr; Croatia",
-                    "PtP; de; Croatia",
-                    "PtP; de; Croatia",
-                    "PtP; fr; Croatia",
+                    "PtP; Croatia; hr",
+                    "PtP; Croatia; de",
+                    "PtP; Croatia; de",
+                    "PtP; Croatia; fr",
                 ],
             }
         )
@@ -575,7 +575,7 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             "fastagency-reference": {
                 "id": "8783430659",
                 "resourceName": "customers/7119828439/assetSets/8783430659",
-                "labels": "PtP; hr; Croatia",
+                "labels": "PtP; Croatia; hr",
             }
         }
 
@@ -608,12 +608,12 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             expected_asset_sets = {
                 f"GBF | Croatia | PtP | Page Feed | de | {mocked_time}": {
                     "id": "91",
-                    "labels": "PtP; de; Croatia",
+                    "labels": "PtP; Croatia; de",
                     "resourceName": "customers/1111/assetSets/91",
                 },
                 f"GBF | Croatia | PtP | Page Feed | fr | {mocked_time}": {
                     "id": "92",
-                    "labels": "PtP; fr; Croatia",
+                    "labels": "PtP; Croatia; fr",
                     "resourceName": "customers/1111/assetSets/92",
                 },
             }
