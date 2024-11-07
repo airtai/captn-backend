@@ -97,7 +97,7 @@ class TestGBBPageFeedTeam:
             ),
             unittest.mock.patch(
                 "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
-                return_value="Created an asset set asset link",
+                return_value="Created customers/1111/assetSets/91.",
             ),
             unittest.mock.patch(
                 "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_create_update",

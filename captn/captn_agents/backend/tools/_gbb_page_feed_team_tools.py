@@ -1,13 +1,13 @@
 import json
 import traceback
 from dataclasses import dataclass
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from autogen.formatting_utils import colored
 from autogen.io.base import IOStream
 
-from google_ads.model import AddPageFeedItems  # , RemoveResource
+from google_ads.model import AddPageFeed, AddPageFeedItems  # , RemoveResource
 
 from ....google_ads.client import (
     check_for_client_approval,
@@ -33,6 +33,7 @@ from ._gbb_google_sheets_team_tools import (
 )
 from ._google_ads_team_tools import (
     change_google_account,
+    get_resource_id_from_response,
 )
 
 GET_AND_VALIDATE_PAGE_FEED_DATA_DESCRIPTION = """Get and validate page feed data.
@@ -59,39 +60,9 @@ def _get_sheet_data_and_return_df(
     )
 
 
-def _get_relevant_page_feeds_and_accounts(
-    page_feeds_and_accounts_templ_df: pd.DataFrame,
-    page_feeds_df: pd.DataFrame,
-) -> pd.DataFrame:
-    custom_labels = page_feeds_df["Custom Label"].unique()
-
-    filtered_page_feeds_and_accounts_templ_df = pd.DataFrame(
-        columns=page_feeds_and_accounts_templ_df.columns
-    )
-    # Get all columns that start with "Custom Label"
-    custom_label_columns = [
-        col
-        for col in page_feeds_and_accounts_templ_df.columns
-        if col.startswith("Custom Label")
-    ]
-
-    # Keep only rows that have at least one custom label in the custom_label_columns
-    for row in page_feeds_and_accounts_templ_df.iterrows():
-        row_custom_labels = row[1][custom_label_columns].values
-        if any(
-            row_custom_label in custom_labels for row_custom_label in row_custom_labels
-        ):
-            filtered_page_feeds_and_accounts_templ_df = pd.concat(
-                [filtered_page_feeds_and_accounts_templ_df, row[1].to_frame().T],
-                ignore_index=True,
-            )
-
-    return filtered_page_feeds_and_accounts_templ_df
-
-
 @dataclass
 class PageFeedTeamContext(GoogleSheetsTeamContext):
-    page_feeds_and_accounts_templ_df: Optional[pd.DataFrame] = None
+    accounts_templ_df: Optional[pd.DataFrame] = None
     page_feeds_df: Optional[pd.DataFrame] = None
 
 
@@ -100,12 +71,6 @@ ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS = [
     "Customer Id",
     "Name",
     "Manager Customer Id",
-]
-
-PAGE_FEEDS_TEMPLATE_TITLE = "Page Feeds"
-PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS = [
-    "Customer Id",
-    "Name",
 ]
 
 PAGE_FEEDS_MANDATORY_COLUMNS = [
@@ -128,12 +93,6 @@ def get_and_validate_page_feed_data(
         spreadsheet_id=template_spreadsheet_id,
         title=ACCOUNTS_TITLE,
     )
-    page_feeds_template_df = _get_sheet_data_and_return_df(
-        user_id=context.user_id,
-        base_url=context.google_sheets_api_url,
-        spreadsheet_id=template_spreadsheet_id,
-        title=PAGE_FEEDS_TEMPLATE_TITLE,
-    )
     page_feeds_df = _get_sheet_data_and_return_df(
         user_id=context.user_id,
         base_url=context.google_sheets_api_url,
@@ -144,11 +103,6 @@ def get_and_validate_page_feed_data(
     error_msg = ""
     for df, mandatory_columns, table_title in [
         (account_templ_df, ACCOUNTS_TEMPLATE_MANDATORY_COLUMNS, ACCOUNTS_TITLE),
-        (
-            page_feeds_template_df,
-            PAGE_FEEDS_TEMPLATE_MANDATORY_COLUMNS,
-            PAGE_FEEDS_TEMPLATE_TITLE,
-        ),
         (page_feeds_df, PAGE_FEEDS_MANDATORY_COLUMNS, page_feed_sheet_title),
     ]:
         error_msg += check_mandatory_columns(
@@ -161,30 +115,9 @@ def get_and_validate_page_feed_data(
     for col in ["Manager Customer Id", "Customer Id"]:
         account_templ_df[col] = account_templ_df[col].str.replace("-", "")
 
-    page_feeds_template_df["Customer Id"] = page_feeds_template_df[
-        "Customer Id"
-    ].str.replace("-", "")
-    # For columns 'Name' rename to 'Page Feed Name' or 'Account Name'
-    page_feeds_and_accounts_templ_df = pd.merge(
-        page_feeds_template_df,
-        account_templ_df,
-        on="Customer Id",
-        how="left",
-        suffixes=(" Page Feed", " Account"),
-    )
-
-    page_feeds_and_accounts_templ_df = _get_relevant_page_feeds_and_accounts(
-        page_feeds_and_accounts_templ_df, page_feeds_df
-    )
-
-    if page_feeds_and_accounts_templ_df.empty:
-        return "Page Feeds Templates don't have any matching Custom Labels with the newly provided Page Feeds data."
-
-    context.page_feeds_and_accounts_templ_df = page_feeds_and_accounts_templ_df
+    context.accounts_templ_df = account_templ_df
     context.page_feeds_df = page_feeds_df
-    avaliable_customers = page_feeds_and_accounts_templ_df[
-        ["Manager Customer Id", "Customer Id", "Name Account"]
-    ].drop_duplicates()
+    avaliable_customers = account_templ_df.drop_duplicates()
     avaliable_customers.rename(
         columns={"Manager Customer Id": "Login Customer Id"}, inplace=True
     )
@@ -200,50 +133,6 @@ Continue the process with the following customers:
 
 
 UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
-
-
-def _get_page_feed_asset_sets(
-    user_id: int,
-    conv_id: int,
-    customer_id: str,
-    login_customer_id: str,
-) -> Dict[str, Dict[str, str]]:
-    page_feed_asset_sets: Dict[str, Dict[str, str]] = {}
-    query = """SELECT
-asset_set.id,
-asset_set.name,
-asset_set.resource_name
-FROM campaign_asset_set
-WHERE
-campaign.advertising_channel_type = 'PERFORMANCE_MAX'
-AND asset_set.type = 'PAGE_FEED'
-AND asset_set.status = 'ENABLED'
-AND campaign_asset_set.status = 'ENABLED'
-AND campaign.status != 'REMOVED'
-"""
-    response = execute_query(
-        user_id=user_id,
-        conv_id=conv_id,
-        customer_ids=[customer_id],
-        login_customer_id=login_customer_id,
-        query=query,
-    )
-    if isinstance(response, dict):
-        raise ValueError(response)
-
-    response_json = json.loads(response.replace("'", '"'))
-
-    if customer_id not in response_json:
-        return page_feed_asset_sets
-
-    for row in response_json[customer_id]:
-        asset_set = row["assetSet"]
-        page_feed_asset_sets[asset_set["name"]] = {
-            "id": asset_set["id"],
-            "resourceName": asset_set["resourceName"],
-        }
-
-    return page_feed_asset_sets
 
 
 def _get_page_feed_items(
@@ -302,6 +191,81 @@ WHERE
     return page_urls_and_labels_df
 
 
+def _get_asset_sets_and_labels_pairs(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+) -> Dict[str, Dict[str, str]]:
+    query = """SELECT
+  asset_set.id,
+  asset_set.name,
+  asset.page_feed_asset.labels
+FROM
+  asset_set_asset
+WHERE
+  asset.type = 'PAGE_FEED'
+  AND asset_set_asset.status != 'REMOVED'
+  AND asset_set.status != 'REMOVED'
+"""  # nosec: [B608]
+
+    response = execute_query(
+        user_id=user_id,
+        conv_id=conv_id,
+        customer_ids=[customer_id],
+        login_customer_id=login_customer_id,
+        query=query,
+    )
+
+    if isinstance(response, dict):
+        raise ValueError(response)
+
+    response_json = json.loads(response.replace("'", '"'))
+
+    asset_sets_and_labels_pairs = {}
+
+    for entry in response_json[customer_id]:
+        asset_set_name = entry["assetSet"]["name"]
+        labels_list = entry["asset"]["pageFeedAsset"]["labels"]
+        labels = "; ".join(labels_list)
+
+        # Initialize the asset set if not already present
+        if asset_set_name not in asset_sets_and_labels_pairs:
+            asset_sets_and_labels_pairs[asset_set_name] = {
+                "id": entry["assetSet"]["id"],
+                "resourceName": entry["assetSet"]["resourceName"],
+                "labels": labels,
+                "valid": True,  # Flag to indicate validity of the asset set
+            }
+        else:
+            # Check if the asset set is still valid
+            if (
+                asset_sets_and_labels_pairs[asset_set_name]["valid"]
+                and asset_sets_and_labels_pairs[asset_set_name]["labels"] != labels
+            ):
+                asset_sets_and_labels_pairs[asset_set_name]["valid"] = (
+                    False  # Mark as invalid
+                )
+
+    # Filter out invalid asset sets from the dictionary
+    valid_asset_sets_and_labels_pairs = {
+        name: {key: value for key, value in data.items() if key != "valid"}
+        for name, data in asset_sets_and_labels_pairs.items()
+        if data["valid"]
+    }
+
+    return valid_asset_sets_and_labels_pairs
+
+
+def _get_url_and_label_chunks(
+    url_and_labels: Dict[str, List[str] | None],
+) -> List[Dict[str, List[str] | None]]:
+    return [
+        dict(list(url_and_labels.items())[i : i + 199])
+        for i in range(0, len(url_and_labels), 199)
+    ]
+
+
 def _add_missing_page_urls(
     user_id: int,
     conv_id: int,
@@ -318,31 +282,40 @@ def _add_missing_page_urls(
             ]
         else:
             url_and_labels[key] = None
-    add_model = AddPageFeedItems(
-        login_customer_id=login_customer_id,
-        customer_id=customer_id,
-        asset_set_resource_name=page_feed_asset_set["resourceName"],
-        urls_and_labels=url_and_labels,
-    )
 
-    try:
-        response = google_ads_api_call(
-            function=google_ads_post_or_get,  # type: ignore[arg-type]
-            kwargs={
-                "user_id": user_id,
-                "conv_id": conv_id,
-                "model": add_model,
-                "recommended_modifications_and_answer_list": [],
-                "already_checked_clients_approval": True,
-                "endpoint": "/add-items-to-page-feed",
-            },
+    # We can create max 200 items in 1 API call
+    url_and_label_chunks = _get_url_and_label_chunks(url_and_labels)
+    response_msg = ""
+
+    for url_and_label_chunk in url_and_label_chunks:
+        add_model = AddPageFeedItems(
+            login_customer_id=login_customer_id,
+            customer_id=customer_id,
+            asset_set_resource_name=page_feed_asset_set["resourceName"],
+            urls_and_labels=url_and_label_chunk,
         )
-    except Exception as e:
-        return f"Failed to add page feed items:\n{url_and_labels}\n\n{str(e)}\n\n"
-    if isinstance(response, dict):
-        raise ValueError(response)
-    urls_to_string = "\n".join(url_and_labels.keys())
-    return f"Added page feed items:\n{urls_to_string}\n\n"
+
+        try:
+            response = google_ads_api_call(
+                function=google_ads_post_or_get,  # type: ignore[arg-type]
+                user_id=user_id,
+                conv_id=conv_id,
+                model=add_model,
+                recommended_modifications_and_answer_list=[],
+                already_checked_clients_approval=True,
+                endpoint="/add-items-to-page-feed",
+            )
+        except Exception as e:
+            response_msg += (
+                f"Failed to add page feed items:\n{url_and_label_chunk}\n\n{str(e)}\n\n"
+            )
+            continue
+        if isinstance(response, dict):
+            response_msg += f"Failed to add page feed items:\n{url_and_label_chunk}\n\n{str(response)}\n\n"
+            continue
+        urls_to_string = "\n".join(url_and_label_chunk.keys())
+        response_msg += f"Added page feed items:\n{urls_to_string}\n\n"
+    return response_msg
 
 
 def _remove_extra_page_urls(
@@ -367,15 +340,13 @@ def _remove_extra_page_urls(
         # try:
         #     response = google_ads_api_call(
         #         function=google_ads_create_update,  # type: ignore[arg-type]
-        #         kwargs={
-        #             "user_id": user_id,
-        #             "conv_id": conv_id,
-        #             "recommended_modifications_and_answer_list": [],
-        #             "already_checked_clients_approval": True,
-        #             "ad": remove_model,
-        #             "login_customer_id": login_customer_id,
-        #             "endpoint": "/remove-google-ads-resource",
-        #         },
+        #         user_id=user_id,
+        #         conv_id=conv_id,
+        #         recommended_modifications_and_answer_list=[],
+        #         already_checked_clients_approval=True,
+        #         ad=remove_model,
+        #         login_customer_id=login_customer_id,
+        #         endpoint="/remove-google-ads-resource",
         #     )
         # except Exception as e:
         #     return f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n{str(e)}\n\n"
@@ -401,34 +372,13 @@ def _sync_page_feed_asset_set(
     conv_id: int,
     customer_id: str,
     login_customer_id: str,
-    page_feeds_and_accounts_templ_df: pd.DataFrame,
     page_feeds_df: pd.DataFrame,
     page_feed_asset_set_name: str,
     page_feed_asset_set: Dict[str, str],
     iostream: IOStream,
 ) -> str:
-    page_feed_rows = page_feeds_and_accounts_templ_df[
-        page_feeds_and_accounts_templ_df["Name Page Feed"] == page_feed_asset_set_name
-    ]
-    if page_feed_rows.empty:
-        msg = f"Skipping page feed '**{page_feed_asset_set_name}**' (not found in the page feed template).\n\n"
-        iostream.print(colored(f"[{get_time()}] " + msg, "yellow"), flush=True)
-        return msg
-
-    elif page_feed_rows["Customer Id"].nunique() > 1:
-        msg = f"Page feed template has multiple values for the same page feed '**{page_feed_asset_set_name}**'!\n\n"
-        iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
-        return msg
-
-    page_feed_template_row = page_feed_rows.iloc[0]
-    custom_labels_values = [
-        page_feed_template_row[col]
-        for col in page_feed_rows.columns
-        if col.startswith("Custom Label")
-    ]
-    page_feed_rows = page_feeds_df[
-        page_feeds_df["Custom Label"].isin(custom_labels_values)
-    ]
+    labels = page_feed_asset_set["labels"]
+    page_feed_rows = page_feeds_df[page_feeds_df["Custom Label"] == labels]
 
     if page_feed_rows.empty:
         msg = f"No page feed data found for page feed '**{page_feed_asset_set_name}**'\n\n"
@@ -446,7 +396,7 @@ def _sync_page_feed_asset_set(
     )
 
     for df in [page_feed_url_and_label_df, gads_page_urls_and_labels_df]:
-        df.loc[:, "Page URL"] = df["Page URL"].str.rstrip("/")
+        df.loc[:, "Page URL"] = df["Page URL"].fillna("").astype(str).str.rstrip("/")
 
     missing_page_urls = page_feed_url_and_label_df[
         ~page_feed_url_and_label_df["Page URL"].isin(
@@ -464,7 +414,7 @@ def _sync_page_feed_asset_set(
         iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
         return msg
 
-    return_value = f"Page feed '**{page_feed_asset_set_name}**' changes:\n"
+    return_value = f"Page feed '**{page_feed_asset_set_name}**' changes:\n\n"
     iostream.print(
         colored(f"[{get_time()}] " + return_value.strip(), "green"), flush=True
     )
@@ -494,25 +444,108 @@ def _sync_page_feed_asset_set(
     return return_value
 
 
+NUMBER_OF_LABELS = 3
+CATEGOGORY_MAPPING = {
+    "sts": "GBB",
+    "ptp": "GBF",
+    # Add other
+}
+
+
+def _create_missing_page_feed_asset_sets(
+    user_id: int,
+    conv_id: int,
+    customer_id: str,
+    login_customer_id: str,
+    page_feeds_df: pd.DataFrame,
+    page_feed_asset_sets_and_labels: Dict[str, Dict[str, str]],
+    iostream: IOStream,
+) -> Tuple[Dict[str, Dict[str, str]], str]:
+    return_value = ""
+    new_page_feed_asset_sets_and_labels: Dict[str, Dict[str, str]] = {}
+
+    unique_labels = set(page_feeds_df["Custom Label"].unique())
+    existing_labels = {
+        asset_set["labels"] for asset_set in page_feed_asset_sets_and_labels.values()
+    }
+    missing_labels = sorted(unique_labels - existing_labels)
+
+    # If there are missing labels, create new entries for them
+    for label in missing_labels:
+        labels = str(label).split(";")
+        if len(labels) != NUMBER_OF_LABELS:
+            msg = f"Skipping label: '{label}'\n\n"
+            iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
+            continue
+
+        # Label example: Ptp; Indonesia; en
+        category = CATEGOGORY_MAPPING.get(labels[0].strip().lower(), "GBB")
+        page_feed_name = f"{category} | {labels[1].strip()} | {labels[0].strip()} | Page Feed | {labels[2].strip()} | {get_time()}"
+        model = AddPageFeed(
+            login_customer_id=login_customer_id,
+            customer_id=customer_id,
+            name=page_feed_name,
+        )
+        try:
+            response = google_ads_post_or_get(
+                user_id=user_id,
+                conv_id=conv_id,
+                recommended_modifications_and_answer_list=[],
+                already_checked_clients_approval=True,
+                model=model,
+                endpoint="/create-page-feed-asset-set",
+            )
+            if isinstance(response, dict):
+                raise ValueError(response)
+            resource_id = get_resource_id_from_response(response)
+            new_page_feed_asset_sets_and_labels[page_feed_name] = {
+                "id": resource_id,
+                "resourceName": f"customers/{customer_id}/assetSets/{resource_id}",
+                "labels": label,
+            }
+            msg = f"Created Page Feed: {page_feed_name}\n\n"
+            iostream.print(colored(f"[{get_time()}] " + msg, "green"), flush=True)
+        except Exception as e:
+            msg = f"Failed to create page feed:\n{page_feed_name}\n\n{str(e)}\n\n"
+            iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
+
+        return_value += msg
+
+    return (new_page_feed_asset_sets_and_labels, return_value)
+
+
 def _sync_page_feed_asset_sets(
     user_id: int,
     conv_id: int,
     customer_id: str,
     login_customer_id: str,
-    page_feeds_and_accounts_templ_df: pd.DataFrame,
     page_feeds_df: pd.DataFrame,
-    page_feed_asset_sets: Dict[str, Dict[str, str]],
+    page_feed_asset_sets_and_labels: Dict[str, Dict[str, str]],
     context: PageFeedTeamContext,
 ) -> str:
     iostream = IOStream.get_default()
-    return_value = ""
-    for page_feed_asset_set_name, page_feed_asset_set in page_feed_asset_sets.items():
+    new_page_feed_asset_sets_and_labels, return_value = (
+        _create_missing_page_feed_asset_sets(
+            user_id=context.user_id,
+            conv_id=context.conv_id,
+            customer_id=customer_id,
+            login_customer_id=login_customer_id,
+            page_feeds_df=context.page_feeds_df,
+            page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
+            iostream=iostream,
+        )
+    )
+    page_feed_asset_sets_and_labels.update(new_page_feed_asset_sets_and_labels)
+
+    for (
+        page_feed_asset_set_name,
+        page_feed_asset_set,
+    ) in page_feed_asset_sets_and_labels.items():
         return_value += _sync_page_feed_asset_set(
             user_id=user_id,
             conv_id=conv_id,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
-            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
             page_feeds_df=page_feeds_df,
             page_feed_asset_set_name=page_feed_asset_set_name,
             page_feed_asset_set=page_feed_asset_set,
@@ -543,27 +576,24 @@ def update_page_feeds(
     if error_msg:
         raise ValueError(error_msg)
 
-    if context.page_feeds_and_accounts_templ_df is None:
+    if context.accounts_templ_df is None:
         return f"Please (re)validate the page feed data first by running the '{get_and_validate_page_feed_data.__name__}' function."
 
     try:
-        page_feed_asset_sets = _get_page_feed_asset_sets(
+        page_feed_asset_sets_and_labels = _get_asset_sets_and_labels_pairs(
             user_id=context.user_id,
             conv_id=context.conv_id,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
         )
-        if len(page_feed_asset_sets) == 0:
-            return f"No page feeds found for customer id {customer_id}."
 
         return _sync_page_feed_asset_sets(
             user_id=context.user_id,
             conv_id=context.conv_id,
             customer_id=customer_id,
             login_customer_id=login_customer_id,
-            page_feeds_and_accounts_templ_df=context.page_feeds_and_accounts_templ_df,
             page_feeds_df=context.page_feeds_df,
-            page_feed_asset_sets=page_feed_asset_sets,
+            page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
             context=context,
         )
     except Exception as e:
@@ -571,7 +601,7 @@ def update_page_feeds(
         traceback.print_exc()
         raise e
     finally:
-        context.page_feeds_and_accounts_templ_df = None
+        context.accounts_templ_df = None
         context.page_feeds_df = None
 
 

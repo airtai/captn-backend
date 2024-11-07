@@ -22,6 +22,7 @@ from captn.captn_agents.helpers import get_db_connection, get_wasp_db_url
 from .model import (
     AdBase,
     AdCopy,
+    AddPageFeed,
     AddPageFeedItems,
     AdGroup,
     AdGroupAd,
@@ -2065,4 +2066,35 @@ async def add_items_to_page_feed(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
+
+
+@router.post("/create-page-feed-asset-set")
+async def create_page_feed_asset_set(
+    user_id: int,
+    model: AddPageFeed,
+) -> str:
+    client = await _get_client(
+        user_id=user_id, login_customer_id=model.login_customer_id
+    )
+
+    operation = client.get_type("AssetSetOperation")
+
+    try:
+        # Creates an asset set which will be used to link the dynamic page feed
+        # assets to a campaign.
+        asset_set = operation.create
+        asset_set.name = model.name
+        asset_set.type_ = client.enums.AssetSetTypeEnum.PAGE_FEED
+
+        # Issues a mutate request to add the asset set and prints its information.
+        asset_set_service = client.get_service("AssetSetService")
+        response = asset_set_service.mutate_asset_sets(
+            customer_id=model.customer_id, operations=[operation]
+        )
+
+        return f"Created {response.results[0].resource_name}."
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
