@@ -619,13 +619,20 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             }
         }
 
-        with unittest.mock.patch(
-            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
-            side_effect=[
-                "Created customers/1111/assetSets/91.",
-                "Created customers/1111/assetSets/92.",
-            ],
-        ) as mock_google_ads_post_or_get:
+        mocked_time = "2024-11-07 10:38:15"
+        with (
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
+                side_effect=[
+                    "Created customers/1111/assetSets/91.",
+                    "Created customers/1111/assetSets/92.",
+                ],
+            ) as mock_google_ads_post_or_get,
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.get_time",
+                return_value=mocked_time,
+            ),
+        ):
             new_page_feed_asset_sets_and_labels, return_value = (
                 _create_missing_page_feed_asset_sets(
                     user_id=-1,
@@ -639,20 +646,20 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             )
 
             expected_asset_sets = {
-                "GBF | Croatia | PtP | Page Feed | de": {
+                f"GBF | Croatia | PtP | Page Feed | de | {mocked_time}": {
                     "id": "91",
                     "labels": "PtP; de; Croatia",
                     "resourceName": "customers/1111/assetSets/91",
                 },
-                "GBF | Croatia | PtP | Page Feed | fr": {
+                f"GBF | Croatia | PtP | Page Feed | fr | {mocked_time}": {
                     "id": "92",
                     "labels": "PtP; fr; Croatia",
                     "resourceName": "customers/1111/assetSets/92",
                 },
             }
-            expected_return_value = """Created Page Feed: GBF | Croatia | PtP | Page Feed | de
+            expected_return_value = f"""Created Page Feed: GBF | Croatia | PtP | Page Feed | de | {mocked_time}
 
-Created Page Feed: GBF | Croatia | PtP | Page Feed | fr
+Created Page Feed: GBF | Croatia | PtP | Page Feed | fr | {mocked_time}
 
 """
 
