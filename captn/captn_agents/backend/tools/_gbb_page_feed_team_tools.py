@@ -7,7 +7,7 @@ import pandas as pd
 from autogen.formatting_utils import colored
 from autogen.io.base import IOStream
 
-from google_ads.model import AddPageFeed, AddPageFeedItems  # , RemoveResource
+from google_ads.model import AddPageFeed, AddPageFeedItems, RemoveResource
 
 from ....google_ads.client import (
     check_for_client_approval,
@@ -327,31 +327,31 @@ def _remove_extra_page_urls(
     extra_page_urls: pd.DataFrame,
     iostream: IOStream,
 ) -> str:
-    return_value = "The following page feed items should be removed by you manually:\n"
+    return_value = "Removing items:\n\n"
     iostream.print(colored(f"[{get_time()}] " + return_value, "green"), flush=True)
     for row in extra_page_urls.iterrows():
         id = row[1]["Id"]
-        # remove_model = RemoveResource(
-        #     customer_id=customer_id,
-        #     parent_id=page_feed_asset_set["id"],
-        #     resource_id=id,
-        #     resource_type="asset_set_asset",
-        # )
-        # try:
-        #     response = google_ads_api_call(
-        #         function=google_ads_create_update,  # type: ignore[arg-type]
-        #         user_id=user_id,
-        #         conv_id=conv_id,
-        #         recommended_modifications_and_answer_list=[],
-        #         already_checked_clients_approval=True,
-        #         ad=remove_model,
-        #         login_customer_id=login_customer_id,
-        #         endpoint="/remove-google-ads-resource",
-        #     )
-        # except Exception as e:
-        #     return f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n{str(e)}\n\n"
+        remove_model = RemoveResource(
+            customer_id=customer_id,
+            parent_id=page_feed_asset_set["id"],
+            resource_id=id,
+            resource_type="asset_set_asset",
+        )
+        try:
+            response = google_ads_api_call(
+                function=google_ads_create_update,  # type: ignore[arg-type]
+                user_id=user_id,
+                conv_id=conv_id,
+                recommended_modifications_and_answer_list=[],
+                already_checked_clients_approval=True,
+                ad=remove_model,
+                login_customer_id=login_customer_id,
+                endpoint="/remove-google-ads-resource",
+            )
+        except Exception as e:
+            return_value += f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n{str(e)}\n\n"
+            continue
 
-        response = "REMOVE THIS LINE ONCE THE ABOVE CODE IS UNCOMMENTED"
         if isinstance(response, dict):
             msg = f"Failed to remove page feed item with id {id} - {row[1]['Page URL']}:\n"
             return_value += msg + str(response) + "\n\n"
