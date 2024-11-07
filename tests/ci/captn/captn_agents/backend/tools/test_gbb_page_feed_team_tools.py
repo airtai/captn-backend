@@ -11,10 +11,11 @@ from captn.captn_agents.backend.config import Config
 from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     PageFeedTeamContext,
     _add_missing_page_urls,
-    _get_page_feed_asset_sets,
+    _create_missing_page_feed_asset_sets,
+    _get_asset_sets_and_labels_pairs,
     _get_page_feed_items,
-    _get_relevant_page_feeds_and_accounts,
     _get_sheet_data_and_return_df,
+    _get_url_and_label_chunks,
     _sync_page_feed_asset_set,
     create_page_feed_team_toolbox,
     get_and_validate_page_feed_data,
@@ -58,12 +59,22 @@ def _get_asset_sets_execute_query_return_value(customer_id: str) -> str:
                     "name": "fastagency-reference",
                     "id": "8783430659",
                 },
+                "asset": {
+                    "pageFeedAsset": {
+                        "labels": ["StS", "hr", "Croatia"],
+                    }
+                },
             },
             {
                 "assetSet": {
                     "resourceName": f"customers/{customer_id}/assetSets/8841207092",
                     "name": "fastagency-tutorial",
                     "id": "8841207092",
+                },
+                "asset": {
+                    "pageFeedAsset": {
+                        "labels": ["StS", "hr", "Croatia"],
+                    }
                 },
             },
         ]
@@ -154,98 +165,12 @@ class TestPageFeedTeamTools:
 
             pd.testing.assert_frame_equal(df, expected_df)
 
-    @pytest.mark.parametrize(
-        "page_feeds_and_accounts_templ_df, expected_df",
-        [
-            (
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123"],
-                        "Custom Label 1": ["StS; hr; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia"],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123"],
-                        "Custom Label 1": ["StS; hr; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia"],
-                    },
-                ),
-            ),
-            (
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123", "def456"],
-                        "Custom Label 1": ["StS; hr; Croatia", "StS; de; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia", ""],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123", "def456"],
-                        "Custom Label 1": ["StS; hr; Croatia", "StS; de; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia", ""],
-                    }
-                ),
-            ),
-            (
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123", "def456", "ghi789"],
-                        "Custom Label 1": [
-                            "None existent",
-                            "None existent",
-                            "None existent",
-                        ],
-                        "Custom Label 2": ["None existent", "None existent", ""],
-                    }
-                ),
-                pd.DataFrame(columns=[]),
-            ),
-        ],
-    )
-    def test_get_relevant_page_feeds_and_accounts(
-        self, page_feeds_and_accounts_templ_df: pd.DataFrame, expected_df: pd.DataFrame
-    ) -> None:
-        page_feeds_df = pd.DataFrame(
-            {
-                "Custom Label": ["StS; hr; Croatia", "StS; de; Croatia"],
-            }
-        )
-        return_df = _get_relevant_page_feeds_and_accounts(
-            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
-            page_feeds_df=page_feeds_df,
-        )
-        if not expected_df.empty:
-            pd.testing.assert_frame_equal(return_df, expected_df)
-        else:
-            assert return_df.empty
-
     def test_get_and_validate_page_feed_data(self) -> None:
         side_effect_get_sheet_data = [
             {
                 "values": [
                     ["Manager Customer Id", "Customer Id", "Name"],
                     ["758-703-7554", "711-982-8439", "airt technologies d.o.o."],
-                ],
-                "issues_present": False,
-            },
-            {
-                "values": [
-                    ["Customer Id", "Name", "Custom Label 1", "Custom Label 2"],
-                    [
-                        "711-982-8439",
-                        "fastagency-reference",
-                        "StS; hr; Croatia",
-                        "StS; en; Croatia",
-                    ],
-                    [
-                        "711-982-8439",
-                        "fastagency-reference-de",
-                        "StS; de; Croatia",
-                        "",
-                    ],
                 ],
                 "issues_present": False,
             },
@@ -345,24 +270,9 @@ class TestPageFeedTeamTools:
             )
 
             assert (
-                "{'7119828439': {'Login Customer Id': '7587037554', 'Name Account': 'airt technologies d.o.o.'}"
+                "{'7119828439': {'Login Customer Id': '7587037554', 'Name': 'airt technologies d.o.o.'}"
                 in return_value
             )
-
-    @pytest.mark.parametrize("mock_execute_query_f", ["1111"], indirect=True)
-    def test_get_page_feed_asset_sets(
-        self, mock_execute_query_f: Iterator[Any]
-    ) -> None:
-        customer_id = "1111"
-        with mock_execute_query_f:
-            page_feed_asset_sets = _get_page_feed_asset_sets(
-                user_id=1,
-                conv_id=2,
-                customer_id=customer_id,
-                login_customer_id=customer_id,
-            )
-
-            assert len(page_feed_asset_sets) == 2
 
     @pytest.mark.parametrize(
         ("gads_page_urls", "page_feeds_df", "expected"),
@@ -370,7 +280,6 @@ class TestPageFeedTeamTools:
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split",
                 ],
                 pd.DataFrame(
                     {
@@ -391,8 +300,7 @@ class TestPageFeedTeamTools:
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split/",
-                    "https://getbybus.com/it/bus-zagreb-to-split",
+                    "https://getbybus.com/en/bus-zagreb-to-karlovac",
                 ],
                 pd.DataFrame(
                     {
@@ -409,31 +317,32 @@ class TestPageFeedTeamTools:
                     }
                 ),
                 """Page feed '**fastagency-reference**' changes:
+
 The following page feed items should be removed by you manually:
-- https://getbybus.com/it/bus-zagreb-to-split\n\n""",
+- https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             ),
             (
                 [
                     "https://getbybus.com/en/bus-zagreb-to-split",
-                    "https://getbybus.com/hr/bus-zagreb-to-split/",
                 ],
                 pd.DataFrame(
                     {
                         "Page URL": [
                             "https://getbybus.com/en/bus-zagreb-to-split",
                             "https://getbybus.com/hr/bus-zagreb-to-split/",
-                            "https://getbybus.com/hr/bus-zagreb-to-karlovac",
+                            "https://getbybus.com/en/bus-zagreb-to-karlovac",
                         ],
                         "Custom Label": [
                             "StS; en; Croatia",
                             "StS; hr; Croatia",
-                            "StS; hr; Croatia",
+                            "StS; en; Croatia",
                         ],
                     }
                 ),
                 """Page feed '**fastagency-reference**' changes:
+
 Added page feed items:
-https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
+https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             ),
         ],
     )
@@ -441,19 +350,11 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
         self, gads_page_urls: List[str], page_feeds_df: pd.DataFrame, expected: str
     ) -> None:
         customer_id = "1111"
-        page_feeds_and_accounts_templ_df = pd.DataFrame(
-            {
-                "Customer Id": [customer_id],
-                "Name Page Feed": ["fastagency-reference"],
-                "Custom Label 1": ["StS; hr; Croatia"],
-                "Custom Label 2": ["StS; en; Croatia"],
-            }
-        )
-
         page_feed_asset_set_name = "fastagency-reference"
         page_feed_asset_set = {
             "resourceName": f"customers/{customer_id}/assetSets/8783430659",
             "id": "8783430659",
+            "labels": "StS; en; Croatia",
         }
 
         mock_execute_query_return_value = _get_assets_execute_query_return_value(
@@ -479,7 +380,6 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
                 conv_id=-1,
                 customer_id=customer_id,
                 login_customer_id=customer_id,
-                page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
                 page_feeds_df=page_feeds_df,
                 page_feed_asset_set_name=page_feed_asset_set_name,
                 page_feed_asset_set=page_feed_asset_set,
@@ -522,6 +422,84 @@ https://getbybus.com/hr/bus-zagreb-to-karlovac\n\n""",
             expected_page_urls_and_labels_df.sort_values("Page URL")
         )
 
+    def test_get_asset_sets_and_labels_pairs(self) -> None:
+        mock_execute_query_return_value = {
+            "123": [
+                {
+                    "asset": {
+                        "resourceName": "customers/123/assets/176480765357",
+                        "pageFeedAsset": {"labels": ["StS", "hr", "Croatia"]},
+                    },
+                    "assetSet": {
+                        "resourceName": "customers/123/assetSets/8783430659",
+                        "name": "fastagency-reference",
+                        "id": "8783430659",
+                    },
+                    "assetSetAsset": {
+                        "resourceName": "customers/123/assetSetAssets/8783430659~176480765357"
+                    },
+                },
+                {
+                    "asset": {
+                        "resourceName": "customers/123/assets/176508971560",
+                        "pageFeedAsset": {"labels": ["StS", "hr", "Croatia"]},
+                    },
+                    "assetSet": {
+                        "resourceName": "customers/123/assetSets/8841207092",
+                        "name": "fastagency-tutorial",
+                        "id": "8841207092",
+                    },
+                    "assetSetAsset": {
+                        "resourceName": "customers/123/assetSetAssets/8841207092~176508971560"
+                    },
+                },
+                {
+                    "asset": {
+                        "resourceName": "customers/123/assets/181414563774",
+                        "pageFeedAsset": {"labels": ["Sts", "hr", "Slo"]},
+                    },
+                    "assetSet": {
+                        "resourceName": "customers/123/assetSets/8841207092",
+                        "name": "fastagency-tutorial",
+                        "id": "8841207092",
+                    },
+                    "assetSetAsset": {
+                        "resourceName": "customers/123/assetSetAssets/8841207092~181414563774"
+                    },
+                },
+            ]
+        }
+
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.execute_query",
+            return_value=str(mock_execute_query_return_value),
+        ):
+            response = _get_asset_sets_and_labels_pairs(
+                -1,
+                -1,
+                "123",
+                "123",
+            )
+            expected = {
+                "fastagency-reference": {
+                    "id": "8783430659",
+                    "resourceName": "customers/123/assetSets/8783430659",
+                    "labels": "StS; hr; Croatia",
+                }
+            }
+            assert response == expected, response
+
+    def test_get_url_and_label_chunks(self) -> None:
+        url_and_labels = {f"url-{i}": None for i in range(1000)}
+        url_and_label_chunks = _get_url_and_label_chunks(url_and_labels)
+        assert len(url_and_label_chunks) == 6
+        expected_lenghts = [199, 199, 199, 199, 199, 5]
+
+        for url_and_label, expected_lenght in zip(
+            url_and_label_chunks, expected_lenghts, strict=False
+        ):
+            assert len(url_and_label) == expected_lenght
+
     def test_add_missing_page_urls(self) -> None:
         with unittest.mock.patch(
             "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
@@ -557,3 +535,96 @@ https://fastagency.ai/latest/api/fastagency/FastAgency\n\n"""
             assert result == expected, result
 
             assert mock_google_ads_post_or_get.call_count == 3
+
+    def test_add_missing_page_urls_chunks(self) -> None:
+        with unittest.mock.patch(
+            "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
+            return_value="Created",
+        ) as mock_google_ads_post_or_get:
+            _add_missing_page_urls(
+                user_id=-1,
+                conv_id=-1,
+                customer_id="1111",
+                login_customer_id="1111",
+                page_feed_asset_set={
+                    "resourceName": "customers/1111/assetSets/8783430659",
+                    "id": "8783430659",
+                },
+                missing_page_urls=pd.DataFrame(
+                    {
+                        "Page URL": [f"https://fastagency.ai/{i}" for i in range(1000)],
+                        "Custom Label": [None] * 1000,
+                    }
+                ),
+            )
+            assert mock_google_ads_post_or_get.call_count == 6
+
+    def test_create_missing_page_feed_asset_sets(self) -> None:
+        page_feeds_df = pd.DataFrame(
+            {
+                "Custom Label": [
+                    "PtP; Croatia; hr",
+                    "PtP; Croatia; de",
+                    "PtP; Croatia; de",
+                    "PtP; Croatia; fr",
+                ],
+            }
+        )
+
+        page_feed_asset_sets_and_labels = {
+            "fastagency-reference": {
+                "id": "8783430659",
+                "resourceName": "customers/7119828439/assetSets/8783430659",
+                "labels": "PtP; Croatia; hr",
+            }
+        }
+
+        mocked_time = "2024-11-07 10:38:15"
+        with (
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.google_ads_post_or_get",
+                side_effect=[
+                    "Created customers/1111/assetSets/91.",
+                    "Created customers/1111/assetSets/92.",
+                ],
+            ) as mock_google_ads_post_or_get,
+            unittest.mock.patch(
+                "captn.captn_agents.backend.tools._gbb_page_feed_team_tools.get_time",
+                return_value=mocked_time,
+            ),
+        ):
+            new_page_feed_asset_sets_and_labels, return_value = (
+                _create_missing_page_feed_asset_sets(
+                    user_id=-1,
+                    conv_id=-1,
+                    customer_id="1111",
+                    login_customer_id="2222",
+                    page_feeds_df=page_feeds_df,
+                    page_feed_asset_sets_and_labels=page_feed_asset_sets_and_labels,
+                    iostream=IOStream.get_default(),
+                )
+            )
+
+            expected_asset_sets = {
+                f"GBF | Croatia | PtP | Page Feed | de | {mocked_time}": {
+                    "id": "91",
+                    "labels": "PtP; Croatia; de",
+                    "resourceName": "customers/1111/assetSets/91",
+                },
+                f"GBF | Croatia | PtP | Page Feed | fr | {mocked_time}": {
+                    "id": "92",
+                    "labels": "PtP; Croatia; fr",
+                    "resourceName": "customers/1111/assetSets/92",
+                },
+            }
+            expected_return_value = f"""Created Page Feed: GBF | Croatia | PtP | Page Feed | de | {mocked_time}
+
+Created Page Feed: GBF | Croatia | PtP | Page Feed | fr | {mocked_time}
+
+"""
+
+            assert mock_google_ads_post_or_get.call_count == 2
+            assert (
+                new_page_feed_asset_sets_and_labels == expected_asset_sets
+            ), new_page_feed_asset_sets_and_labels
+            assert return_value == expected_return_value, return_value
