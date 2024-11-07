@@ -13,9 +13,7 @@ from captn.captn_agents.backend.tools._gbb_page_feed_team_tools import (
     _add_missing_page_urls,
     _create_missing_page_feed_asset_sets,
     _get_asset_sets_and_labels_pairs,
-    _get_page_feed_asset_sets,
     _get_page_feed_items,
-    _get_relevant_page_feeds_and_accounts,
     _get_sheet_data_and_return_df,
     _get_url_and_label_chunks,
     _sync_page_feed_asset_set,
@@ -157,74 +155,6 @@ class TestPageFeedTeamTools:
 
             pd.testing.assert_frame_equal(df, expected_df)
 
-    @pytest.mark.parametrize(
-        "page_feeds_and_accounts_templ_df, expected_df",
-        [
-            (
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123"],
-                        "Custom Label 1": ["StS; hr; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia"],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123"],
-                        "Custom Label 1": ["StS; hr; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia"],
-                    },
-                ),
-            ),
-            (
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123", "def456"],
-                        "Custom Label 1": ["StS; hr; Croatia", "StS; de; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia", ""],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123", "def456"],
-                        "Custom Label 1": ["StS; hr; Croatia", "StS; de; Croatia"],
-                        "Custom Label 2": ["StS; en; Croatia", ""],
-                    }
-                ),
-            ),
-            (
-                pd.DataFrame(
-                    {
-                        "Customer Id": ["abc123", "def456", "ghi789"],
-                        "Custom Label 1": [
-                            "None existent",
-                            "None existent",
-                            "None existent",
-                        ],
-                        "Custom Label 2": ["None existent", "None existent", ""],
-                    }
-                ),
-                pd.DataFrame(columns=[]),
-            ),
-        ],
-    )
-    def test_get_relevant_page_feeds_and_accounts(
-        self, page_feeds_and_accounts_templ_df: pd.DataFrame, expected_df: pd.DataFrame
-    ) -> None:
-        page_feeds_df = pd.DataFrame(
-            {
-                "Custom Label": ["StS; hr; Croatia", "StS; de; Croatia"],
-            }
-        )
-        return_df = _get_relevant_page_feeds_and_accounts(
-            page_feeds_and_accounts_templ_df=page_feeds_and_accounts_templ_df,
-            page_feeds_df=page_feeds_df,
-        )
-        if not expected_df.empty:
-            pd.testing.assert_frame_equal(return_df, expected_df)
-        else:
-            assert return_df.empty
-
     def test_get_and_validate_page_feed_data(self) -> None:
         side_effect_get_sheet_data = [
             {
@@ -333,21 +263,6 @@ class TestPageFeedTeamTools:
                 "{'7119828439': {'Login Customer Id': '7587037554', 'Name': 'airt technologies d.o.o.'}"
                 in return_value
             )
-
-    @pytest.mark.parametrize("mock_execute_query_f", ["1111"], indirect=True)
-    def test_get_page_feed_asset_sets(
-        self, mock_execute_query_f: Iterator[Any]
-    ) -> None:
-        customer_id = "1111"
-        with mock_execute_query_f:
-            page_feed_asset_sets = _get_page_feed_asset_sets(
-                user_id=1,
-                conv_id=2,
-                customer_id=customer_id,
-                login_customer_id=customer_id,
-            )
-
-            assert len(page_feed_asset_sets) == 2
 
     @pytest.mark.parametrize(
         ("gads_page_urls", "page_feeds_df", "expected"),

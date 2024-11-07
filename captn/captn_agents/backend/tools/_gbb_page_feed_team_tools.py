@@ -60,36 +60,6 @@ def _get_sheet_data_and_return_df(
     )
 
 
-def _get_relevant_page_feeds_and_accounts(
-    page_feeds_and_accounts_templ_df: pd.DataFrame,
-    page_feeds_df: pd.DataFrame,
-) -> pd.DataFrame:
-    custom_labels = page_feeds_df["Custom Label"].unique()
-
-    filtered_page_feeds_and_accounts_templ_df = pd.DataFrame(
-        columns=page_feeds_and_accounts_templ_df.columns
-    )
-    # Get all columns that start with "Custom Label"
-    custom_label_columns = [
-        col
-        for col in page_feeds_and_accounts_templ_df.columns
-        if col.startswith("Custom Label")
-    ]
-
-    # Keep only rows that have at least one custom label in the custom_label_columns
-    for row in page_feeds_and_accounts_templ_df.iterrows():
-        row_custom_labels = row[1][custom_label_columns].values
-        if any(
-            row_custom_label in custom_labels for row_custom_label in row_custom_labels
-        ):
-            filtered_page_feeds_and_accounts_templ_df = pd.concat(
-                [filtered_page_feeds_and_accounts_templ_df, row[1].to_frame().T],
-                ignore_index=True,
-            )
-
-    return filtered_page_feeds_and_accounts_templ_df
-
-
 @dataclass
 class PageFeedTeamContext(GoogleSheetsTeamContext):
     accounts_templ_df: Optional[pd.DataFrame] = None
@@ -163,50 +133,6 @@ Continue the process with the following customers:
 
 
 UPDATE_PAGE_FEED_DESCRIPTION = "Update Google Ads Page Feeds."
-
-
-def _get_page_feed_asset_sets(
-    user_id: int,
-    conv_id: int,
-    customer_id: str,
-    login_customer_id: str,
-) -> Dict[str, Dict[str, str]]:
-    page_feed_asset_sets: Dict[str, Dict[str, str]] = {}
-    query = """SELECT
-asset_set.id,
-asset_set.name,
-asset_set.resource_name
-FROM campaign_asset_set
-WHERE
-campaign.advertising_channel_type = 'PERFORMANCE_MAX'
-AND asset_set.type = 'PAGE_FEED'
-AND asset_set.status = 'ENABLED'
-AND campaign_asset_set.status = 'ENABLED'
-AND campaign.status != 'REMOVED'
-"""
-    response = execute_query(
-        user_id=user_id,
-        conv_id=conv_id,
-        customer_ids=[customer_id],
-        login_customer_id=login_customer_id,
-        query=query,
-    )
-    if isinstance(response, dict):
-        raise ValueError(response)
-
-    response_json = json.loads(response.replace("'", '"'))
-
-    if customer_id not in response_json:
-        return page_feed_asset_sets
-
-    for row in response_json[customer_id]:
-        asset_set = row["assetSet"]
-        page_feed_asset_sets[asset_set["name"]] = {
-            "id": asset_set["id"],
-            "resourceName": asset_set["resourceName"],
-        }
-
-    return page_feed_asset_sets
 
 
 def _get_page_feed_items(
