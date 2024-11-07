@@ -71,7 +71,7 @@ class TestGBBPageFeedTeam:
             "Page feed '**fastagency-reference**' changes:",
             "Page feed '**fastagency-tutorial**' changes:",
             "Added page feed items:",
-            "The following page feed items should be removed by you manually:",
+            "Removing items:",
         ]
 
         customer_id = "1111"

@@ -318,7 +318,8 @@ class TestPageFeedTeamTools:
                 ),
                 """Page feed '**fastagency-reference**' changes:
 
-The following page feed items should be removed by you manually:
+Removing items:
+
 - https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
             ),
             (
