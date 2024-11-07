@@ -59,12 +59,22 @@ def _get_asset_sets_execute_query_return_value(customer_id: str) -> str:
                     "name": "fastagency-reference",
                     "id": "8783430659",
                 },
+                "asset": {
+                    "pageFeedAsset": {
+                        "labels": ["StS", "hr", "Croatia"],
+                    }
+                },
             },
             {
                 "assetSet": {
                     "resourceName": f"customers/{customer_id}/assetSets/8841207092",
                     "name": "fastagency-tutorial",
                     "id": "8841207092",
+                },
+                "asset": {
+                    "pageFeedAsset": {
+                        "labels": ["StS", "hr", "Croatia"],
+                    }
                 },
             },
         ]
