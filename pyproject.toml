@@ -102,7 +102,7 @@ agents = [
     "pydantic==2.9.2",
     "tenacity==9.0.0",
     "prometheus-client==0.21.0",
-    "opentelemetry-distro==0.48b0",
+    "opentelemetry-distro==0.49b1",
     "opentelemetry-instrumentation-fastapi==0.48b0",
     "opentelemetry-instrumentation-logging==0.48b0",
     "opentelemetry-exporter-otlp==1.27.0",
