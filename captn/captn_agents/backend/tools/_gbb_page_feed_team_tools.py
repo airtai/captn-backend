@@ -227,6 +227,8 @@ WHERE
 
     for entry in response_json[customer_id]:
         asset_set_name = entry["assetSet"]["name"]
+        if "labels" not in entry["asset"]["pageFeedAsset"]:
+            continue
         labels_list = entry["asset"]["pageFeedAsset"]["labels"]
         labels = "; ".join(labels_list)
 
