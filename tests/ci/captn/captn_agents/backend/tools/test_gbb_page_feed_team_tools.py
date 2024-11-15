@@ -468,6 +468,20 @@ https://getbybus.com/en/bus-zagreb-to-karlovac\n\n""",
                         "resourceName": "customers/123/assetSetAssets/8841207092~181414563774"
                     },
                 },
+                {
+                    "asset": {
+                        "resourceName": "customers/123/assets/181414563775",
+                        "pageFeedAsset": {},
+                    },
+                    "assetSet": {
+                        "resourceName": "customers/123/assetSets/8841207093",
+                        "name": "fastagency-tutorial2",
+                        "id": "8841207093",
+                    },
+                    "assetSetAsset": {
+                        "resourceName": "customers/123/assetSetAssets/8841207093~181414563775"
+                    },
+                },
             ]
         }
 
