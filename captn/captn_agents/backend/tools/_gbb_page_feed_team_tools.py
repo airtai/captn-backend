@@ -1,4 +1,5 @@
 import json
+import time
 import traceback
 from dataclasses import dataclass
 from typing import Annotated, Any, Dict, List, Optional, Tuple
@@ -310,6 +311,8 @@ def _add_missing_page_urls(
                 f"Failed to add page feed items:\n{url_and_label_chunk}\n\n{str(e)}\n\n"
             )
             continue
+        finally:
+            time.sleep(1)
         if isinstance(response, dict):
             response_msg += f"Failed to add page feed items:\n{url_and_label_chunk}\n\n{str(response)}\n\n"
             continue
@@ -508,6 +511,8 @@ def _create_missing_page_feed_asset_sets(
         except Exception as e:
             msg = f"Failed to create page feed:\n{page_feed_name}\n\n{str(e)}\n\n"
             iostream.print(colored(f"[{get_time()}] " + msg, "red"), flush=True)
+        finally:
+            time.sleep(1)
 
         return_value += msg
 
