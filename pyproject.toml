@@ -60,7 +60,7 @@ lint = [
     "isort>=5",
     "ruff==0.7.2",
     "pyupgrade-directories",
-    "bandit==1.7.10",
+    "bandit==1.8.0",
     "semgrep==1.78.0",
     "pre-commit==4.0.1",
     "detect-secrets==1.5.0",
