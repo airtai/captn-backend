@@ -60,7 +60,7 @@ lint = [
     "isort>=5",
     "ruff==0.7.2",
     "pyupgrade-directories",
-    "bandit==1.7.10",
+    "bandit==1.8.0",
     "semgrep==1.78.0",
     "pre-commit==4.0.1",
     "detect-secrets==1.5.0",
@@ -111,8 +111,8 @@ agents = [
     "fastapi==0.115.2",
     "asyncer==0.0.8",
     "fastagency[openapi]==0.3.4",
-    "markdownify==0.13.1",
-    "python-multipart==0.0.17",
+    "markdownify==0.14.1",
+    "python-multipart==0.0.19",
     "flaml==2.2.0",
 ]
 
