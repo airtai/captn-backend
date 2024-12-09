@@ -137,4 +137,4 @@ def setting_otlp(
     if log_correlation:
         LoggingInstrumentor().instrument(set_logging_format=True)
 
-    FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer)  # type: ignore [arg-type]
+    FastAPIInstrumentor.instrument_app(app, tracer_provider=tracer)
